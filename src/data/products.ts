@@ -2,8 +2,8 @@ import { Product, ProductCategory, TherapeuticSegment } from '../types';
 
 export const CATEGORIES: { id: string; label: ProductCategory | 'All Categories' }[] = [
   { id: 'all', label: 'All Categories' },
-  { id: 'tablets', label: 'Tablets' },
   { id: 'capsules', label: 'Capsules' },
+  { id: 'tablets', label: 'Tablets' },
   { id: 'syrups', label: 'Syrups & Suspensions' },
   { id: 'injectables', label: 'Injectables' },
   { id: 'nutraceuticals', label: 'Nutraceuticals & Specialty' },
@@ -22,8 +22,8 @@ export const THERAPEUTIC_SEGMENTS: TherapeuticSegment[] = [
 
 export const PRODUCTS: Product[] = [
   {
-    id: 'coq10-carnitine-softgel',
-    name: 'Coenzyme Q10 + L-Carnitine Softgel Capsules',
+    id: 'pro-l-q10-capsules',
+    name: 'PRO-L Q10 Capsules',
     category: 'Capsules',
     therapeuticSegment: 'Cardiology & Metabolic',
     genericComposition: 'Co-Enzyme Q10 100mg + L-Carnitine L-Tartrate 500mg + Lycopene 10% 5000mcg + Zinc & Selenium Softgel Capsules',
@@ -33,7 +33,7 @@ export const PRODUCTS: Product[] = [
     pharmacopoeiaStandard: 'USP',
     shelfLife: '24 Months from manufacturing date',
     storageCondition: 'Store in a cool, dry place below 25°C. Protect from direct sunlight and heat.',
-    moq: '[500 Packs / Batch MOQ]',
+    moq: '500 Packs / Batch MOQ',
     unit: 'Pack / Box',
     badge: 'Cardio Vitality',
     regulatoryStatus: 'Standard Pharmacopeial Formulation',
@@ -50,8 +50,8 @@ export const PRODUCTS: Product[] = [
     ]
   },
   {
-    id: 'rabeprazole-domperidone-capsules',
-    name: 'Rabeprazole (EC) + Domperidone (SR) Capsules',
+    id: 'rabefill-dsr-capsules',
+    name: 'Rabefill DSR Capsules',
     category: 'Capsules',
     therapeuticSegment: 'Gastroenterology',
     genericComposition: 'Rabeprazole Sodium IP 20mg (Enteric Coated) + Domperidone IP 30mg (Sustained Release) Capsules',
@@ -61,7 +61,7 @@ export const PRODUCTS: Product[] = [
     pharmacopoeiaStandard: 'IP',
     shelfLife: '36 Months from manufacturing date',
     storageCondition: 'Store in a cool, dry place below 25°C. Protect from moisture and direct light.',
-    moq: '[1,000 Strips]',
+    moq: '1,000 Strips',
     unit: 'Strip / Box',
     badge: 'High Prescribing Demand',
     regulatoryStatus: 'Schedule Prescription Drug',
@@ -78,8 +78,8 @@ export const PRODUCTS: Product[] = [
     ]
   },
   {
-    id: 'cholecalciferol-softgel-60k',
-    name: 'Cholecalciferol (Vitamin D3) 60,000 IU Softgels',
+    id: 'calcibone-d3-softgels',
+    name: 'Calcibone D3 Softgel Capsules',
     category: 'Capsules',
     therapeuticSegment: 'Orthopedics & Bone Health',
     genericComposition: 'Cholecalciferol (Vitamin D3) IP 60,000 IU Softgel Capsules',
@@ -89,7 +89,7 @@ export const PRODUCTS: Product[] = [
     pharmacopoeiaStandard: 'IP',
     shelfLife: '24 Months from manufacturing date',
     storageCondition: 'Store in a dry place at or below 25°C. Protect from light.',
-    moq: '[500 Strips]',
+    moq: '500 Strips',
     unit: 'Strip / Box',
     badge: 'Essential Ortho Molecule',
     regulatoryStatus: 'Therapeutic High-Potency Dosage',
@@ -100,177 +100,205 @@ export const PRODUCTS: Product[] = [
       'Hermetically sealed oval soft gelatin shell prevents atmospheric oxidation'
     ],
     features: [
-      'Strict HPLC assay compliance ensuring exact 60,000 IU potency per softgel',
-      'High patient compliance due to compact easy-to-swallow capsule geometry',
-      'Certified gelatin source complying with pharmacopeial microbial limits'
+      'Precision dose uniformity tested per IP monograph',
+      'Zero heavy metal contamination verified via atomic absorption spectroscopy',
+      'Attractive packaging with anti-counterfeiting holographic strip'
     ]
   },
   {
-    id: 'myo-inositol-folate-tablets',
-    name: 'Myo-Inositol + D-Chiro Inositol + L-Methylfolate Tablets',
+    id: 'ovamain-tablets',
+    name: 'Ovamain Tablets',
     category: 'Tablets',
     therapeuticSegment: 'Gynecology & Women\'s Health',
-    genericComposition: 'Myo-Inositol 1000mg + D-Chiro Inositol 25mg + L-Methylfolate Calcium 1mg + Vitamin D3 1000 IU Tablets',
-    activeMolecules: ['Myo-Inositol (USP)', 'D-Chiro-Inositol', 'L-Methylfolate Calcium', 'Cholecalciferol (Vitamin D3)'],
-    dosageForm: 'Film-Coated Bilayer Tablets',
-    packaging: '10 x 1 x 10 Tablets in Alu-Alu Blister Box',
+    genericComposition: 'Myo-Inositol 1000mg + D-Chiro-Inositol 25mg + L-Methylfolate Calcium 1mg + Vitamin D3 1000 IU Film Coated Tablets',
+    activeMolecules: ['Myo-Inositol', 'D-Chiro-Inositol (40:1 Ratio)', 'L-Methylfolate Calcium', 'Vitamin D3 (Cholecalciferol)'],
+    dosageForm: 'Film-Coated Tablets',
+    packaging: '10 x 1 x 10 Tablets in Alu-Alu Blister Strip with Monocarton',
     pharmacopoeiaStandard: 'USP',
     shelfLife: '24 Months from manufacturing date',
-    storageCondition: 'Store in a cool, dry place below 25°C. Keep container tightly closed.',
-    moq: '[500 Packs]',
+    storageCondition: 'Store in a cool, dry place protected from light and moisture.',
+    moq: '500 Packs / Batch MOQ',
     unit: 'Pack / Box',
-    badge: 'Gynecology Benchmark',
-    regulatoryStatus: 'Standard Pharmaceutical Formulation',
-    indication: 'Polycystic Ovarian Syndrome (PCOS/PCOD), insulin resistance, ovulatory dysfunction, hyperandrogenism, and hormonal balancing.',
+    badge: 'PCOS & Ovulatory Care',
+    regulatoryStatus: 'Specialized Gynecological Formulation',
+    indication: 'Polycystic Ovary Syndrome (PCOS), insulin resistance-associated hyperandrogenism, ovulatory restoration, and metabolic follicular health.',
     clinicalHighlights: [
-      'Clinically benchmarked 40:1 physiological ratio of Myo-Inositol to D-Chiro-Inositol',
-      'Contains 4th generation bioactive L-Methylfolate bypassing MTHFR gene polymorphism',
-      'First-line prescription therapy for insulin-sensitizing ovarian support'
+      'Scientifically established 40:1 physiological ratio of Myo-Inositol to D-Chiro-Inositol',
+      'L-Methylfolate active co-factor form bypasses MTHFR genetic polymorphism',
+      'Improves insulin sensitivity and optimizes ovulatory regularity'
     ],
     features: [
-      'Film coating protects active inositols from moisture-induced degradation',
-      'Rigorous uniform weight and content uniformity compliance',
-      'Consistent stability data under accelerated conditions'
+      'Smooth aqueous film coating for easy swallowing and taste masking',
+      'Moisture-impermeable cold-formed aluminum barrier packaging',
+      'HPLC assay validated active concentration'
     ]
   },
   {
-    id: 'ursodeoxycholic-acid-300-tablets',
-    name: 'Ursodeoxycholic Acid 300mg Film-Coated Tablets',
+    id: 'ursocure-300-tablets',
+    name: 'Ursocure 300 Tablets',
     category: 'Tablets',
     therapeuticSegment: 'Hepatology',
     genericComposition: 'Ursodeoxycholic Acid IP 300mg Tablets',
     activeMolecules: ['Ursodeoxycholic Acid IP (UDCA) 300mg'],
-    dosageForm: 'Film-Coated Tablets',
-    packaging: '10 x 10 Tablets in Alu-Alu Moisture Barrier Strip',
+    dosageForm: 'Uncoated / Film-Coated Tablets',
+    packaging: '10 x 10 Tablets in Blister / Alu-Alu Pack',
     pharmacopoeiaStandard: 'IP',
     shelfLife: '36 Months from manufacturing date',
-    storageCondition: 'Store below 30°C in original packaging. Protect from direct moisture.',
-    moq: '[1,000 Strips]',
+    storageCondition: 'Store below 25°C in a dry place. Protect from light.',
+    moq: '1,000 Strips',
     unit: 'Strip / Box',
-    badge: 'Hepatology Specialist',
-    regulatoryStatus: 'Schedule Prescription Drug',
-    indication: 'Primary Biliary Cholangitis (PBC), dissolution of radiolucent non-calcified gallstones, and cholestatic liver diseases.',
+    badge: 'Hepatoprotective Core',
+    regulatoryStatus: 'Schedule Prescription Medicine',
+    indication: 'Primary Biliary Cholangitis (PBC), non-alcoholic fatty liver disease (NAFLD), dissolution of radiolucent cholesterol gallstones, and toxic cholestatic liver disorders.',
     clinicalHighlights: [
-      'Hepatoprotective hydrophilic bile acid replaces cytotoxic hydrophobic bile acids in liver pool',
-      'Protects hepatocyte and cholangiocyte cell membranes from oxidative and toxic bile injury',
-      'Manufactured with micronized UDCA API ensuring rapid gastrointestinal dissolution'
+      'Hydrophilic bile acid that displaces toxic hydrophobic bile acids from the hepatobiliary pool',
+      'Cytoprotective and membrane-stabilizing action on damaged hepatocytes and cholangiocytes',
+      'Immunomodulatory effect suppressing aberrant HLA class I/II expression on liver cells'
     ],
     features: [
-      'Strict pharmacopeial dissolution rate >80% in 30 minutes',
-      'High chemical purity API with verified absence of toxic lithocholic acid impurities',
-      'Export-grade blister packaging with anti-counterfeiting holographic strip'
+      'High chemical purity meeting strict IP/BP assay specifications',
+      'Rapid disintegration and uniform bioavailability profile',
+      'Robust stability testing substantiating 36-month shelf life'
     ]
   },
   {
-    id: 'lycopene-multivitamin-syrup',
-    name: 'Lycopene + Multivitamin & Minerals Oral Suspension',
-    category: 'Syrups & Suspensions',
-    therapeuticSegment: 'Cardiology & Metabolic',
-    genericComposition: 'Lycopene 10% 2000mcg + Niacinamide IP 25mg + Pyridoxine HCl IP 1.5mg + Cyanocobalamin IP 1mcg + Folic Acid IP 100mcg + Zinc & Minerals Liquid',
-    activeMolecules: ['Lycopene 10% Extract', 'Niacinamide IP', 'Pyridoxine Hydrochloride IP', 'Cyanocobalamin IP', 'Folic Acid IP', 'Zinc Gluconate'],
-    dosageForm: 'Liquid Syrup Suspension',
-    packaging: '200 ml Amber PET Bottle with Calibrated Measuring Cup & High-Gloss Outer Carton',
-    pharmacopoeiaStandard: 'IP',
-    shelfLife: '18 Months from manufacturing date',
-    storageCondition: 'Store in a cool, dry place. Protect from light. Shake well before use.',
-    moq: '[1,200 Bottles]',
-    unit: 'Bottle',
-    badge: 'High Volume Liquid',
-    regulatoryStatus: 'Standard Pharmaceutical Liquid',
-    indication: 'Post-illness convalescence, physical fatigue, vascular endothelial antioxidant support, micronutrient deficiency, and immune strengthening.',
-    clinicalHighlights: [
-      'Micro-emulsified lycopene suspension for maximum oral bioavailability',
-      'Zero metallic aftertaste with pharmaceutical-grade mixed-berry organoleptic vehicle',
-      'Amber PET bottle prevents photochemical degradation of active vitamins'
-    ],
-    features: [
-      'Homogeneous suspension with verified viscosity and uniform pouring characteristics',
-      'Automated volumetric liquid filling in HEPA-filtered cleanroom environment',
-      'Calibrated pharmaceutical dosing cap included with every individual bottle'
-    ]
-  },
-  {
-    id: 'digestive-enzymes-syrup',
-    name: 'Fungal Diastase + Pepsin Digestive Enzyme Syrup',
-    category: 'Syrups & Suspensions',
-    therapeuticSegment: 'Gastroenterology',
-    genericComposition: 'Fungal Diastase (1:1200) IP 50mg + Pepsin (1:3000) IP 10mg Digestive Enzyme Syrup',
-    activeMolecules: ['Fungal Diastase IP (Derived from Aspergillus oryzae)', 'Pepsin IP (Proteolytic Enzyme)'],
-    dosageForm: 'Liquid Enzyme Elixir',
-    packaging: '200 ml Round Amber Bottle in Embossed Metallic Outer Mono Carton',
-    pharmacopoeiaStandard: 'IP',
-    shelfLife: '18 Months from manufacturing date',
-    storageCondition: 'Store below 25°C in a dry place. Protect from heat and sunlight.',
-    moq: '[1,000 Bottles]',
-    unit: 'Bottle',
-    badge: 'Fast Moving Digestive',
-    regulatoryStatus: 'Standard Formulation',
-    indication: 'Enzyme-deficient dyspepsia, post-prandial heaviness, functional flatulence, loss of appetite, and chronic digestive insufficiency.',
-    clinicalHighlights: [
-      'Dual-enzyme digestive action: Fungal Diastase digests dietary starches while Pepsin breaks down complex dietary proteins',
-      'Acid-stable enzyme complex active across broad physiological gastric pH ranges',
-      'Palatable aromatic carminative vehicle soothing gastrointestinal mucosa'
-    ],
-    features: [
-      'Standardized enzymatic activity assay verification per batch',
-      'Tamper-evident ROPP cap with leak-proof inner sealing plug',
-      'Consistently high reorder rate from hospital pharmacies & retail stockists'
-    ]
-  },
-  {
-    id: 'l-carnosine-pediatric-syrup',
-    name: 'L-Carnosine 100mg/5ml Neuroprotective Oral Solution',
+    id: 'lycoreach-syrup',
+    name: 'Lycoreach Syrup',
     category: 'Syrups & Suspensions',
     therapeuticSegment: 'Pediatrics & Neurology',
-    genericComposition: 'L-Carnosine 100mg per 5ml Cognitive & Neuroprotective Liquid Formulation',
-    activeMolecules: ['L-Carnosine (Beta-Alanyl-L-Histidine Dipeptide) 100mg/5ml'],
-    dosageForm: 'Oral Pediatric Liquid Solution',
-    packaging: '100 ml Amber PET Bottle with Child-Resistant Measuring Cap & Mono Carton',
+    genericComposition: 'Lycopene 10% + Multivitamins + Multiminerals + Antioxidants Liquid Oral Suspension',
+    activeMolecules: ['Lycopene (Natural Carotenoid)', 'Vitamin A, C, E Complex', 'B-Complex Vitamins (B1, B2, B6, Nicotinamide)', 'Zinc Gluconate', 'Sodium Selenite', 'Manganese Sulphate'],
+    dosageForm: 'Oral Liquid / Syrup',
+    packaging: '200ml Amber PET Bottle with Measuring Cap & Sealed Monocarton',
     pharmacopoeiaStandard: 'In-House',
     shelfLife: '24 Months from manufacturing date',
-    storageCondition: 'Store in a cool, dry place. Keep out of reach of children.',
-    moq: '[600 Bottles]',
+    storageCondition: 'Store in a cool place, protected from direct sunlight. Do not freeze.',
+    moq: '1,000 Bottles',
     unit: 'Bottle',
-    badge: 'Specialty Pediatric Neuro',
-    regulatoryStatus: 'Proprietary Pharmaceutical Formulation',
-    indication: 'Neurodevelopmental delay, cognitive function support, and neuroprotective antioxidant adjuvant therapy.',
+    badge: 'Universal Antioxidant',
+    regulatoryStatus: 'Nutraceutical / Dietary Supplement',
+    indication: 'Convalescence, oxidative stress defense, general physical asthenia, immune deficiency, post-surgical recovery, and nutritional deficit management.',
     clinicalHighlights: [
-      'High-purity synthetic dipeptide L-Carnosine freely crossing blood-brain barrier',
-      'Protects neuronal synaptic membranes from lipid peroxidation and advanced glycation end-products (AGEs)',
-      'High clinical adoption among developmental pediatricians'
+      'Micro-emulsified lycopene suspension ensures high gastrointestinal absorption',
+      'Balanced synergistic vitamin-mineral antioxidant cascade',
+      'Pleasant palatable flavor profile ensuring high pediatric and geriatric compliance'
     ],
     features: [
-      'Sugar-free, dye-free formulation safe for pediatric therapeutic regimens',
-      'Validated stability at diverse ambient temperature profiles',
-      'High-precision volumetric automated liquid dosing assurance'
+      'Non-settling homogeneous syrup matrix with verified suspension stability',
+      'Tamper-evident shrink sleeve cap with accurate measuring unit',
+      'Comprehensive microbial testing clearing bioburden and pathogens'
     ]
   },
   {
-    id: 'rabeprazole-iv-injection',
-    name: 'Rabeprazole Sodium 20mg Lyophilized IV Injection',
-    category: 'Injectables',
-    therapeuticSegment: 'Anti-Infectives & Critical Care',
-    genericComposition: 'Rabeprazole Sodium for Injection IP 20mg (Sterile Lyophilized Powder) + 5ml Sterile Water for Injections (WFI)',
-    activeMolecules: ['Rabeprazole Sodium IP (Sterile Lyophilized Cake) 20mg', 'Sterile Water for Injections IP 5ml Ampoule'],
-    dosageForm: 'Sterile Lyophilized Powder for Reconstitution (IV Injection)',
-    packaging: 'Single-Dose USP Type-I Borosilicate Glass Vial + 5ml Plastic/Glass Ampoule in Mono Carton',
-    pharmacopoeiaStandard: 'IP',
+    id: 'mytro-q10-syrup',
+    name: 'Mytro Q10 Syrup',
+    category: 'Syrups & Suspensions',
+    therapeuticSegment: 'Cardiology & Metabolic',
+    genericComposition: 'Coenzyme Q10 + L-Carnitine + Cyanocobalamin (Vitamin B12) Liquid Oral Formulation',
+    activeMolecules: ['Coenzyme Q10', 'L-Carnitine Base', 'Cyanocobalamin (Vitamin B12) IP', 'Elemental Zinc'],
+    dosageForm: 'Oral Liquid Formulation',
+    packaging: '150ml / 200ml Amber Bottle in Unit Carton with Measuring Dispenser',
+    pharmacopoeiaStandard: 'In-House',
     shelfLife: '24 Months from manufacturing date',
-    storageCondition: 'Store below 25°C. Protect from light. Reconstituted solution must be used immediately.',
-    moq: '[2,000 Vials]',
-    unit: 'Pack / Vial',
-    badge: 'Critical Care Hospital Grade',
-    regulatoryStatus: 'Schedule Prescription Injectable',
-    indication: 'Acute upper gastrointestinal hemorrhage, severe acute erosive GERD, prophylaxis of stress-induced gastrointestinal ulcers in ICU surgical settings.',
+    storageCondition: 'Store below 25°C in a dry place. Protect from heat and light.',
+    moq: '1,000 Bottles',
+    unit: 'Bottle',
+    badge: 'Liquid Cellular Energy',
+    regulatoryStatus: 'Nutritional Health Supplement',
+    indication: 'Cardiovascular fatigue, chronic muscular asthenia, peripheral neuropathies, geriatric vigor revival, and mitochondrial metabolic support in liquid form.',
     clinicalHighlights: [
-      'Lyophilized in sterile Class 100 (Grade A) laminar airflow cleanrooms',
-      'Rapid intravenous onset of action with 100% systemic bioavailability within minutes',
-      'Non-pyrogenic, bacterial endotoxin tested (<0.2 EU/mg) for patient safety'
+      'Liquid micellar dispersion of lipid-soluble CoQ10 for patients with swallowing difficulties',
+      'Dual active transport mechanism boosting mitochondrial beta-oxidation',
+      'Rapid systemic uptake compared to conventional solid dosage forms'
     ],
     features: [
-      'USP Type-I neutral borosilicate glass prevents alkali leaching into active solution',
-      'Bromobutyl rubber stoppers with aluminum flip-off seals for aseptic integrity',
-      'Supplied to leading multi-specialty hospitals and trauma care centers'
+      'Advanced flavor-masking technology eliminating unpleasant metallic notes',
+      'Physically and chemically stable formulation without phase separation',
+      'Amber UV-filtering PET container preserving light-sensitive bioactives'
+    ]
+  },
+  {
+    id: 'peptin-gold-syrup',
+    name: 'Peptin Gold Syrup',
+    category: 'Syrups & Suspensions',
+    therapeuticSegment: 'Gastroenterology',
+    genericComposition: 'Fungal Diastase IP (1:1200) 50mg + Pepsin IP (1:3000) 10mg Digestive Enzyme Syrup',
+    activeMolecules: ['Fungal Diastase IP (Starch Degrading Enzyme)', 'Pepsin IP (Proteolytic Enzyme)'],
+    dosageForm: 'Enzyme Oral Liquid',
+    packaging: '200ml Amber Bottle with Measuring Cap & Drip-Off Monocarton',
+    pharmacopoeiaStandard: 'IP',
+    shelfLife: '18 Months from manufacturing date',
+    storageCondition: 'Store in a cool, dry place. Keep container tightly closed after use.',
+    moq: '1,000 Bottles',
+    unit: 'Bottle',
+    badge: 'Digestive Enzyme Core',
+    regulatoryStatus: 'Digestive Formulation',
+    indication: 'Functional dyspepsia, chronic post-prandial bloating, enzyme insufficiency, anorexia, gastrointestinal fullness, and post-illness digestive weakness.',
+    clinicalHighlights: [
+      'Fungal diastase actively digests complex starches into readily absorbable simple carbohydrates',
+      'Pepsin facilitates complete protein breakdown in acidic stomach environments',
+      'Fast-acting enzymatic relief from feeling of abdominal heaviness and distension'
+    ],
+    features: [
+      'High enzymatic activity confirmed through standardized IP enzymatic assay testing',
+      'Aromatic pleasant syrup base promoting digestive appetite stimulation',
+      'Certified microbial purity and heavy metal clearance'
+    ]
+  },
+  {
+    id: 'pro-carnoshine-syrup',
+    name: 'PRO Carnoshine Syrup',
+    category: 'Syrups & Suspensions',
+    therapeuticSegment: 'Pediatrics & Neurology',
+    genericComposition: 'L-Carnosine 100mg Liquid Oral Formulation',
+    activeMolecules: ['L-Carnosine (Beta-Alanyl-L-Histidine) 100mg'],
+    dosageForm: 'Oral Liquid Formulation',
+    packaging: '100ml Amber Bottle with Child-Resistant Measuring Cap & Monocarton',
+    pharmacopoeiaStandard: 'USP',
+    shelfLife: '24 Months from manufacturing date',
+    storageCondition: 'Store in a cool, dry place below 25°C. Protect from moisture and direct sunlight.',
+    moq: '1,000 Bottles',
+    unit: 'Bottle',
+    badge: 'Neuro-Cognitive Support',
+    regulatoryStatus: 'Specialized Neuro-Nutritional Formulation',
+    indication: 'Neurological developmental support, speech and socialization enhancement in pediatric neuro-atypical conditions, cellular antiglycation, and neuroprotection.',
+    clinicalHighlights: [
+      'Di-peptide antioxidant with proven blood-brain barrier permeability',
+      'Protects neuronal membrane lipids against toxic lipid peroxidation and free radical injury',
+      'Enhances frontal lobe neuronal synchronization and neurotransmitter receptor sensitivity'
+    ],
+    features: [
+      'HPLC assay verified purity and dipeptide potency',
+      'Pleasant child-friendly taste formulation ensuring continuous therapeutic compliance',
+      'Strict quality parameters meeting international USP monograph standards'
+    ]
+  },
+  {
+    id: 'rabefill-iv-injection',
+    name: '20mg Rabefill IV Injection',
+    category: 'Injectables',
+    therapeuticSegment: 'Anti-Infectives & Critical Care',
+    genericComposition: 'Rabeprazole Sodium IP 20mg Lyophilized Sterile Powder for Injection with Sterile Water for Injections IP',
+    activeMolecules: ['Rabeprazole Sodium IP (Sterile Lyophilized Powder)', 'Sterile Water for Injections IP (Diluent)'],
+    dosageForm: 'Lyophilized Sterile Powder for IV Injection (Vial + Diluent Ampoule)',
+    packaging: 'Single Dose 10ml Neutral Glass Vial + 5ml FFS Sterile Water Ampoule in Rigid Monocarton',
+    pharmacopoeiaStandard: 'IP',
+    shelfLife: '24 Months from manufacturing date',
+    storageCondition: 'Store below 25°C. Protect from light. Reconstituted solution should be used immediately.',
+    moq: '500 Vials / Batch MOQ',
+    unit: 'Vial / Pack',
+    badge: 'Critical Care IV',
+    regulatoryStatus: 'Schedule Prescription Hospital Injectable',
+    indication: 'Severe gastrointestinal ulcer bleeding, acute reflux esophagitis with aspiration risk, Zollinger-Ellison syndrome, and stress ulcer prophylaxis in ICU patients.',
+    clinicalHighlights: [
+      'Aseptic freeze-drying (lyophilization) preserves molecule integrity and ensures instant reconstitution',
+      'Rapid intravenous onset delivering maximum gastric acid suppression within 1 hour',
+      'Direct proton pump inhibition without reliance on hepatic CYP2C19 extensive metabolism'
+    ],
+    features: [
+      'Manufactured inside Class 100 (Grade A) laminar cleanroom isolators',
+      '100% bacterial endotoxin tested (LAL test) ensuring endotoxin <0.2 EU/mg',
+      'Type-I USP borosilicate glass neutral vial ensuring zero alkali leaching'
     ]
   }
 ];
