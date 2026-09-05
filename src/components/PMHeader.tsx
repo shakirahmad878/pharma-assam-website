@@ -60,49 +60,58 @@ export const PMHeader: React.FC<PMHeaderProps> = ({
   return (
     <header className="sticky top-0 z-40 bg-white shadow-md border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20 gap-4">
+        
+        {/* Main Header Row */}
+        <div className="flex items-center justify-between h-20 gap-4 lg:gap-8">
           
-          {/* Company Brand Logo & Title (Exact match to screenshot) */}
+          {/* Company Brand Logo & Title */}
           <div className="flex items-center gap-3.5 flex-shrink-0 cursor-pointer" onClick={() => handleNavClick('home')}>
-            <div className="w-11 h-11 rounded-xl bg-[#0b1e33] flex items-center justify-center text-[#00e5c9] shadow-md">
+            <div className="w-11 h-11 rounded-xl bg-[#0b1e33] flex items-center justify-center text-[#00e5c9] shadow-md flex-shrink-0">
               <Building2 className="w-6 h-6" />
             </div>
-            <div>
+            <div className="flex-shrink-0">
               <div className="flex items-center gap-2">
-                <span className="text-lg sm:text-xl font-black tracking-tight text-[#0b1e33]">
+                <span className="text-base sm:text-lg md:text-xl font-black tracking-tight text-[#0b1e33] whitespace-nowrap">
                   {COMPANY_CONFIG.name}
                 </span>
-                <span className="text-[10px] font-bold text-slate-600 bg-slate-100 border border-slate-300 px-2 py-0.5 rounded tracking-wider uppercase">
+                <span className="text-[10px] font-bold text-slate-600 bg-slate-100 border border-slate-300 px-2 py-0.5 rounded tracking-wider uppercase whitespace-nowrap hidden sm:inline-block">
                   ASSAM REGIONAL
                 </span>
               </div>
-              <p className="text-[10.5px] text-slate-500 font-bold tracking-wider uppercase mt-0.5">
+              <p className="text-[10px] sm:text-[10.5px] text-slate-500 font-bold tracking-wider uppercase mt-0.5 whitespace-nowrap">
                 PHARMACEUTICAL MANUFACTURER & DISTRIBUTOR
               </p>
             </div>
           </div>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-1 font-semibold text-sm text-slate-700">
+          {/* Clean Horizontal Navigation Menu (No text wrapping, elegant menu style) */}
+          <nav className="hidden lg:flex items-center gap-1.5 font-bold text-[13.5px] text-slate-700 flex-shrink-0">
+            
+            {/* Home */}
             <button
               onClick={() => handleNavClick('home')}
-              className={`px-3.5 py-2 rounded-md transition-colors ${
-                activeSection === 'home' ? 'text-[#c72828] font-bold bg-red-50' : 'hover:text-[#c72828] hover:bg-slate-50'
+              className={`px-4 py-2 rounded-md transition-all whitespace-nowrap ${
+                activeSection === 'home'
+                  ? 'text-[#c72828] font-extrabold bg-red-50 shadow-sm border border-red-100'
+                  : 'hover:text-[#c72828] hover:bg-slate-100'
               }`}
             >
               Home
             </button>
 
+            {/* About Us */}
             <button
               onClick={() => handleNavClick('about')}
-              className={`px-3.5 py-2 rounded-md transition-colors ${
-                activeSection === 'about' ? 'text-[#c72828] font-bold bg-red-50' : 'hover:text-[#c72828] hover:bg-slate-50'
+              className={`px-4 py-2 rounded-md transition-all whitespace-nowrap ${
+                activeSection === 'about'
+                  ? 'text-[#c72828] font-extrabold bg-red-50 shadow-sm border border-red-100'
+                  : 'hover:text-[#c72828] hover:bg-slate-100'
               }`}
             >
               About Us
             </button>
 
-            {/* Products Mega Dropdown */}
+            {/* Products Dropdown */}
             <div 
               className="relative"
               onMouseEnter={() => setIsProductsMenuOpen(true)}
@@ -110,12 +119,14 @@ export const PMHeader: React.FC<PMHeaderProps> = ({
             >
               <button
                 onClick={() => handleNavClick('products')}
-                className={`px-3.5 py-2 rounded-md transition-colors flex items-center gap-1 ${
-                  activeSection === 'products' ? 'text-[#c72828] font-bold bg-red-50' : 'hover:text-[#c72828] hover:bg-slate-50'
+                className={`px-4 py-2 rounded-md transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                  activeSection === 'products'
+                    ? 'text-[#c72828] font-extrabold bg-red-50 shadow-sm border border-red-100'
+                    : 'hover:text-[#c72828] hover:bg-slate-100'
                 }`}
               >
                 <span>Products</span>
-                <ChevronDown className="w-4 h-4 text-slate-500" />
+                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isProductsMenuOpen ? 'rotate-180 text-[#c72828]' : 'text-slate-500'}`} />
               </button>
 
               {/* Mega Dropdown Box */}
@@ -232,19 +243,25 @@ export const PMHeader: React.FC<PMHeaderProps> = ({
               )}
             </div>
 
+            {/* Flipbook */}
             <button
               onClick={() => handleNavClick('flipbook')}
-              className={`px-3.5 py-2 rounded-md transition-colors ${
-                activeSection === 'flipbook' ? 'text-[#c72828] font-bold bg-red-50' : 'hover:text-[#c72828] hover:bg-slate-50'
+              className={`px-4 py-2 rounded-md transition-all whitespace-nowrap ${
+                activeSection === 'flipbook'
+                  ? 'text-[#c72828] font-extrabold bg-red-50 shadow-sm border border-red-100'
+                  : 'hover:text-[#c72828] hover:bg-slate-100'
               }`}
             >
               Flipbook
             </button>
 
+            {/* Contact Us */}
             <button
               onClick={() => handleNavClick('contact')}
-              className={`px-3.5 py-2 rounded-md transition-colors ${
-                activeSection === 'contact' ? 'text-[#c72828] font-bold bg-red-50' : 'hover:text-[#c72828] hover:bg-slate-50'
+              className={`px-4 py-2 rounded-md transition-all whitespace-nowrap ${
+                activeSection === 'contact'
+                  ? 'text-[#c72828] font-extrabold bg-red-50 shadow-sm border border-red-100'
+                  : 'hover:text-[#c72828] hover:bg-slate-100'
               }`}
             >
               Contact Us
@@ -252,7 +269,7 @@ export const PMHeader: React.FC<PMHeaderProps> = ({
           </nav>
 
           {/* Quick Search & Mobile Toggle */}
-          <div className="flex items-center gap-2" ref={searchRef}>
+          <div className="flex items-center gap-2 flex-shrink-0" ref={searchRef}>
             <div className="relative">
               <div className="flex items-center">
                 <input
@@ -264,7 +281,7 @@ export const PMHeader: React.FC<PMHeaderProps> = ({
                     setIsSearchDropdownOpen(true);
                   }}
                   onFocus={() => setIsSearchDropdownOpen(true)}
-                  className="w-36 sm:w-48 md:w-60 px-3 py-1.5 text-xs rounded-l-md border border-slate-300 focus:outline-none focus:ring-1 focus:ring-[#0b1e33] focus:border-[#0b1e33]"
+                  className="w-28 sm:w-40 md:w-48 lg:w-44 xl:w-56 px-3 py-1.5 text-xs rounded-l-md border border-slate-300 focus:outline-none focus:ring-1 focus:ring-[#0b1e33] focus:border-[#0b1e33]"
                 />
                 <button
                   onClick={() => {
@@ -318,7 +335,7 @@ export const PMHeader: React.FC<PMHeaderProps> = ({
             {/* Mobile Hamburger Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden p-2 rounded-md text-slate-700 hover:text-[#c72828] hover:bg-slate-100"
+              className="lg:hidden p-2 rounded-md text-slate-700 hover:text-[#c72828] hover:bg-slate-100 flex-shrink-0"
               aria-label="Toggle Navigation Menu"
             >
               {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
