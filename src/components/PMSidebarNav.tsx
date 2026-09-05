@@ -1,7 +1,7 @@
 import React from 'react';
-import { X, ChevronRight, Building2, Phone, Mail, MessageCircle, ShieldCheck, Pill, FlaskConical, Layers, Syringe, BookOpen } from 'lucide-react';
+import { X, ChevronRight, Building2, Phone, Mail, MessageCircle, ShieldCheck, Pill, ArrowUpRight } from 'lucide-react';
 import { COMPANY_CONFIG } from '../data/companyConfig';
-import { ProductCategory, Product } from '../types';
+import { ProductCategory } from '../types';
 
 interface PMSidebarNavProps {
   isOpen: boolean;
@@ -34,53 +34,97 @@ export const PMSidebarNav: React.FC<PMSidebarNavProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/75 backdrop-blur-md animate-fadeIn">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 md:p-8 bg-black/60 backdrop-blur-md animate-fadeIn"
+      onClick={onClose}
+    >
       
-      {/* Outer Modal Container (Recreating the uploaded reference card layout) */}
+      {/* Outer Modal Container (Exact Zoox reference card layout) */}
       <div 
-        className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-4xl w-full max-h-[92vh] overflow-hidden grid grid-cols-1 md:grid-cols-12 relative animate-scaleUp"
+        className="bg-white rounded-3xl sm:rounded-[32px] shadow-2xl border border-slate-200/80 max-w-4xl w-full max-h-[92vh] overflow-hidden grid grid-cols-1 md:grid-cols-12 relative animate-scaleUp p-4 sm:p-6 gap-6"
         onClick={(e) => e.stopPropagation()}
       >
         
         {/* Left Column: Navigation & Sub-links */}
-        <div className="md:col-span-7 p-6 sm:p-8 flex flex-col justify-between overflow-y-auto max-h-[92vh]">
+        <div className="md:col-span-6 flex flex-col justify-between overflow-y-auto max-h-[82vh] pr-1 sm:pr-2">
           
-          <div className="space-y-6">
+          <div className="space-y-5">
             
-            {/* Top Bar: Close Button & Brand */}
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            {/* Top Bar: Square Close Button & Brand Name */}
+            <div className="flex items-center gap-4 border-b border-slate-100 pb-4">
               <button
                 onClick={onClose}
-                className="w-10 h-10 rounded-xl border border-slate-300 flex items-center justify-center text-slate-700 hover:bg-slate-100 hover:border-slate-400 transition-colors shadow-sm"
+                className="w-10 h-10 rounded-2xl border border-slate-200 flex items-center justify-center text-slate-700 hover:bg-slate-100 hover:border-slate-300 transition-all shadow-sm active:scale-95"
                 aria-label="Close Menu"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5 text-slate-700" />
               </button>
 
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-[#0b1e33] flex items-center justify-center text-[#00e5c9]">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-[#0b1e33] flex items-center justify-center text-[#00e5c9] shadow-sm">
                   <Building2 className="w-4 h-4" />
                 </div>
-                <span className="text-sm font-black tracking-tight text-[#0b1e33]">
-                  {COMPANY_CONFIG.name}
-                </span>
+                <div>
+                  <span className="text-sm font-black tracking-tight text-[#0b1e33] uppercase">
+                    {COMPANY_CONFIG.name}
+                  </span>
+                  <span className="block text-[10px] text-slate-400 font-medium">Wholesale & Institutional Portal</span>
+                </div>
               </div>
             </div>
 
-            {/* Primary Large Menu Links (with dark rounded arrow buttons like example) */}
-            <nav className="space-y-2">
+            {/* Primary Large Menu Links with dark circular chevron buttons */}
+            <nav className="space-y-1.5">
               
               {/* Home */}
               <button
                 onClick={() => handleNav('home')}
-                className={`w-full flex items-center justify-between p-3 rounded-2xl transition-all group ${
-                  activeSection === 'home' ? 'bg-red-50 text-[#c72828]' : 'hover:bg-slate-50 text-slate-800'
+                className={`w-full flex items-center justify-between py-2.5 px-3 rounded-2xl transition-all group ${
+                  activeSection === 'home' ? 'bg-slate-100 text-[#0b1e33]' : 'hover:bg-slate-50 text-slate-900'
                 }`}
               >
-                <span className="text-xl sm:text-2xl font-black tracking-tight">Home</span>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-transform group-hover:scale-110 ${
-                  activeSection === 'home' ? 'bg-[#c72828] text-white' : 'bg-[#0b1e33] text-white'
-                }`}>
+                <span className="text-xl sm:text-2xl font-bold tracking-tight">Home</span>
+                <div className="w-8 h-8 rounded-full bg-[#1e293b] text-white flex items-center justify-center transition-transform group-hover:scale-110 group-hover:bg-[#0b1e33] shadow-sm">
+                  <ChevronRight className="w-4 h-4" />
+                </div>
+              </button>
+
+              {/* Products & Catalog */}
+              <button
+                onClick={() => handleNav('products')}
+                className={`w-full flex items-center justify-between py-2.5 px-3 rounded-2xl transition-all group ${
+                  activeSection === 'products' ? 'bg-slate-100 text-[#0b1e33]' : 'hover:bg-slate-50 text-slate-900'
+                }`}
+              >
+                <span className="text-xl sm:text-2xl font-bold tracking-tight">Products & Catalog</span>
+                <div className="w-8 h-8 rounded-full bg-[#1e293b] text-white flex items-center justify-center transition-transform group-hover:scale-110 group-hover:bg-[#0b1e33] shadow-sm">
+                  <ChevronRight className="w-4 h-4" />
+                </div>
+              </button>
+
+              {/* Visual Aid / Flipbook */}
+              <button
+                onClick={() => handleNav('flipbook')}
+                className={`w-full flex items-center justify-between py-2.5 px-3 rounded-2xl transition-all group ${
+                  activeSection === 'flipbook' ? 'bg-slate-100 text-[#0b1e33]' : 'hover:bg-slate-50 text-slate-900'
+                }`}
+              >
+                <span className="text-xl sm:text-2xl font-bold tracking-tight">Flipbook / Visual Aid</span>
+                <div className="w-8 h-8 rounded-full bg-[#1e293b] text-white flex items-center justify-center transition-transform group-hover:scale-110 group-hover:bg-[#0b1e33] shadow-sm">
+                  <ChevronRight className="w-4 h-4" />
+                </div>
+              </button>
+
+              {/* MOQ & Trade Enquiry */}
+              <button
+                onClick={() => {
+                  onClose();
+                  onOpenEnquiry();
+                }}
+                className="w-full flex items-center justify-between py-2.5 px-3 rounded-2xl hover:bg-slate-50 text-slate-900 transition-all group"
+              >
+                <span className="text-xl sm:text-2xl font-bold tracking-tight text-[#c72828]">MOQ & Trade Enquiry</span>
+                <div className="w-8 h-8 rounded-full bg-[#c72828] text-white flex items-center justify-center transition-transform group-hover:scale-110 shadow-sm">
                   <ChevronRight className="w-4 h-4" />
                 </div>
               </button>
@@ -88,67 +132,12 @@ export const PMSidebarNav: React.FC<PMSidebarNavProps> = ({
               {/* About Us */}
               <button
                 onClick={() => handleNav('about')}
-                className={`w-full flex items-center justify-between p-3 rounded-2xl transition-all group ${
-                  activeSection === 'about' ? 'bg-red-50 text-[#c72828]' : 'hover:bg-slate-50 text-slate-800'
+                className={`w-full flex items-center justify-between py-2.5 px-3 rounded-2xl transition-all group ${
+                  activeSection === 'about' ? 'bg-slate-100 text-[#0b1e33]' : 'hover:bg-slate-50 text-slate-900'
                 }`}
               >
-                <span className="text-xl sm:text-2xl font-black tracking-tight">About Us</span>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-transform group-hover:scale-110 ${
-                  activeSection === 'about' ? 'bg-[#c72828] text-white' : 'bg-[#0b1e33] text-white'
-                }`}>
-                  <ChevronRight className="w-4 h-4" />
-                </div>
-              </button>
-
-              {/* Products Directory */}
-              <button
-                onClick={() => handleNav('products')}
-                className={`w-full flex items-center justify-between p-3 rounded-2xl transition-all group ${
-                  activeSection === 'products' ? 'bg-red-50 text-[#c72828]' : 'hover:bg-slate-50 text-slate-800'
-                }`}
-              >
-                <div>
-                  <span className="text-xl sm:text-2xl font-black tracking-tight">Products & Catalog</span>
-                  <p className="text-[11px] text-slate-400 font-semibold">10 Standard Formulations</p>
-                </div>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-transform group-hover:scale-110 ${
-                  activeSection === 'products' ? 'bg-[#c72828] text-white' : 'bg-[#0b1e33] text-white'
-                }`}>
-                  <ChevronRight className="w-4 h-4" />
-                </div>
-              </button>
-
-              {/* Flipbook / Visual Aid */}
-              <button
-                onClick={() => handleNav('flipbook')}
-                className={`w-full flex items-center justify-between p-3 rounded-2xl transition-all group ${
-                  activeSection === 'flipbook' ? 'bg-red-50 text-[#c72828]' : 'hover:bg-slate-50 text-slate-800'
-                }`}
-              >
-                <div>
-                  <span className="text-xl sm:text-2xl font-black tracking-tight">Flipbook / Visual Aid</span>
-                  <p className="text-[11px] text-slate-400 font-semibold">Doctor & Representative Monograph</p>
-                </div>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-transform group-hover:scale-110 ${
-                  activeSection === 'flipbook' ? 'bg-[#c72828] text-white' : 'bg-[#0b1e33] text-white'
-                }`}>
-                  <ChevronRight className="w-4 h-4" />
-                </div>
-              </button>
-
-              {/* MOQ Enquiry */}
-              <button
-                onClick={() => {
-                  onClose();
-                  onOpenEnquiry();
-                }}
-                className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-slate-50 text-slate-800 transition-all group"
-              >
-                <div>
-                  <span className="text-xl sm:text-2xl font-black tracking-tight text-[#c72828]">MOQ & Trade Enquiry</span>
-                  <p className="text-[11px] text-slate-400 font-semibold">Wholesale Batch Quotation</p>
-                </div>
-                <div className="w-8 h-8 rounded-full bg-[#c72828] text-white flex items-center justify-center transition-transform group-hover:scale-110">
+                <span className="text-xl sm:text-2xl font-bold tracking-tight">About Us</span>
+                <div className="w-8 h-8 rounded-full bg-[#1e293b] text-white flex items-center justify-center transition-transform group-hover:scale-110 group-hover:bg-[#0b1e33] shadow-sm">
                   <ChevronRight className="w-4 h-4" />
                 </div>
               </button>
@@ -156,14 +145,12 @@ export const PMSidebarNav: React.FC<PMSidebarNavProps> = ({
               {/* Contact Us */}
               <button
                 onClick={() => handleNav('contact')}
-                className={`w-full flex items-center justify-between p-3 rounded-2xl transition-all group ${
-                  activeSection === 'contact' ? 'bg-red-50 text-[#c72828]' : 'hover:bg-slate-50 text-slate-800'
+                className={`w-full flex items-center justify-between py-2.5 px-3 rounded-2xl transition-all group ${
+                  activeSection === 'contact' ? 'bg-slate-100 text-[#0b1e33]' : 'hover:bg-slate-50 text-slate-900'
                 }`}
               >
-                <span className="text-xl sm:text-2xl font-black tracking-tight">Contact Us</span>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-transform group-hover:scale-110 ${
-                  activeSection === 'contact' ? 'bg-[#c72828] text-white' : 'bg-[#0b1e33] text-white'
-                }`}>
+                <span className="text-xl sm:text-2xl font-bold tracking-tight">Contact Us</span>
+                <div className="w-8 h-8 rounded-full bg-[#1e293b] text-white flex items-center justify-center transition-transform group-hover:scale-110 group-hover:bg-[#0b1e33] shadow-sm">
                   <ChevronRight className="w-4 h-4" />
                 </div>
               </button>
@@ -171,107 +158,129 @@ export const PMSidebarNav: React.FC<PMSidebarNavProps> = ({
             </nav>
 
             {/* Secondary Quick Links Grid (2 Columns as per reference layout) */}
-            <div className="pt-4 border-t border-slate-100 grid grid-cols-2 gap-2 text-xs font-semibold text-slate-600">
+            <div className="pt-3 border-t border-slate-100 grid grid-cols-2 gap-x-3 gap-y-1.5 text-[13px] font-medium text-slate-600">
               <button 
                 onClick={() => handleCategoryNav('Pharmaceutical Capsules')}
-                className="text-left py-1 px-2 rounded hover:text-[#c72828] hover:bg-slate-50 flex items-center justify-between"
+                className="text-left py-1 hover:text-[#0b1e33] flex items-center justify-between group"
               >
-                <span>Pharmaceutical Capsules</span>
-                <span className="text-slate-400 text-[10px]">›</span>
+                <span>Capsules</span>
+                <span className="text-slate-400 group-hover:text-slate-700 transition-colors">›</span>
               </button>
 
               <button 
                 onClick={() => handleCategoryNav('Pharmaceutical Syrup')}
-                className="text-left py-1 px-2 rounded hover:text-[#c72828] hover:bg-slate-50 flex items-center justify-between"
+                className="text-left py-1 hover:text-[#0b1e33] flex items-center justify-between group"
               >
-                <span>Pharmaceutical Syrup</span>
-                <span className="text-slate-400 text-[10px]">›</span>
+                <span>Liquid Syrups</span>
+                <span className="text-slate-400 group-hover:text-slate-700 transition-colors">›</span>
               </button>
 
               <button 
                 onClick={() => handleCategoryNav('Pharmaceutical Tablets')}
-                className="text-left py-1 px-2 rounded hover:text-[#c72828] hover:bg-slate-50 flex items-center justify-between"
+                className="text-left py-1 hover:text-[#0b1e33] flex items-center justify-between group"
               >
-                <span>Pharmaceutical Tablets</span>
-                <span className="text-slate-400 text-[10px]">›</span>
+                <span>Tablets</span>
+                <span className="text-slate-400 group-hover:text-slate-700 transition-colors">›</span>
               </button>
 
               <button 
                 onClick={() => handleCategoryNav('Pharmaceutical Injectable')}
-                className="text-left py-1 px-2 rounded hover:text-[#c72828] hover:bg-slate-50 flex items-center justify-between"
+                className="text-left py-1 hover:text-[#0b1e33] flex items-center justify-between group"
               >
-                <span>Pharmaceutical Injectable</span>
-                <span className="text-slate-400 text-[10px]">›</span>
+                <span>Injectables</span>
+                <span className="text-slate-400 group-hover:text-slate-700 transition-colors">›</span>
+              </button>
+
+              <button 
+                onClick={() => handleNav('about')}
+                className="text-left py-1 hover:text-[#0b1e33] flex items-center justify-between group"
+              >
+                <span>Quality Policy</span>
+                <span className="text-slate-400 group-hover:text-slate-700 transition-colors">›</span>
+              </button>
+
+              <button 
+                onClick={() => handleNav('contact')}
+                className="text-left py-1 hover:text-[#0b1e33] flex items-center justify-between group"
+              >
+                <span>Regional Depot</span>
+                <span className="text-slate-400 group-hover:text-slate-700 transition-colors">›</span>
               </button>
             </div>
 
           </div>
 
-          {/* Bottom Quick Contact & Regulatory Badge Box */}
-          <div className="mt-6 pt-3 border-t border-slate-100 flex items-center justify-between bg-slate-50 p-3 rounded-2xl">
-            <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-              Assam Regional Hub
+          {/* Bottom Box (Matching the reference SOCIALS / QUICK CONTACT bar) */}
+          <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between bg-slate-50/90 p-3 rounded-2xl border border-slate-100">
+            <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest">
+              ASSAM TRADE DESK
             </span>
             <div className="flex items-center gap-2">
               <a
-                href="https://wa.me/?text=Hello,%20I%20would%20like%20to%20inquire%20about%20your%20pharmaceutical%20product%20MOQ."
+                href="https://wa.me/?text=Hello,%20I%20would%20like%20to%20inquire%20about%20your%20pharmaceutical%20formulations%20and%20MOQ."
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-sm transition-colors"
+                className="bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-sm transition-all active:scale-95"
               >
-                <MessageCircle className="w-3.5 h-3.5" />
+                <MessageCircle className="w-3.5 h-3.5 fill-white text-[#25D366]" />
                 <span>WhatsApp</span>
               </a>
+              <button
+                onClick={() => {
+                  onClose();
+                  onOpenEnquiry();
+                }}
+                className="bg-[#0b1e33] hover:bg-[#163e61] text-white text-xs font-bold px-3 py-1.5 rounded-xl transition-all active:scale-95"
+              >
+                Inquire MOQ
+              </button>
             </div>
           </div>
 
         </div>
 
-        {/* Right Column: Visual Showcase Card (Exact match to reference style) */}
-        <div className="hidden md:flex md:col-span-5 bg-gradient-to-br from-[#0b1e33] to-[#163e61] p-6 flex-col justify-between text-white relative overflow-hidden">
-          
-          {/* Subtle Background Art */}
-          <div className="absolute inset-0 opacity-15 pointer-events-none">
-            <div className="absolute -top-12 -right-12 w-64 h-64 rounded-full bg-cyan-400 blur-3xl"></div>
-            <div className="absolute -bottom-12 -left-12 w-64 h-64 rounded-full bg-red-500 blur-3xl"></div>
-          </div>
+        {/* Right Column: Full-Height Vertical Photo Card (Exact match to reference style) */}
+        <div className="hidden md:block md:col-span-6 relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-slate-200/60 bg-slate-900 group">
+          {/* Vertical Editorial Healthcare / Pharma Photography */}
+          <img
+            src="https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=1200&q=80"
+            alt="Pharmaceutical Formulations & Research"
+            className="w-full h-full min-h-[460px] object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out"
+          />
 
-          {/* Top Label */}
-          <div className="relative z-10">
-            <span className="bg-white/10 backdrop-blur-md border border-white/20 text-cyan-300 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest inline-block">
-              Assam & North-East Healthcare
-            </span>
-            <h3 className="text-2xl font-black text-white mt-3 leading-tight tracking-tight">
-              Quality Formulations Built for Clinical Trust.
-            </h3>
-            <p className="text-xs text-slate-300 mt-2 leading-relaxed">
-              Standardized pharmacopoeial monograph compliance across Oral Solids, Liquid Formulations, and Lyophilized Sterile Injectables.
-            </p>
-          </div>
-
-          {/* Center Product Visual Feature */}
-          <div className="relative z-10 my-4 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4 flex items-center justify-center">
-            <img
-              src="https://2.wlimg.com/product_images/bc-500/2026/2/12905670/rabefill-dsr-capsules-1772254673-7305716.jpeg"
-              alt="Featured Formulation"
-              className="max-h-48 object-contain filter drop-shadow-xl"
-            />
-          </div>
-
-          {/* Bottom Card Stat */}
-          <div className="relative z-10 bg-slate-900/60 backdrop-blur-md border border-slate-700/60 p-3.5 rounded-xl space-y-1">
-            <div className="flex items-center gap-1.5 text-xs font-bold text-[#00e5c9]">
-              <ShieldCheck className="w-4 h-4" />
-              <span>WHO-GMP Quality Certified</span>
+          {/* Elegant Dark Gradient & Badges Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent flex flex-col justify-between p-6">
+            
+            {/* Top Badge */}
+            <div className="flex justify-end">
+              <span className="bg-black/50 backdrop-blur-md border border-white/20 text-white text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#00e5c9]" />
+                WHO-GMP Monograph
+              </span>
             </div>
-            <p className="text-[11px] text-slate-300 leading-snug">
-              Guwahati central logistics depot ensuring timely cold-chain and direct hospital dispatch.
-            </p>
-          </div>
 
+            {/* Bottom Content Card */}
+            <div className="space-y-2">
+              <span className="text-[11px] font-bold uppercase tracking-widest text-[#00e5c9]">
+                Clinical Excellence
+              </span>
+              <h3 className="text-xl sm:text-2xl font-bold text-white leading-snug">
+                Precision Formulations for Hospitals & Wholesalers.
+              </h3>
+              <p className="text-xs text-slate-200/90 leading-relaxed font-normal">
+                Standardized monographs across Oral Solids, Liquid Formulations, and Lyophilized Sterile Injectables.
+              </p>
+              <div className="pt-2 flex items-center gap-2 text-[11px] text-white/80 font-medium">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                <span>Guwahati Regional Cold-Chain Distribution</span>
+              </div>
+            </div>
+
+          </div>
         </div>
 
       </div>
     </div>
   );
 };
+
