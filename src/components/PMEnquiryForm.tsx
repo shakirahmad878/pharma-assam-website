@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Send, CheckCircle2, MessageSquare, Phone, Mail, User, Hash } from 'lucide-react';
+import { Send, CheckCircle2, MessageSquare, Phone, Mail, User, Hash, HelpCircle, PackageCheck } from 'lucide-react';
 import { PRODUCTS } from '../data/products';
 import { COMPANY_CONFIG } from '../data/companyConfig';
 
@@ -9,16 +9,17 @@ interface PMEnquiryFormProps {
 
 export const PMEnquiryForm: React.FC<PMEnquiryFormProps> = ({ defaultProduct }) => {
   const [selectedProductName, setSelectedProductName] = useState(defaultProduct || PRODUCTS[0].name);
-  const [quantity, setQuantity] = useState(100);
+  const currentProduct = PRODUCTS.find(p => p.name === selectedProductName) || PRODUCTS[0];
+  
+  const [quantity, setQuantity] = useState(500);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [message, setMessage] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  // Derive unit from selected product
-  const currentProduct = PRODUCTS.find(p => p.name === selectedProductName) || PRODUCTS[0];
   const unit = currentProduct.unit || 'Pack';
+  const moqInfo = currentProduct.moq || '500 Units';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +27,7 @@ export const PMEnquiryForm: React.FC<PMEnquiryFormProps> = ({ defaultProduct }) 
   };
 
   const handleWhatsAppInquiry = () => {
-    const text = `*Inquiry for ${selectedProductName}*\n*Quantity:* ${quantity} ${unit}\n*Name:* ${name || 'Prospective Buyer'}\n*Phone:* ${phone || 'N/A'}\n*Email:* ${email || 'N/A'}\n*Requirement:* ${message || 'Please share best quotation and availability.'}`;
+    const text = `*MOQ & Product Enquiry for ${selectedProductName}*\n*Standard MOQ:* ${moqInfo}\n*Target Enquiry Quantity:* ${quantity} ${unit}\n*Name:* ${name || 'Prospective Partner'}\n*Phone:* ${phone || 'N/A'}\n*Email:* ${email || 'N/A'}\n*Enquiry Notes:* ${message || 'Please provide MOQ details, batch quotation, and distributor terms.'}`;
     window.open(`https://wa.me/916001137678?text=${encodeURIComponent(text)}`, '_blank');
   };
 
@@ -37,25 +38,35 @@ export const PMEnquiryForm: React.FC<PMEnquiryFormProps> = ({ defaultProduct }) 
         <div className="bg-gradient-to-br from-slate-50 via-white to-slate-50 rounded-2xl border-2 border-[#163e61]/20 shadow-xl overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-12">
             
-            {/* Left Column: Form Intro & Contact Assurance */}
+            {/* Left Column: MOQ Information & Statutory Assurance */}
             <div className="lg:col-span-5 bg-[#163e61] text-white p-8 sm:p-10 flex flex-col justify-between">
               <div className="space-y-6">
                 <div className="inline-block bg-[#c72828] text-white text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                  Direct Manufacturer Portal
+                  Wholesale & Distributor Portal
                 </div>
 
                 <h3 className="text-2xl sm:text-3xl font-black tracking-tight leading-tight">
-                  Send Your Requirement & Get Instant Quotation
+                  Product & MOQ Requirement Enquiry
                 </h3>
 
                 <p className="text-xs sm:text-sm text-slate-200 leading-relaxed">
-                  Tell us your product formulation requirements, desired order quantity, and institutional delivery location. Our distribution team will revert with confirmed batch pricing and shipping terms.
+                  Have questions regarding our <strong>Minimum Order Quantity (MOQ)</strong>, batch manufacturing capacity, or regional stockist terms? Submit your enquiry below to receive official product catalogs and wholesale rate structures.
                 </p>
 
-                <div className="space-y-3 pt-4 border-t border-slate-700/60 text-xs">
+                {/* Live Selected Molecule MOQ Card */}
+                <div className="bg-slate-800/80 border border-slate-700 p-3.5 rounded-xl space-y-1">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-red-300">
+                    <PackageCheck className="w-4 h-4" />
+                    <span>Selected Molecule Standard MOQ</span>
+                  </div>
+                  <p className="text-sm font-extrabold text-white">{currentProduct.name}</p>
+                  <p className="text-xs text-emerald-400 font-semibold">Standard MOQ: {moqInfo}</p>
+                </div>
+
+                <div className="space-y-3 pt-2 border-t border-slate-700/60 text-xs">
                   <div className="flex items-center gap-3">
                     <Phone className="w-4 h-4 text-red-400" />
-                    <span>Call: <strong>{COMPANY_CONFIG.phone}</strong></span>
+                    <span>Enquiry Line: <strong>{COMPANY_CONFIG.phone}</strong></span>
                   </div>
                   <div className="flex items-center gap-3">
                     <Mail className="w-4 h-4 text-red-400" />
@@ -69,13 +80,14 @@ export const PMEnquiryForm: React.FC<PMEnquiryFormProps> = ({ defaultProduct }) 
               </div>
 
               <div className="mt-8 pt-6 border-t border-slate-700/60">
-                <p className="text-[11px] text-slate-300">
-                  🔒 Institutional confidentiality guaranteed. Orders dispatched under audited cold-chain / climate-controlled protocols.
+                <p className="text-[11px] text-slate-300 flex items-center gap-1.5">
+                  <HelpCircle className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                  <span>This portal is for trade & institutional MOQ inquiries. No retail consumer order processing.</span>
                 </p>
               </div>
             </div>
 
-            {/* Right Column: Interactive Requirement Form (Exact fields from progressivemolecules.in) */}
+            {/* Right Column: MOQ Enquiry Form */}
             <div className="lg:col-span-7 p-8 sm:p-10">
               {isSubmitted ? (
                 <div className="py-12 text-center space-y-4 animate-fadeIn">
@@ -83,23 +95,24 @@ export const PMEnquiryForm: React.FC<PMEnquiryFormProps> = ({ defaultProduct }) 
                     <CheckCircle2 className="w-10 h-10" />
                   </div>
                   <h4 className="text-2xl font-black text-[#163e61]">
-                    Thank You! Your Enquiry Has Been Sent Successfully.
+                    Thank You! Your MOQ Enquiry Has Been Received.
                   </h4>
                   <p className="text-xs sm:text-sm text-slate-600 max-w-md mx-auto">
-                    We have received your requirement for <strong>{quantity} {unit}</strong> of <strong>{selectedProductName}</strong>. Our business development team will contact you shortly.
+                    We have recorded your MOQ inquiry for <strong>{quantity} {unit}</strong> of <strong>{selectedProductName}</strong> (Standard MOQ: {moqInfo}). Our institutional team will share wholesale terms shortly.
                   </p>
                   <div className="pt-4 flex justify-center gap-3">
                     <button
                       onClick={handleWhatsAppInquiry}
                       className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-2.5 rounded-lg shadow transition-colors flex items-center gap-2"
                     >
-                      <span>Connect via WhatsApp</span>
+                      <MessageSquare className="w-3.5 h-3.5" />
+                      <span>Chat on WhatsApp</span>
                     </button>
                     <button
                       onClick={() => setIsSubmitted(false)}
                       className="bg-[#163e61] text-white font-bold text-xs px-5 py-2.5 rounded-lg shadow hover:bg-slate-800 transition-colors"
                     >
-                      Submit Another Enquiry
+                      Inquire for Another Molecule
                     </button>
                   </div>
                 </div>
@@ -109,7 +122,7 @@ export const PMEnquiryForm: React.FC<PMEnquiryFormProps> = ({ defaultProduct }) 
                   {/* Row 1: Product Selection */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Product / Formulation Looking For <span className="text-red-500">*</span>
+                      Product / Molecule for MOQ Enquiry <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={selectedProductName}
@@ -119,17 +132,17 @@ export const PMEnquiryForm: React.FC<PMEnquiryFormProps> = ({ defaultProduct }) 
                     >
                       {PRODUCTS.map(p => (
                         <option key={p.id} value={p.name}>
-                          {p.name} ({p.category}) - {p.genericComposition}
+                          {p.name} ({p.category}) — [MOQ: {p.moq}]
                         </option>
                       ))}
                     </select>
                   </div>
 
-                  {/* Row 2: Quantity & Unit */}
+                  {/* Row 2: Desired Quantity & Unit */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">
-                        Quantity <span className="text-red-500">*</span>
+                        Target Enquiry Quantity <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="number"
@@ -139,10 +152,11 @@ export const PMEnquiryForm: React.FC<PMEnquiryFormProps> = ({ defaultProduct }) 
                         className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#163e61]"
                         required
                       />
+                      <p className="text-[10px] text-slate-500 mt-0.5">Standard MOQ: {moqInfo}</p>
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">
-                        Unit
+                        Packaging Unit
                       </label>
                       <input
                         type="text"
@@ -157,12 +171,12 @@ export const PMEnquiryForm: React.FC<PMEnquiryFormProps> = ({ defaultProduct }) 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">
-                        Your Name / Institution <span className="text-red-500">*</span>
+                        Your Name / Stockist / Firm Name <span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
                         <input
                           type="text"
-                          placeholder="e.g. Dr. Rajesh Sharma / Apollo Hospital"
+                          placeholder="e.g. Dr. Rajesh Sharma / MediLife Agency"
                           value={name}
                           onChange={(e) => setName(e.target.value)}
                           className="w-full pl-8 pr-3 py-2 text-xs rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#163e61]"
@@ -174,7 +188,7 @@ export const PMEnquiryForm: React.FC<PMEnquiryFormProps> = ({ defaultProduct }) 
 
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">
-                        Mobile Number <span className="text-red-500">*</span>
+                        Contact Phone / Mobile <span className="text-red-500">*</span>
                       </label>
                       <div className="flex">
                         <span className="inline-flex items-center px-2.5 rounded-l-lg border border-r-0 border-slate-300 bg-slate-100 text-slate-600 text-xs font-bold">
@@ -195,12 +209,12 @@ export const PMEnquiryForm: React.FC<PMEnquiryFormProps> = ({ defaultProduct }) 
                   {/* Row 4: Email */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Email Address
+                      Email Address (Optional)
                     </label>
                     <div className="relative">
                       <input
                         type="email"
-                        placeholder="e.g. purchase@hospital.com"
+                        placeholder="e.g. enquiry@distributor.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="w-full pl-8 pr-3 py-2 text-xs rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#163e61]"
@@ -212,11 +226,11 @@ export const PMEnquiryForm: React.FC<PMEnquiryFormProps> = ({ defaultProduct }) 
                   {/* Row 5: Message */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Enquiry Details / Delivery Destination
+                      Enquiry Specifics / Distribution Region
                     </label>
                     <textarea
                       rows={3}
-                      placeholder="Please provide details such as target delivery state (e.g. Assam, Guwahati, Pan-India), timeline, or batch size..."
+                      placeholder="Specify your target distribution district (e.g. Assam, Guwahati, North-East, Pan-India), franchise interest, or batch requirement..."
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
                       className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#163e61]"
@@ -230,7 +244,7 @@ export const PMEnquiryForm: React.FC<PMEnquiryFormProps> = ({ defaultProduct }) 
                       className="bg-[#c72828] hover:bg-red-700 text-white font-bold text-xs px-6 py-2.5 rounded-lg shadow transition-colors flex items-center gap-2"
                     >
                       <Send className="w-3.5 h-3.5" />
-                      <span>Submit Requirement</span>
+                      <span>Submit MOQ Enquiry</span>
                     </button>
 
                     <button
@@ -239,7 +253,7 @@ export const PMEnquiryForm: React.FC<PMEnquiryFormProps> = ({ defaultProduct }) 
                       className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-2.5 rounded-lg shadow transition-colors flex items-center gap-2"
                     >
                       <MessageSquare className="w-3.5 h-3.5" />
-                      <span>Instant WhatsApp Quote</span>
+                      <span>Instant WhatsApp MOQ Quote</span>
                     </button>
                   </div>
 

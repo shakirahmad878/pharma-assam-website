@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Send, ShieldCheck, CheckCircle2, Package, Sparkles } from 'lucide-react';
+import { X, Send, ShieldCheck, CheckCircle2, Package, Sparkles, PackageCheck } from 'lucide-react';
 import { Product } from '../types';
 
 interface PMProductModalProps {
@@ -67,8 +67,9 @@ export const PMProductModal: React.FC<PMProductModalProps> = ({
                 <span className="bg-slate-100 text-slate-700 px-2.5 py-1 rounded font-medium">
                   Packaging: <strong>{product.packagingSize || product.packaging}</strong>
                 </span>
-                <span className="bg-slate-100 text-slate-700 px-2.5 py-1 rounded font-medium">
-                  Shelf Life: <strong>{product.shelfLife}</strong>
+                <span className="bg-red-50 text-[#c72828] border border-red-200 px-2.5 py-1 rounded font-bold flex items-center gap-1">
+                  <PackageCheck className="w-3.5 h-3.5" />
+                  MOQ: <strong>{product.moq}</strong>
                 </span>
               </div>
             </div>
@@ -145,7 +146,7 @@ export const PMProductModal: React.FC<PMProductModalProps> = ({
             className="bg-[#c72828] hover:bg-red-700 text-white text-xs font-bold px-6 py-2 rounded-lg shadow transition-colors flex items-center gap-1.5"
           >
             <Send className="w-3.5 h-3.5" />
-            <span>Send Requirement Enquiry</span>
+            <span>Inquire Product MOQ & Quotation</span>
           </button>
         </div>
 

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, Send, CheckCircle2, MessageSquare, Phone, User, Mail } from 'lucide-react';
+import { X, Send, CheckCircle2, MessageSquare, Phone, User, Mail, PackageCheck } from 'lucide-react';
 import { PRODUCTS } from '../data/products';
-import { COMPANY_CONFIG } from '../data/companyConfig';
 
 interface PMSendEnquiryModalProps {
   isOpen: boolean;
@@ -15,7 +14,9 @@ export const PMSendEnquiryModal: React.FC<PMSendEnquiryModalProps> = ({
   defaultProductName
 }) => {
   const [productName, setProductName] = useState(defaultProductName || PRODUCTS[0].name);
-  const [quantity, setQuantity] = useState(100);
+  const currentProduct = PRODUCTS.find(p => p.name === productName) || PRODUCTS[0];
+  
+  const [quantity, setQuantity] = useState(500);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -30,8 +31,8 @@ export const PMSendEnquiryModal: React.FC<PMSendEnquiryModalProps> = ({
 
   if (!isOpen) return null;
 
-  const currentProduct = PRODUCTS.find(p => p.name === productName) || PRODUCTS[0];
   const unit = currentProduct.unit || 'Pack';
+  const moq = currentProduct.moq || '500 Units';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +40,7 @@ export const PMSendEnquiryModal: React.FC<PMSendEnquiryModalProps> = ({
   };
 
   const handleWhatsApp = () => {
-    const text = `*Inquiry for ${productName}*\n*Quantity:* ${quantity} ${unit}\n*Name:* ${name || 'Prospective Buyer'}\n*Phone:* ${phone || 'N/A'}\n*Requirement:* ${message || 'Please share product quotation and availability.'}`;
+    const text = `*MOQ & Product Enquiry for ${productName}*\n*Standard MOQ:* ${moq}\n*Target Enquiry Quantity:* ${quantity} ${unit}\n*Name:* ${name || 'Prospective Partner'}\n*Phone:* ${phone || 'N/A'}\n*Notes:* ${message || 'Please share MOQ details and batch quotation.'}`;
     window.open(`https://wa.me/916001137678?text=${encodeURIComponent(text)}`, '_blank');
   };
 
@@ -58,9 +59,9 @@ export const PMSendEnquiryModal: React.FC<PMSendEnquiryModalProps> = ({
         <div className="bg-[#163e61] text-white px-6 py-4 flex items-center justify-between">
           <div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-red-300">
-              Progressive Molecules Pvt. Ltd.
+              Wholesale & Institutional Enquiry
             </span>
-            <h3 className="text-base font-bold">Send Instant Product Enquiry</h3>
+            <h3 className="text-base font-bold">Inquire MOQ & Product Quotation</h3>
           </div>
           <button
             onClick={resetAndClose}
@@ -78,10 +79,10 @@ export const PMSendEnquiryModal: React.FC<PMSendEnquiryModalProps> = ({
                 <CheckCircle2 className="w-8 h-8" />
               </div>
               <h4 className="text-xl font-bold text-[#163e61]">
-                Enquiry Sent Successfully!
+                MOQ Enquiry Sent Successfully!
               </h4>
               <p className="text-xs text-slate-600">
-                Thank you for contacting Progressive Molecules Pvt. Ltd. We have received your requirement for <strong>{productName}</strong> and our team will get in touch shortly.
+                Thank you for inquiring about <strong>{productName}</strong>. Our distribution team will review your target quantity of <strong>{quantity} {unit}</strong> (Standard MOQ: {moq}) and contact you with wholesale pricing.
               </p>
               <div className="pt-2 flex flex-col sm:flex-row justify-center gap-2">
                 <button
@@ -102,10 +103,18 @@ export const PMSendEnquiryModal: React.FC<PMSendEnquiryModalProps> = ({
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4 text-xs">
               
-              {/* Product */}
+              {/* Product Info Banner */}
+              <div className="bg-slate-50 border border-slate-200 p-2.5 rounded-lg flex items-center justify-between">
+                <span className="font-bold text-[#163e61]">{productName}</span>
+                <span className="text-[11px] font-bold text-[#c72828] bg-red-50 px-2 py-0.5 rounded border border-red-100">
+                  MOQ: {moq}
+                </span>
+              </div>
+
+              {/* Product Selector */}
               <div>
                 <label className="block font-bold text-slate-700 mb-1">
-                  Selected Formulation <span className="text-red-500">*</span>
+                  Product / Molecule <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={productName}
@@ -115,7 +124,7 @@ export const PMSendEnquiryModal: React.FC<PMSendEnquiryModalProps> = ({
                 >
                   {PRODUCTS.map(p => (
                     <option key={p.id} value={p.name}>
-                      {p.name} ({p.category})
+                      {p.name} ({p.category}) [MOQ: {p.moq}]
                     </option>
                   ))}
                 </select>
@@ -125,7 +134,7 @@ export const PMSendEnquiryModal: React.FC<PMSendEnquiryModalProps> = ({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-slate-700 mb-1">
-                    Quantity <span className="text-red-500">*</span>
+                    Enquiry Quantity <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -151,12 +160,12 @@ export const PMSendEnquiryModal: React.FC<PMSendEnquiryModalProps> = ({
               <div className="space-y-3">
                 <div>
                   <label className="block font-bold text-slate-700 mb-1">
-                    Your Name / Pharmacy Name <span className="text-red-500">*</span>
+                    Your Name / Pharmacy / Stockist Name <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <input
                       type="text"
-                      placeholder="e.g. Dr. Rajesh Kumar"
+                      placeholder="e.g. Dr. Rajesh Kumar / City Chemist"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       className="w-full pl-8 pr-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#163e61]"
@@ -187,7 +196,7 @@ export const PMSendEnquiryModal: React.FC<PMSendEnquiryModalProps> = ({
 
                 <div>
                   <label className="block font-bold text-slate-700 mb-1">
-                    Email Address
+                    Email Address (Optional)
                   </label>
                   <div className="relative">
                     <input
@@ -203,11 +212,11 @@ export const PMSendEnquiryModal: React.FC<PMSendEnquiryModalProps> = ({
 
                 <div>
                   <label className="block font-bold text-slate-700 mb-1">
-                    Requirement Notes / Destination
+                    Target Region / Specific Requirements
                   </label>
                   <textarea
                     rows={2}
-                    placeholder="Delivery location (e.g. Assam, Mumbai, etc.), urgency, or packaging request..."
+                    placeholder="Region of distribution (e.g. Assam, Mumbai, etc.), PCD interest, or batch inquiries..."
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#163e61]"
@@ -229,7 +238,7 @@ export const PMSendEnquiryModal: React.FC<PMSendEnquiryModalProps> = ({
                   className="bg-[#c72828] hover:bg-red-700 text-white font-bold px-5 py-2 rounded-lg shadow transition-colors flex items-center gap-1.5"
                 >
                   <Send className="w-3.5 h-3.5" />
-                  <span>Send Requirement</span>
+                  <span>Submit MOQ Enquiry</span>
                 </button>
               </div>
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, ShieldCheck, Award, ArrowRight, Send } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ShieldCheck, Award, ArrowRight, Send, PackageCheck } from 'lucide-react';
 import { PRODUCTS } from '../data/products';
 import { Product } from '../types';
 
@@ -14,7 +14,7 @@ export const PMHeroSlider: React.FC<PMHeroSliderProps> = ({
   onOpenEnquiry,
   onNavigate
 }) => {
-  // We showcase 5 featured products from the catalog
+  // We showcase 6 featured products from the catalog
   const featuredIds = [
     'rabefill-dsr-capsules',
     'lycoreach-syrup',
@@ -27,7 +27,7 @@ export const PMHeroSlider: React.FC<PMHeroSliderProps> = ({
   const slides = PRODUCTS.filter(p => featuredIds.includes(p.id));
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  // Auto slide rotation every 5 seconds
+  // Auto slide rotation every 5.5 seconds
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide(prev => (prev + 1) % slides.length);
@@ -85,15 +85,18 @@ export const PMHeroSlider: React.FC<PMHeroSliderProps> = ({
               </p>
             </div>
 
-            {/* Key Specs Matrix */}
+            {/* Key Specs Matrix with MOQ */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
-              <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
-                <p className="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Dosage Form</p>
-                <p className="text-sm font-bold text-slate-800">{current.dosageForm}</p>
-              </div>
               <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
                 <p className="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Packaging Size</p>
                 <p className="text-sm font-bold text-slate-800">{current.packagingSize || current.packaging}</p>
+              </div>
+              <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+                <p className="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Standard MOQ</p>
+                <p className="text-sm font-extrabold text-[#c72828] flex items-center gap-1">
+                  <PackageCheck className="w-3.5 h-3.5" />
+                  {current.moq}
+                </p>
               </div>
               <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm col-span-2 sm:col-span-1">
                 <p className="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Standard</p>
@@ -114,7 +117,7 @@ export const PMHeroSlider: React.FC<PMHeroSliderProps> = ({
                 className="bg-[#c72828] hover:bg-red-700 text-white font-bold text-sm px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition-all flex items-center gap-2"
               >
                 <Send className="w-4 h-4" />
-                <span>Enquiry Now</span>
+                <span>Inquire MOQ & Quotation</span>
               </button>
 
               <button
@@ -158,7 +161,7 @@ export const PMHeroSlider: React.FC<PMHeroSliderProps> = ({
               <div className="w-full mt-4 pt-3 border-t border-slate-100 text-center">
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">{current.category}</p>
                 <p className="text-base font-extrabold text-[#163e61] group-hover:text-[#c72828] transition-colors">{current.name}</p>
-                <p className="text-xs text-slate-500 mt-1">{current.packaging}</p>
+                <p className="text-xs text-[#c72828] font-bold mt-1">Minimum Order Qty: {current.moq}</p>
               </div>
             </div>
 
@@ -166,7 +169,7 @@ export const PMHeroSlider: React.FC<PMHeroSliderProps> = ({
 
         </div>
 
-        {/* Carousel Slider Controls (Left/Right & Indicators) */}
+        {/* Carousel Slider Controls */}
         <div className="mt-8 flex items-center justify-between border-t border-slate-200/60 pt-4">
           
           {/* Slide Indicator Dots & Titles */}

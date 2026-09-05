@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Send, Eye, Search, Filter } from 'lucide-react';
+import { Send, Eye, Search, Filter, PackageCheck } from 'lucide-react';
 import { PRODUCTS, CATEGORIES } from '../data/products';
 import { Product, ProductCategory } from '../types';
 
@@ -45,7 +45,7 @@ export const PMProductCatalog: React.FC<PMProductCatalogProps> = ({
               Latest Products & Formulations
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 mt-1">
-              Explore our verified pharmaceutical product portfolio available for direct supply & ethical franchise distribution.
+              Explore our verified pharmaceutical product portfolio. Submit an MOQ enquiry for batch supply and distribution pricing.
             </p>
           </div>
 
@@ -140,7 +140,7 @@ export const PMProductCatalog: React.FC<PMProductCatalogProps> = ({
                       {product.name}
                     </h3>
 
-                    {/* Structured Specs Table (Exact replica of progressivemolecules.in card table) */}
+                    {/* Structured Specs Table (Exact replica of progressivemolecules.in card table with explicit MOQ) */}
                     <div className="space-y-1.5 text-xs border-t border-slate-100 pt-2.5">
                       <div className="grid grid-cols-12 gap-1 text-[11px]">
                         <span className="col-span-5 text-slate-500 font-semibold">Composition:</span>
@@ -164,9 +164,9 @@ export const PMProductCatalog: React.FC<PMProductCatalogProps> = ({
                       </div>
 
                       <div className="grid grid-cols-12 gap-1 text-[11px]">
-                        <span className="col-span-5 text-slate-500 font-semibold">Form:</span>
-                        <span className="col-span-7 font-medium text-slate-800">
-                          {product.form || product.dosageForm}
+                        <span className="col-span-5 text-slate-500 font-semibold">Standard MOQ:</span>
+                        <span className="col-span-7 font-bold text-[#c72828]">
+                          {product.moq}
                         </span>
                       </div>
                     </div>
@@ -180,7 +180,7 @@ export const PMProductCatalog: React.FC<PMProductCatalogProps> = ({
                     className="bg-[#c72828] hover:bg-red-700 text-white text-xs font-bold py-2 px-3 rounded-lg shadow-sm hover:shadow transition-colors flex items-center justify-center gap-1.5"
                   >
                     <Send className="w-3.5 h-3.5" />
-                    <span>Enquiry Now</span>
+                    <span>Inquire MOQ</span>
                   </button>
 
                   <button
