@@ -21,11 +21,11 @@ export interface CompanyConfig {
 }
 
 export const COMPANY_CONFIG: CompanyConfig = {
-  name: 'Pharma Assam Laboratories',
-  shortName: 'Pharma Assam',
+  name: '[PHARMA COMPANY NAME]',
+  shortName: '[PHARMA COMPANY NAME]',
   tagline: 'Reliable Therapeutic Formulations & Ethical Distribution',
   headline: 'Advancing Healthcare Through Quality Pharmaceutical Formulations.',
-  subheadline: 'Pharma Assam Laboratories is a dedicated pharmaceutical manufacturer and distributor supplying high-efficacy Oral Solid Dosages, Softgel Capsules, Digestive & Nutritional Syrups, and Sterile Injectables across hospital formularies, stockists, and medical institutions in Assam and the North-East.',
+  subheadline: 'A dedicated pharmaceutical manufacturer and distributor supplying high-efficacy Oral Solid Dosages, Softgel Capsules, Digestive & Nutritional Syrups, and Sterile Injectables across hospital formularies, stockists, and medical institutions in Assam and the North-East.',
   missionStatement: '"To empower clinical practice and patient health with therapeutically proven, strictly quality-tested pharmaceutical formulations delivered through transparent ethical partnerships."',
   corporateStory: 'Established to provide reliable, therapeutic-grade medicines conforming strictly to Indian Pharmacopoeia (IP) and World Health Organization (WHO-GMP) standards. Operating with robust distribution infrastructure and authorized supply hubs across Guwahati and the entire Assam & North-East region.',
   yearsOfExperience: 'Established & Trusted',
@@ -39,11 +39,11 @@ export const COMPANY_CONFIG: CompanyConfig = {
     'ISO 9001:2015 Quality Systems',
     'Assam Regional Supply Network'
   ],
-  headquarters: 'Guwahati, Assam, India',
-  registeredAddress: 'Industrial Area, Guwahati, Assam – 781001, India',
-  email: 'info@pharmaassam.in',
-  phone: '+91 94350 00000',
-  registrationNumber: 'Regd. DCA / Drug License Active',
+  headquarters: 'Guwahati, Assam [CENTRAL DEPOT]',
+  registeredAddress: '[REGISTERED OFFICE & CENTRAL DEPOT, GUWAHATI, ASSAM - 781001]',
+  email: '[OFFICIAL COMPANY EMAIL]',
+  phone: '[ASSAM TRADE HELPLINE / CONTACT]',
+  registrationNumber: 'DL / GST: [ASSAM DRUG LICENSE & GST NO]',
   operatingHours: 'Monday – Saturday: 09:30 – 18:30 IST',
-  directors: 'Authorized Management Board'
+  directors: '[AUTHORIZED DIRECTORS & MANAGEMENT]'
 };

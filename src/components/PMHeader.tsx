@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, ChevronDown, Menu, X, ArrowRight, Pill } from 'lucide-react';
+import { Search, ChevronDown, Menu, X, ArrowRight, Building2 } from 'lucide-react';
 import { PRODUCTS } from '../data/products';
 import { COMPANY_CONFIG } from '../data/companyConfig';
 import { Product } from '../types';
@@ -34,7 +34,6 @@ export const PMHeader: React.FC<PMHeaderProps> = ({
     p.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Close search dropdown on click outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
@@ -63,17 +62,22 @@ export const PMHeader: React.FC<PMHeaderProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20 gap-4">
           
-          {/* Company Brand Logo & Title */}
-          <div className="flex items-center gap-3 flex-shrink-0 cursor-pointer" onClick={() => handleNavClick('home')}>
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[#c72828] to-[#163e61] flex items-center justify-center text-white shadow-md p-2">
-              <Pill className="w-7 h-7" />
+          {/* Company Brand Logo & Title (Exact match to screenshot) */}
+          <div className="flex items-center gap-3.5 flex-shrink-0 cursor-pointer" onClick={() => handleNavClick('home')}>
+            <div className="w-11 h-11 rounded-xl bg-[#0b1e33] flex items-center justify-center text-[#00e5c9] shadow-md">
+              <Building2 className="w-6 h-6" />
             </div>
             <div>
-              <div className="text-xl sm:text-2xl font-black tracking-tight text-[#163e61] leading-tight">
-                {COMPANY_CONFIG.shortName} <span className="text-[#c72828] text-lg font-bold">Laboratories</span>
+              <div className="flex items-center gap-2">
+                <span className="text-lg sm:text-xl font-black tracking-tight text-[#0b1e33]">
+                  {COMPANY_CONFIG.name}
+                </span>
+                <span className="text-[10px] font-bold text-slate-600 bg-slate-100 border border-slate-300 px-2 py-0.5 rounded tracking-wider uppercase">
+                  ASSAM REGIONAL
+                </span>
               </div>
-              <p className="text-[11px] text-slate-500 font-medium tracking-wide uppercase">
-                Assam Regional Formulations & Supply
+              <p className="text-[10.5px] text-slate-500 font-bold tracking-wider uppercase mt-0.5">
+                PHARMACEUTICAL MANUFACTURER & DISTRIBUTOR
               </p>
             </div>
           </div>
@@ -249,7 +253,6 @@ export const PMHeader: React.FC<PMHeaderProps> = ({
 
           {/* Quick Search & Mobile Toggle */}
           <div className="flex items-center gap-2" ref={searchRef}>
-            {/* Search Input Bar */}
             <div className="relative">
               <div className="flex items-center">
                 <input
@@ -261,7 +264,7 @@ export const PMHeader: React.FC<PMHeaderProps> = ({
                     setIsSearchDropdownOpen(true);
                   }}
                   onFocus={() => setIsSearchDropdownOpen(true)}
-                  className="w-36 sm:w-48 md:w-60 px-3 py-1.5 text-xs rounded-l-md border border-slate-300 focus:outline-none focus:ring-1 focus:ring-[#163e61] focus:border-[#163e61]"
+                  className="w-36 sm:w-48 md:w-60 px-3 py-1.5 text-xs rounded-l-md border border-slate-300 focus:outline-none focus:ring-1 focus:ring-[#0b1e33] focus:border-[#0b1e33]"
                 />
                 <button
                   onClick={() => {
@@ -269,7 +272,7 @@ export const PMHeader: React.FC<PMHeaderProps> = ({
                       setIsSearchDropdownOpen(true);
                     }
                   }}
-                  className="bg-[#163e61] text-white px-3 py-1.5 text-xs font-bold rounded-r-md hover:bg-slate-800 transition-colors flex items-center justify-center"
+                  className="bg-[#0b1e33] text-white px-3 py-1.5 text-xs font-bold rounded-r-md hover:bg-slate-800 transition-colors flex items-center justify-center"
                   title="Search"
                 >
                   <Search className="w-3.5 h-3.5" />
@@ -300,7 +303,7 @@ export const PMHeader: React.FC<PMHeaderProps> = ({
                               className="w-9 h-9 object-contain bg-white border border-slate-200 rounded p-0.5 flex-shrink-0"
                             />
                             <div className="flex-grow min-w-0">
-                              <p className="text-xs font-bold text-[#163e61] truncate">{product.name}</p>
+                              <p className="text-xs font-bold text-[#0b1e33] truncate">{product.name}</p>
                               <p className="text-[11px] text-slate-500 truncate">{product.category}</p>
                             </div>
                           </button>

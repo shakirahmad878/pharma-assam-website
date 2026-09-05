@@ -1,5 +1,5 @@
 import React from 'react';
-import { Phone, Mail, FileText, Send, MessageCircle } from 'lucide-react';
+import { ShieldCheck, MapPin, Send, MessageCircle } from 'lucide-react';
 import { COMPANY_CONFIG } from '../data/companyConfig';
 
 interface PMTopBarProps {
@@ -8,61 +8,45 @@ interface PMTopBarProps {
 
 export const PMTopBar: React.FC<PMTopBarProps> = ({ onOpenEnquiry }) => {
   return (
-    <div className="bg-[#c72828] text-white text-xs py-2 px-4 border-b border-red-700 select-none">
+    <div className="bg-[#0b1e33] text-white text-xs py-2 px-4 border-b border-slate-800 select-none">
       <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
-        {/* Left: Regulatory Info */}
-        <div className="flex items-center gap-4 flex-wrap">
-          <div className="flex items-center gap-1.5 font-bold tracking-wider uppercase bg-red-800/60 px-2.5 py-1 rounded">
-            <FileText className="w-3.5 h-3.5 text-red-200" />
+        
+        {/* Left: Exact Style from Screenshot: ShieldCheck + DL/GST + Dot + Location */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-1.5 font-bold tracking-tight text-[#00e5c9]">
+            <ShieldCheck className="w-4 h-4 text-[#00e5c9] flex-shrink-0" />
             <span>{COMPANY_CONFIG.registrationNumber}</span>
           </div>
-          <span className="hidden sm:inline-block text-red-200 font-medium">
-            Manufacturer & Regional Distributor of Quality Pharmaceuticals
-          </span>
+
+          <span className="text-slate-500 font-bold hidden sm:inline">•</span>
+
+          <div className="flex items-center gap-1.5 text-cyan-200 font-medium hidden sm:flex">
+            <MapPin className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" />
+            <span>Guwahati, Assam [CENTRAL DEPOT]</span>
+          </div>
         </div>
 
-        {/* Right: Phone, Email, Instant Enquiry & WhatsApp */}
-        <div className="flex items-center gap-4 flex-wrap">
-          <a 
-            href={`tel:${COMPANY_CONFIG.phone}`} 
-            className="flex items-center gap-1.5 hover:text-red-100 transition-colors font-semibold"
-            title="Helpline"
-          >
-            <Phone className="w-3.5 h-3.5 fill-current text-white" />
-            <span>{COMPANY_CONFIG.phone}</span>
-          </a>
-
-          <span className="hidden md:inline text-red-300">|</span>
-
-          <a 
-            href={`mailto:${COMPANY_CONFIG.email}`} 
-            className="hidden md:flex items-center gap-1.5 hover:text-red-100 transition-colors"
-            title="Email"
-          >
-            <Mail className="w-3.5 h-3.5 text-white" />
-            <span>{COMPANY_CONFIG.email}</span>
-          </a>
-
-          <span className="hidden md:inline text-red-300">|</span>
-
+        {/* Right: Quick Inquiries & WhatsApp */}
+        <div className="flex items-center gap-3 flex-wrap">
           <button
             onClick={onOpenEnquiry}
-            className="flex items-center gap-1 bg-white text-[#c72828] font-bold px-2.5 py-1 rounded shadow-sm hover:bg-slate-100 transition-colors"
+            className="flex items-center gap-1 bg-[#00e5c9] text-[#0b1e33] font-bold px-2.5 py-1 rounded shadow-sm hover:bg-cyan-300 transition-colors text-xs"
           >
             <Send className="w-3 h-3" />
             <span>MOQ Enquiry</span>
           </button>
 
           <a
-            href={`https://wa.me/?text=${encodeURIComponent(`Hello ${COMPANY_CONFIG.name}, I would like to inquire about your pharmaceutical product MOQ.`)}`}
+            href="https://wa.me/?text=Hello,%20I%20would%20like%20to%20inquire%20about%20your%20pharmaceutical%20product%20MOQ."
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2.5 py-1 rounded shadow-sm transition-colors"
+            className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2.5 py-1 rounded shadow-sm transition-colors text-xs"
           >
             <MessageCircle className="w-3 h-3" />
             <span className="hidden sm:inline">WhatsApp</span>
           </a>
         </div>
+
       </div>
     </div>
   );
