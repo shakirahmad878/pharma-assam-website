@@ -1,37 +1,25 @@
 import React, { useState } from 'react';
-import { EditorialNavbar } from './components/EditorialNavbar';
-import { BoldHero } from './components/BoldHero';
-import { CleanTrustStrip } from './components/CleanTrustStrip';
-import { EditorialAbout } from './components/EditorialAbout';
-import { InteractiveBatchCalculator } from './components/InteractiveBatchCalculator';
-import { EditorialCatalog } from './components/EditorialCatalog';
-import { EditorialCleanroom } from './components/EditorialCleanroom';
-import { EditorialQualityLab } from './components/EditorialQualityLab';
-import { RegionalAssamNetwork } from './components/RegionalAssamNetwork';
-import { EditorialComparison } from './components/EditorialComparison';
-import { EditorialVisualAid } from './components/EditorialVisualAid';
-import { EditorialContact } from './components/EditorialContact';
-import { EnterpriseFooter } from './components/EnterpriseFooter';
-import { ProductDetailModal } from './components/ProductDetailModal';
-import { EnquiryModal } from './components/EnquiryModal';
-import { SearchModal } from './components/SearchModal';
-import { LiveRfqCartDrawer, RfqItem } from './components/LiveRfqCartDrawer';
+import { PMTopBar } from './components/PMTopBar';
+import { PMHeader } from './components/PMHeader';
+import { PMHeroSlider } from './components/PMHeroSlider';
+import { PMCategoryShowcase } from './components/PMCategoryShowcase';
+import { PMProductCatalog } from './components/PMProductCatalog';
+import { PMAboutSection } from './components/PMAboutSection';
+import { PMFlipbook } from './components/PMFlipbook';
+import { PMEnquiryForm } from './components/PMEnquiryForm';
+import { PMContactSection } from './components/PMContactSection';
+import { PMFooter } from './components/PMFooter';
+import { PMProductModal } from './components/PMProductModal';
+import { PMSendEnquiryModal } from './components/PMSendEnquiryModal';
 import { PRODUCTS } from './data/products';
-import { Product } from './types';
+import { Product, ProductCategory } from './types';
 
 export function App() {
   const [activeSection, setActiveSection] = useState<string>('home');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [isEnquiryOpen, setIsEnquiryOpen] = useState<boolean>(false);
-  const [enquiryProductName, setEnquiryProductName] = useState<string>('');
-  const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
-  const [isRfqDrawerOpen, setIsRfqDrawerOpen] = useState<boolean>(false);
-  
-  // Interactive RFQ Requisition Cart State
-  const [rfqItems, setRfqItems] = useState<RfqItem[]>([
-    { product: PRODUCTS[0], quantity: 25000, unit: 'Softgel Capsules' },
-    { product: PRODUCTS[1], quantity: 50000, unit: 'Strips (Alu-Alu)' }
-  ]);
+  const [isEnquiryModalOpen, setIsEnquiryModalOpen] = useState<boolean>(false);
+  const [enquiryProductName, setEnquiryProductName] = useState<string>(PRODUCTS[0].name);
+  const [selectedCategory, setSelectedCategory] = useState<ProductCategory | 'All Products'>('All Products');
 
   const handleNavigate = (sectionId: string) => {
     setActiveSection(sectionId);
@@ -40,7 +28,7 @@ export function App() {
     } else {
       const el = document.getElementById(sectionId);
       if (el) {
-        const offset = 90;
+        const offset = 80;
         const bodyRect = document.body.getBoundingClientRect().top;
         const elementRect = el.getBoundingClientRect().top;
         const elementPosition = elementRect - bodyRect;
@@ -54,149 +42,92 @@ export function App() {
     }
   };
 
-  const handleOpenEnquiry = (productName?: string) => {
+  const handleOpenEnquiryModal = (productName?: string) => {
     setEnquiryProductName(productName || PRODUCTS[0].name);
-    setIsEnquiryOpen(true);
+    setIsEnquiryModalOpen(true);
   };
 
-  const handleAddToRfq = (product: Product) => {
-    setRfqItems((prev) => {
-      const existing = prev.find((item) => item.product.id === product.id);
-      if (existing) {
-        return prev.map((item) => 
-          item.product.id === product.id 
-            ? { ...item, quantity: item.quantity + 5000 }
-            : item
-        );
-      }
-      return [...prev, { product, quantity: 10000, unit: product.unit }];
-    });
-  };
-
-  const handleRemoveRfqItem = (productId: string) => {
-    setRfqItems((prev) => prev.filter((item) => item.product.id !== productId));
-  };
-
-  const handleUpdateRfqQuantity = (productId: string, quantity: number) => {
-    setRfqItems((prev) => 
-      prev.map((item) => 
-        item.product.id === productId ? { ...item, quantity } : item
-      )
-    );
-  };
-
-  const handleClearRfqCart = () => {
-    setRfqItems([]);
+  const handleSelectProduct = (product: Product) => {
+    setSelectedProduct(product);
   };
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 flex flex-col justify-between selection:bg-teal-700 selection:text-white font-sans antialiased">
+    <div className="min-h-screen bg-white text-slate-900 flex flex-col justify-between selection:bg-[#c72828] selection:text-white font-sans antialiased">
       
-      {/* 1. Header with Regulatory Registration & Language Selector */}
-      <EditorialNavbar
+      {/* 1. Official Red Top Bar (GST, Phone, Email, Quick Links) */}
+      <PMTopBar onOpenEnquiry={() => handleOpenEnquiryModal()} />
+
+      {/* 2. Official Corporate Header & Mega Dropdown Navigation */}
+      <PMHeader
         activeSection={activeSection}
         onNavigate={handleNavigate}
-        onOpenSearch={() => setIsSearchOpen(true)}
-        onOpenEnquiry={handleOpenEnquiry}
-        rfqCount={rfqItems.length}
-        onOpenRfqDrawer={() => setIsRfqDrawerOpen(true)}
+        onSelectProduct={handleSelectProduct}
+        onOpenEnquiry={handleOpenEnquiryModal}
       />
 
-      {/* Main Interactive Sections */}
+      {/* Main Content Sections */}
       <main className="flex-grow">
         
-        {/* 2. Bold Editorial Hero Section with Live Formulation Spotlight */}
+        {/* 3. Hero Showcase Slider (Featuring core formulations) */}
         <section id="home">
-          <BoldHero
+          <PMHeroSlider
+            onSelectProduct={handleSelectProduct}
+            onOpenEnquiry={handleOpenEnquiryModal}
             onNavigate={handleNavigate}
-            onOpenEnquiry={handleOpenEnquiry}
-            onOpenDetails={(p) => setSelectedProduct(p)}
-            onAddToRfq={handleAddToRfq}
           />
         </section>
 
-        {/* 3. Verified Regulatory Compliance Strip */}
-        <CleanTrustStrip />
-
-        {/* 4. Corporate Governance & Verified Track Record */}
-        <EditorialAbout 
+        {/* 4. Product Categories Showcase (Capsules, Syrups, Tablets, Injectable) */}
+        <PMCategoryShowcase
+          onSelectCategory={(cat) => setSelectedCategory(cat)}
           onNavigate={handleNavigate}
-          onOpenEnquiry={handleOpenEnquiry}
         />
 
-        {/* 5. Interactive Batch Sizing & Formulation Studio */}
-        <InteractiveBatchCalculator 
-          onOpenEnquiry={handleOpenEnquiry}
-          onAddToRfq={handleAddToRfq}
+        {/* 5. Full Product Catalog Directory (10 Formulations) */}
+        <PMProductCatalog
+          selectedCategory={selectedCategory}
+          onSelectCategory={(cat) => setSelectedCategory(cat)}
+          onSelectProduct={handleSelectProduct}
+          onOpenEnquiry={handleOpenEnquiryModal}
         />
 
-        {/* 6. Standardized Product Directory & Filter Matrix */}
-        <EditorialCatalog
-          onOpenDetails={(p) => setSelectedProduct(p)}
-          onOpenEnquiry={handleOpenEnquiry}
-          onAddToRfq={handleAddToRfq}
+        {/* 6. Official About Us & Factsheet Section */}
+        <PMAboutSection
+          onOpenEnquiry={() => handleOpenEnquiryModal()}
+          onNavigate={handleNavigate}
         />
 
-        {/* 7. Cleanroom Facility & Environmental Telemetry HUD */}
-        <EditorialCleanroom 
-          onOpenEnquiry={handleOpenEnquiry}
+        {/* 7. Clinical Flipbook / Visual Aid Viewer */}
+        <PMFlipbook
+          onOpenEnquiry={handleOpenEnquiryModal}
+          onSelectProduct={handleSelectProduct}
         />
 
-        {/* 8. cGLP Analytical Testing Lab with HPLC & Dissolution Simulators */}
-        <EditorialQualityLab 
-          onOpenEnquiry={handleOpenEnquiry}
-        />
+        {/* 8. Quick Requirement / Direct Enquiry Form */}
+        <PMEnquiryForm defaultProduct={enquiryProductName} />
 
-        {/* 9. Assam & North-East Regional Distribution Network */}
-        <RegionalAssamNetwork 
-          onOpenEnquiry={handleOpenEnquiry}
-        />
-
-        {/* 10. Institutional Sourcing Why Partner & Comparison Table */}
-        <EditorialComparison 
-          onOpenEnquiry={handleOpenEnquiry}
-        />
-
-        {/* 11. Digital Medical Representative Visual Monograph */}
-        <EditorialVisualAid
-          onOpenEnquiry={handleOpenEnquiry}
-          onAddToRfq={handleAddToRfq}
-        />
-
-        {/* 12. Direct Institutional RFP/RFQ Portal */}
-        <EditorialContact />
+        {/* 9. Official Contact Details, Registered Address & Map */}
+        <PMContactSection />
 
       </main>
 
-      {/* 13. Luxury Corporate Footer */}
-      <EnterpriseFooter onNavigate={handleNavigate} />
+      {/* 10. Official Footer */}
+      <PMFooter
+        onNavigate={handleNavigate}
+        onSelectCategory={(cat) => setSelectedCategory(cat)}
+      />
 
-      {/* Interactive Modals & Slide-Out Drawers */}
-      <ProductDetailModal
+      {/* Modals */}
+      <PMProductModal
         product={selectedProduct}
         onClose={() => setSelectedProduct(null)}
-        onOpenEnquiry={handleOpenEnquiry}
+        onOpenEnquiry={handleOpenEnquiryModal}
       />
 
-      <EnquiryModal
-        isOpen={isEnquiryOpen}
-        onClose={() => setIsEnquiryOpen(false)}
+      <PMSendEnquiryModal
+        isOpen={isEnquiryModalOpen}
+        onClose={() => setIsEnquiryModalOpen(false)}
         defaultProductName={enquiryProductName}
-      />
-
-      <SearchModal
-        isOpen={isSearchOpen}
-        onClose={() => setIsSearchOpen(false)}
-        onSelectProduct={(p) => setSelectedProduct(p)}
-      />
-
-      <LiveRfqCartDrawer
-        isOpen={isRfqDrawerOpen}
-        onClose={() => setIsRfqDrawerOpen(false)}
-        items={rfqItems}
-        onRemoveItem={handleRemoveRfqItem}
-        onUpdateQuantity={handleUpdateRfqQuantity}
-        onClearCart={handleClearRfqCart}
       />
 
     </div>
