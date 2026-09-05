@@ -28,7 +28,7 @@ export const PMEnquiryForm: React.FC<PMEnquiryFormProps> = ({ defaultProduct }) 
 
   const handleWhatsAppInquiry = () => {
     const text = `*MOQ & Product Enquiry for ${selectedProductName}*\n*Standard MOQ:* ${moqInfo}\n*Target Enquiry Quantity:* ${quantity} ${unit}\n*Name:* ${name || 'Prospective Partner'}\n*Phone:* ${phone || 'N/A'}\n*Email:* ${email || 'N/A'}\n*Enquiry Notes:* ${message || 'Please provide MOQ details, batch quotation, and distributor terms.'}`;
-    window.open(`https://wa.me/916001137678?text=${encodeURIComponent(text)}`, '_blank');
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   return (

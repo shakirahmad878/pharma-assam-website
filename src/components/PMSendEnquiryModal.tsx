@@ -41,7 +41,7 @@ export const PMSendEnquiryModal: React.FC<PMSendEnquiryModalProps> = ({
 
   const handleWhatsApp = () => {
     const text = `*MOQ & Product Enquiry for ${productName}*\n*Standard MOQ:* ${moq}\n*Target Enquiry Quantity:* ${quantity} ${unit}\n*Name:* ${name || 'Prospective Partner'}\n*Phone:* ${phone || 'N/A'}\n*Notes:* ${message || 'Please share MOQ details and batch quotation.'}`;
-    window.open(`https://wa.me/916001137678?text=${encodeURIComponent(text)}`, '_blank');
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   const resetAndClose = () => {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pill, Phone, Mail, MapPin, Globe, ChevronRight } from 'lucide-react';
+import { Pill, Phone, Mail, MapPin, ChevronRight } from 'lucide-react';
 import { COMPANY_CONFIG } from '../data/companyConfig';
 import { CATEGORIES } from '../data/products';
 import { ProductCategory } from '../types';
@@ -31,10 +31,10 @@ export const PMFooter: React.FC<PMFooterProps> = ({
             </div>
             <div>
               <p className="text-base font-bold tracking-tight text-white">
-                Progressive Molecules Pvt. Ltd.
+                {COMPANY_CONFIG.name}
               </p>
               <p className="text-[11px] text-slate-400">
-                GST NO. : {COMPANY_CONFIG.registrationNumber.replace('GST: ', '')}
+                {COMPANY_CONFIG.registrationNumber}
               </p>
             </div>
           </div>
@@ -57,7 +57,7 @@ export const PMFooter: React.FC<PMFooterProps> = ({
             </a>
 
             <div className="bg-slate-800/80 px-3 py-1.5 rounded text-slate-400 font-mono text-[11px]">
-              Visitor No. : 162,747
+              Assam Regional Portal
             </div>
           </div>
 
@@ -71,13 +71,13 @@ export const PMFooter: React.FC<PMFooterProps> = ({
           {/* Col 1: Corporate Overview */}
           <div className="space-y-3">
             <h4 className="text-sm font-bold text-white uppercase tracking-wider border-b border-red-500 pb-1.5 inline-block">
-              About Progressive Molecules
+              About {COMPANY_CONFIG.shortName}
             </h4>
             <p className="text-slate-300 leading-relaxed text-xs">
-              Progressive Molecules Pvt. Ltd. is a thriving manufacturer and supplier of pharmaceutical capsules, syrups, tablets, and injectables conforming strictly to IP/USP pharmacopoeial monographs and WHO-GMP standards.
+              {COMPANY_CONFIG.subheadline}
             </p>
             <p className="text-slate-400 text-[11px]">
-              Distributing across Assam, North-East, Maharashtra, and Pan-India.
+              Distributing across Assam and North-East healthcare institutions.
             </p>
           </div>
 
@@ -120,7 +120,7 @@ export const PMFooter: React.FC<PMFooterProps> = ({
                   className="hover:text-red-400 transition-colors flex items-center gap-1"
                 >
                   <ChevronRight className="w-3 h-3 text-red-400" />
-                  <span>Flipbook / Visual Aid</span>
+                  <span>Visual Aid / Monograph</span>
                 </button>
               </li>
               <li>
@@ -158,21 +158,15 @@ export const PMFooter: React.FC<PMFooterProps> = ({
           {/* Col 4: Registered Address & Details */}
           <div className="space-y-3">
             <h4 className="text-sm font-bold text-white uppercase tracking-wider border-b border-red-500 pb-1.5 inline-block">
-              Contact Address
+              Regional Depot & Office
             </h4>
             <div className="space-y-2 text-slate-300">
               <div className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
                 <span className="leading-relaxed">{COMPANY_CONFIG.registeredAddress}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Globe className="w-4 h-4 text-red-400 flex-shrink-0" />
-                <a href="https://www.progressivemolecules.in" target="_blank" rel="noopener noreferrer" className="hover:underline">
-                  www.progressivemolecules.in
-                </a>
-              </div>
               <div className="pt-2 text-[11px] text-slate-400">
-                Authorized Directors: Mrs. Anupriya Deb, Sandeep Kumar Mollick, Priya Banik
+                Operating Hours: {COMPANY_CONFIG.operatingHours}
               </div>
             </div>
           </div>
@@ -183,7 +177,7 @@ export const PMFooter: React.FC<PMFooterProps> = ({
       {/* Copyright Bar */}
       <div className="bg-[#070e17] py-4 border-t border-slate-800 text-center text-slate-400 text-[11px]">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p>© {new Date().getFullYear()} Progressive Molecules Pvt. Ltd. All Rights Reserved.</p>
+          <p>© {new Date().getFullYear()} {COMPANY_CONFIG.name}. All Rights Reserved.</p>
           <p className="text-slate-500">
             Compliant with Drugs & Cosmetics Act and Indian Pharmacopoeia Standards.
           </p>

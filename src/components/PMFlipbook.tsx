@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { BookOpen, ChevronLeft, ChevronRight, Maximize2, Send, CheckCircle2 } from 'lucide-react';
+import { BookOpen, ChevronLeft, ChevronRight, Send, CheckCircle2 } from 'lucide-react';
 import { PRODUCTS } from '../data/products';
+import { COMPANY_CONFIG } from '../data/companyConfig';
 import { Product } from '../types';
 
 interface PMFlipbookProps {
@@ -34,10 +35,10 @@ export const PMFlipbook: React.FC<PMFlipbookProps> = ({
             Digital Visual Aid
           </span>
           <h2 className="mt-3 text-2xl sm:text-3xl md:text-4xl font-black text-[#163e61] tracking-tight">
-            Medical Monograph & Flipbook
+            Medical Monograph & Visual Aid
           </h2>
           <p className="mt-2 text-xs sm:text-sm text-slate-600">
-            Interactive clinical visual aid for doctors, medical representatives, and authorized stockists.
+            Clinical visual aid for doctors, medical representatives, and authorized stockists.
           </p>
         </div>
 
@@ -48,7 +49,7 @@ export const PMFlipbook: React.FC<PMFlipbookProps> = ({
           <div className="bg-[#163e61] text-white px-6 py-3 flex items-center justify-between text-xs font-semibold">
             <div className="flex items-center gap-2">
               <BookOpen className="w-4 h-4 text-red-400" />
-              <span>Progressive Molecules Product Visual Monograph</span>
+              <span>{COMPANY_CONFIG.shortName} Product Visual Monograph</span>
             </div>
             <div className="flex items-center gap-3">
               <span className="bg-white/20 px-2.5 py-0.5 rounded text-[11px]">
@@ -73,7 +74,7 @@ export const PMFlipbook: React.FC<PMFlipbookProps> = ({
                 <span className="text-[11px] font-bold text-[#c72828] uppercase tracking-wider">
                   {currentProduct.category}
                 </span>
-                <p className="text-xs text-slate-500 font-medium">Packaging: {currentProduct.packagingSize || currentProduct.packaging}</p>
+                <p className="text-xs text-slate-500 font-medium">Packaging: {currentProduct.packagingSize || currentProduct.packaging} | MOQ: {currentProduct.moq}</p>
               </div>
             </div>
 
@@ -116,7 +117,7 @@ export const PMFlipbook: React.FC<PMFlipbookProps> = ({
                   className="bg-[#c72828] hover:bg-red-700 text-white font-bold text-xs px-5 py-2.5 rounded-lg shadow transition-colors flex items-center gap-1.5"
                 >
                   <Send className="w-3.5 h-3.5" />
-                  <span>Enquire for {currentProduct.name.split(' ')[0]}</span>
+                  <span>Inquire MOQ for {currentProduct.name.split(' ')[0]}</span>
                 </button>
                 <button
                   onClick={() => onSelectProduct(currentProduct)}

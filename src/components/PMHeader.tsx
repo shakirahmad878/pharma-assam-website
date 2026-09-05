@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, ChevronDown, Menu, X, ArrowRight, Pill } from 'lucide-react';
 import { PRODUCTS } from '../data/products';
+import { COMPANY_CONFIG } from '../data/companyConfig';
 import { Product } from '../types';
 
 interface PMHeaderProps {
@@ -69,10 +70,10 @@ export const PMHeader: React.FC<PMHeaderProps> = ({
             </div>
             <div>
               <div className="text-xl sm:text-2xl font-black tracking-tight text-[#163e61] leading-tight">
-                Progressive Molecules <span className="text-[#c72828] text-lg font-bold">Pvt. Ltd.</span>
+                {COMPANY_CONFIG.shortName} <span className="text-[#c72828] text-lg font-bold">Laboratories</span>
               </div>
               <p className="text-[11px] text-slate-500 font-medium tracking-wide uppercase">
-                Pharmaceutical Manufacturer & Supplier
+                Assam Regional Formulations & Supply
               </p>
             </div>
           </div>
@@ -375,7 +376,7 @@ export const PMHeader: React.FC<PMHeaderProps> = ({
               }}
               className="w-full bg-[#c72828] text-white py-2.5 rounded-lg text-xs font-bold shadow hover:bg-red-700 transition-colors"
             >
-              Send Requirement Enquiry
+              Submit MOQ Enquiry
             </button>
           </div>
         </div>

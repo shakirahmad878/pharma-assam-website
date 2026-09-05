@@ -10,14 +10,14 @@ export const PMTopBar: React.FC<PMTopBarProps> = ({ onOpenEnquiry }) => {
   return (
     <div className="bg-[#c72828] text-white text-xs py-2 px-4 border-b border-red-700 select-none">
       <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
-        {/* Left: GST & ISO Info */}
+        {/* Left: Regulatory Info */}
         <div className="flex items-center gap-4 flex-wrap">
           <div className="flex items-center gap-1.5 font-bold tracking-wider uppercase bg-red-800/60 px-2.5 py-1 rounded">
             <FileText className="w-3.5 h-3.5 text-red-200" />
-            <span>GST NO. : {COMPANY_CONFIG.registrationNumber.replace('GST: ', '')}</span>
+            <span>{COMPANY_CONFIG.registrationNumber}</span>
           </div>
           <span className="hidden sm:inline-block text-red-200 font-medium">
-            Manufacturer & Supplier of Quality Pharmaceuticals
+            Manufacturer & Regional Distributor of Quality Pharmaceuticals
           </span>
         </div>
 
@@ -26,7 +26,7 @@ export const PMTopBar: React.FC<PMTopBarProps> = ({ onOpenEnquiry }) => {
           <a 
             href={`tel:${COMPANY_CONFIG.phone}`} 
             className="flex items-center gap-1.5 hover:text-red-100 transition-colors font-semibold"
-            title="Call Progressive Molecules"
+            title="Helpline"
           >
             <Phone className="w-3.5 h-3.5 fill-current text-white" />
             <span>{COMPANY_CONFIG.phone}</span>
@@ -37,7 +37,7 @@ export const PMTopBar: React.FC<PMTopBarProps> = ({ onOpenEnquiry }) => {
           <a 
             href={`mailto:${COMPANY_CONFIG.email}`} 
             className="hidden md:flex items-center gap-1.5 hover:text-red-100 transition-colors"
-            title="Email Progressive Molecules"
+            title="Email"
           >
             <Mail className="w-3.5 h-3.5 text-white" />
             <span>{COMPANY_CONFIG.email}</span>
@@ -50,11 +50,11 @@ export const PMTopBar: React.FC<PMTopBarProps> = ({ onOpenEnquiry }) => {
             className="flex items-center gap-1 bg-white text-[#c72828] font-bold px-2.5 py-1 rounded shadow-sm hover:bg-slate-100 transition-colors"
           >
             <Send className="w-3 h-3" />
-            <span>Send Enquiry</span>
+            <span>MOQ Enquiry</span>
           </button>
 
           <a
-            href={`https://wa.me/916001137678?text=${encodeURIComponent('Hello Progressive Molecules Pvt. Ltd., I would like to inquire about your pharmaceutical products.')}`}
+            href={`https://wa.me/?text=${encodeURIComponent(`Hello ${COMPANY_CONFIG.name}, I would like to inquire about your pharmaceutical product MOQ.`)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2.5 py-1 rounded shadow-sm transition-colors"

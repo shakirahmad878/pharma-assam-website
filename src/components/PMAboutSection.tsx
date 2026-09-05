@@ -12,21 +12,21 @@ export const PMAboutSection: React.FC<PMAboutSectionProps> = ({
   onNavigate
 }) => {
   const companyProfileRows = [
-    { label: 'Nature of Business', value: 'Manufacturer & Supplier' },
-    { label: 'Number of Employees', value: '10+ Industry Professionals' },
-    { label: 'Year of Establishment', value: '2023' },
-    { label: 'Market Covered', value: 'Assam, North-East & Pan-India' },
-    { label: 'Name of Directors', value: '1. Mrs. Anupriya Deb | 2. Sandeep Kumar Mollick | 3. Priya Banik' },
-    { label: 'GST No', value: COMPANY_CONFIG.registrationNumber.replace('GST: ', '') },
-    { label: 'Legal Status of Firm', value: 'Private Limited Company (Limited by Shares)' },
-    { label: 'Registered Address', value: COMPANY_CONFIG.registeredAddress }
+    { label: 'Nature of Business', value: 'Manufacturer & Regional Supplier' },
+    { label: 'Operational Focus', value: 'Assam & North-East Healthcare' },
+    { label: 'Regulatory Compliance', value: 'WHO-GMP & State DCA Standard' },
+    { label: 'Market Covered', value: COMPANY_CONFIG.marketsServed },
+    { label: 'Corporate Management', value: COMPANY_CONFIG.directors },
+    { label: 'Registration Status', value: COMPANY_CONFIG.registrationNumber },
+    { label: 'Quality Standards', value: 'IP / USP Monograph Compliance' },
+    { label: 'Headquarters & Depot', value: COMPANY_CONFIG.registeredAddress }
   ];
 
   return (
     <section id="about" className="py-16 bg-white border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
         
-        {/* Section 1: Official Corporate Narrative */}
+        {/* Section 1: Corporate Narrative */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
           
           <div className="lg:col-span-7 space-y-5">
@@ -38,15 +38,15 @@ export const PMAboutSection: React.FC<PMAboutSectionProps> = ({
             </div>
             
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-[#163e61] tracking-tight leading-tight">
-              Progressive Molecules <span className="text-[#c72828]">Pvt. Ltd.</span>
+              {COMPANY_CONFIG.name}
             </h2>
 
             <p className="text-sm sm:text-base text-slate-700 leading-relaxed font-medium">
-              <span className="font-bold text-[#163e61]">Progressive Molecules Pvt. Ltd.</span> is a thriving and prominent manufacturer and supplier of superior quality pharmaceutical products. We understand the clinical and therapeutic needs of patients and medical practitioners, focusing on delivering reliable therapeutic solutions to diverse conditions and infections.
+              <span className="font-bold text-[#163e61]">{COMPANY_CONFIG.name}</span> is a thriving and dedicated regional manufacturer and supplier of superior quality pharmaceutical products. We understand the medical needs of institutions and practitioners across Assam and the North-East, focusing on providing dependable therapeutic solutions at reasonable, partner-friendly rates.
             </p>
 
             <p className="text-sm text-slate-600 leading-relaxed">
-              We leverage innovative pharmaceutical research and technology to manufacture high-quality medicines. Sourcing superior grade active pharmaceutical ingredients (APIs) and raw materials from audited vendors, all products are manufactured under strict supervision of experienced professionals and distributed at competitive, customer-friendly rates.
+              We utilize advanced pharmaceutical manufacturing technologies and certified APIs sourced from audited vendors. All products are formulated under strict quality control, conforming to Indian Pharmacopoeia (IP) monographs and WHO-GMP compliance.
             </p>
 
             {/* Product Assurance & Distribution Highlight Boxes */}
@@ -57,17 +57,17 @@ export const PMAboutSection: React.FC<PMAboutSectionProps> = ({
                   <h4 className="font-bold text-sm text-[#163e61]">Product Assurance</h4>
                 </div>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  We manufacture pharmaceutical capsules, syrups, tablets, and injectables ensuring highest safety, purity, and efficacy. Stringent in-process and finished product quality checks safeguard patient compliance.
+                  We supply pharmaceutical capsules, syrups, tablets, and injectables ensuring highest clinical safety, purity, and bioavailability with certified stability.
                 </p>
               </div>
 
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
                 <div className="flex items-center gap-2 text-[#163e61]">
                   <Truck className="w-5 h-5 flex-shrink-0" />
-                  <h4 className="font-bold text-sm text-[#163e61]">Distribution Network</h4>
+                  <h4 className="font-bold text-sm text-[#163e61]">Regional Logistics Network</h4>
                 </div>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  We offer outstanding quality products throughout Assam, North-East, Maharashtra, and pan-India through dedicated channel partners, ensuring timely delivery within stipulated timeframes.
+                  Dedicated distribution hubs in Guwahati and authorized channel partners ensure rapid, temperature-controlled delivery across all Assam districts and neighboring regions.
                 </p>
               </div>
             </div>
@@ -77,19 +77,19 @@ export const PMAboutSection: React.FC<PMAboutSectionProps> = ({
                 onClick={onOpenEnquiry}
                 className="bg-[#c72828] hover:bg-red-700 text-white font-bold text-xs px-5 py-2.5 rounded-lg shadow transition-colors"
               >
-                Send Direct Requirement
+                Inquire Product MOQ
               </button>
               <button
                 onClick={() => onNavigate('contact')}
                 className="bg-[#163e61] hover:bg-slate-800 text-white font-bold text-xs px-5 py-2.5 rounded-lg shadow transition-colors"
               >
-                View Corporate Offices
+                View Regional Depot
               </button>
             </div>
 
           </div>
 
-          {/* Right Column: Company Factsheet Table (Direct Replica of progressivemolecules.in) */}
+          {/* Right Column: Company Factsheet Table */}
           <div className="lg:col-span-5">
             <div className="bg-slate-50 border-2 border-[#163e61]/20 rounded-2xl p-6 shadow-lg">
               
@@ -98,7 +98,7 @@ export const PMAboutSection: React.FC<PMAboutSectionProps> = ({
                   <Award className="w-5 h-5 text-[#c72828]" />
                   Company Profile & Factsheet
                 </h3>
-                <p className="text-xs text-slate-500">Official statutory & business details</p>
+                <p className="text-xs text-slate-500">Regional pharmaceutical details</p>
               </div>
 
               <div className="divide-y divide-slate-200 text-xs">
@@ -114,7 +114,7 @@ export const PMAboutSection: React.FC<PMAboutSectionProps> = ({
 
               <div className="mt-4 pt-3 border-t border-slate-200 text-center">
                 <span className="inline-block bg-emerald-100 text-emerald-800 text-[11px] font-bold px-3 py-1 rounded-full">
-                  ✓ Verified Corporate Entity & Active GST
+                  ✓ Verified Regional Supply & Regulatory Standard
                 </span>
               </div>
 
@@ -123,7 +123,7 @@ export const PMAboutSection: React.FC<PMAboutSectionProps> = ({
 
         </div>
 
-        {/* Section 2: Vision, Mission & Values (Exact replica of official site cards) */}
+        {/* Section 2: Vision, Mission & Values */}
         <div>
           <div className="text-center max-w-2xl mx-auto mb-8">
             <h3 className="text-xl sm:text-2xl font-black text-[#163e61]">
@@ -143,7 +143,7 @@ export const PMAboutSection: React.FC<PMAboutSectionProps> = ({
               </div>
               <h4 className="text-base font-bold text-[#163e61]">Our Vision</h4>
               <p className="text-xs text-slate-600 leading-relaxed">
-                To emerge as one of the most trusted and progressive pharmaceutical enterprises, delivering quality formulations that enrich patient health and clinical outcomes.
+                To emerge as one of the most trusted pharmaceutical partners in the region, delivering quality formulations that enrich patient health and clinical outcomes.
               </p>
             </div>
 
@@ -154,7 +154,7 @@ export const PMAboutSection: React.FC<PMAboutSectionProps> = ({
               </div>
               <h4 className="text-base font-bold text-[#163e61]">Our Mission</h4>
               <p className="text-xs text-slate-600 leading-relaxed">
-                To provide safe, efficacious, and affordable pharmaceutical products through strict regulatory adherence, continuous research, and reliable supply networks.
+                To provide safe, efficacious, and affordable pharmaceutical products through strict regulatory adherence, continuous research, and reliable regional supply.
               </p>
             </div>
 
@@ -165,7 +165,7 @@ export const PMAboutSection: React.FC<PMAboutSectionProps> = ({
               </div>
               <h4 className="text-base font-bold text-[#163e61]">Core Values</h4>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Uncompromising quality integrity, ethical commercial transparency, clinical reliability, and enduring commitment to patient care and partner success.
+                Uncompromising quality integrity, ethical commercial transparency, clinical reliability, and enduring commitment to regional healthcare success.
               </p>
             </div>
 

@@ -17,32 +17,33 @@ export interface CompanyConfig {
   phone: string;
   registrationNumber: string;
   operatingHours: string;
+  directors: string;
 }
 
 export const COMPANY_CONFIG: CompanyConfig = {
-  name: 'Progressive Molecules Pvt. Ltd.',
-  shortName: 'Progressive Molecules',
-  tagline: 'Advancing Therapeutics Through Progressive Quality Formulations',
-  headline: 'Advancing Healthcare Through Progressive Pharmaceutical Formulations.',
-  subheadline: 'Progressive Molecules Pvt. Ltd. is a premier pharmaceutical manufacturer, marketer, and distributor delivering high-efficacy Oral Solid Dosages, Softgel Capsules, Digestive & Nutritional Syrups, and Sterile Lyophilized Injectables across healthcare institutions, PCD franchise networks, and medical professionals.',
+  name: 'Pharma Assam Laboratories',
+  shortName: 'Pharma Assam',
+  tagline: 'Reliable Therapeutic Formulations & Ethical Distribution',
+  headline: 'Advancing Healthcare Through Quality Pharmaceutical Formulations.',
+  subheadline: 'Pharma Assam Laboratories is a dedicated pharmaceutical manufacturer and distributor supplying high-efficacy Oral Solid Dosages, Softgel Capsules, Digestive & Nutritional Syrups, and Sterile Injectables across hospital formularies, stockists, and medical institutions in Assam and the North-East.',
   missionStatement: '"To empower clinical practice and patient health with therapeutically proven, strictly quality-tested pharmaceutical formulations delivered through transparent ethical partnerships."',
-  corporateStory: 'Progressive Molecules Pvt. Ltd. was established to provide reliable, therapeutic-grade medicines conforming strictly to Indian Pharmacopoeia (IP) and World Health Organization (WHO-GMP) standards. Operating with robust manufacturing infrastructure and authorized supply hubs, we cater to hospital formularies, doctor prescriptions, and PCD franchise partners across Assam, Maharashtra, and pan-India.',
+  corporateStory: 'Established to provide reliable, therapeutic-grade medicines conforming strictly to Indian Pharmacopoeia (IP) and World Health Organization (WHO-GMP) standards. Operating with robust distribution infrastructure and authorized supply hubs across Guwahati and the entire Assam & North-East region.',
   yearsOfExperience: 'Established & Trusted',
   productsCount: '10+ Core Formulations',
-  marketsServed: 'Assam, North-East & Pan-India',
-  manufacturingSuitesCount: 'WHO-GMP & Revised Schedule M',
+  marketsServed: 'Assam & North-East Region',
+  manufacturingSuitesCount: 'WHO-GMP & Schedule M Compliant',
   certifications: [
-    'WHO-GMP Compliant Facilities',
-    'CDSCO & State DCA Approved',
-    'GST: 18AANCP7298K1ZE',
+    'WHO-GMP Compliant Manufacturing',
+    'State DCA & CDSCO Regulatory Approval',
     'IP/BP Monograph Compliance',
     'ISO 9001:2015 Quality Systems',
-    'Assam & Pan-India Distribution'
+    'Assam Regional Supply Network'
   ],
-  headquarters: 'Bandra West, Mumbai / Guwahati, Assam',
-  registeredAddress: '67-B, Gopal Mansion CHS Ltd, Gurunanak Road, Opp Kooper Chimani, Bandra West, Mumbai, Maharashtra - 400050, India',
-  email: 'progressivemolecules23@gmail.com',
-  phone: '+91 6001137678',
-  registrationNumber: 'GST: 18AANCP7298K1ZE',
-  operatingHours: 'Monday – Saturday: 09:30 – 18:30 IST'
+  headquarters: 'Guwahati, Assam, India',
+  registeredAddress: 'Industrial Area, Guwahati, Assam – 781001, India',
+  email: 'info@pharmaassam.in',
+  phone: '+91 94350 00000',
+  registrationNumber: 'Regd. DCA / Drug License Active',
+  operatingHours: 'Monday – Saturday: 09:30 – 18:30 IST',
+  directors: 'Authorized Management Board'
 };
