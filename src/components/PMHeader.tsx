@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, ChevronDown, Menu, X, ArrowRight, Building2 } from 'lucide-react';
+import { Search, ChevronDown, Menu, ArrowRight, Building2, Grid } from 'lucide-react';
 import { PRODUCTS } from '../data/products';
 import { COMPANY_CONFIG } from '../data/companyConfig';
 import { Product } from '../types';
@@ -9,16 +9,17 @@ interface PMHeaderProps {
   onNavigate: (sectionId: string) => void;
   onSelectProduct: (product: Product) => void;
   onOpenEnquiry: (productName?: string) => void;
+  onOpenSidebar: () => void;
 }
 
 export const PMHeader: React.FC<PMHeaderProps> = ({
   activeSection,
   onNavigate,
   onSelectProduct,
-  onOpenEnquiry
+  onOpenEnquiry,
+  onOpenSidebar
 }) => {
   const [isProductsMenuOpen, setIsProductsMenuOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchDropdownOpen, setIsSearchDropdownOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
@@ -46,14 +47,12 @@ export const PMHeader: React.FC<PMHeaderProps> = ({
 
   const handleProductClick = (product: Product) => {
     setIsProductsMenuOpen(false);
-    setIsMobileMenuOpen(false);
     setIsSearchDropdownOpen(false);
     onSelectProduct(product);
   };
 
   const handleNavClick = (sectionId: string) => {
     setIsProductsMenuOpen(false);
-    setIsMobileMenuOpen(false);
     onNavigate(sectionId);
   };
 
@@ -62,10 +61,10 @@ export const PMHeader: React.FC<PMHeaderProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Main Header Row */}
-        <div className="flex items-center justify-between h-20 gap-4 lg:gap-8">
+        <div className="flex items-center justify-between h-20 gap-3 sm:gap-6">
           
           {/* Company Brand Logo & Title */}
-          <div className="flex items-center gap-3.5 flex-shrink-0 cursor-pointer" onClick={() => handleNavClick('home')}>
+          <div className="flex items-center gap-3 flex-shrink-0 cursor-pointer" onClick={() => handleNavClick('home')}>
             <div className="w-11 h-11 rounded-xl bg-[#0b1e33] flex items-center justify-center text-[#00e5c9] shadow-md flex-shrink-0">
               <Building2 className="w-6 h-6" />
             </div>
@@ -84,13 +83,13 @@ export const PMHeader: React.FC<PMHeaderProps> = ({
             </div>
           </div>
 
-          {/* Clean Horizontal Navigation Menu (No text wrapping, elegant menu style) */}
-          <nav className="hidden lg:flex items-center gap-1.5 font-bold text-[13.5px] text-slate-700 flex-shrink-0">
+          {/* Clean Horizontal Navigation Menu */}
+          <nav className="hidden xl:flex items-center gap-1.5 font-bold text-[13.5px] text-slate-700 flex-shrink-0">
             
             {/* Home */}
             <button
               onClick={() => handleNavClick('home')}
-              className={`px-4 py-2 rounded-md transition-all whitespace-nowrap ${
+              className={`px-3.5 py-2 rounded-md transition-all whitespace-nowrap ${
                 activeSection === 'home'
                   ? 'text-[#c72828] font-extrabold bg-red-50 shadow-sm border border-red-100'
                   : 'hover:text-[#c72828] hover:bg-slate-100'
@@ -102,7 +101,7 @@ export const PMHeader: React.FC<PMHeaderProps> = ({
             {/* About Us */}
             <button
               onClick={() => handleNavClick('about')}
-              className={`px-4 py-2 rounded-md transition-all whitespace-nowrap ${
+              className={`px-3.5 py-2 rounded-md transition-all whitespace-nowrap ${
                 activeSection === 'about'
                   ? 'text-[#c72828] font-extrabold bg-red-50 shadow-sm border border-red-100'
                   : 'hover:text-[#c72828] hover:bg-slate-100'
@@ -119,7 +118,7 @@ export const PMHeader: React.FC<PMHeaderProps> = ({
             >
               <button
                 onClick={() => handleNavClick('products')}
-                className={`px-4 py-2 rounded-md transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                className={`px-3.5 py-2 rounded-md transition-all whitespace-nowrap flex items-center gap-1.5 ${
                   activeSection === 'products'
                     ? 'text-[#c72828] font-extrabold bg-red-50 shadow-sm border border-red-100'
                     : 'hover:text-[#c72828] hover:bg-slate-100'
@@ -246,7 +245,7 @@ export const PMHeader: React.FC<PMHeaderProps> = ({
             {/* Flipbook */}
             <button
               onClick={() => handleNavClick('flipbook')}
-              className={`px-4 py-2 rounded-md transition-all whitespace-nowrap ${
+              className={`px-3.5 py-2 rounded-md transition-all whitespace-nowrap ${
                 activeSection === 'flipbook'
                   ? 'text-[#c72828] font-extrabold bg-red-50 shadow-sm border border-red-100'
                   : 'hover:text-[#c72828] hover:bg-slate-100'
@@ -258,7 +257,7 @@ export const PMHeader: React.FC<PMHeaderProps> = ({
             {/* Contact Us */}
             <button
               onClick={() => handleNavClick('contact')}
-              className={`px-4 py-2 rounded-md transition-all whitespace-nowrap ${
+              className={`px-3.5 py-2 rounded-md transition-all whitespace-nowrap ${
                 activeSection === 'contact'
                   ? 'text-[#c72828] font-extrabold bg-red-50 shadow-sm border border-red-100'
                   : 'hover:text-[#c72828] hover:bg-slate-100'
@@ -268,20 +267,22 @@ export const PMHeader: React.FC<PMHeaderProps> = ({
             </button>
           </nav>
 
-          {/* Quick Search & Mobile Toggle */}
-          <div className="flex items-center gap-2 flex-shrink-0" ref={searchRef}>
+          {/* Quick Search & Sidebar Navigation Trigger Button */}
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0" ref={searchRef}>
+            
+            {/* Search Box */}
             <div className="relative">
               <div className="flex items-center">
                 <input
                   type="text"
-                  placeholder="Search products..."
+                  placeholder="Search..."
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
                     setIsSearchDropdownOpen(true);
                   }}
                   onFocus={() => setIsSearchDropdownOpen(true)}
-                  className="w-28 sm:w-40 md:w-48 lg:w-44 xl:w-56 px-3 py-1.5 text-xs rounded-l-md border border-slate-300 focus:outline-none focus:ring-1 focus:ring-[#0b1e33] focus:border-[#0b1e33]"
+                  className="w-24 sm:w-36 md:w-44 px-3 py-1.5 text-xs rounded-l-md border border-slate-300 focus:outline-none focus:ring-1 focus:ring-[#0b1e33] focus:border-[#0b1e33]"
                 />
                 <button
                   onClick={() => {
@@ -289,14 +290,14 @@ export const PMHeader: React.FC<PMHeaderProps> = ({
                       setIsSearchDropdownOpen(true);
                     }
                   }}
-                  className="bg-[#0b1e33] text-white px-3 py-1.5 text-xs font-bold rounded-r-md hover:bg-slate-800 transition-colors flex items-center justify-center"
+                  className="bg-[#0b1e33] text-white px-2.5 py-1.5 text-xs font-bold rounded-r-md hover:bg-slate-800 transition-colors flex items-center justify-center"
                   title="Search"
                 >
                   <Search className="w-3.5 h-3.5" />
                 </button>
               </div>
 
-              {/* Instant Search Results Dropdown */}
+              {/* Search Dropdown */}
               {isSearchDropdownOpen && searchQuery.trim() !== '' && (
                 <div className="absolute right-0 top-full mt-1.5 w-72 sm:w-80 bg-white rounded-lg shadow-xl border border-slate-200 p-2 z-50 max-h-80 overflow-y-auto">
                   <div className="text-[11px] font-bold uppercase text-slate-400 px-2 py-1 border-b border-slate-100">
@@ -332,75 +333,20 @@ export const PMHeader: React.FC<PMHeaderProps> = ({
               )}
             </div>
 
-            {/* Mobile Hamburger Menu Button */}
+            {/* Sidebar Navigation Button (Opens the requested Sidebar Modal) */}
             <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden p-2 rounded-md text-slate-700 hover:text-[#c72828] hover:bg-slate-100 flex-shrink-0"
-              aria-label="Toggle Navigation Menu"
+              onClick={onOpenSidebar}
+              className="flex items-center gap-1.5 bg-[#0b1e33] hover:bg-[#163e61] text-white text-xs font-bold px-3 py-2 rounded-lg shadow-sm transition-all"
+              title="Open Navigation Menu"
             >
-              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              <Menu className="w-4 h-4 text-[#00e5c9]" />
+              <span className="hidden sm:inline">Menu</span>
             </button>
+
           </div>
 
         </div>
       </div>
-
-      {/* Mobile Menu Drawer */}
-      {isMobileMenuOpen && (
-        <div className="lg:hidden border-t border-slate-200 bg-white px-4 pt-2 pb-6 space-y-2 shadow-xl animate-fadeIn">
-          <button
-            onClick={() => handleNavClick('home')}
-            className="w-full text-left px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-red-50 hover:text-[#c72828] rounded-md"
-          >
-            Home
-          </button>
-          <button
-            onClick={() => handleNavClick('about')}
-            className="w-full text-left px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-red-50 hover:text-[#c72828] rounded-md"
-          >
-            About Us
-          </button>
-          <button
-            onClick={() => handleNavClick('products')}
-            className="w-full text-left px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-red-50 hover:text-[#c72828] rounded-md"
-          >
-            All Products (10 Formulations)
-          </button>
-          
-          <div className="pl-4 space-y-1 text-xs text-slate-600 border-l-2 border-red-200 my-2">
-            <p className="font-bold text-[#c72828] uppercase text-[10px] tracking-wider mb-1">Categories</p>
-            <p onClick={() => handleNavClick('products')} className="cursor-pointer hover:text-[#c72828] py-1">• Pharmaceutical Capsules (3)</p>
-            <p onClick={() => handleNavClick('products')} className="cursor-pointer hover:text-[#c72828] py-1">• Pharmaceutical Syrup (4)</p>
-            <p onClick={() => handleNavClick('products')} className="cursor-pointer hover:text-[#c72828] py-1">• Pharmaceutical Tablets (2)</p>
-            <p onClick={() => handleNavClick('products')} className="cursor-pointer hover:text-[#c72828] py-1">• Pharmaceutical Injectable (1)</p>
-          </div>
-
-          <button
-            onClick={() => handleNavClick('flipbook')}
-            className="w-full text-left px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-red-50 hover:text-[#c72828] rounded-md"
-          >
-            Flipbook / Visual Aid
-          </button>
-          <button
-            onClick={() => handleNavClick('contact')}
-            className="w-full text-left px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-red-50 hover:text-[#c72828] rounded-md"
-          >
-            Contact Us
-          </button>
-
-          <div className="pt-3 border-t border-slate-200">
-            <button
-              onClick={() => {
-                setIsMobileMenuOpen(false);
-                onOpenEnquiry();
-              }}
-              className="w-full bg-[#c72828] text-white py-2.5 rounded-lg text-xs font-bold shadow hover:bg-red-700 transition-colors"
-            >
-              Submit MOQ Enquiry
-            </button>
-          </div>
-        </div>
-      )}
     </header>
   );
 };
