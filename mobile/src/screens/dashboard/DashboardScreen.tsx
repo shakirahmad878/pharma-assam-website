@@ -159,10 +159,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             <Text style={styles.tileTitle}>FIRMS</Text>
           </TouchableOpacity>
 
-          {/* Tile 4: CALENDAR (MTP TOUR PLAN) */}
+          {/* Tile 4: CALENDAR (TOUR PLAN) */}
           <TouchableOpacity
             style={styles.tileCard}
-            onPress={() => onNavigate('ROUTES')}
+            onPress={() => onNavigate('TOUR_PLAN')}
             activeOpacity={0.75}
           >
             <Ionicons name="calendar-outline" size={32} color="#FFFFFF" />
@@ -195,27 +195,27 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             onPress={() => onNavigate('LEAVES')}
             activeOpacity={0.75}
           >
-            <Ionicons name="document-text-outline" size={32} color="#FFFFFF" />
+            <Ionicons name="airplane-outline" size={32} color="#FFFFFF" />
             <Text style={styles.tileTitle}>LEAVES</Text>
           </TouchableOpacity>
 
           {/* Tile 8: REPORTS */}
           <TouchableOpacity
             style={styles.tileCard}
-            onPress={() => onNavigate('NOTIFICATIONS')}
+            onPress={() => onNavigate('REPORTS')}
             activeOpacity={0.75}
           >
-            <Ionicons name="document-text-outline" size={32} color="#FFFFFF" />
+            <Ionicons name="bar-chart-outline" size={32} color="#FFFFFF" />
             <Text style={styles.tileTitle}>REPORTS</Text>
           </TouchableOpacity>
 
           {/* Tile 9: BUSINESS */}
           <TouchableOpacity
             style={styles.tileCard}
-            onPress={() => onNavigate('ORDERS')}
+            onPress={() => onNavigate('BUSINESS_PLAN')}
             activeOpacity={0.75}
           >
-            <Ionicons name="document-text-outline" size={32} color="#FFFFFF" />
+            <Ionicons name="trending-up-outline" size={32} color="#FFFFFF" />
             <Text style={styles.tileTitle}>BUSINESS</Text>
           </TouchableOpacity>
 
@@ -227,7 +227,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             }}
             activeOpacity={0.75}
           >
-            <Ionicons name="document-text-outline" size={32} color="#FFFFFF" />
+            <Ionicons name="gift-outline" size={32} color="#FFFFFF" />
             <Text style={styles.tileTitleCenter}>BIRTHDAYS{"\n"}ANNIVERSARIES</Text>
           </TouchableOpacity>
 
@@ -237,7 +237,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             onPress={() => onNavigate('NOTIFICATIONS')}
             activeOpacity={0.75}
           >
-            <Ionicons name="document-text-outline" size={32} color="#FFFFFF" />
+            <Ionicons name="notifications-outline" size={32} color="#FFFFFF" />
             <Text style={styles.tileTitle}>NOTIFICATIONS</Text>
           </TouchableOpacity>
 
@@ -249,27 +249,27 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             }}
             activeOpacity={0.75}
           >
-            <Ionicons name="document-text-outline" size={32} color="#FFFFFF" />
+            <Ionicons name="help-circle-outline" size={32} color="#FFFFFF" />
             <Text style={styles.tileTitle}>APP TUTORIAL</Text>
           </TouchableOpacity>
 
           {/* Tile 13: MONTHLY SUMMARY */}
           <TouchableOpacity
             style={styles.tileCard}
-            onPress={() => onNavigate('ROUTES')}
+            onPress={() => onNavigate('MONTHLY_SUMMARY')}
             activeOpacity={0.75}
           >
-            <Ionicons name="document-text-outline" size={32} color="#FFFFFF" />
-            <Text style={styles.tileTitle}>MONTHLY SUMMARY</Text>
+            <Ionicons name="pie-chart-outline" size={32} color="#FFFFFF" />
+            <Text style={styles.tileTitleCenter}>MONTHLY{"\n"}SUMMARY</Text>
           </TouchableOpacity>
 
           {/* Tile 14: HOLIDAYS */}
           <TouchableOpacity
             style={styles.tileCard}
-            onPress={() => onNavigate('ROUTES')}
+            onPress={() => onNavigate('HOLIDAYS')}
             activeOpacity={0.75}
           >
-            <Ionicons name="document-text-outline" size={32} color="#FFFFFF" />
+            <Ionicons name="sunny-outline" size={32} color="#FFFFFF" />
             <Text style={styles.tileTitle}>HOLIDAYS</Text>
           </TouchableOpacity>
 

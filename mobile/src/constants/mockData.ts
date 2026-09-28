@@ -1851,3 +1851,130 @@ export const CURRENT_USER_MOCK = CURRENT_USER;
 export const DOCTORS_MOCK = MOCK_DOCTORS;
 export const CHEMISTS_MOCK = MOCK_CHEMISTS;
 export const PRODUCTS_MOCK = MOCK_PRODUCTS;
+
+// Standard Fare Chart (SFC) Rates from Reference UI (Images 6, 7, 26, 27)
+export interface SFCRouteEntry {
+  id: string;
+  fromLocation: string;
+  toLocation: string;
+  distanceKm: number;
+  ratePerKm: number;
+  standardFare: number;
+  daAllowed: number;
+  routeType: 'HQ' | 'EX_HQ' | 'OUTSTATION';
+}
+
+export const MOCK_SFC_ROUTES: SFCRouteEntry[] = [
+  { id: 'sfc-01', fromLocation: 'Sribhumi HQ', toLocation: 'Patharkandi', distanceKm: 70, ratePerKm: 3.0, standardFare: 210, daAllowed: 450, routeType: 'EX_HQ' },
+  { id: 'sfc-02', fromLocation: 'Sribhumi HQ', toLocation: 'Makunda', distanceKm: 154, ratePerKm: 3.0, standardFare: 462, daAllowed: 750, routeType: 'OUTSTATION' },
+  { id: 'sfc-03', fromLocation: 'Sribhumi HQ', toLocation: 'Badarpur Junction', distanceKm: 66, ratePerKm: 3.0, standardFare: 198, daAllowed: 450, routeType: 'EX_HQ' },
+  { id: 'sfc-04', fromLocation: 'Sribhumi HQ', toLocation: 'Lakhibazar', distanceKm: 24, ratePerKm: 3.0, standardFare: 72, daAllowed: 250, routeType: 'HQ' },
+  { id: 'sfc-05', fromLocation: 'Sribhumi HQ', toLocation: 'Nilambazar', distanceKm: 32, ratePerKm: 3.0, standardFare: 96, daAllowed: 250, routeType: 'HQ' },
+  { id: 'sfc-06', fromLocation: 'Sribhumi HQ', toLocation: 'Girishganj', distanceKm: 40, ratePerKm: 3.0, standardFare: 120, daAllowed: 250, routeType: 'HQ' },
+  { id: 'sfc-07', fromLocation: 'Sribhumi HQ', toLocation: 'Nivia', distanceKm: 58, ratePerKm: 3.0, standardFare: 174, daAllowed: 450, routeType: 'EX_HQ' },
+  { id: 'sfc-08', fromLocation: 'Sribhumi HQ', toLocation: 'Silchar SMCH', distanceKm: 110, ratePerKm: 3.0, standardFare: 330, daAllowed: 750, routeType: 'OUTSTATION' },
+  { id: 'sfc-09', fromLocation: 'Sribhumi HQ', toLocation: 'Hailakandi Town', distanceKm: 90, ratePerKm: 3.0, standardFare: 270, daAllowed: 450, routeType: 'EX_HQ' },
+];
+
+// Leave Entitlements (Images 28, 37)
+export interface LeaveEntitlement {
+  type: string;
+  code: 'CL' | 'EL' | 'SL';
+  available: number;
+  total: number;
+}
+
+export const MOCK_LEAVE_BALANCE: LeaveEntitlement[] = [
+  { type: 'Casual Leave(CL)', code: 'CL', available: 8, total: 12 },
+  { type: 'Earn Leave(EL)', code: 'EL', available: 15, total: 15 },
+  { type: 'Sick Leave(SL)', code: 'SL', available: 1, total: 12 },
+];
+
+// Assam Regional Holiday Calendar (Image 24)
+export interface AssamHoliday {
+  id: string;
+  name: string;
+  date: string;
+  dayOfWeek: string;
+  type: 'Gazetted' | 'Restricted';
+}
+
+export const MOCK_ASSAM_HOLIDAYS: AssamHoliday[] = [
+  { id: 'h-01', name: 'Magh Bihu & Tusu Puja', date: '15 Jan 2026', dayOfWeek: 'Thursday', type: 'Gazetted' },
+  { id: 'h-02', name: 'Makar Sankranti', date: '16 Jan 2026', dayOfWeek: 'Friday', type: 'Gazetted' },
+  { id: 'h-03', name: 'Republic Day', date: '26 Jan 2026', dayOfWeek: 'Monday', type: 'Gazetted' },
+  { id: 'h-04', name: 'Bohag Bihu (Rongali Bihu)', date: '14 Apr 2026', dayOfWeek: 'Tuesday', type: 'Gazetted' },
+  { id: 'h-05', name: 'Bohag Bihu Holiday', date: '15 Apr 2026', dayOfWeek: 'Wednesday', type: 'Gazetted' },
+  { id: 'h-06', name: 'Independence Day', date: '15 Aug 2026', dayOfWeek: 'Saturday', type: 'Gazetted' },
+  { id: 'h-07', name: 'Mahatma Gandhi Birthday', date: '02 Oct 2026', dayOfWeek: 'Friday', type: 'Gazetted' },
+  { id: 'h-08', name: 'Durga Puja (Maha Saptami)', date: '18 Oct 2026', dayOfWeek: 'Sunday', type: 'Gazetted' },
+  { id: 'h-09', name: 'Durga Puja (Maha Ashtami & Navami)', date: '19 Oct 2026', dayOfWeek: 'Monday', type: 'Gazetted' },
+  { id: 'h-10', name: 'Vijaya Dashami', date: '20 Oct 2026', dayOfWeek: 'Tuesday', type: 'Gazetted' },
+  { id: 'h-11', name: 'Kali Puja & Diwali', date: '08 Nov 2026', dayOfWeek: 'Sunday', type: 'Gazetted' },
+];
+
+// Business Planning Data (Images 21, 23, 25)
+export interface DoctorBusinessPlan {
+  id: string;
+  doctorName: string;
+  specialty: string;
+  area: string;
+  category: string;
+  potential: number;
+  lastMonthSale: number;
+  targetCurrentMonth: number;
+  status: 'DRAFT' | 'SUBMITTED' | 'APPROVED';
+}
+
+export const MOCK_BUSINESS_DOCTORS: DoctorBusinessPlan[] = [
+  { id: 'bp-doc-01', doctorName: 'Dr. Abdul Basit', specialty: 'General Physician', area: 'Lakhibazar, Assam', category: 'GENERAL', potential: 15000, lastMonthSale: 12500, targetCurrentMonth: 16000, status: 'DRAFT' },
+  { id: 'bp-doc-02', doctorName: 'Dr. Abul Hussain', specialty: 'Pediatrician', area: 'Karimganj, Assam', category: 'GENERAL', potential: 20000, lastMonthSale: 18200, targetCurrentMonth: 22000, status: 'DRAFT' },
+  { id: 'bp-doc-03', doctorName: 'Dr. Abou Md Sufian Choudhury', specialty: 'Consultant Physician', area: 'Girishganj, Assam', category: 'GENERAL', potential: 18000, lastMonthSale: 15000, targetCurrentMonth: 19000, status: 'DRAFT' },
+  { id: 'bp-doc-04', doctorName: 'Dr. Gautam Roy Sharma', specialty: 'Cardiologist', area: 'Karimganj, Assam', category: 'CORE', potential: 35000, lastMonthSale: 31000, targetCurrentMonth: 38000, status: 'DRAFT' },
+  { id: 'bp-doc-05', doctorName: 'Dr. Aftar Uddin', specialty: 'Surgeon', area: 'Karimganj, Assam', category: 'GENERAL', potential: 12000, lastMonthSale: 9800, targetCurrentMonth: 13000, status: 'DRAFT' },
+];
+
+export interface RetailerSalesPlan {
+  id: string;
+  firmName: string;
+  type: 'Retailer' | 'Distributor' | 'Stockist';
+  area: string;
+  lastMonthSale: number;
+  targetCurrentMonth: number;
+  status: 'DRAFT' | 'SUBMITTED' | 'APPROVED';
+}
+
+export const MOCK_BUSINESS_RETAILERS: RetailerSalesPlan[] = [
+  { id: 'bp-ret-01', firmName: 'AK Medical', type: 'Retailer', area: 'Karimganj, Assam', lastMonthSale: 45000, targetCurrentMonth: 50000, status: 'DRAFT' },
+  { id: 'bp-ret-02', firmName: 'Asha Medical', type: 'Retailer', area: 'Karimganj, Assam', lastMonthSale: 38000, targetCurrentMonth: 42000, status: 'DRAFT' },
+  { id: 'bp-ret-03', firmName: 'Alif Medication', type: 'Retailer', area: 'Nilambazar, Assam', lastMonthSale: 28000, targetCurrentMonth: 32000, status: 'DRAFT' },
+  { id: 'bp-ret-04', firmName: 'Ashok Medical Hall', type: 'Retailer', area: 'Karimganj, Assam', lastMonthSale: 52000, targetCurrentMonth: 58000, status: 'DRAFT' },
+  { id: 'bp-ret-05', firmName: 'Assam Medical Hall', type: 'Retailer', area: 'Karimganj, Assam', lastMonthSale: 60000, targetCurrentMonth: 65000, status: 'DRAFT' },
+  { id: 'bp-ret-06', firmName: 'Baba Medical Hall', type: 'Retailer', area: 'Srigauri, Assam', lastMonthSale: 22000, targetCurrentMonth: 25000, status: 'DRAFT' },
+  { id: 'bp-ret-07', firmName: 'Banka Medical Hall', type: 'Retailer', area: 'Lakhibazar, Assam', lastMonthSale: 34000, targetCurrentMonth: 38000, status: 'DRAFT' },
+  { id: 'bp-ret-08', firmName: 'Barbhuiya Medicare', type: 'Retailer', area: 'Karimganj, Assam', lastMonthSale: 41000, targetCurrentMonth: 45000, status: 'DRAFT' },
+];
+
+// Daily Expenses Log (Images 26, 27)
+export interface DailyExpenseItem {
+  id: string;
+  date: string;
+  route: string;
+  distanceKm: number;
+  taAmount: number;
+  daAmount: number;
+  hotelAmount: number;
+  miscAmount: number;
+  totalAmount: number;
+  status: 'Approved' | 'UnApproved' | 'Pending';
+  adminRemark?: string;
+}
+
+export const MOCK_EXPENSES_LOG: DailyExpenseItem[] = [
+  { id: 'exp-01', date: '26 Sep 2026', route: 'Sribhumi HQ -> Karimganj Central Beat', distanceKm: 18, taAmount: 54, daAmount: 250, hotelAmount: 0, miscAmount: 0, totalAmount: 304, status: 'UnApproved', adminRemark: 'Pending monthly closing review' },
+  { id: 'exp-02', date: '25 Sep 2026', route: 'Sribhumi HQ -> Patharkandi', distanceKm: 70, taAmount: 210, daAmount: 450, hotelAmount: 0, miscAmount: 50, totalAmount: 710, status: 'Approved', adminRemark: 'Verified against SFC standard rate' },
+  { id: 'exp-03', date: '24 Sep 2026', route: 'Sribhumi HQ -> Makunda Outstation', distanceKm: 154, taAmount: 462, daAmount: 750, hotelAmount: 800, miscAmount: 120, totalAmount: 2132, status: 'Approved', adminRemark: 'Approved by ABM' },
+  { id: 'exp-04', date: '23 Sep 2026', route: 'Sribhumi HQ -> Badarpur Junction', distanceKm: 66, taAmount: 198, daAmount: 450, hotelAmount: 0, miscAmount: 0, totalAmount: 648, status: 'Approved', adminRemark: 'Auto-verified with GPS telemetry' },
+  { id: 'exp-05', date: '22 Sep 2026', route: 'Sribhumi HQ -> Lakhibazar', distanceKm: 24, taAmount: 72, daAmount: 250, hotelAmount: 0, miscAmount: 0, totalAmount: 322, status: 'Approved', adminRemark: 'Verified' },
+];
+

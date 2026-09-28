@@ -107,9 +107,51 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack }) =>
     }
   };
 
+  const [lateApproved, setLateApproved] = useState(false);
+
   const handlePunchIn = async () => {
     if (!selfieUri) {
       Alert.alert('Selfie Required', 'Please take an attendance selfie with front camera before punching in.');
+      return;
+    }
+
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const isPastCutoff = currentHour > 10 || (currentHour === 10 && currentMinute > 30);
+
+    if (isPastCutoff && !lateApproved) {
+      Alert.alert(
+        'Late Attendance Locked (Past 10:30 AM) ⏰',
+        `Current time is ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}. Field reporting is locked after 10:30 AM.\n\nManager authorization is required to start your day.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Request ABM Approval',
+            onPress: () => {
+              Alert.prompt
+                ? Alert.prompt(
+                    'Late Check-in Reason',
+                    'Enter reason for delayed reporting (e.g. clinic delay / travel delay):',
+                    [
+                      { text: 'Cancel', style: 'cancel' },
+                      {
+                        text: 'Submit & Unlock',
+                        onPress: (reason) => {
+                          setLateApproved(true);
+                          Alert.alert('Approval Granted ✅', `Late check-in authorized by ABM (G Solanki) for: "${reason || 'Field Transit'}". You may now punch in.`);
+                        },
+                      },
+                    ]
+                  )
+                : (() => {
+                    setLateApproved(true);
+                    Alert.alert('Approval Granted ✅', 'Late check-in authorized by ABM (G Solanki). You may now punch in.');
+                  })();
+            },
+          },
+        ]
+      );
       return;
     }
 

@@ -50,7 +50,12 @@ export type ScreenName =
   | 'NOTIFICATIONS'
   | 'EXPENSES'
   | 'LEAVES'
-  | 'FILES';
+  | 'FILES'
+  | 'TOUR_PLAN'
+  | 'HOLIDAYS'
+  | 'BUSINESS_PLAN'
+  | 'REPORTS'
+  | 'MONTHLY_SUMMARY';
 
 interface StackEntry {
   screen: ScreenName;
@@ -294,6 +299,52 @@ export const RootNavigator: React.FC = () => {
             subtitle="Casual & Sick Leave Balance"
             onBack={pop}
             type="LEAVES"
+          />
+        )}
+
+        {currentScreen === 'TOUR_PLAN' && (
+          <AuxScreen
+            title="Tour Plan Calendar"
+            subtitle="Barak Valley Monthly Programme"
+            onBack={pop}
+            type="TOUR_PLAN"
+            onNavigate={handleNavigate}
+          />
+        )}
+
+        {currentScreen === 'HOLIDAYS' && (
+          <AuxScreen
+            title="Holiday List"
+            subtitle="Assam Regional Calendar 2026"
+            onBack={pop}
+            type="HOLIDAYS"
+          />
+        )}
+
+        {currentScreen === 'BUSINESS_PLAN' && (
+          <AuxScreen
+            title="Business Planning"
+            subtitle="Barak Valley Monthly Targets"
+            onBack={pop}
+            type="BUSINESS_PLAN"
+          />
+        )}
+
+        {currentScreen === 'REPORTS' && (
+          <AuxScreen
+            title="Reports & Analytics"
+            subtitle="18+ Strategic MIS Reports"
+            onBack={pop}
+            type="REPORTS"
+          />
+        )}
+
+        {currentScreen === 'MONTHLY_SUMMARY' && (
+          <AuxScreen
+            title="Monthly Summary"
+            subtitle="Barak Division Field Performance"
+            onBack={pop}
+            type="MONTHLY_SUMMARY"
           />
         )}
 

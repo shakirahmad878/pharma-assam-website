@@ -7,200 +7,373 @@ import {
   FlatList,
   TouchableOpacity,
   TextInput,
-  Linking,
+  Modal,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, typography, spacing, radius, shadows } from '../../constants/theme';
-import { Header } from '../../components/common/Header';
-import { Badge } from '../../components/common/Badge';
-import { BARAK_FIRMS } from '../../constants/mockData';
-import { StockistFirm } from '../../types';
+import { LocationService, LocationResult } from '../../services/location/locationService';
+
+interface FirmItem {
+  id: string;
+  name: string;
+  type: 'Retailer' | 'Distributor' | 'Stockist';
+  area: string;
+  district: string;
+  phone?: string;
+}
+
+const INITIAL_FIRMS: FirmItem[] = [
+  { id: 'f-01', name: 'ALIF MEDICATION', type: 'Retailer', area: 'Nilambazar, Assam', district: 'Karimganj' },
+  { id: 'f-02', name: 'ASHA MEDICAL', type: 'Retailer', area: 'Karimganj, Assam', district: 'Karimganj' },
+  { id: 'f-03', name: 'ASHOK MEDICAL HALL', type: 'Retailer', area: 'Karimganj, Assam', district: 'Karimganj' },
+  { id: 'f-04', name: 'ASSAM MEDICAL HALL', type: 'Retailer', area: 'Karimganj, Assam', district: 'Karimganj' },
+  { id: 'f-05', name: 'AT DRUGS', type: 'Retailer', area: 'Srigauri, Assam', district: 'Karimganj' },
+  { id: 'f-06', name: 'BABA MEDICAL HALL', type: 'Retailer', area: 'Srigauri, Assam', district: 'Karimganj' },
+  { id: 'f-07', name: 'BANKA MEDICAL HALL', type: 'Retailer', area: 'Lakhibazar, Assam', district: 'Karimganj' },
+  { id: 'f-08', name: 'BARBHUIYA MEDICARE', type: 'Retailer', area: 'Karimganj, Assam', district: 'Karimganj' },
+  { id: 'f-09', name: 'SURMA PHARMA DISTRIBUTORS', type: 'Distributor', area: 'Station Road, Karimganj', district: 'Karimganj' },
+  { id: 'f-10', name: 'CACHAR DRUG HOUSE', type: 'Stockist', area: 'Central Beat, Silchar', district: 'Cachar' },
+];
 
 interface FirmDirectoryScreenProps {
   onBack: () => void;
 }
 
 export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack }) => {
-  const [firms] = useState<StockistFirm[]>(BARAK_FIRMS);
+  const [firms, setFirms] = useState<FirmItem[]>(INITIAL_FIRMS);
+  const [filterType, setFilterType] = useState<'All' | 'Retailer' | 'Distributor' | 'Stockist'>('All');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const [selectedDistrict, setSelectedDistrict] = useState<'ALL' | 'Cachar' | 'Karimganj' | 'Hailakandi'>('ALL');
+
+  // Add Firm Modal State
+  const [addModalVisible, setAddModalVisible] = useState(false);
+  const [newFirmName, setNewFirmName] = useState('');
+  const [newFirmType, setNewFirmType] = useState<'Retailer' | 'Distributor' | 'Stockist'>('Retailer');
+  const [capturedGps, setCapturedGps] = useState<LocationResult | null>(null);
+  const [autoArea, setAutoArea] = useState('Acquiring GPS...');
+  const [gpsLoading, setGpsLoading] = useState(false);
+
+  const fetchGpsForFirm = async () => {
+    setGpsLoading(true);
+    const loc = await LocationService.getCurrentLocation();
+    setGpsLoading(false);
+    if (loc) {
+      setCapturedGps(loc);
+      setAutoArea('Main Road & Station Area, Karimganj, Assam');
+    } else {
+      setAutoArea('Karimganj, Assam');
+    }
+  };
+
+  const openAddModal = () => {
+    setAddModalVisible(true);
+    fetchGpsForFirm();
+  };
+
+  const handleAddFirm = () => {
+    if (!newFirmName.trim()) {
+      Alert.alert('Missing Name', 'Please provide firm name.');
+      return;
+    }
+    const newEntry: FirmItem = {
+      id: 'firm-' + Date.now(),
+      name: newFirmName.toUpperCase(),
+      type: newFirmType,
+      area: autoArea,
+      district: 'Karimganj',
+    };
+    setFirms([newEntry, ...firms]);
+    setAddModalVisible(false);
+    setNewFirmName('');
+    Alert.alert('Firm Registered ✅', `${newEntry.name} added with Auto-GPS location at ${autoArea}.`);
+  };
 
   const filtered = firms.filter(f => {
+    const matchFilter = filterType === 'All' || f.type === filterType;
     const matchSearch =
       f.name.toLowerCase().includes(search.toLowerCase()) ||
-      f.contactPerson.toLowerCase().includes(search.toLowerCase()) ||
-      f.area.toLowerCase().includes(search.toLowerCase()) ||
-      f.district.toLowerCase().includes(search.toLowerCase()) ||
-      f.gstNumber.toLowerCase().includes(search.toLowerCase()) ||
-      f.dlNumber.toLowerCase().includes(search.toLowerCase());
-    const matchDistrict = selectedDistrict === 'ALL' || f.district === selectedDistrict;
-    return matchSearch && matchDistrict;
+      f.area.toLowerCase().includes(search.toLowerCase());
+    return matchFilter && matchSearch;
   });
 
   return (
     <SafeAreaView style={styles.container}>
-      <Header
-        title="Barak Stockists & Wholesale Firms"
-        subtitle={firms.length + ' Authorized Pharma Distributors'}
-        showBack
-        onBack={onBack}
-      />
-
-      {/* Search Input */}
-      <View style={styles.searchBar}>
-        <View style={styles.searchInputWrapper}>
-          <Ionicons name="search-outline" size={18} color="#64748B" style={styles.searchIcon} />
-          <TextInput
-            style={styles.input}
-            placeholder="Search Barak Pharma, Cachar Drug, Surma Valley..."
-            placeholderTextColor="#94A3B8"
-            value={search}
-            onChangeText={setSearch}
-          />
+      {/* Header matching Image 33 */}
+      <View style={styles.headerBar}>
+        <TouchableOpacity style={styles.backBtn} onPress={onBack}>
+          <Ionicons name="arrow-back" size={22} color="#ffffff" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>FIRMS</Text>
+        <View style={styles.headerRightMeta}>
+          <Text style={styles.headerUserName}>Pranjal Malakar</Text>
+          <Text style={styles.headerDateText}>26 Sept 2026 11:18</Text>
         </View>
       </View>
 
-      {/* District Filter Chips */}
-      <View style={styles.filterRow}>
-        {(['ALL', 'Cachar', 'Karimganj', 'Hailakandi'] as const).map(dist => (
-          <TouchableOpacity
-            key={dist}
-            style={[styles.filterChip, selectedDistrict === dist && styles.filterChipActive]}
-            onPress={() => setSelectedDistrict(dist)}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.filterChipText, selectedDistrict === dist && styles.filterChipTextActive]}>
-              {dist === 'ALL' ? 'All Districts (' + firms.length + ')' : dist}
-            </Text>
-          </TouchableOpacity>
-        ))}
+      {/* Filter Row with Dropdown matching Image 33 */}
+      <View style={styles.filterBar}>
+        <TouchableOpacity
+          style={styles.dropdownTrigger}
+          onPress={() => setDropdownOpen(!dropdownOpen)}
+        >
+          <Text style={styles.dropdownTriggerText}>{filterType}</Text>
+          <Ionicons name={dropdownOpen ? 'chevron-up' : 'chevron-down'} size={16} color="#64748B" />
+        </TouchableOpacity>
+
+        {dropdownOpen && (
+          <View style={styles.dropdownMenu}>
+            {(['All', 'Retailer', 'Distributor', 'Stockist'] as const).map(t => (
+              <TouchableOpacity
+                key={t}
+                style={[styles.dropdownMenuItem, filterType === t && styles.dropdownMenuItemActive]}
+                onPress={() => {
+                  setFilterType(t);
+                  setDropdownOpen(false);
+                }}
+              >
+                <Text style={[styles.dropdownMenuItemText, filterType === t && styles.dropdownMenuItemTextActive]}>
+                  {t}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </View>
 
+      {/* Firms List matching Image 33 */}
       <FlatList
         data={filtered}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              <View style={styles.firmIconBox}>
-                <Ionicons name="storefront" size={24} color="#059669" />
+        renderItem={({ item }) => {
+          const initial = item.name.charAt(0).toUpperCase();
+          return (
+            <TouchableOpacity
+              style={styles.firmCard}
+              activeOpacity={0.8}
+              onPress={() =>
+                Alert.alert(item.name, `${item.type}\nLocation: ${item.area}\nWould you like to book POB order or log visit?`, [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Log Visit', onPress: () => Alert.alert('Visit Logged', `DCR visit noted for ${item.name}.`) },
+                ])
+              }
+            >
+              <View style={styles.avatarCircle}>
+                <Text style={styles.avatarText}>{initial}</Text>
               </View>
-              <View style={{ flex: 1, marginLeft: spacing.sm }}>
-                <Text style={styles.firmName}>{item.name}</Text>
-                <Text style={styles.contactText}>👤 Contact Person: {item.contactPerson}</Text>
-                <View style={styles.areaRow}>
-                  <Ionicons name="location-sharp" size={13} color="#059669" />
-                  <Text style={styles.areaText}>{item.area}, {item.district}</Text>
+              <View style={styles.firmDetailsCol}>
+                <Text style={styles.firmNameText}>{item.name}</Text>
+                <View style={styles.firmMetaRow}>
+                  <Ionicons name="person-outline" size={13} color="#64748B" />
+                  <Text style={styles.firmTypeText}>{item.type}</Text>
+                </View>
+                <View style={styles.firmMetaRow}>
+                  <Ionicons name="location-outline" size={13} color="#64748B" />
+                  <Text style={styles.firmAreaText}>{item.area}</Text>
                 </View>
               </View>
-              <Badge
-                label={item.type.replace(/_/g, ' ')}
-                variant={item.type === 'SUPER_STOCKIST' ? 'primary' : 'success'}
-              />
+            </TouchableOpacity>
+          );
+        }}
+      />
+
+      {/* Floating Action Button `+` matching Image 33 */}
+      <TouchableOpacity style={styles.fabBtn} onPress={openAddModal}>
+        <Ionicons name="add" size={26} color="#ffffff" />
+      </TouchableOpacity>
+
+      {/* Add Firm Modal */}
+      <Modal visible={addModalVisible} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Add New Firm / Retailer</Text>
+            <Text style={styles.modalSubtitle}>Karimganj / Barak Valley Directory</Text>
+
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Firm / Pharmacy Name"
+              placeholderTextColor="#94A3B8"
+              value={newFirmName}
+              onChangeText={setNewFirmName}
+            />
+
+            <Text style={styles.modalLabel}>Category Type</Text>
+            <View style={styles.typeSelectorRow}>
+              {(['Retailer', 'Distributor', 'Stockist'] as const).map(t => (
+                <TouchableOpacity
+                  key={t}
+                  style={[styles.typeOptionBtn, newFirmType === t && styles.typeOptionBtnActive]}
+                  onPress={() => setNewFirmType(t)}
+                >
+                  <Text style={[styles.typeOptionText, newFirmType === t && styles.typeOptionTextActive]}>{t}</Text>
+                </TouchableOpacity>
+              ))}
             </View>
 
-            <Text style={styles.addressText}>{item.address}</Text>
-
-            <View style={styles.licenseRow}>
-              <Text style={styles.licenseText}>GST: <Text style={styles.boldVal}>{item.gstNumber}</Text></Text>
-              <Text style={styles.licenseText}>DL: <Text style={styles.boldVal}>{item.dlNumber}</Text></Text>
+            {/* Live Auto-GPS */}
+            <View style={styles.autoGpsBox}>
+              <View style={styles.autoGpsHeader}>
+                <Ionicons name="location" size={16} color="#2563EB" />
+                <Text style={styles.autoGpsTitle}>Live Auto-GPS Area</Text>
+              </View>
+              <Text style={styles.autoGpsAreaText}>{gpsLoading ? 'Acquiring GPS...' : autoArea}</Text>
             </View>
 
-            <View style={styles.actionRow}>
-              <TouchableOpacity
-                onPress={() => Linking.openURL('tel:' + item.phone)}
-                style={styles.callBtn}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="call" size={14} color="#FFFFFF" />
-                <Text style={styles.callText}>Call Firm ({item.phone})</Text>
+            <View style={styles.modalBtnRow}>
+              <TouchableOpacity style={[styles.modalBtn, { backgroundColor: '#94A3B8' }]} onPress={() => setAddModalVisible(false)}>
+                <Text style={styles.modalBtnText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.modalBtn, { backgroundColor: '#2563EB' }]} onPress={handleAddFirm}>
+                <Text style={styles.modalBtnText}>Save Firm</Text>
               </TouchableOpacity>
             </View>
           </View>
-        )}
-      />
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8FAFC' },
-  searchBar: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xs, backgroundColor: '#FFFFFF' },
-  searchInputWrapper: {
+
+  // Header Bar matching Image 33
+  headerBar: {
+    backgroundColor: '#3B82F6',
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F1F5F9',
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
   },
-  searchIcon: { marginRight: spacing.xs },
-  input: { flex: 1, paddingVertical: spacing.md, fontSize: typography.fontSize.sm, color: '#0F172A' },
-  filterRow: {
+  backBtn: { padding: 4, marginRight: 8 },
+  headerTitle: { color: '#ffffff', fontSize: 16, fontWeight: '800', flex: 1 },
+  headerRightMeta: { alignItems: 'flex-end' },
+  headerUserName: { color: '#ffffff', fontSize: 11, fontWeight: '700' },
+  headerDateText: { color: '#BFDBFE', fontSize: 10, marginTop: 1 },
+
+  // Filter Bar
+  filterBar: { paddingHorizontal: 16, paddingVertical: 10, zIndex: 100 },
+  dropdownTrigger: {
     flexDirection: 'row',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: radius.sm,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    width: 140,
+    ...shadows.sm,
   },
-  filterChip: {
-    paddingHorizontal: spacing.sm + 2,
-    paddingVertical: 5,
-    borderRadius: 14,
-    backgroundColor: '#F1F5F9',
-    marginRight: spacing.xs,
-  },
-  filterChipActive: { backgroundColor: '#059669' },
-  filterChipText: { fontSize: 11, fontWeight: typography.fontWeight.semibold, color: '#475569' },
-  filterChipTextActive: { color: '#FFFFFF', fontWeight: typography.fontWeight.bold },
-  listContent: { padding: spacing.lg, paddingBottom: spacing.xxxl },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.md,
+  dropdownTriggerText: { fontSize: 13, fontWeight: '700', color: colors.textPrimary },
+  dropdownMenu: {
+    position: 'absolute',
+    top: 48,
+    left: 16,
+    width: 140,
+    backgroundColor: '#ffffff',
+    borderRadius: radius.sm,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    shadowColor: '#64748B',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
+    ...shadows.lg,
+    zIndex: 100,
   },
-  cardHeader: { flexDirection: 'row', alignItems: 'flex-start' },
-  firmIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: '#DCFCE7',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  firmName: { fontSize: typography.fontSize.base, fontWeight: typography.fontWeight.bold, color: '#0F172A' },
-  contactText: { fontSize: typography.fontSize.xs, color: '#334155', marginTop: 2, fontWeight: typography.fontWeight.medium },
-  areaRow: { flexDirection: 'row', alignItems: 'center', marginTop: 2 },
-  areaText: { fontSize: typography.fontSize.xs, color: '#059669', fontWeight: typography.fontWeight.semibold, marginLeft: 2 },
-  addressText: { fontSize: typography.fontSize.xs, color: '#64748B', marginVertical: spacing.sm, lineHeight: 17 },
-  licenseRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    backgroundColor: '#F8FAFC',
-    padding: 8,
-    borderRadius: radius.sm,
-    marginBottom: spacing.sm,
-  },
-  licenseText: { fontSize: 11, color: '#64748B' },
-  boldVal: { color: '#0F172A', fontWeight: typography.fontWeight.bold },
-  actionRow: { borderTopWidth: 1, borderTopColor: '#F1F5F9', paddingTop: spacing.sm },
-  callBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#059669',
-    paddingVertical: 9,
+  dropdownMenuItem: { paddingVertical: 10, paddingHorizontal: 14, borderBottomWidth: 1, borderColor: '#F1F5F9' },
+  dropdownMenuItemActive: { backgroundColor: '#EFF6FF' },
+  dropdownMenuItemText: { fontSize: 13, color: colors.textPrimary, fontWeight: '600' },
+  dropdownMenuItemTextActive: { color: '#2563EB', fontWeight: '800' },
+
+  listContent: { paddingHorizontal: 16, paddingBottom: 80 },
+
+  // Firm Card matching Image 33
+  firmCard: {
+    backgroundColor: '#ffffff',
     borderRadius: radius.md,
+    padding: 14,
+    marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    ...shadows.sm,
   },
-  callText: { fontSize: 12, fontWeight: typography.fontWeight.bold, color: '#FFFFFF', marginLeft: 6 },
+  avatarCircle: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  avatarText: { fontSize: 16, fontWeight: '800', color: '#2563EB' },
+  firmDetailsCol: { flex: 1 },
+  firmNameText: { fontSize: 13, fontWeight: '800', color: colors.textPrimary, letterSpacing: 0.3 },
+  firmMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 },
+  firmTypeText: { fontSize: 11, color: '#64748B', fontWeight: '600' },
+  firmAreaText: { fontSize: 11, color: '#475569' },
+
+  fabBtn: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#2563EB',
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...shadows.lg,
+  },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  modalCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: radius.md,
+    padding: 20,
+    width: '100%',
+    maxWidth: 380,
+    ...shadows.lg,
+  },
+  modalTitle: { fontSize: 16, fontWeight: '800', color: colors.textPrimary },
+  modalSubtitle: { fontSize: 11, color: '#64748B', marginBottom: 12 },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: radius.sm,
+    padding: 10,
+    fontSize: 13,
+    marginBottom: 10,
+    color: colors.textPrimary,
+  },
+  modalLabel: { fontSize: 11, fontWeight: '700', color: '#475569', marginBottom: 4 },
+  typeSelectorRow: { flexDirection: 'row', gap: 6, marginBottom: 10 },
+  typeOptionBtn: { flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: radius.sm, backgroundColor: '#F1F5F9' },
+  typeOptionBtnActive: { backgroundColor: '#2563EB' },
+  typeOptionText: { fontSize: 11, color: '#64748B', fontWeight: '600' },
+  typeOptionTextActive: { color: '#ffffff', fontWeight: '800' },
+  autoGpsBox: {
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    borderRadius: radius.sm,
+    padding: 10,
+    marginBottom: 10,
+  },
+  autoGpsHeader: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 },
+  autoGpsTitle: { fontSize: 11, fontWeight: '700', color: '#1D4ED8' },
+  autoGpsAreaText: { fontSize: 12, fontWeight: '700', color: colors.textPrimary },
+  modalBtnRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 8 },
+  modalBtn: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: radius.sm },
+  modalBtnText: { color: '#ffffff', fontWeight: '700', fontSize: 12 },
 });
