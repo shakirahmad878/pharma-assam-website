@@ -27,7 +27,7 @@ export const USER_PRANJAL_MR: UserProfile = {
   role: 'MEDICAL_REP',
   employeeCode: '0002',
   territory: 'Barak Valley Division (Assam)',
-  headquarter: 'Silchar / Karimganj Beat',
+  headquarter: 'Silchar HQ',
   phone: '',
   assignedRouteIds: [
     'route-cachar-01',

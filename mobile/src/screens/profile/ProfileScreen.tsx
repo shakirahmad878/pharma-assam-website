@@ -31,15 +31,16 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBack, onLogout }
   const [hqInput, setHqInput] = useState(user.headquarter || 'Silchar HQ');
 
   const handleSaveContact = async () => {
-    if (!phoneInput.trim()) {
-      Alert.alert('Phone Number Required', 'Please enter your mobile contact number.');
+    const cleanedPhone = phoneInput.trim().replace(/\D/g, '');
+    if (cleanedPhone.length !== 10) {
+      Alert.alert('Invalid Mobile Number', 'Please enter a valid 10-digit Indian mobile number (e.g. 9435012345).');
       return;
     }
 
     const updated = await AuthService.updateUserProfile({
-      phone: phoneInput.trim(),
+      phone: `+91 ${cleanedPhone}`,
       email: emailInput.trim(),
-      headquarter: hqInput.trim(),
+      headquarter: hqInput.trim() || 'Silchar HQ',
     });
 
     setUser(updated);
@@ -70,8 +71,8 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBack, onLogout }
 
   return (
     <SafeAreaView style={styles.container}>
-      <Header title="Representative Profile" subtitle="Field Duty Credentials" showBack onBack={onBack} />
-      <ScrollView contentContainerStyle={styles.content}>
+      <Header title="Representative Profile" subtitle="Barak Valley Division (Assam)" showBack onBack={onBack} />
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* User Identity Card */}
         <Card>
           <View style={styles.userRow}>
@@ -102,7 +103,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBack, onLogout }
             <TouchableOpacity
               style={styles.editContactPill}
               onPress={() => {
-                setPhoneInput(user.phone || '');
+                setPhoneInput(user.phone ? user.phone.replace('+91 ', '') : '');
                 setEmailInput(user.email || '');
                 setHqInput(user.headquarter || 'Silchar HQ');
                 setEditModalVisible(true);
@@ -118,7 +119,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBack, onLogout }
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Mobile Number:</Text>
             <Text style={[styles.infoVal, !user.phone && styles.unsetText]}>
-              {user.phone ? user.phone : 'Not Set (Tap Fill Contact)'}
+              {user.phone ? user.phone : 'Not Set (Tap + Fill Contact)'}
             </Text>
           </View>
 
@@ -156,8 +157,8 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBack, onLogout }
         <Card>
           <Text style={styles.sectionTitle}>Application Information</Text>
           <Text style={styles.infoText}>Version: 1.2.0 (Barak Division Production Build)</Text>
-          <Text style={styles.infoText}>Target: Google Play Store (AAB / Standalone APK)</Text>
           <Text style={styles.infoText}>Platform: RepPulse Enterprise SFA</Text>
+          <Text style={styles.infoText}>Headquarter Base: Silchar, Assam</Text>
           <Text style={styles.infoText}>Territory: Barak Valley Division (Assam)</Text>
         </Card>
 

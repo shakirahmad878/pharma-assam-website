@@ -116,7 +116,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           <Text style={styles.sinceTimeText}>
             Since : {punchInTime || '10:14 AM'}
           </Text>
-          <Text style={styles.hoCityText}>HO : Sribhumi</Text>
+          <Text style={styles.hoCityText}>HO : Silchar</Text>
         </View>
       </View>
 
