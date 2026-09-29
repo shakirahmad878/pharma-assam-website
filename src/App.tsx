@@ -48,7 +48,24 @@ import { ChangePasswordModal } from './components/auth/ChangePasswordModal';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(() => AuthService.getCurrentUser());
-  const [activeTab, setActiveTab] = useState<NavTab>('admin_portal');
+  const [activeTab, setActiveTab] = useState<NavTab>(() => {
+    const hash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
+    if (hash === 'admin' || hash === 'admin_portal' || hash === 'admin-portal') return 'admin_portal';
+    if (hash === 'dashboard' || hash === 'manager') return 'dashboard';
+    if (hash === 'doctors') return 'doctors';
+    if (hash === 'chemists') return 'chemists';
+    if (hash === 'products') return 'products';
+    if (hash === 'territories') return 'territories';
+    if (hash === 'dcr') return 'dcr';
+    if (hash === 'tour_plans' || hash === 'tour') return 'tour_plans';
+    if (hash === 'orders') return 'orders';
+    if (hash === 'rcpa') return 'rcpa';
+    if (hash === 'attendance') return 'attendance';
+    if (hash === 'expenses') return 'expenses';
+    if (hash === 'mis_reports' || hash === 'reports') return 'mis_reports';
+    if (hash === 'fleet_tracking' || hash === 'fleet') return 'fleet_tracking';
+    return 'admin_portal';
+  });
   const [isDemoTourOpen, setIsDemoTourOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
@@ -87,6 +104,50 @@ export default function App() {
   
   const [isSimulatingPing, setIsSimulatingPing] = useState(false);
 
+  // Sync tab with URL Hash
+  React.useEffect(() => {
+    const parseHash = () => {
+      const hash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
+      if (hash === 'admin' || hash === 'admin_portal' || hash === 'admin-portal') {
+        setActiveTab('admin_portal');
+      } else if (hash === 'dashboard' || hash === 'manager') {
+        setActiveTab('dashboard');
+      } else if (hash === 'doctors') {
+        setActiveTab('doctors');
+      } else if (hash === 'chemists') {
+        setActiveTab('chemists');
+      } else if (hash === 'products') {
+        setActiveTab('products');
+      } else if (hash === 'territories') {
+        setActiveTab('territories');
+      } else if (hash === 'dcr') {
+        setActiveTab('dcr');
+      } else if (hash === 'tour_plans' || hash === 'tour') {
+        setActiveTab('tour_plans');
+      } else if (hash === 'orders') {
+        setActiveTab('orders');
+      } else if (hash === 'rcpa') {
+        setActiveTab('rcpa');
+      } else if (hash === 'attendance') {
+        setActiveTab('attendance');
+      } else if (hash === 'expenses') {
+        setActiveTab('expenses');
+      } else if (hash === 'mis_reports' || hash === 'reports') {
+        setActiveTab('mis_reports');
+      } else if (hash === 'fleet_tracking' || hash === 'fleet') {
+        setActiveTab('fleet_tracking');
+      }
+    };
+
+    window.addEventListener('hashchange', parseHash);
+    return () => window.removeEventListener('hashchange', parseHash);
+  }, []);
+
+  const handleTabChange = (tab: NavTab) => {
+    setActiveTab(tab);
+    window.location.hash = tab === 'admin_portal' ? 'admin' : tab;
+  };
+
   // Helper to log audit entries automatically
   const logAudit = (
     action: AuditLogEntry['action'],
@@ -117,10 +178,15 @@ export default function App() {
   const handleLoginSuccess = (user: User) => {
     setCurrentUser(user);
     AuthService.setCurrentUser(user);
-    if (user.role === 'SUPER_ADMIN' || user.role === 'ADMIN') {
+    const hash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
+    if (hash && hash !== '') {
+      // keep requested tab from hash
+    } else if (user.role === 'SUPER_ADMIN' || user.role === 'ADMIN') {
       setActiveTab('admin_portal');
+      window.location.hash = 'admin';
     } else {
       setActiveTab('dashboard');
+      window.location.hash = 'dashboard';
     }
   };
 
@@ -337,7 +403,7 @@ export default function App() {
         {/* Left Navigation Sidebar */}
         <Sidebar
           activeTab={activeTab}
-          onSelectTab={setActiveTab}
+          onSelectTab={handleTabChange}
           userRole={currentUser.role}
         />
 
@@ -384,7 +450,7 @@ export default function App() {
               telemetryLogs={telemetryLogs}
               dcrLogs={dcrLogs}
               userRole={currentUser.role}
-              onNavigateToTab={setActiveTab}
+              onNavigateToTab={handleTabChange}
             />
           )}
 

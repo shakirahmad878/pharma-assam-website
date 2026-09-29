@@ -56,10 +56,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, users }) =
             <Activity className="w-8 h-8 text-slate-950 stroke-[2.5]" />
           </div>
           <h2 className="text-2xl font-bold tracking-tight text-white">
-            RepPulse <span className="text-teal-400">Enterprise</span>
+            RepPulse <span className="text-teal-400">Admin & Enterprise Portal</span>
           </h2>
           <p className="text-sm text-slate-400 mt-1">
-            Intelligent Pharma SFA & Administrative Portal
+            Official Administration & Management Portal • Pharma Assam
           </p>
         </div>
 
