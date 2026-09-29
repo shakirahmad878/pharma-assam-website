@@ -21,6 +21,16 @@
       }
     },
     "production": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "API_BASE_URL": "https://api.sefmed.com/api/v1",
+        "TELEMETRY_INTERVAL_MINUTES": "15"
+      }
+    },
+    "production-aab": {
       "android": {
         "buildType": "app-bundle"
       },
