@@ -70,4 +70,50 @@ export class DoctorService {
       await StorageService.setItem(STORAGE_KEYS.DOCTORS_CACHE, doctors);
     }
   }
+
+  public static async updateDoctor(id: string, updatedFields: Partial<Doctor>): Promise<Doctor | null> {
+    const doctors = await this.getDoctors();
+    const index = doctors.findIndex(d => d.id === id);
+    if (index === -1) return null;
+
+    const current = doctors[index];
+    const updated: Doctor = {
+      ...current,
+      ...updatedFields,
+    };
+    doctors[index] = updated;
+    await StorageService.setItem(STORAGE_KEYS.DOCTORS_CACHE, doctors);
+    return updated;
+  }
+
+  public static async deleteDoctor(id: string): Promise<boolean> {
+    const doctors = await this.getDoctors();
+    const filtered = doctors.filter(d => d.id !== id);
+    await StorageService.setItem(STORAGE_KEYS.DOCTORS_CACHE, filtered);
+    return true;
+  }
+
+  public static async requestDoctorDeletion(
+    doctorId: string,
+    doctorName: string,
+    reason: string,
+    mrName = 'Pranjal Malakar (MR)'
+  ): Promise<{ success: boolean; requestId: string }> {
+    const existing = await StorageService.getItem<any[]>(STORAGE_KEYS.DOCTOR_DELETE_REQUESTS, []);
+    const request = {
+      id: 'del-req-' + Date.now(),
+      doctorId,
+      doctorName,
+      reason: reason.trim() || 'Duplicate / Wrong entry',
+      requestedBy: mrName,
+      requestedAt: new Date().toISOString(),
+      status: 'PENDING',
+    };
+    await StorageService.setItem(STORAGE_KEYS.DOCTOR_DELETE_REQUESTS, [request, ...existing]);
+    return { success: true, requestId: request.id };
+  }
+
+  public static async getPendingDeletionRequests(): Promise<any[]> {
+    return await StorageService.getItem<any[]>(STORAGE_KEYS.DOCTOR_DELETE_REQUESTS, []);
+  }
 }

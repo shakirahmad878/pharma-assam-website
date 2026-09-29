@@ -1,10 +1,19 @@
-import { Doctor, Chemist, Product, UserProfile, RoutePlan, Hospital, StockistFirm, MonthlyTourProgramme } from '../types';
+import {
+  UserProfile,
+  RoutePlan,
+  Hospital,
+  StockistFirm,
+  Doctor,
+  Chemist,
+  Product,
+  MonthlyTourProgramme,
+} from '../types';
 
-export const USER_BODRUD_ABM: UserProfile = {
-  id: 'usr-abm-0001',
+export const USER_BODRUD_RSM: UserProfile = {
+  id: 'usr-rsm-0001',
   name: 'Bodrud Jaman Sadiol',
-  email: 'bodrud.abm@reppulse.com',
-  role: 'AREA_MANAGER',
+  email: 'bodrud.rsm@reppulse.com',
+  role: 'REGIONAL_MANAGER',
   employeeCode: '0001',
   territory: 'Barak Valley Division (Assam)',
   headquarter: 'Silchar HQ',
@@ -19,6 +28,8 @@ export const USER_BODRUD_ABM: UserProfile = {
   ],
   activeRouteId: 'route-cachar-01',
 };
+
+export const USER_BODRUD_ABM = USER_BODRUD_RSM;
 
 export const USER_PRANJAL_MR: UserProfile = {
   id: 'usr-mr-0002',
@@ -41,7 +52,7 @@ export const USER_PRANJAL_MR: UserProfile = {
 };
 
 export const CURRENT_USER: UserProfile = USER_PRANJAL_MR;
-export const ALL_APP_USERS: UserProfile[] = [USER_BODRUD_ABM, USER_PRANJAL_MR];
+export const ALL_APP_USERS: UserProfile[] = [USER_BODRUD_RSM, USER_PRANJAL_MR];
 
 export const BARAK_ROUTES: RoutePlan[] = [
   {

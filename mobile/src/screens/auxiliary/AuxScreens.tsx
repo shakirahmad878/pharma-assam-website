@@ -802,7 +802,7 @@ export const MonthlySummaryScreen: React.FC<{ onBack: () => void }> = ({ onBack 
 
   const teamAgents = [
     { id: 'usr-0002', name: 'Pranjal Malakar', role: 'MEDICAL_REP', employeeCode: '0002', territory: 'Silchar & Karimganj Beat (Barak Valley)' },
-    { id: 'usr-0001', name: 'Bodrud Jaman Sadiol', role: 'AREA_MANAGER', employeeCode: '0001', territory: 'Barak Valley Division HQ' },
+    { id: 'usr-0001', name: 'Bodrud Jaman Sadiol', role: 'REGIONAL_MANAGER', employeeCode: '0001', territory: 'Barak Valley Division HQ' },
     { id: 'usr-0003', name: 'Rahul Das', role: 'MEDICAL_REP', employeeCode: '0003', territory: 'Hailakandi District' },
     { id: 'usr-0004', name: 'Bikash Paul', role: 'MEDICAL_REP', employeeCode: '0004', territory: 'Badarpur & Rural Corridor' },
   ];
@@ -813,8 +813,8 @@ export const MonthlySummaryScreen: React.FC<{ onBack: () => void }> = ({ onBack 
   const handleAgentClick = () => {
     if (userRole === 'MEDICAL_REP') {
       Alert.alert(
-        '🔒 Access Restricted to ABM / Admin',
-        'Medical Representatives (MR) are only authorized to view their own Monthly Performance Summary.\n\nOnly an Area Business Manager (ABM) or System Admin can inspect and switch between other agents.'
+        '🔒 Access Restricted to RSM / Admin',
+        'Medical Representatives (MR) are only authorized to view their own Monthly Performance Summary.\n\nOnly a Regional Sales Manager (RSM) or System Admin can inspect and switch between other agents.'
       );
     } else {
       setAgentModalVisible(true);

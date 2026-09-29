@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Alert, Modal } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  Modal,
+  TextInput,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, typography, spacing, radius, shadows } from '../../constants/theme';
 import { Header } from '../../components/common/Header';
 import { Card } from '../../components/common/Card';
@@ -8,7 +19,8 @@ import { Button } from '../../components/common/Button';
 import { DoctorService } from '../../services/doctorService';
 import { LocationService } from '../../services/location/locationService';
 import { GeofenceService } from '../../services/location/geofenceService';
-import { Doctor, GeofenceStatus } from '../../types';
+import { AuthService } from '../../services/authService';
+import { Doctor, GeofenceStatus, UserProfile } from '../../types';
 
 interface DoctorDetailsScreenProps {
   doctorId: string;
@@ -16,13 +28,43 @@ interface DoctorDetailsScreenProps {
   onStartVisit: (doctor: Doctor, isGeofenceOk: boolean, distanceMeters: number) => void;
 }
 
+const COMMON_SPECIALTIES = [
+  'Cardiologist',
+  'Diabetologist',
+  'General Physician',
+  'Pediatrician',
+  'Orthopedic',
+  'Gynecologist',
+  'Dermatologist',
+  'ENT Specialist',
+];
+
 export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
   doctorId,
   onBack,
   onStartVisit,
 }) => {
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(AuthService.getCurrentUser());
   const [doctor, setDoctor] = useState<Doctor | null>(null);
   const [tierModalVisible, setTierModalVisible] = useState(false);
+
+  // Edit Doctor Modal State
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editSpecialty, setEditSpecialty] = useState('');
+  const [editQual, setEditQual] = useState('');
+  const [editClinic, setEditClinic] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editTier, setEditTier] = useState<'A_PLUS' | 'A' | 'B' | 'C'>('A');
+  const [editDistrict, setEditDistrict] = useState<'Cachar' | 'Karimganj' | 'Hailakandi'>('Cachar');
+  const [editArea, setEditArea] = useState('');
+
+  // Delete Doctor Modal State
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [deleteReason, setDeleteReason] = useState('Doctor relocated / chamber closed');
+  const [managerPinInput, setManagerPinInput] = useState('');
+  const [submittingDelete, setSubmittingDelete] = useState(false);
+
   const [geofenceEval, setGeofenceEval] = useState<{
     status: GeofenceStatus;
     distanceMeters: number;
@@ -32,16 +74,32 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
     status: 'NOT_STARTED',
     distanceMeters: 0,
     isWithinRadius: false,
-    statusText: 'Checking satellite distance...'
+    statusText: 'Checking satellite distance...',
   });
   const [checkingLocation, setCheckingLocation] = useState(false);
 
+  const isManager = currentUser?.role === 'REGIONAL_MANAGER' || currentUser?.role === 'AREA_MANAGER';
+
   useEffect(() => {
-    DoctorService.getDoctorById(doctorId).then(doc => {
-      setDoctor(doc);
-      if (doc) checkGeofence(doc);
-    });
+    setCurrentUser(AuthService.getCurrentUser());
+    loadDoctor();
   }, [doctorId]);
+
+  const loadDoctor = async () => {
+    const doc = await DoctorService.getDoctorById(doctorId);
+    setDoctor(doc);
+    if (doc) {
+      checkGeofence(doc);
+      setEditName(doc.name);
+      setEditSpecialty(doc.specialty);
+      setEditQual(doc.qualification);
+      setEditClinic(doc.clinicName);
+      setEditPhone(doc.phone ? doc.phone.replace('+91 ', '') : '');
+      setEditTier(doc.tier || 'A');
+      setEditDistrict(doc.district as any || 'Cachar');
+      setEditArea(doc.area);
+    }
+  };
 
   const checkGeofence = async (doc: Doctor) => {
     setCheckingLocation(true);
@@ -68,8 +126,127 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
         status: 'LOCATION_ACCURACY_LOW',
         distanceMeters: 0,
         isWithinRadius: false,
-        statusText: 'GPS fix unavailable. Please check location permissions.'
+        statusText: 'GPS fix unavailable. Please check location permissions.',
       });
+    }
+  };
+
+  const handleOpenEdit = () => {
+    if (!doctor) return;
+    setEditName(doctor.name);
+    setEditSpecialty(doctor.specialty);
+    setEditQual(doctor.qualification);
+    setEditClinic(doctor.clinicName);
+    setEditPhone(doctor.phone ? doctor.phone.replace('+91 ', '') : '');
+    setEditTier(doctor.tier || 'A');
+    setEditDistrict(doctor.district as any || 'Cachar');
+    setEditArea(doctor.area);
+    setEditModalVisible(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!doctor) return;
+    if (!editName.trim()) {
+      Alert.alert('Required Field', 'Please enter Doctor Full Name.');
+      return;
+    }
+    if (!editClinic.trim()) {
+      Alert.alert('Required Field', 'Please enter Clinic / Chamber Name.');
+      return;
+    }
+
+    const cleanPhoneDigits = editPhone.trim().replace(/\D/g, '');
+    if (cleanPhoneDigits.length !== 10 || !/^[6-9]\d{9}$/.test(cleanPhoneDigits)) {
+      Alert.alert('Invalid Mobile Number', 'Please enter a valid 10-digit Indian mobile number (e.g. 9435012345).');
+      return;
+    }
+
+    const formattedName = editName.trim().startsWith('Dr.') ? editName.trim() : `Dr. ${editName.trim()}`;
+    const formattedPhone = `+91 ${cleanPhoneDigits}`;
+
+    const updated = await DoctorService.updateDoctor(doctor.id, {
+      name: formattedName,
+      specialty: editSpecialty.trim() || 'General Physician',
+      qualification: editQual.trim() || 'MBBS',
+      clinicName: editClinic.trim(),
+      phone: formattedPhone,
+      tier: editTier,
+      district: editDistrict,
+      area: editArea.trim() || doctor.area,
+      clinicAddress: `${editClinic.trim()}, ${editArea.trim() || doctor.area}, ${editDistrict}`,
+      monthlyVisitTarget: editTier === 'A_PLUS' ? 12 : editTier === 'A' ? 8 : 4,
+    });
+
+    if (updated) {
+      setDoctor(updated);
+      setEditModalVisible(false);
+      Alert.alert('Doctor Details Updated ✅', `${updated.name} records have been saved successfully.`);
+    }
+  };
+
+  const handleDeletePress = () => {
+    if (!doctor) return;
+
+    if (isManager) {
+      // Direct Manager Delete with confirmation
+      Alert.alert(
+        'Delete Doctor Record',
+        `Are you sure you want to permanently delete ${doctor.name} (${doctor.clinicName}) from the system?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete Doctor',
+            style: 'destructive',
+            onPress: async () => {
+              await DoctorService.deleteDoctor(doctor.id);
+              Alert.alert('Doctor Deleted 🗑️', `${doctor.name} has been removed from the registry.`);
+              onBack();
+            },
+          },
+        ]
+      );
+    } else {
+      // MR Deletion Approval Request
+      setDeleteModalVisible(true);
+    }
+  };
+
+  const handleSendDeleteRequest = async () => {
+    if (!doctor) return;
+    if (!deleteReason.trim()) {
+      Alert.alert('Reason Required', 'Please enter a reason for requesting doctor deletion.');
+      return;
+    }
+    setSubmittingDelete(true);
+    await DoctorService.requestDoctorDeletion(
+      doctor.id,
+      doctor.name,
+      deleteReason,
+      currentUser?.name || 'Pranjal Malakar (MR)'
+    );
+    setSubmittingDelete(false);
+    setDeleteModalVisible(false);
+
+    Alert.alert(
+      'Deletion Request Sent ✅',
+      `Approval request to delete ${doctor.name} sent to Regional Sales Manager (RSM Bodrud Jaman Sadiol).`
+    );
+  };
+
+  const handleManagerPinDelete = async () => {
+    if (!doctor) return;
+    if (!managerPinInput.trim()) {
+      Alert.alert('PIN Required', 'Please enter 4-digit Manager Authorization PIN.');
+      return;
+    }
+
+    if (managerPinInput.trim() === '0001' || managerPinInput.trim() === '1234') {
+      setDeleteModalVisible(false);
+      await DoctorService.deleteDoctor(doctor.id);
+      Alert.alert('Manager Authorized ✅', `${doctor.name} has been permanently deleted by RSM Authorization.`);
+      onBack();
+    } else {
+      Alert.alert('Invalid PIN', 'Incorrect Manager Authorization PIN.');
     }
   };
 
@@ -78,8 +255,7 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
   return (
     <SafeAreaView style={styles.container}>
       <Header title={doctor.name} subtitle={doctor.specialty} showBack onBack={onBack} />
-      <ScrollView contentContainerStyle={styles.content}>
-        
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Profile Card */}
         <Card>
           <View style={styles.headerRow}>
@@ -88,16 +264,22 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
               <Text style={styles.docQual}>{doctor.qualification}</Text>
               <Text style={styles.docSpecialty}>Specialty: {doctor.specialty}</Text>
             </View>
-            <TouchableOpacity
-              onPress={() => setTierModalVisible(true)}
-              style={styles.tierBadgeWrapper}
-            >
-              <Badge
-                label={doctor.tier === 'A_PLUS' ? 'Tier A+' : `Tier ${doctor.tier}`}
-                variant="primary"
-              />
-              <Text style={styles.changeTierHint}>✏️ Change</Text>
-            </TouchableOpacity>
+            <View style={{ alignItems: 'flex-end', gap: 6 }}>
+              <TouchableOpacity
+                onPress={() => setTierModalVisible(true)}
+                style={styles.tierBadgeWrapper}
+              >
+                <Badge
+                  label={doctor.tier === 'A_PLUS' ? 'Tier A+' : `Tier ${doctor.tier}`}
+                  variant="primary"
+                />
+                <Text style={styles.changeTierHint}>✏️ Tier</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.editBtnPill} onPress={handleOpenEdit}>
+                <Ionicons name="create-outline" size={13} color="#2563EB" />
+                <Text style={styles.editBtnPillText}>Edit Info</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </Card>
 
@@ -170,7 +352,12 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
 
         {/* Clinic Details */}
         <Card>
-          <Text style={styles.sectionTitle}>Clinic Information</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+            <Text style={styles.sectionTitle}>Clinic Information</Text>
+            <TouchableOpacity onPress={handleOpenEdit}>
+              <Text style={styles.editSectionLink}>✏️ Edit</Text>
+            </TouchableOpacity>
+          </View>
           <Text style={styles.clinicName}>🏥 {doctor.clinicName}</Text>
           <Text style={styles.clinicAddr}>{doctor.clinicAddress}</Text>
           <Text style={styles.clinicPhone}>📞 {doctor.phone}</Text>
@@ -205,7 +392,175 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
             variant={geofenceEval.isWithinRadius ? "primary" : "secondary"}
           />
         </View>
+
+        {/* Delete Doctor Button */}
+        <TouchableOpacity style={styles.deleteDoctorBtn} onPress={handleDeletePress}>
+          <Ionicons name="trash-outline" size={16} color="#DC2626" />
+          <Text style={styles.deleteDoctorText}>
+            {isManager ? 'Delete Doctor Record' : 'Request Doctor Deletion (RSM Approval)'}
+          </Text>
+        </TouchableOpacity>
       </ScrollView>
+
+      {/* Edit Doctor Modal */}
+      <Modal visible={editModalVisible} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { maxHeight: '90%' }]}>
+            <View style={styles.modalHeaderRow}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="create" size={20} color={colors.primary} />
+                <Text style={styles.modalHeaderTitle}>Edit Doctor Details</Text>
+              </View>
+              <TouchableOpacity onPress={() => setEditModalVisible(false)}>
+                <Ionicons name="close" size={22} color="#64748B" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Text style={styles.formInputLabel}>Doctor Full Name *</Text>
+              <TextInput
+                style={styles.formInput}
+                value={editName}
+                onChangeText={setEditName}
+                placeholder="e.g. Dr. Bikram Nath"
+              />
+
+              <Text style={styles.formInputLabel}>Specialty *</Text>
+              <TextInput
+                style={styles.formInput}
+                value={editSpecialty}
+                onChangeText={setEditSpecialty}
+                placeholder="e.g. Cardiologist"
+              />
+
+              <View style={styles.chipsWrap}>
+                {COMMON_SPECIALTIES.map(spec => (
+                  <TouchableOpacity
+                    key={spec}
+                    style={[styles.specChip, editSpecialty === spec && styles.specChipActive]}
+                    onPress={() => setEditSpecialty(spec)}
+                  >
+                    <Text style={[styles.specChipText, editSpecialty === spec && styles.specChipTextActive]}>
+                      {spec}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={styles.formInputLabel}>Clinic / Chamber Name *</Text>
+              <TextInput
+                style={styles.formInput}
+                value={editClinic}
+                onChangeText={setEditClinic}
+                placeholder="e.g. Apollo Polyclinic, Hospital Road"
+              />
+
+              <Text style={styles.formInputLabel}>10-Digit Mobile Number *</Text>
+              <TextInput
+                style={styles.formInput}
+                value={editPhone}
+                onChangeText={setEditPhone}
+                placeholder="e.g. 9435012345"
+                keyboardType="phone-pad"
+              />
+
+              <Text style={styles.formInputLabel}>Classification Tier</Text>
+              <View style={styles.tierSelectorRow}>
+                {(['A_PLUS', 'A', 'B', 'C'] as const).map(t => (
+                  <TouchableOpacity
+                    key={t}
+                    style={[styles.tierChip, editTier === t && styles.tierChipActive]}
+                    onPress={() => setEditTier(t)}
+                  >
+                    <Text style={[styles.tierChipText, editTier === t && styles.tierChipTextActive]}>
+                      {t === 'A_PLUS' ? 'Tier A+' : `Tier ${t}`}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={styles.formInputLabel}>Territory District</Text>
+              <View style={styles.tierSelectorRow}>
+                {(['Cachar', 'Karimganj', 'Hailakandi'] as const).map(d => (
+                  <TouchableOpacity
+                    key={d}
+                    style={[styles.tierChip, editDistrict === d && styles.tierChipActive]}
+                    onPress={() => setEditDistrict(d)}
+                  >
+                    <Text style={[styles.tierChipText, editDistrict === d && styles.tierChipTextActive]}>
+                      {d}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <TouchableOpacity style={styles.saveChangesBtn} onPress={handleSaveEdit}>
+                <Text style={styles.saveChangesBtnText}>Save Changes</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Delete Doctor Approval Request Modal (For MR) */}
+      <Modal visible={deleteModalVisible} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeaderRow}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Ionicons name="shield-checkmark" size={20} color="#DC2626" />
+                <Text style={styles.modalHeaderTitle}>Manager Deletion Approval</Text>
+              </View>
+              <TouchableOpacity onPress={() => setDeleteModalVisible(false)}>
+                <Ionicons name="close" size={22} color="#64748B" />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.modalNotice}>
+              Deleting a registered doctor requires approval from Regional Sales Manager (RSM Bodrud Jaman Sadiol).
+            </Text>
+
+            <Text style={styles.formInputLabel}>Reason for Deletion *</Text>
+            <TextInput
+              style={[styles.formInput, { minHeight: 60, textAlignVertical: 'top' }]}
+              value={deleteReason}
+              onChangeText={setDeleteReason}
+              placeholder="e.g. Doctor chamber closed / duplicate registration..."
+              multiline
+            />
+
+            <TouchableOpacity
+              style={styles.requestApprovalBtn}
+              onPress={handleSendDeleteRequest}
+              disabled={submittingDelete}
+            >
+              <Text style={styles.requestApprovalBtnText}>
+                {submittingDelete ? 'Submitting...' : '📨 Send Deletion Request to RSM'}
+              </Text>
+            </TouchableOpacity>
+
+            <View style={styles.orDivider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.orText}>OR ENTER RSM PIN</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+              <TextInput
+                style={[styles.formInput, { flex: 1 }]}
+                placeholder="RSM PIN (0001)"
+                value={managerPinInput}
+                onChangeText={setManagerPinInput}
+                keyboardType="numeric"
+                secureTextEntry
+              />
+              <TouchableOpacity style={styles.authorizeBtn} onPress={handleManagerPinDelete}>
+                <Text style={styles.authorizeBtnText}>Authorize</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -218,7 +573,20 @@ const styles = StyleSheet.create({
   docQual: { color: colors.textSecondary, fontSize: typography.fontSize.sm, marginTop: 2 },
   docSpecialty: { color: colors.primaryDark, fontSize: typography.fontSize.sm, fontWeight: typography.fontWeight.bold, marginTop: 4 },
   tierBadgeWrapper: { alignItems: 'center' },
-  changeTierHint: { fontSize: 10, color: '#2563EB', fontWeight: '700', marginTop: 4 },
+  changeTierHint: { fontSize: 10, color: '#2563EB', fontWeight: '700', marginTop: 2 },
+  editBtnPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+  },
+  editBtnPillText: { fontSize: 11, fontWeight: '700', color: '#2563EB' },
+  editSectionLink: { fontSize: 12, fontWeight: '700', color: '#2563EB' },
 
   modalOverlay: {
     flex: 1,
@@ -232,11 +600,18 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     padding: 20,
     width: '100%',
-    maxWidth: 360,
+    maxWidth: 380,
     ...shadows.lg,
   },
-  modalTitle: { fontSize: 16, fontWeight: '800', color: colors.textPrimary },
+  modalHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  modalHeaderTitle: { fontSize: 16, fontWeight: '800', color: colors.textPrimary },
   modalSubtitle: { fontSize: 12, color: '#64748B', marginTop: 2, marginBottom: 16 },
+  modalNotice: { fontSize: 12, color: '#64748B', lineHeight: 18, marginBottom: 12 },
   tierOptionsList: { gap: 10, marginBottom: 16 },
   tierOptionItem: {
     flexDirection: 'row',
@@ -271,4 +646,66 @@ const styles = StyleSheet.create({
   clinicPhone: { color: colors.primary, fontSize: typography.fontSize.sm, marginTop: 4, fontWeight: typography.fontWeight.semibold },
   historyText: { color: colors.textSecondary, fontSize: typography.fontSize.sm, marginTop: 3 },
   ctaContainer: { marginTop: spacing.md },
+
+  deleteDoctorBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 14,
+    marginTop: spacing.md,
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+    backgroundColor: '#FEF2F2',
+    borderRadius: radius.md,
+  },
+  deleteDoctorText: { color: '#DC2626', fontSize: 13, fontWeight: '700' },
+
+  // Edit form styles
+  formInputLabel: { fontSize: 11, fontWeight: '700', color: '#475569', marginTop: 8, marginBottom: 4 },
+  formInput: {
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: radius.sm,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 13,
+    color: colors.textPrimary,
+  },
+  chipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 6, marginBottom: 4 },
+  specChip: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: radius.full, backgroundColor: '#F1F5F9' },
+  specChipActive: { backgroundColor: '#EFF6FF', borderWidth: 1, borderColor: '#2563EB' },
+  specChipText: { fontSize: 11, color: '#64748B', fontWeight: '600' },
+  specChipTextActive: { color: '#2563EB', fontWeight: '800' },
+  tierSelectorRow: { flexDirection: 'row', gap: 6, marginTop: 4, marginBottom: 8 },
+  tierChip: { flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: radius.sm, backgroundColor: '#F1F5F9' },
+  tierChipActive: { backgroundColor: '#2563EB' },
+  tierChipText: { fontSize: 11, color: '#64748B', fontWeight: '700' },
+  tierChipTextActive: { color: '#ffffff', fontWeight: '800' },
+  saveChangesBtn: {
+    backgroundColor: colors.primary,
+    paddingVertical: 12,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    marginTop: 14,
+    marginBottom: 6,
+  },
+  saveChangesBtnText: { color: '#ffffff', fontSize: 14, fontWeight: '800' },
+
+  // Approval modal styles
+  requestApprovalBtn: {
+    backgroundColor: '#DC2626',
+    paddingVertical: 12,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  requestApprovalBtnText: { color: '#ffffff', fontSize: 13, fontWeight: '700' },
+  orDivider: { flexDirection: 'row', alignItems: 'center', gap: 8, marginVertical: 12 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: '#E2E8F0' },
+  orText: { fontSize: 10, fontWeight: '800', color: '#94A3B8' },
+  authorizeBtn: { backgroundColor: '#0F172A', paddingHorizontal: 16, justifyContent: 'center', borderRadius: radius.sm },
+  authorizeBtnText: { color: '#ffffff', fontSize: 12, fontWeight: '700' },
 });
+

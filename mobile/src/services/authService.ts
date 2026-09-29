@@ -62,7 +62,7 @@ export class AuthService {
     return null;
   }
 
-  public static async requestLateApproval(reason: string, managerName = 'Bodrud Jaman Sadiol (ABM)'): Promise<LateLoginApproval> {
+  public static async requestLateApproval(reason: string, managerName = 'Bodrud Jaman Sadiol (RSM)'): Promise<LateLoginApproval> {
     const todayStr = new Date().toISOString().split('T')[0];
     const approval: LateLoginApproval = {
       date: todayStr,
@@ -80,7 +80,7 @@ export class AuthService {
     if (!validPins.includes(pin.trim())) {
       return { success: false, error: 'Invalid Manager Authorization PIN.' };
     }
-    const approval = await this.requestLateApproval(reason, 'Bodrud Jaman Sadiol (ABM)');
+    const approval = await this.requestLateApproval(reason, 'Bodrud Jaman Sadiol (RSM)');
     return { success: true, approval };
   }
 
