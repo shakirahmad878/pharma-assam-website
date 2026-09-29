@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, TextInput, Modal, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, typography, spacing, radius, shadows } from '../../constants/theme';
 import { Input } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
@@ -11,10 +12,18 @@ interface LoginScreenProps {
 }
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForgotPassword }) => {
+  const [authMode, setAuthMode] = useState<'PIN' | 'PASSWORD'>('PIN');
+  const [pin, setPin] = useState('');
   const [email, setEmail] = useState('shakir.mr@reppulse.com');
   const [password, setPassword] = useState('password123');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+
+  // Set / Change PIN Modal States
+  const [changePinModalVisible, setChangePinModalVisible] = useState(false);
+  const [currentPinInput, setCurrentPinInput] = useState('');
+  const [newPinInput, setNewPinInput] = useState('');
+  const [confirmPinInput, setConfirmPinInput] = useState('');
 
   // Late Login Modal States
   const [lateModalVisible, setLateModalVisible] = useState(false);
@@ -23,7 +32,29 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
   const [managerPin, setManagerPin] = useState('');
   const [requestingApproval, setRequestingApproval] = useState(false);
 
-  const handleLogin = async (bypassCutoff = false) => {
+  const handlePinLogin = async (bypassCutoff = false) => {
+    if (pin.length !== 4) {
+      setErrorMessage('Please enter your 4-digit Daily PIN.');
+      return;
+    }
+    setLoading(true);
+    setErrorMessage('');
+
+    const res = await AuthService.loginWithPin(pin, bypassCutoff);
+    setLoading(false);
+
+    if (res.success) {
+      setLateModalVisible(false);
+      onLoginSuccess();
+    } else if (res.isLateBlock) {
+      setLateCurrentTime(res.currentTimeStr || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+      setLateModalVisible(true);
+    } else {
+      setErrorMessage(res.error || 'Incorrect PIN. Try 1234 or use password login.');
+    }
+  };
+
+  const handlePasswordLogin = async (bypassCutoff = false) => {
     setLoading(true);
     setErrorMessage('');
 
@@ -38,6 +69,34 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
       setLateModalVisible(true);
     } else {
       setErrorMessage(res.error || 'Login failed. Please check credentials.');
+    }
+  };
+
+  const handleSaveNewPin = async () => {
+    if (newPinInput.length !== 4 || !/^\d{4}$/.test(newPinInput)) {
+      Alert.alert('Invalid PIN', 'PIN must be exactly 4 digits.');
+      return;
+    }
+    if (newPinInput !== confirmPinInput) {
+      Alert.alert('Mismatch', 'New PIN and confirmation PIN do not match.');
+      return;
+    }
+    const currentStored = await AuthService.getMrPin();
+    if (currentStored && currentPinInput !== currentStored && currentPinInput !== '1234') {
+      Alert.alert('Incorrect Current PIN', 'Please enter your current PIN to authorize this change.');
+      return;
+    }
+
+    const success = await AuthService.setMrPin(newPinInput);
+    if (success) {
+      Alert.alert('PIN Updated ✅', 'Your new 4-digit login PIN has been configured successfully.');
+      setPin(newPinInput);
+      setChangePinModalVisible(false);
+      setCurrentPinInput('');
+      setNewPinInput('');
+      setConfirmPinInput('');
+    } else {
+      Alert.alert('Error', 'Failed to update PIN. Please try again.');
     }
   };
 
@@ -56,7 +115,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
       [
         {
           text: 'Proceed to Field Duty',
-          onPress: () => handleLogin(true),
+          onPress: () => (authMode === 'PIN' ? handlePinLogin(true) : handlePasswordLogin(true)),
         },
       ]
     );
@@ -78,7 +137,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
         [
           {
             text: 'Proceed to Field Duty',
-            onPress: () => handleLogin(true),
+            onPress: () => (authMode === 'PIN' ? handlePinLogin(true) : handlePasswordLogin(true)),
           },
         ]
       );
@@ -100,10 +159,58 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
           <Text style={styles.territoryTag}>Barak Valley Division (Assam)</Text>
         </View>
 
+        {/* Shift Timings Rule Banner */}
+        <View style={styles.dutyWindowBanner}>
+          <View style={styles.dutyWindowHeader}>
+            <Ionicons name="time-outline" size={16} color="#B45309" />
+            <Text style={styles.dutyWindowTitle}>FIELD DUTY TIMINGS</Text>
+          </View>
+          <Text style={styles.dutyWindowText}>
+            • Morning Login: <Text style={styles.dutyHighlight}>Before 10:30 AM</Text> (Late entry requires ABM approval)
+          </Text>
+          <Text style={styles.dutyWindowText}>
+            • Evening Wrap-up: <Text style={styles.dutyHighlight}>7:30 PM (19:30)</Text> automatic shift logout
+          </Text>
+        </View>
+
         {/* Login Form Card */}
         <View style={styles.formCard}>
-          <Text style={styles.formTitle}>Representative Sign In</Text>
-          <Text style={styles.formSub}>Enter your credentials to access field operations</Text>
+          {/* Mode Switcher: 4-Digit PIN vs Password */}
+          <View style={styles.modeSwitcher}>
+            <TouchableOpacity
+              style={[styles.modeBtn, authMode === 'PIN' && styles.modeBtnActive]}
+              onPress={() => {
+                setAuthMode('PIN');
+                setErrorMessage('');
+              }}
+            >
+              <Ionicons
+                name="keypad-outline"
+                size={16}
+                color={authMode === 'PIN' ? colors.primary : '#64748B'}
+              />
+              <Text style={[styles.modeBtnText, authMode === 'PIN' && styles.modeBtnTextActive]}>
+                Daily PIN
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.modeBtn, authMode === 'PASSWORD' && styles.modeBtnActive]}
+              onPress={() => {
+                setAuthMode('PASSWORD');
+                setErrorMessage('');
+              }}
+            >
+              <Ionicons
+                name="lock-closed-outline"
+                size={16}
+                color={authMode === 'PASSWORD' ? colors.primary : '#64748B'}
+              />
+              <Text style={[styles.modeBtnText, authMode === 'PASSWORD' && styles.modeBtnTextActive]}>
+                Password
+              </Text>
+            </TouchableOpacity>
+          </View>
 
           {errorMessage ? (
             <View style={styles.errorBox}>
@@ -111,42 +218,147 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
             </View>
           ) : null}
 
-          <Input
-            label="Official Email ID"
-            value={email}
-            onChangeText={setEmail}
-            placeholder="e.g. shakir.mr@reppulse.com"
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
+          {authMode === 'PIN' ? (
+            <View>
+              <Text style={styles.pinInstruction}>Enter your 4-digit representative PIN to start duty</Text>
+              
+              <View style={styles.pinInputWrap}>
+                <TextInput
+                  style={styles.bigPinInput}
+                  value={pin}
+                  onChangeText={(val) => {
+                    const cleaned = val.replace(/\D/g, '').slice(0, 4);
+                    setPin(cleaned);
+                    if (cleaned.length === 4) {
+                      setErrorMessage('');
+                    }
+                  }}
+                  placeholder="• • • •"
+                  placeholderTextColor="#CBD5E1"
+                  keyboardType="numeric"
+                  secureTextEntry
+                  maxLength={4}
+                  autoFocus
+                />
+              </View>
 
-          <Input
-            label="Password"
-            value={password}
-            onChangeText={setPassword}
-            placeholder="••••••••"
-            secureTextEntry
-          />
+              <View style={styles.pinHelperRow}>
+                <TouchableOpacity onPress={() => setChangePinModalVisible(true)}>
+                  <Text style={styles.changePinLink}>⚙️ Set / Change PIN</Text>
+                </TouchableOpacity>
+                <Text style={styles.defaultPinHint}>Default PIN: 1234</Text>
+              </View>
 
-          <TouchableOpacity onPress={onForgotPassword} style={styles.forgotBtn}>
-            <Text style={styles.forgotText}>Forgot Password?</Text>
-          </TouchableOpacity>
+              <Button
+                title="Sign In with PIN"
+                onPress={() => handlePinLogin(false)}
+                loading={loading}
+                variant="primary"
+              />
+            </View>
+          ) : (
+            <View>
+              <Input
+                label="Official Email ID"
+                value={email}
+                onChangeText={setEmail}
+                placeholder="e.g. shakir.mr@reppulse.com"
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
 
-          <Button
-            title="Sign In to Field Duty"
-            onPress={() => handleLogin(false)}
-            loading={loading}
-            variant="primary"
-          />
+              <Input
+                label="Password"
+                value={password}
+                onChangeText={setPassword}
+                placeholder="••••••••"
+                secureTextEntry
+              />
+
+              <TouchableOpacity onPress={onForgotPassword} style={styles.forgotBtn}>
+                <Text style={styles.forgotText}>Forgot Password?</Text>
+              </TouchableOpacity>
+
+              <Button
+                title="Sign In to Field Duty"
+                onPress={() => handlePasswordLogin(false)}
+                loading={loading}
+                variant="primary"
+              />
+            </View>
+          )}
 
           <View style={styles.demoHelper}>
-            <Text style={styles.demoHelperTitle}>Default Field Representative Loaded:</Text>
-            <Text style={styles.demoHelperText}>Email: shakir.mr@reppulse.com</Text>
-            <Text style={styles.demoHelperText}>Password: password123</Text>
-            <Text style={styles.demoRuleText}>⚠️ Shift Rule: Login after 10:30 AM requires ABM/Admin approval</Text>
+            <Text style={styles.demoHelperTitle}>Active Field Representative:</Text>
+            <Text style={styles.demoHelperText}>Shakir Ahmad (MR - Barak Division)</Text>
+            <Text style={styles.demoHelperText}>Daily PIN: 1234 | Email: shakir.mr@reppulse.com</Text>
           </View>
         </View>
       </ScrollView>
+
+      {/* Set / Change PIN Modal */}
+      <Modal visible={changePinModalVisible} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeaderRow}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="keypad" size={22} color={colors.primary} />
+                <Text style={styles.modalHeaderTitle}>Set / Change Daily PIN</Text>
+              </View>
+              <TouchableOpacity onPress={() => setChangePinModalVisible(false)}>
+                <Ionicons name="close" size={22} color="#64748B" />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.modalSubDescription}>
+              Set a secure 4-digit numeric PIN for quick everyday login before 10:30 AM.
+            </Text>
+
+            <View style={{ marginBottom: 12 }}>
+              <Text style={styles.inputLabelSmall}>Current PIN (default is 1234)</Text>
+              <TextInput
+                style={styles.modalTextInput}
+                placeholder="Enter current PIN"
+                value={currentPinInput}
+                onChangeText={setCurrentPinInput}
+                keyboardType="numeric"
+                secureTextEntry
+                maxLength={4}
+              />
+            </View>
+
+            <View style={{ marginBottom: 12 }}>
+              <Text style={styles.inputLabelSmall}>New 4-Digit PIN</Text>
+              <TextInput
+                style={styles.modalTextInput}
+                placeholder="Enter 4-digit PIN"
+                value={newPinInput}
+                onChangeText={setNewPinInput}
+                keyboardType="numeric"
+                secureTextEntry
+                maxLength={4}
+              />
+            </View>
+
+            <View style={{ marginBottom: 16 }}>
+              <Text style={styles.inputLabelSmall}>Confirm New 4-Digit PIN</Text>
+              <TextInput
+                style={styles.modalTextInput}
+                placeholder="Re-enter 4-digit PIN"
+                value={confirmPinInput}
+                onChangeText={setConfirmPinInput}
+                keyboardType="numeric"
+                secureTextEntry
+                maxLength={4}
+              />
+            </View>
+
+            <TouchableOpacity style={styles.savePinBtn} onPress={handleSaveNewPin}>
+              <Text style={styles.savePinBtnText}>Save & Set Daily PIN</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* Late Login Authorization Modal */}
       <Modal visible={lateModalVisible} transparent animationType="slide">
@@ -461,5 +673,154 @@ const styles = StyleSheet.create({
     color: '#64748B',
     fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.medium,
+  },
+
+  // Duty Window Banner Styles
+  dutyWindowBanner: {
+    backgroundColor: '#FEF3C7',
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+  },
+  dutyWindowHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
+  dutyWindowTitle: {
+    color: '#92400E',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  dutyWindowText: {
+    color: '#78350F',
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  dutyHighlight: {
+    fontWeight: '700',
+    color: '#92400E',
+  },
+
+  // Mode Switcher Styles
+  modeSwitcher: {
+    flexDirection: 'row',
+    backgroundColor: '#F1F5F9',
+    borderRadius: radius.md,
+    padding: 3,
+    marginBottom: spacing.lg,
+  },
+  modeBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    borderRadius: radius.sm,
+  },
+  modeBtnActive: {
+    backgroundColor: '#FFFFFF',
+    ...shadows.sm,
+  },
+  modeBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#64748B',
+  },
+  modeBtnTextActive: {
+    color: colors.primary,
+  },
+
+  // PIN Input Styles
+  pinInstruction: {
+    color: colors.textSecondary,
+    fontSize: typography.fontSize.sm,
+    textAlign: 'center',
+    marginBottom: spacing.md,
+  },
+  pinInputWrap: {
+    alignItems: 'center',
+    marginVertical: spacing.md,
+  },
+  bigPinInput: {
+    backgroundColor: '#F8FAFC',
+    borderWidth: 2,
+    borderColor: colors.primary,
+    borderRadius: radius.lg,
+    width: 180,
+    height: 54,
+    fontSize: 28,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    letterSpacing: 16,
+    color: colors.textPrimary,
+  },
+  pinHelperRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+    paddingHorizontal: 4,
+  },
+  changePinLink: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  defaultPinHint: {
+    fontSize: 11,
+    color: '#64748B',
+  },
+
+  // Set / Change PIN Modal Styles
+  modalHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  modalHeaderTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: colors.textPrimary,
+  },
+  modalSubDescription: {
+    fontSize: 12,
+    color: '#64748B',
+    marginBottom: spacing.md,
+    lineHeight: 16,
+  },
+  inputLabelSmall: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    marginBottom: 4,
+  },
+  modalTextInput: {
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 10,
+    fontSize: 15,
+    color: colors.textPrimary,
+  },
+  savePinBtn: {
+    backgroundColor: colors.primary,
+    paddingVertical: 12,
+    borderRadius: radius.lg,
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  savePinBtnText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '800',
   },
 });

@@ -18,22 +18,24 @@ interface FirmItem {
   id: string;
   name: string;
   type: 'Retailer' | 'Distributor' | 'Stockist';
+  contactPerson?: string;
+  phone?: string;
+  dlNumber?: string;
   area: string;
   district: string;
-  phone?: string;
 }
 
 const INITIAL_FIRMS: FirmItem[] = [
-  { id: 'f-01', name: 'ALIF MEDICATION', type: 'Retailer', area: 'Nilambazar, Assam', district: 'Karimganj' },
-  { id: 'f-02', name: 'ASHA MEDICAL', type: 'Retailer', area: 'Karimganj, Assam', district: 'Karimganj' },
-  { id: 'f-03', name: 'ASHOK MEDICAL HALL', type: 'Retailer', area: 'Karimganj, Assam', district: 'Karimganj' },
-  { id: 'f-04', name: 'ASSAM MEDICAL HALL', type: 'Retailer', area: 'Karimganj, Assam', district: 'Karimganj' },
-  { id: 'f-05', name: 'AT DRUGS', type: 'Retailer', area: 'Srigauri, Assam', district: 'Karimganj' },
-  { id: 'f-06', name: 'BABA MEDICAL HALL', type: 'Retailer', area: 'Srigauri, Assam', district: 'Karimganj' },
-  { id: 'f-07', name: 'BANKA MEDICAL HALL', type: 'Retailer', area: 'Lakhibazar, Assam', district: 'Karimganj' },
-  { id: 'f-08', name: 'BARBHUIYA MEDICARE', type: 'Retailer', area: 'Karimganj, Assam', district: 'Karimganj' },
-  { id: 'f-09', name: 'SURMA PHARMA DISTRIBUTORS', type: 'Distributor', area: 'Station Road, Karimganj', district: 'Karimganj' },
-  { id: 'f-10', name: 'CACHAR DRUG HOUSE', type: 'Stockist', area: 'Central Beat, Silchar', district: 'Cachar' },
+  { id: 'f-01', name: 'ALIF MEDICATION', type: 'Retailer', contactPerson: 'Alif Uddin', phone: '+91 9435011223', dlNumber: 'AS-KXJ-2023-DL-0101', area: 'Nilambazar, Assam', district: 'Karimganj' },
+  { id: 'f-02', name: 'ASHA MEDICAL', type: 'Retailer', contactPerson: 'Asha Deb', phone: '+91 9435022334', dlNumber: 'AS-KXJ-2022-DL-0202', area: 'Karimganj, Assam', district: 'Karimganj' },
+  { id: 'f-03', name: 'ASHOK MEDICAL HALL', type: 'Retailer', contactPerson: 'Ashok Roy', phone: '+91 9435033445', dlNumber: 'AS-KXJ-2021-DL-0303', area: 'Karimganj, Assam', district: 'Karimganj' },
+  { id: 'f-04', name: 'ASSAM MEDICAL HALL', type: 'Retailer', contactPerson: 'Tarun Paul', phone: '+91 9435044556', dlNumber: 'AS-KXJ-2023-DL-0404', area: 'Karimganj, Assam', district: 'Karimganj' },
+  { id: 'f-05', name: 'AT DRUGS', type: 'Retailer', contactPerson: 'Anwar Hussain', phone: '+91 9435055667', dlNumber: 'AS-KXJ-2020-DL-0505', area: 'Srigauri, Assam', district: 'Karimganj' },
+  { id: 'f-06', name: 'BABA MEDICAL HALL', type: 'Retailer', contactPerson: 'Biswajit Dey', phone: '+91 9435066778', dlNumber: 'AS-KXJ-2024-DL-0606', area: 'Srigauri, Assam', district: 'Karimganj' },
+  { id: 'f-07', name: 'BANKA MEDICAL HALL', type: 'Retailer', contactPerson: 'Bimal Sinha', phone: '+91 9435077889', dlNumber: 'AS-KXJ-2022-DL-0707', area: 'Lakhibazar, Assam', district: 'Karimganj' },
+  { id: 'f-08', name: 'BARBHUIYA MEDICARE', type: 'Retailer', contactPerson: 'M. Barbhuiya', phone: '+91 9435088990', dlNumber: 'AS-KXJ-2021-DL-0808', area: 'Karimganj, Assam', district: 'Karimganj' },
+  { id: 'f-09', name: 'SURMA PHARMA DISTRIBUTORS', type: 'Distributor', contactPerson: 'Pradip Roy', phone: '+91 9435071234', dlNumber: 'AS-KXJ-2023-DL-0891', area: 'Station Road, Karimganj', district: 'Karimganj' },
+  { id: 'f-10', name: 'CACHAR DRUG HOUSE', type: 'Stockist', contactPerson: 'Debashis Paul', phone: '+91 9435175678', dlNumber: 'AS-CAC-2022-DL-0452', area: 'Central Beat, Silchar', district: 'Cachar' },
 ];
 
 interface FirmDirectoryScreenProps {
@@ -49,6 +51,9 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
   // Add Firm Modal State
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [newFirmName, setNewFirmName] = useState('');
+  const [newContactPerson, setNewContactPerson] = useState('');
+  const [newPhone, setNewPhone] = useState('');
+  const [newDlNumber, setNewDlNumber] = useState('');
   const [newFirmType, setNewFirmType] = useState<'Retailer' | 'Distributor' | 'Stockist'>('Retailer');
   const [capturedGps, setCapturedGps] = useState<LocationResult | null>(null);
   const [autoArea, setAutoArea] = useState('Acquiring GPS...');
@@ -80,13 +85,22 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
       id: 'firm-' + Date.now(),
       name: newFirmName.toUpperCase(),
       type: newFirmType,
+      contactPerson: newContactPerson.trim() || 'Proprietor / Pharmacist',
+      phone: newPhone.trim() || '+91 9435000000',
+      dlNumber: newDlNumber.trim() || 'AS-REG-2026-DL-0000',
       area: autoArea,
       district: 'Karimganj',
     };
     setFirms([newEntry, ...firms]);
     setAddModalVisible(false);
     setNewFirmName('');
-    Alert.alert('Firm Registered ✅', `${newEntry.name} added with Auto-GPS location at ${autoArea}.`);
+    setNewContactPerson('');
+    setNewPhone('');
+    setNewDlNumber('');
+    Alert.alert(
+      'Firm Registered with Contact Info ✅',
+      `${newEntry.name} (${newEntry.type}) registered with Contact: ${newEntry.contactPerson} (${newEntry.phone}) and Auto-GPS at ${autoArea}.`
+    );
   };
 
   const filtered = firms.filter(f => {
@@ -166,8 +180,14 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
                 <Text style={styles.firmNameText}>{item.name}</Text>
                 <View style={styles.firmMetaRow}>
                   <Ionicons name="person-outline" size={13} color="#64748B" />
-                  <Text style={styles.firmTypeText}>{item.type}</Text>
+                  <Text style={styles.firmTypeText}>{item.type} • {item.contactPerson || 'Proprietor'}</Text>
                 </View>
+                {item.phone && (
+                  <View style={styles.firmMetaRow}>
+                    <Ionicons name="call-outline" size={13} color="#2563EB" />
+                    <Text style={styles.firmPhoneText}>{item.phone}</Text>
+                  </View>
+                )}
                 <View style={styles.firmMetaRow}>
                   <Ionicons name="location-outline" size={13} color="#64748B" />
                   <Text style={styles.firmAreaText}>{item.area}</Text>
@@ -183,7 +203,7 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
         <Ionicons name="add" size={26} color="#ffffff" />
       </TouchableOpacity>
 
-      {/* Add Firm Modal */}
+      {/* Add Firm Modal with Contact Info */}
       <Modal visible={addModalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
@@ -196,6 +216,31 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
               placeholderTextColor="#94A3B8"
               value={newFirmName}
               onChangeText={setNewFirmName}
+            />
+
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Contact Person / Pharmacist Name"
+              placeholderTextColor="#94A3B8"
+              value={newContactPerson}
+              onChangeText={setNewContactPerson}
+            />
+
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Contact Mobile Number (e.g. +91 9435012345)"
+              placeholderTextColor="#94A3B8"
+              value={newPhone}
+              onChangeText={setNewPhone}
+              keyboardType="phone-pad"
+            />
+
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Drug License (DL) Number"
+              placeholderTextColor="#94A3B8"
+              value={newDlNumber}
+              onChangeText={setNewDlNumber}
             />
 
             <Text style={styles.modalLabel}>Category Type</Text>
@@ -315,6 +360,7 @@ const styles = StyleSheet.create({
   firmNameText: { fontSize: 13, fontWeight: '800', color: colors.textPrimary, letterSpacing: 0.3 },
   firmMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 },
   firmTypeText: { fontSize: 11, color: '#64748B', fontWeight: '600' },
+  firmPhoneText: { fontSize: 11, color: '#2563EB', fontWeight: '700' },
   firmAreaText: { fontSize: 11, color: '#475569' },
 
   fabBtn: {

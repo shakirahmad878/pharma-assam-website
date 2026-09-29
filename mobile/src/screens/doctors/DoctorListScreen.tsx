@@ -7,12 +7,16 @@ import {
   FlatList,
   TouchableOpacity,
   TextInput,
+  Modal,
+  ScrollView,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, typography, spacing, radius, shadows } from '../../constants/theme';
 import { DoctorService } from '../../services/doctorService';
 import { RouteService } from '../../services/routeService';
+import { LocationService } from '../../services/location/locationService';
 import { PdfReportService } from '../../services/pdfReportService';
 import { Doctor, RoutePlan } from '../../types';
 
@@ -22,6 +26,17 @@ interface DoctorListScreenProps {
   onOpenDrawer?: () => void;
   onNavigateToFirms?: () => void;
 }
+
+const COMMON_SPECIALTIES = [
+  'Cardiologist',
+  'Diabetologist',
+  'General Physician',
+  'Pediatrician',
+  'Orthopedic',
+  'Gynecologist',
+  'Dermatologist',
+  'ENT Specialist',
+];
 
 export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
   onBack,
@@ -38,6 +53,21 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [activeRoute, setActiveRoute] = useState<RoutePlan | null>(null);
 
+  // Add Doctor Modal State
+  const [addModalVisible, setAddModalVisible] = useState(false);
+  const [newDocName, setNewDocName] = useState('');
+  const [newDocSpecialty, setNewDocSpecialty] = useState('General Physician');
+  const [newDocClinic, setNewDocClinic] = useState('');
+  const [newDocPhone, setNewDocPhone] = useState('');
+  const [newDocTier, setNewDocTier] = useState<'A_PLUS' | 'A' | 'B' | 'C'>('A');
+  const [newDocDistrict, setNewDocDistrict] = useState<'Cachar' | 'Karimganj' | 'Hailakandi'>('Cachar');
+  const [newDocArea, setNewDocArea] = useState('Hospital Road, Silchar');
+  const [gpsLoading, setGpsLoading] = useState(false);
+  const [capturedCoords, setCapturedCoords] = useState<{ lat: number; lng: number }>({
+    lat: 24.8215,
+    lng: 92.7970,
+  });
+
   useEffect(() => {
     loadData();
   }, []);
@@ -49,11 +79,78 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
     setActiveRoute(route);
   };
 
+  const handleOpenAddDoctorModal = async () => {
+    setNewDocName('');
+    setNewDocSpecialty('General Physician');
+    setNewDocClinic('');
+    setNewDocPhone('');
+    setNewDocTier('A');
+    setNewDocDistrict('Cachar');
+    setNewDocArea('Hospital Road, Silchar');
+    setAddModalVisible(true);
+
+    // Auto-capture GPS
+    setGpsLoading(true);
+    try {
+      const loc = await LocationService.getCurrentLocation();
+      if (loc) {
+        setCapturedCoords({ lat: loc.latitude, lng: loc.longitude });
+      }
+    } catch {
+      // fallback
+    } finally {
+      setGpsLoading(false);
+    }
+  };
+
+  const handleSaveDoctor = async () => {
+    if (!newDocName.trim()) {
+      Alert.alert('Required Field', 'Please enter Doctor Full Name.');
+      return;
+    }
+    if (!newDocClinic.trim()) {
+      Alert.alert('Required Field', 'Please enter Clinic / Hospital / Chamber Name.');
+      return;
+    }
+    if (!newDocPhone.trim()) {
+      Alert.alert('Contact Info Required', 'Please enter Doctor Contact / Mobile Number.');
+      return;
+    }
+
+    const formattedName = newDocName.trim().startsWith('Dr.')
+      ? newDocName.trim()
+      : `Dr. ${newDocName.trim()}`;
+
+    await DoctorService.addDoctor({
+      name: formattedName,
+      specialty: newDocSpecialty.trim() || 'General Physician',
+      clinicName: newDocClinic.trim(),
+      phone: newDocPhone.trim(),
+      tier: newDocTier,
+      district: newDocDistrict,
+      area: newDocArea,
+      clinicAddress: `${newDocClinic.trim()}, ${newDocArea}, ${newDocDistrict}`,
+      latitude: capturedCoords.lat,
+      longitude: capturedCoords.lng,
+      monthlyVisitTarget: newDocTier === 'A_PLUS' ? 12 : newDocTier === 'A' ? 8 : 4,
+    });
+
+    setAddModalVisible(false);
+    await loadData();
+
+    Alert.alert(
+      'Doctor Added ✅',
+      `${formattedName} (Tier ${newDocTier.replace('_', '+')}) registered with contact ${newDocPhone.trim()} and Auto-GPS Geofence!`
+    );
+  };
+
   const handleShareVisits = async () => {
-    const headers = ['Doctor Name', 'Specialty', 'Location', 'Completed/Target', 'Status'];
+    const headers = ['Doctor Name', 'Specialty', 'Tier', 'Phone', 'Location', 'Target', 'Status'];
     const rows = filteredDoctors.map(d => [
       d.name,
       d.specialty,
+      `Tier ${d.tier ? d.tier.replace('_', '+') : 'A'}`,
+      d.phone || 'N/A',
       `${d.area}, ${d.district}`,
       `${d.completedVisitsThisMonth}/${d.monthlyVisitTarget}`,
       d.todayVisitStatus,
@@ -75,6 +172,7 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
       doc.name.toLowerCase().includes(query) ||
       doc.specialty.toLowerCase().includes(query) ||
       doc.clinicName.toLowerCase().includes(query) ||
+      (doc.phone && doc.phone.includes(query)) ||
       doc.area.toLowerCase().includes(query) ||
       doc.district.toLowerCase().includes(query);
 
@@ -86,7 +184,7 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header Banner matching Images 35, 36, 38 */}
+      {/* Header Banner matching Images */}
       <View style={styles.headerBanner}>
         <View style={styles.headerTopRow}>
           <TouchableOpacity style={styles.menuBtn} onPress={onOpenDrawer || onBack}>
@@ -154,12 +252,12 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
         </View>
       </View>
 
-      {/* Search Input Bar matching Image 36 */}
+      {/* Search Input Bar */}
       <View style={styles.searchBarBox}>
         <Ionicons name="search-outline" size={18} color="#64748B" />
         <TextInput
           style={styles.searchInput}
-          placeholder="Search by Name,City,Hospital Name"
+          placeholder="Search by Doctor, Phone, City, Specialty"
           placeholderTextColor="#94A3B8"
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -171,7 +269,7 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
         )}
       </View>
 
-      {/* List of Doctor Visit Cards matching Images 35, 36, 38 */}
+      {/* List of Doctor Visit Cards */}
       <FlatList
         data={filteredDoctors}
         keyExtractor={item => item.id}
@@ -182,6 +280,10 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
           const isOpen = item.todayVisitStatus === 'PENDING';
           const isCompleted = item.todayVisitStatus === 'COMPLETED';
           const isSkipped = item.todayVisitStatus === 'MISSED';
+
+          const tierLabel = item.tier === 'A_PLUS' ? 'Tier A+' : item.tier ? `Tier ${item.tier}` : 'Tier A';
+          const tierBg = item.tier === 'A_PLUS' ? '#FEF3C7' : item.tier === 'A' ? '#EFF6FF' : '#F1F5F9';
+          const tierColor = item.tier === 'A_PLUS' ? '#B45309' : item.tier === 'A' ? '#1D4ED8' : '#475569';
 
           return (
             <TouchableOpacity
@@ -205,11 +307,17 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
 
                   <Text style={styles.docCodeText}>PJDDR6 | ID #{item.id.replace(/\D/g, '') || '1833'}</Text>
                   <Text style={styles.docLocationText}>📍 {item.area}, {item.district}</Text>
+                  
+                  {item.phone ? (
+                    <Text style={styles.docPhoneText}>📞 {item.phone}</Text>
+                  ) : null}
 
                   <View style={styles.docTagsRow}>
-                    <Text style={styles.specialtyTag}>✨ {item.specialty.substring(0, 10).toUpperCase()}</Text>
+                    <Text style={[styles.tierBadge, { backgroundColor: tierBg, color: tierColor }]}>
+                      ⭐ {tierLabel}
+                    </Text>
+                    <Text style={styles.specialtyTag}>✨ {item.specialty.toUpperCase()}</Text>
                     <Text style={styles.potentialTag}>💰 ₹ 0-5000</Text>
-                    <Text style={styles.categoryTag}>GENERAL</Text>
                   </View>
 
                   <View style={styles.cardBottomRow}>
@@ -250,13 +358,187 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
         }
       />
 
-      {/* Bottom Bar with Share button matching Image 38 */}
+      {/* Floating Orange '+' Action Button */}
+      <TouchableOpacity
+        style={styles.fabBtn}
+        activeOpacity={0.85}
+        onPress={handleOpenAddDoctorModal}
+      >
+        <Ionicons name="add" size={30} color="#FFFFFF" />
+      </TouchableOpacity>
+
+      {/* Bottom Bar with Share button */}
       <View style={styles.bottomBar}>
         <TouchableOpacity style={styles.shareBtn} onPress={handleShareVisits}>
           <Ionicons name="share-social-outline" size={20} color="#2563EB" />
           <Text style={styles.shareBtnText}>Share</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Add New Doctor Modal */}
+      <Modal visible={addModalVisible} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeaderRow}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="person-add" size={22} color={colors.primary} />
+                <Text style={styles.modalHeaderTitle}>Add New Client / Doctor</Text>
+              </View>
+              <TouchableOpacity onPress={() => setAddModalVisible(false)}>
+                <Ionicons name="close" size={24} color="#64748B" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+              {/* Doctor Name */}
+              <Text style={styles.inputLabel}>Doctor Full Name *</Text>
+              <TextInput
+                style={styles.formInput}
+                placeholder="e.g. Dr. Bikram Nath"
+                placeholderTextColor="#94A3B8"
+                value={newDocName}
+                onChangeText={setNewDocName}
+              />
+
+              {/* Specialty Selector & Chips */}
+              <Text style={styles.inputLabel}>Specialty *</Text>
+              <TextInput
+                style={styles.formInput}
+                placeholder="e.g. Cardiologist"
+                placeholderTextColor="#94A3B8"
+                value={newDocSpecialty}
+                onChangeText={setNewDocSpecialty}
+              />
+              <View style={styles.chipsContainer}>
+                {COMMON_SPECIALTIES.map(spec => (
+                  <TouchableOpacity
+                    key={spec}
+                    style={[
+                      styles.chipItem,
+                      newDocSpecialty === spec && styles.chipItemActive,
+                    ]}
+                    onPress={() => setNewDocSpecialty(spec)}
+                  >
+                    <Text
+                      style={[
+                        styles.chipText,
+                        newDocSpecialty === spec && styles.chipTextActive,
+                      ]}
+                    >
+                      {spec}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Clinic / Chamber */}
+              <Text style={styles.inputLabel}>Clinic / Chamber Name *</Text>
+              <TextInput
+                style={styles.formInput}
+                placeholder="e.g. Apollo Clinic, Station Road"
+                placeholderTextColor="#94A3B8"
+                value={newDocClinic}
+                onChangeText={setNewDocClinic}
+              />
+
+              {/* Contact Info / Mobile Number */}
+              <Text style={styles.inputLabel}>Contact Info / Mobile Number *</Text>
+              <View style={styles.inputWithIcon}>
+                <Ionicons name="call-outline" size={18} color="#64748B" style={{ marginLeft: 10 }} />
+                <TextInput
+                  style={styles.innerTextInput}
+                  placeholder="e.g. +91 9435012345"
+                  placeholderTextColor="#94A3B8"
+                  value={newDocPhone}
+                  onChangeText={setNewDocPhone}
+                  keyboardType="phone-pad"
+                />
+              </View>
+
+              {/* Doctor Tier Selector */}
+              <Text style={styles.inputLabel}>Doctor Classification Tier *</Text>
+              <View style={styles.tierSelectorRow}>
+                {[
+                  { id: 'A_PLUS', label: 'Tier A+', desc: 'VIP / Core' },
+                  { id: 'A', label: 'Tier A', desc: 'High Priority' },
+                  { id: 'B', label: 'Tier B', desc: 'Regular' },
+                  { id: 'C', label: 'Tier C', desc: 'Potential' },
+                ].map(t => (
+                  <TouchableOpacity
+                    key={t.id}
+                    style={[
+                      styles.tierOptionBtn,
+                      newDocTier === t.id && styles.tierOptionBtnActive,
+                    ]}
+                    onPress={() => setNewDocTier(t.id as any)}
+                  >
+                    <Text
+                      style={[
+                        styles.tierOptionLabel,
+                        newDocTier === t.id && styles.tierOptionLabelActive,
+                      ]}
+                    >
+                      {t.label}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.tierOptionDesc,
+                        newDocTier === t.id && styles.tierOptionDescActive,
+                      ]}
+                    >
+                      {t.desc}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Territory District */}
+              <Text style={styles.inputLabel}>Territory District</Text>
+              <View style={styles.districtRow}>
+                {(['Cachar', 'Karimganj', 'Hailakandi'] as const).map(d => (
+                  <TouchableOpacity
+                    key={d}
+                    style={[
+                      styles.districtChip,
+                      newDocDistrict === d && styles.districtChipActive,
+                    ]}
+                    onPress={() => setNewDocDistrict(d)}
+                  >
+                    <Text
+                      style={[
+                        styles.districtChipText,
+                        newDocDistrict === d && styles.districtChipTextActive,
+                      ]}
+                    >
+                      {d}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Live Auto-GPS Banner */}
+              <View style={styles.gpsBanner}>
+                <Ionicons name="location-outline" size={20} color="#059669" />
+                <View style={{ flex: 1, marginLeft: 8 }}>
+                  <Text style={styles.gpsBannerTitle}>Live Auto-GPS Location</Text>
+                  {gpsLoading ? (
+                    <ActivityIndicator size="small" color="#059669" style={{ alignSelf: 'flex-start', marginTop: 2 }} />
+                  ) : (
+                    <Text style={styles.gpsBannerSub}>
+                      {newDocArea} ({capturedCoords.lat.toFixed(4)}° N, {capturedCoords.lng.toFixed(4)}° E)
+                    </Text>
+                  )}
+                </View>
+              </View>
+
+              {/* Save Button */}
+              <TouchableOpacity style={styles.submitBtn} onPress={handleSaveDoctor}>
+                <Text style={styles.submitBtnText}>Save Doctor & Schedule Visits</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -345,7 +627,7 @@ const styles = StyleSheet.create({
   },
   searchInput: { flex: 1, paddingVertical: 8, paddingLeft: 6, fontSize: 13, color: colors.textPrimary },
 
-  listContent: { paddingHorizontal: 12, paddingBottom: 80 },
+  listContent: { paddingHorizontal: 12, paddingBottom: 100 },
 
   // Doctor Card
   docCard: {
@@ -375,10 +657,11 @@ const styles = StyleSheet.create({
   docNameText: { fontSize: 14, fontWeight: '800', color: colors.textPrimary },
   docCodeText: { fontSize: 11, color: '#64748B', marginTop: 2 },
   docLocationText: { fontSize: 12, color: '#475569', marginTop: 2 },
+  docPhoneText: { fontSize: 12, color: '#0369A1', marginTop: 2, fontWeight: '600' },
   docTagsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 6 },
+  tierBadge: { fontSize: 10, fontWeight: '800', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
   specialtyTag: { fontSize: 10, fontWeight: '700', color: '#7C3AED', backgroundColor: '#F3E8FF', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
   potentialTag: { fontSize: 10, fontWeight: '700', color: '#059669', backgroundColor: '#D1FAE5', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  categoryTag: { fontSize: 10, fontWeight: '700', color: '#64748B', backgroundColor: '#F1F5F9', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
 
   cardBottomRow: {
     flexDirection: 'row',
@@ -402,6 +685,22 @@ const styles = StyleSheet.create({
   emptyBox: { alignItems: 'center', justifyContent: 'center', paddingVertical: 40 },
   emptyText: { fontSize: 13, color: '#64748B', marginTop: 10 },
 
+  // Floating Action Button
+  fabBtn: {
+    position: 'absolute',
+    bottom: 58,
+    right: 18,
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: '#F97316',
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...shadows.lg,
+    elevation: 8,
+    zIndex: 99,
+  },
+
   bottomBar: {
     position: 'absolute',
     bottom: 0,
@@ -415,4 +714,194 @@ const styles = StyleSheet.create({
   },
   shareBtn: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   shareBtnText: { color: '#2563EB', fontSize: 13, fontWeight: '700' },
+
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.7)',
+    justifyContent: 'flex-end',
+  },
+  modalCard: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: '90%',
+    padding: 20,
+    ...shadows.card,
+  },
+  modalHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  modalHeaderTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: colors.textPrimary,
+  },
+  modalBody: {
+    marginBottom: 10,
+  },
+  inputLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    marginBottom: 4,
+    marginTop: 8,
+  },
+  formInput: {
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: radius.md,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    fontSize: 14,
+    color: colors.textPrimary,
+  },
+  inputWithIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: radius.md,
+  },
+  innerTextInput: {
+    flex: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+    fontSize: 14,
+    color: colors.textPrimary,
+  },
+  chipsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 6,
+    marginBottom: 4,
+  },
+  chipItem: {
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+  },
+  chipItemActive: {
+    backgroundColor: '#EFF6FF',
+    borderColor: '#2563EB',
+  },
+  chipText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#475569',
+  },
+  chipTextActive: {
+    color: '#2563EB',
+    fontWeight: '700',
+  },
+  tierSelectorRow: {
+    flexDirection: 'row',
+    gap: 6,
+    marginTop: 4,
+    marginBottom: 4,
+  },
+  tierOptionBtn: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: radius.md,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    alignItems: 'center',
+  },
+  tierOptionBtnActive: {
+    backgroundColor: '#FEF3C7',
+    borderColor: '#F59E0B',
+  },
+  tierOptionLabel: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#475569',
+  },
+  tierOptionLabelActive: {
+    color: '#B45309',
+  },
+  tierOptionDesc: {
+    fontSize: 9,
+    color: '#94A3B8',
+    marginTop: 2,
+  },
+  tierOptionDescActive: {
+    color: '#92400E',
+    fontWeight: '600',
+  },
+  districtRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 4,
+  },
+  districtChip: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: radius.md,
+    paddingVertical: 8,
+    alignItems: 'center',
+  },
+  districtChipActive: {
+    backgroundColor: '#EFF6FF',
+    borderColor: '#2563EB',
+  },
+  districtChipText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#475569',
+  },
+  districtChipTextActive: {
+    color: '#2563EB',
+    fontWeight: '800',
+  },
+  gpsBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ECFDF5',
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    padding: 10,
+    marginTop: 14,
+    marginBottom: 16,
+  },
+  gpsBannerTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#065F46',
+  },
+  gpsBannerSub: {
+    fontSize: 11,
+    color: '#047857',
+    marginTop: 1,
+  },
+  submitBtn: {
+    backgroundColor: '#2563EB',
+    paddingVertical: 13,
+    borderRadius: radius.lg,
+    alignItems: 'center',
+    marginBottom: 20,
+    ...shadows.sm,
+  },
+  submitBtnText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '800',
+  },
 });
