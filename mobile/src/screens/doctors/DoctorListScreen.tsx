@@ -353,7 +353,12 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
         ListEmptyComponent={
           <View style={styles.emptyBox}>
             <Ionicons name="medkit-outline" size={48} color="#94A3B8" />
-            <Text style={styles.emptyText}>No visits found for the selected filter.</Text>
+            <Text style={[styles.emptyText, { fontWeight: '800', color: colors.textPrimary, fontSize: 15 }]}>
+              No Doctors Registered Yet
+            </Text>
+            <Text style={[styles.emptyText, { marginTop: 4, textAlign: 'center' }]}>
+              Tap the orange '+' button below to register a doctor with Tier and contact info.
+            </Text>
           </View>
         }
       />

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { colors, typography, spacing, radius, shadows } from '../../constants/theme';
 import { LocationService, LocationResult } from '../../services/location/locationService';
+import { StorageService, STORAGE_KEYS } from '../../services/storageService';
 
 interface FirmItem {
   id: string;
@@ -25,18 +26,7 @@ interface FirmItem {
   district: string;
 }
 
-const INITIAL_FIRMS: FirmItem[] = [
-  { id: 'f-01', name: 'ALIF MEDICATION', type: 'Retailer', contactPerson: 'Alif Uddin', phone: '+91 9435011223', dlNumber: 'AS-KXJ-2023-DL-0101', area: 'Nilambazar, Assam', district: 'Karimganj' },
-  { id: 'f-02', name: 'ASHA MEDICAL', type: 'Retailer', contactPerson: 'Asha Deb', phone: '+91 9435022334', dlNumber: 'AS-KXJ-2022-DL-0202', area: 'Karimganj, Assam', district: 'Karimganj' },
-  { id: 'f-03', name: 'ASHOK MEDICAL HALL', type: 'Retailer', contactPerson: 'Ashok Roy', phone: '+91 9435033445', dlNumber: 'AS-KXJ-2021-DL-0303', area: 'Karimganj, Assam', district: 'Karimganj' },
-  { id: 'f-04', name: 'ASSAM MEDICAL HALL', type: 'Retailer', contactPerson: 'Tarun Paul', phone: '+91 9435044556', dlNumber: 'AS-KXJ-2023-DL-0404', area: 'Karimganj, Assam', district: 'Karimganj' },
-  { id: 'f-05', name: 'AT DRUGS', type: 'Retailer', contactPerson: 'Anwar Hussain', phone: '+91 9435055667', dlNumber: 'AS-KXJ-2020-DL-0505', area: 'Srigauri, Assam', district: 'Karimganj' },
-  { id: 'f-06', name: 'BABA MEDICAL HALL', type: 'Retailer', contactPerson: 'Biswajit Dey', phone: '+91 9435066778', dlNumber: 'AS-KXJ-2024-DL-0606', area: 'Srigauri, Assam', district: 'Karimganj' },
-  { id: 'f-07', name: 'BANKA MEDICAL HALL', type: 'Retailer', contactPerson: 'Bimal Sinha', phone: '+91 9435077889', dlNumber: 'AS-KXJ-2022-DL-0707', area: 'Lakhibazar, Assam', district: 'Karimganj' },
-  { id: 'f-08', name: 'BARBHUIYA MEDICARE', type: 'Retailer', contactPerson: 'M. Barbhuiya', phone: '+91 9435088990', dlNumber: 'AS-KXJ-2021-DL-0808', area: 'Karimganj, Assam', district: 'Karimganj' },
-  { id: 'f-09', name: 'SURMA PHARMA DISTRIBUTORS', type: 'Distributor', contactPerson: 'Pradip Roy', phone: '+91 9435071234', dlNumber: 'AS-KXJ-2023-DL-0891', area: 'Station Road, Karimganj', district: 'Karimganj' },
-  { id: 'f-10', name: 'CACHAR DRUG HOUSE', type: 'Stockist', contactPerson: 'Debashis Paul', phone: '+91 9435175678', dlNumber: 'AS-CAC-2022-DL-0452', area: 'Central Beat, Silchar', district: 'Cachar' },
-];
+const INITIAL_FIRMS: FirmItem[] = [];
 
 interface FirmDirectoryScreenProps {
   onBack: () => void;
@@ -47,6 +37,21 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
   const [filterType, setFilterType] = useState<'All' | 'Retailer' | 'Distributor' | 'Stockist'>('All');
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    loadFirms();
+  }, []);
+
+  const loadFirms = async () => {
+    try {
+      const stored = await StorageService.getItem<FirmItem[]>(STORAGE_KEYS.FIRMS_CACHE, []);
+      if (stored && Array.isArray(stored)) {
+        setFirms(stored);
+      }
+    } catch {
+      // Fallback
+    }
+  };
 
   // Add Firm Modal State
   const [addModalVisible, setAddModalVisible] = useState(false);
@@ -76,7 +81,7 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
     fetchGpsForFirm();
   };
 
-  const handleAddFirm = () => {
+  const handleAddFirm = async () => {
     if (!newFirmName.trim()) {
       Alert.alert('Missing Name', 'Please provide firm name.');
       return;
@@ -91,7 +96,10 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
       area: autoArea,
       district: 'Karimganj',
     };
-    setFirms([newEntry, ...firms]);
+    const updatedList = [newEntry, ...firms];
+    setFirms(updatedList);
+    await StorageService.setItem(STORAGE_KEYS.FIRMS_CACHE, updatedList);
+
     setAddModalVisible(false);
     setNewFirmName('');
     setNewContactPerson('');
@@ -196,6 +204,13 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
             </TouchableOpacity>
           );
         }}
+        ListEmptyComponent={
+          <View style={styles.emptyBox}>
+            <Ionicons name="business-outline" size={48} color="#94A3B8" />
+            <Text style={styles.emptyTitle}>No Firms / Retailers Registered</Text>
+            <Text style={styles.emptySubtitle}>Tap the '+' button below to register a firm during field visits.</Text>
+          </View>
+        }
       />
 
       {/* Floating Action Button `+` matching Image 33 */}
@@ -422,4 +437,7 @@ const styles = StyleSheet.create({
   modalBtnRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 8 },
   modalBtn: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: radius.sm },
   modalBtnText: { color: '#ffffff', fontWeight: '700', fontSize: 12 },
+  emptyBox: { alignItems: 'center', justifyContent: 'center', paddingVertical: 60, paddingHorizontal: 24 },
+  emptyTitle: { fontSize: 15, fontWeight: '800', color: colors.textPrimary, marginTop: 12 },
+  emptySubtitle: { fontSize: 12, color: '#64748B', textAlign: 'center', marginTop: 6 },
 });

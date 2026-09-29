@@ -5,10 +5,11 @@ import { MOCK_DOCTORS } from '../constants/mockData';
 export class DoctorService {
   public static async getDoctors(): Promise<Doctor[]> {
     const cached = await StorageService.getItem<Doctor[]>(STORAGE_KEYS.DOCTORS_CACHE, []);
-    if (cached && cached.length > 0) return cached;
-    
-    await StorageService.setItem(STORAGE_KEYS.DOCTORS_CACHE, MOCK_DOCTORS);
-    return MOCK_DOCTORS;
+    return cached || [];
+  }
+
+  public static async clearAllDoctors(): Promise<void> {
+    await StorageService.setItem(STORAGE_KEYS.DOCTORS_CACHE, []);
   }
 
   public static async getDoctorById(id: string): Promise<Doctor | null> {
