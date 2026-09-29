@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, UserRole } from '../../types';
 import { OfflineSyncService } from '../../services/offlineSyncService';
-import { Shield, Radio, Activity, Wifi, WifiOff, RefreshCw, Sparkles } from 'lucide-react';
+import { Shield, Radio, Activity, Wifi, WifiOff, KeyRound, LogIn, LogOut, Sparkles } from 'lucide-react';
 
 interface NavbarProps {
   currentUser: User;
@@ -9,6 +9,9 @@ interface NavbarProps {
   isSimulatingTelemetry: boolean;
   onTriggerTelemetryPing: () => void;
   onOpenDemoTour?: () => void;
+  onOpenChangePassword?: () => void;
+  onOpenLogin?: () => void;
+  onLogout?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -17,6 +20,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   isSimulatingTelemetry,
   onTriggerTelemetryPing,
   onOpenDemoTour,
+  onOpenChangePassword,
+  onOpenLogin,
+  onLogout,
 }) => {
   const [isOnline, setIsOnline] = useState(true);
   const [pendingQueueCount, setPendingQueueCount] = useState(0);
@@ -43,7 +49,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         
         {/* Brand Logo & Platform Title */}
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-teal-500 flex items-center justify-center shadow-lg shadow-teal-500/30">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-500 to-emerald-400 flex items-center justify-center shadow-lg shadow-teal-500/20">
             <Activity className="w-5 h-5 text-slate-950 stroke-[2.5]" />
           </div>
           <div>
@@ -58,24 +64,24 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         {/* Action Controls & Simulator Bar */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-2.5">
           
           {/* Platform Guided Tour Modal Trigger */}
           {onOpenDemoTour && (
             <button
               onClick={onOpenDemoTour}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-teal-500/20 hover:bg-teal-500/30 text-teal-300 border border-teal-500/40 transition-all shadow-sm shadow-teal-500/20"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-teal-500/20 hover:bg-teal-500/30 text-teal-300 border border-teal-500/40 transition-all shadow-sm shadow-teal-500/20 cursor-pointer"
               title="Start Interactive Guided Tour"
             >
               <Sparkles className="w-3.5 h-3.5 text-teal-400 animate-pulse" />
-              <span>Guided Tour</span>
+              <span className="hidden md:inline">Guided Tour</span>
             </button>
           )}
 
           {/* Offline Mode Toggle Simulator */}
           <button
             onClick={handleToggleOnline}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
               isOnline 
                 ? 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700' 
                 : 'bg-amber-500/20 text-amber-300 border-amber-500/40 animate-pulse'
@@ -83,7 +89,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             title="Toggle online / offline field simulator"
           >
             {isOnline ? <Wifi className="w-3.5 h-3.5 text-emerald-400" /> : <WifiOff className="w-3.5 h-3.5 text-amber-400" />}
-            <span className="hidden md:inline">{isOnline ? 'Online' : 'Offline Mode'}</span>
+            <span className="hidden lg:inline">{isOnline ? 'Online' : 'Offline Mode'}</span>
             {pendingQueueCount > 0 && (
               <span className="bg-amber-500 text-slate-950 px-1.5 py-0.2 rounded-full font-bold text-[10px]">
                 {pendingQueueCount}
@@ -95,32 +101,63 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={onTriggerTelemetryPing}
             disabled={isSimulatingTelemetry}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-teal-300 border border-slate-700 transition-colors shadow-sm"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-teal-300 border border-slate-700 transition-colors shadow-sm cursor-pointer"
             title="Simulates an automatic 15-minute background GPS location ping from field MR"
           >
             <Radio className={`w-3.5 h-3.5 ${isSimulatingTelemetry ? 'animate-ping text-teal-400' : 'text-teal-400'}`} />
-            <span className="hidden lg:inline">Simulate 15-Min GPS</span>
+            <span className="hidden lg:inline">GPS Ping</span>
           </button>
 
-          {/* Role Switcher Sandbox for Testing RBAC */}
-          <div className="flex items-center gap-1 bg-slate-950/80 p-1 rounded-lg border border-slate-800">
-            <Shield className="w-3.5 h-3.5 text-slate-400 ml-1.5 hidden sm:block" />
-            <select
-              value={currentUser.role}
-              onChange={(e) => onRoleChange(e.target.value as UserRole)}
-              className="bg-slate-900 text-xs font-semibold text-teal-300 rounded border border-slate-700 px-2 py-1 focus:outline-none focus:ring-1 focus:ring-teal-400 cursor-pointer"
+          {/* Change Password Button */}
+          {onOpenChangePassword && (
+            <button
+              onClick={onOpenChangePassword}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-colors cursor-pointer"
+              title="Change Account Password"
             >
-              <option value="SUPER_ADMIN">👑 Super Admin</option>
-              <option value="AREA_MANAGER">👔 Area Manager</option>
-              <option value="MEDICAL_REP">🏃 Field MR</option>
-            </select>
-          </div>
+              <KeyRound className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden md:inline">Password</span>
+            </button>
+          )}
 
-          {/* User Profile Pill */}
+          {/* Switch User Button */}
+          {onOpenLogin && (
+            <button
+              onClick={onOpenLogin}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all cursor-pointer"
+              title="Switch User Account"
+            >
+              <LogIn className="w-3.5 h-3.5 text-teal-400" />
+              <span className="hidden sm:inline">Switch</span>
+            </button>
+          )}
+
+          {/* User Profile Pill & Sign Out */}
           <div className="flex items-center gap-2 pl-2 border-l border-slate-800">
-            <div className="w-8 h-8 rounded-full bg-slate-700 border border-slate-600 flex items-center justify-center font-bold text-xs text-teal-300">
-              {currentUser.name.split(' ').map((n: string) => n[0]).join('')}
+            <div className="text-right hidden xl:block">
+              <span className="text-xs font-bold text-white block leading-tight">{currentUser.name}</span>
+              <span className="text-[10px] text-teal-400 leading-tight block">
+                {currentUser.role === 'SUPER_ADMIN' ? '👑 Super Admin' :
+                 currentUser.role === 'ADMIN' ? '🏢 Company Admin' :
+                 currentUser.role === 'MANAGER' ? '👔 Manager' : '🏃 Field MR'}
+              </span>
             </div>
+            
+            <div className="w-8 h-8 rounded-full bg-slate-700 border border-slate-600 flex items-center justify-center font-bold text-xs text-teal-300">
+              {currentUser.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+            </div>
+
+            {/* Prominent Sign Out Button */}
+            {onLogout && (
+              <button
+                onClick={onLogout}
+                className="flex items-center gap-1 p-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition-colors cursor-pointer"
+                title="Sign Out / Lock Session"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline text-xs font-semibold">Sign Out</span>
+              </button>
+            )}
           </div>
 
         </div>

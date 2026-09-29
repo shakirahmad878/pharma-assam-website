@@ -56,6 +56,8 @@ export interface Product {
   mrp?: number;
   ptr?: number;
   pts?: number;
+  companyId?: string;
+  companyName?: string;
   visualAidSlides?: VisualAidSlide[];
 }
 
@@ -71,7 +73,61 @@ export interface InquiryFormData {
 
 // =================== SFA & TELEMETRY DOMAIN TYPES ===================
 
-export type UserRole = 'SUPER_ADMIN' | 'REGIONAL_MANAGER' | 'AREA_MANAGER' | 'MEDICAL_REP';
+export type UserRole = 
+  | 'SUPER_ADMIN' 
+  | 'ADMIN' 
+  | 'MANAGER' 
+  | 'REGIONAL_MANAGER' 
+  | 'AREA_MANAGER' 
+  | 'MEDICAL_REP';
+
+export interface UserPermissions {
+  canManageUsers: boolean;
+  canManageDoctors: boolean;
+  canManageChemists: boolean;
+  canManageProducts: boolean;
+  canManageTerritories: boolean;
+  canApproveDCR: boolean;
+  canApproveTourPlans: boolean;
+  canApproveExpenses: boolean;
+  canExportData: boolean;
+  canModifyDatabase: boolean;
+  canViewAuditLogs: boolean;
+}
+
+export interface Company {
+  id: string;
+  name: string;
+  code: string;
+  registrationNumber: string;
+  gstNumber: string;
+  contactEmail: string;
+  contactPhone: string;
+  headquarters: string;
+  state: string;
+  subscriptionPlan: 'ENTERPRISE' | 'PRO' | 'STANDARD';
+  maxUsers: number;
+  activeUsersCount: number;
+  activeDoctorsCount: number;
+  activeChemistsCount: number;
+  status: 'ACTIVE' | 'SUSPENDED' | 'TRIAL';
+  createdAt: string;
+}
+
+export interface AuditLogEntry {
+  id: string;
+  timestamp: string;
+  actorId: string;
+  actorName: string;
+  actorRole: UserRole;
+  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'ROLE_CHANGE' | 'PERMISSIONS_UPDATE' | 'ACCESS_REVOKED';
+  entityType: 'COMPANY' | 'USER' | 'DOCTOR' | 'CHEMIST' | 'PRODUCT' | 'TERRITORY' | 'DATABASE_RECORD';
+  entityId: string;
+  entityName: string;
+  companyId?: string;
+  companyName?: string;
+  details: string;
+}
 
 export interface User {
   id: string;
@@ -79,12 +135,17 @@ export interface User {
   email: string;
   role: UserRole;
   phone: string;
+  username?: string;
+  password?: string;
+  companyId?: string;
+  companyName?: string;
   territoryId: string;
   territoryName: string;
   employeeCode: string;
   avatarUrl?: string;
   isActive: boolean;
   assignedManagerId?: string;
+  permissions?: Partial<UserPermissions>;
 }
 
 export type DoctorTier = 'A_PLUS' | 'A' | 'B' | 'C';
@@ -127,6 +188,8 @@ export interface Doctor {
   lastVisitedDate?: string;
   monthlyVisitTarget: number;
   monthlyVisitsCompleted: number;
+  companyId?: string;
+  companyName?: string;
 }
 
 export interface Chemist {
@@ -142,6 +205,8 @@ export interface Chemist {
   contactPerson: string;
   associatedDoctors: string[];
   averageMonthlyTurnover: number;
+  companyId?: string;
+  companyName?: string;
 }
 
 export interface Stockist {
@@ -155,6 +220,8 @@ export interface Stockist {
   email: string;
   creditLimit: number;
   outstandingBalance: number;
+  companyId?: string;
+  companyName?: string;
 }
 
 export interface Territory {
@@ -168,6 +235,8 @@ export interface Territory {
   assignedMRIds: string[];
   doctorCount: number;
   chemistCount: number;
+  companyId?: string;
+  companyName?: string;
 }
 
 export interface LocationTelemetryPoint {

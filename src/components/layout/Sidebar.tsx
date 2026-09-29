@@ -14,10 +14,12 @@ import {
   FileSpreadsheet,
   UserCheck,
   Receipt,
-  BarChart3
+  BarChart3,
+  ShieldCheck
 } from 'lucide-react';
 
 export type NavTab = 
+  | 'admin_portal'
   | 'dashboard' 
   | 'fleet_tracking' 
   | 'dcr' 
@@ -39,9 +41,19 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab, userRole }) => {
-  const isAdmin = userRole === 'SUPER_ADMIN';
+  const isSuperAdmin = userRole === 'SUPER_ADMIN';
+  const isAdmin = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
+  const canAccessAdminPage = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'MANAGER' || userRole === 'AREA_MANAGER' || userRole === 'REGIONAL_MANAGER';
 
   const menuItems = [
+    { 
+      id: 'admin_portal' as NavTab, 
+      label: 'Admin Control Center', 
+      icon: ShieldCheck, 
+      badge: 'RBAC Studio',
+      isHighlight: true,
+      restricted: !canAccessAdminPage
+    },
     { id: 'dashboard' as NavTab, label: 'Overview', icon: LayoutDashboard },
     { 
       id: 'fleet_tracking' as NavTab, 
@@ -73,7 +85,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab, userRo
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
-            const isRestricted = item.adminOnly && !isAdmin;
+            const isRestricted = (item.adminOnly && !isSuperAdmin) || ((item as any).restricted);
 
             return (
               <button
@@ -82,13 +94,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab, userRo
                 className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                   isActive
                     ? 'bg-teal-600 text-white shadow-md shadow-teal-600/20'
+                    : (item as any).isHighlight
+                    ? 'text-teal-300 bg-teal-950/40 hover:bg-teal-900/40 border border-teal-500/20'
                     : isRestricted
-                    ? 'text-slate-400 hover:text-slate-300 hover:bg-slate-800/40'
+                    ? 'text-slate-500 hover:text-slate-400 hover:bg-slate-800/40'
                     : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-white' : isRestricted ? 'text-slate-400' : 'text-slate-400'}`} />
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-white' : (item as any).isHighlight ? 'text-teal-400' : isRestricted ? 'text-slate-500' : 'text-slate-400'}`} />
                   <span>{item.label}</span>
                 </div>
 
@@ -99,7 +113,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab, userRo
                   </span>
                 )}
                 {item.badge && !item.adminOnly && (
-                  <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-teal-500/20 text-teal-300">
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                    (item as any).isHighlight 
+                      ? 'bg-teal-500/30 text-teal-200 border border-teal-500/40 font-bold' 
+                      : 'bg-teal-500/20 text-teal-300'
+                  }`}>
                     {item.badge}
                   </span>
                 )}
@@ -114,10 +132,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab, userRo
             <Lock className="w-3.5 h-3.5 text-teal-400" />
             <span>Strict RBAC Active</span>
           </div>
-          <p className="leading-relaxed">
-            {isAdmin 
-              ? '✅ Super Admin: Live tracking & route replays authorized.' 
-              : '🔒 Field Rep: Telemetry is restricted to Admins.'}
+          <p className="leading-relaxed text-[10px]">
+            {isSuperAdmin 
+              ? '👑 Super Admin: Full multi-tenant database & telemetry root access.' 
+              : isAdmin
+              ? '🏢 Company Admin: Company database CRUD & staff management.'
+              : canAccessAdminPage
+              ? '👔 Manager: Operational approvals & delegated company data.'
+              : '🔒 Field Rep: Field calls and reporting active.'}
           </p>
         </div>
 
