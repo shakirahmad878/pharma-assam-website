@@ -60,4 +60,13 @@ export class DoctorService {
     await StorageService.setItem(STORAGE_KEYS.DOCTORS_CACHE, updated);
     return doc;
   }
+
+  public static async updateDoctorTier(id: string, tier: Doctor['tier']): Promise<void> {
+    const doctors = await this.getDoctors();
+    const doc = doctors.find(d => d.id === id);
+    if (doc) {
+      doc.tier = tier;
+      await StorageService.setItem(STORAGE_KEYS.DOCTORS_CACHE, doctors);
+    }
+  }
 }

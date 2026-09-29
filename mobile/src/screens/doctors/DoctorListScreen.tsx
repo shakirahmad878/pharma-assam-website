@@ -45,6 +45,7 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
   const [newDocName, setNewDocName] = useState('');
   const [newDocSpecialty, setNewDocSpecialty] = useState('');
   const [newDocClinic, setNewDocClinic] = useState('');
+  const [newDocTier, setNewDocTier] = useState<Doctor['tier']>('A');
   const [gpsLoading, setGpsLoading] = useState(false);
   const [capturedGps, setCapturedGps] = useState<LocationResult | null>(null);
   const [autoArea, setAutoArea] = useState('Acquiring GPS...');
@@ -149,6 +150,7 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
     await DoctorService.addDoctor({
       name: newDocName.startsWith('Dr.') ? newDocName : 'Dr. ' + newDocName,
       specialty: newDocSpecialty,
+      tier: newDocTier,
       clinicName: newDocClinic.trim() || 'Consultation Chamber',
       clinicAddress: autoArea + ', ' + autoDistrict,
       area: autoArea,
@@ -378,6 +380,27 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
               onChangeText={setNewDocClinic}
             />
 
+            {/* User Selectable Doctor Tier */}
+            <Text style={styles.modalFieldLabel}>Doctor Tier / Category</Text>
+            <View style={styles.tierSelectorRow}>
+              {[
+                { id: 'A_PLUS', label: 'Tier A+' },
+                { id: 'A', label: 'Tier A' },
+                { id: 'B', label: 'Tier B' },
+                { id: 'C', label: 'Tier C' },
+              ].map(t => (
+                <TouchableOpacity
+                  key={t.id}
+                  style={[styles.tierOptionBtn, newDocTier === t.id && styles.tierOptionBtnActive]}
+                  onPress={() => setNewDocTier(t.id as Doctor['tier'])}
+                >
+                  <Text style={[styles.tierOptionText, newDocTier === t.id && styles.tierOptionTextActive]}>
+                    {t.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
             {/* Auto-GPS Captured Area (Locked to GPS) */}
             <View style={styles.autoGpsBox}>
               <View style={styles.autoGpsHeader}>
@@ -598,6 +621,39 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginBottom: 8,
     color: colors.textPrimary,
+  },
+  modalFieldLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    marginTop: 6,
+    marginBottom: 4,
+  },
+  tierSelectorRow: {
+    flexDirection: 'row',
+    gap: 6,
+    marginBottom: 10,
+  },
+  tierOptionBtn: {
+    flex: 1,
+    paddingVertical: 7,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: radius.sm,
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+  },
+  tierOptionBtnActive: {
+    backgroundColor: '#EFF6FF',
+    borderColor: '#2563EB',
+  },
+  tierOptionText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#64748B',
+  },
+  tierOptionTextActive: {
+    color: '#2563EB',
   },
   autoGpsBox: {
     backgroundColor: '#EFF6FF',

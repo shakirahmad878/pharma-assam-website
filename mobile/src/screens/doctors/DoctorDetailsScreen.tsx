@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import { colors, typography, spacing, radius } from '../../constants/theme';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Alert, Modal } from 'react-native';
+import { colors, typography, spacing, radius, shadows } from '../../constants/theme';
 import { Header } from '../../components/common/Header';
 import { Card } from '../../components/common/Card';
 import { Badge } from '../../components/common/Badge';
@@ -22,6 +22,7 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
   onStartVisit,
 }) => {
   const [doctor, setDoctor] = useState<Doctor | null>(null);
+  const [tierModalVisible, setTierModalVisible] = useState(false);
   const [geofenceEval, setGeofenceEval] = useState<{
     status: GeofenceStatus;
     distanceMeters: number;
@@ -82,9 +83,70 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
               <Text style={styles.docQual}>{doctor.qualification}</Text>
               <Text style={styles.docSpecialty}>Specialty: {doctor.specialty}</Text>
             </View>
-            <Badge label={`Tier ${doctor.tier}`} variant="primary" />
+            <TouchableOpacity
+              onPress={() => setTierModalVisible(true)}
+              style={styles.tierBadgeWrapper}
+            >
+              <Badge
+                label={doctor.tier === 'A_PLUS' ? 'Tier A+' : `Tier ${doctor.tier}`}
+                variant="primary"
+              />
+              <Text style={styles.changeTierHint}>✏️ Change</Text>
+            </TouchableOpacity>
           </View>
         </Card>
+
+        {/* Change Tier Modal */}
+        <Modal visible={tierModalVisible} transparent animationType="fade">
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              <Text style={styles.modalTitle}>Select Doctor Tier</Text>
+              <Text style={styles.modalSubtitle}>Assign appropriate tier for {doctor.name}</Text>
+
+              <View style={styles.tierOptionsList}>
+                {[
+                  { id: 'A_PLUS', label: 'Tier A+ (Key Opinion Leader)' },
+                  { id: 'A', label: 'Tier A (High Potential Prescriber)' },
+                  { id: 'B', label: 'Tier B (Regular Prescriber)' },
+                  { id: 'C', label: 'Tier C (Occasional Prescriber)' },
+                ].map(t => (
+                  <TouchableOpacity
+                    key={t.id}
+                    style={[
+                      styles.tierOptionItem,
+                      doctor.tier === t.id && styles.tierOptionItemActive,
+                    ]}
+                    onPress={async () => {
+                      await DoctorService.updateDoctorTier(doctor.id, t.id as Doctor['tier']);
+                      setDoctor({ ...doctor, tier: t.id as Doctor['tier'] });
+                      setTierModalVisible(false);
+                      Alert.alert('Tier Updated ✅', `${doctor.name} is now set to ${t.label.split(' ')[0]} ${t.label.split(' ')[1] || ''}.`);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.tierOptionLabel,
+                        doctor.tier === t.id && styles.tierOptionLabelActive,
+                      ]}
+                    >
+                      {t.label}
+                    </Text>
+                    {doctor.tier === t.id && (
+                      <Text style={styles.activeCheck}>✓</Text>
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <TouchableOpacity
+                style={styles.modalCancelBtn}
+                onPress={() => setTierModalVisible(false)}
+              >
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
 
         {/* 100m Clinic Geofence Status Card */}
         <Card style={geofenceEval.isWithinRadius ? styles.geofenceCardOk : styles.geofenceCardWarn}>
@@ -150,6 +212,47 @@ const styles = StyleSheet.create({
   docName: { color: colors.textPrimary, fontSize: typography.fontSize.xl, fontWeight: typography.fontWeight.black },
   docQual: { color: colors.textSecondary, fontSize: typography.fontSize.sm, marginTop: 2 },
   docSpecialty: { color: colors.primaryDark, fontSize: typography.fontSize.sm, fontWeight: typography.fontWeight.bold, marginTop: 4 },
+  tierBadgeWrapper: { alignItems: 'center' },
+  changeTierHint: { fontSize: 10, color: '#2563EB', fontWeight: '700', marginTop: 4 },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  modalCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: radius.md,
+    padding: 20,
+    width: '100%',
+    maxWidth: 360,
+    ...shadows.lg,
+  },
+  modalTitle: { fontSize: 16, fontWeight: '800', color: colors.textPrimary },
+  modalSubtitle: { fontSize: 12, color: '#64748B', marginTop: 2, marginBottom: 16 },
+  tierOptionsList: { gap: 10, marginBottom: 16 },
+  tierOptionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: radius.sm,
+    backgroundColor: '#F8FAFC',
+  },
+  tierOptionItemActive: {
+    backgroundColor: '#EFF6FF',
+    borderColor: '#2563EB',
+  },
+  tierOptionLabel: { fontSize: 13, fontWeight: '600', color: '#475569' },
+  tierOptionLabelActive: { color: '#2563EB', fontWeight: '800' },
+  activeCheck: { color: '#2563EB', fontWeight: '900', fontSize: 14 },
+  modalCancelBtn: { alignItems: 'center', paddingVertical: 10 },
+  modalCancelText: { color: '#64748B', fontWeight: '700', fontSize: 13 },
+
   geofenceCardOk: { backgroundColor: colors.successLight, borderColor: colors.success },
   geofenceCardWarn: { backgroundColor: colors.warningLight, borderColor: colors.warning },
   geofenceHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.xs },

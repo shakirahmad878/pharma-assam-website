@@ -94,7 +94,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         </TouchableOpacity>
 
         <Text style={styles.companyTitle} numberOfLines={1}>
-          PROGRESSIVE MOLECULES PRIVATE...
+          RepPulse
         </Text>
 
         <View style={{ width: 24 }} />
