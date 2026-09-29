@@ -7,14 +7,12 @@ import {
   FlatList,
   TouchableOpacity,
   TextInput,
-  Modal,
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, typography, spacing, radius, shadows } from '../../constants/theme';
 import { DoctorService } from '../../services/doctorService';
 import { RouteService } from '../../services/routeService';
-import { LocationService, LocationResult } from '../../services/location/locationService';
 import { PdfReportService } from '../../services/pdfReportService';
 import { Doctor, RoutePlan } from '../../types';
 
@@ -40,17 +38,6 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [activeRoute, setActiveRoute] = useState<RoutePlan | null>(null);
 
-  // Add Doctor Modal State with Auto-GPS
-  const [addModalVisible, setAddModalVisible] = useState(false);
-  const [newDocName, setNewDocName] = useState('');
-  const [newDocSpecialty, setNewDocSpecialty] = useState('');
-  const [newDocClinic, setNewDocClinic] = useState('');
-  const [newDocTier, setNewDocTier] = useState<Doctor['tier']>('A');
-  const [gpsLoading, setGpsLoading] = useState(false);
-  const [capturedGps, setCapturedGps] = useState<LocationResult | null>(null);
-  const [autoArea, setAutoArea] = useState('Acquiring GPS...');
-  const [autoDistrict, setAutoDistrict] = useState<'Cachar' | 'Karimganj' | 'Hailakandi'>('Karimganj');
-
   useEffect(() => {
     loadData();
   }, []);
@@ -60,47 +47,6 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
     setDoctors(docs);
     const route = await RouteService.getActiveRoute();
     setActiveRoute(route);
-  };
-
-  const resolveBarakArea = (lat: number, lon: number): { area: string; district: 'Cachar' | 'Karimganj' | 'Hailakandi' } => {
-    if (lon < 92.50) {
-      return { area: 'Main Road & Station Area, Karimganj', district: 'Karimganj' };
-    } else if (lat < 24.75) {
-      return { area: 'Civil Hospital Road, Hailakandi', district: 'Hailakandi' };
-    } else if (lat < 24.80) {
-      return { area: 'SMCH Ghungoor Beat, Silchar', district: 'Cachar' };
-    } else {
-      return { area: 'Hospital Road & Central Beat, Silchar', district: 'Cachar' };
-    }
-  };
-
-  const fetchGpsForNewDoctor = async () => {
-    setGpsLoading(true);
-    const loc = await LocationService.getCurrentLocation();
-    setGpsLoading(false);
-    if (loc) {
-      setCapturedGps(loc);
-      const resolved = resolveBarakArea(loc.latitude, loc.longitude);
-      setAutoArea(resolved.area);
-      setAutoDistrict(resolved.district);
-    } else {
-      const defaultLoc: LocationResult = {
-        latitude: 24.8649,
-        longitude: 92.3593,
-        accuracyMeters: 14,
-        speedKmh: 0,
-        isMockLocation: false,
-        timestamp: new Date().toISOString(),
-      };
-      setCapturedGps(defaultLoc);
-      setAutoArea('Main Road, Karimganj');
-      setAutoDistrict('Karimganj');
-    }
-  };
-
-  const openAddModal = () => {
-    setAddModalVisible(true);
-    fetchGpsForNewDoctor();
   };
 
   const handleShareVisits = async () => {
@@ -137,40 +83,6 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
     }
     return matchesSearch;
   });
-
-  const handleAddDoctor = async () => {
-    if (!newDocName.trim() || !newDocSpecialty.trim()) {
-      Alert.alert('Missing Details', 'Please provide doctor name and specialty.');
-      return;
-    }
-
-    const lat = capturedGps ? capturedGps.latitude : 24.8649;
-    const lon = capturedGps ? capturedGps.longitude : 92.3593;
-
-    await DoctorService.addDoctor({
-      name: newDocName.startsWith('Dr.') ? newDocName : 'Dr. ' + newDocName,
-      specialty: newDocSpecialty,
-      tier: newDocTier,
-      clinicName: newDocClinic.trim() || 'Consultation Chamber',
-      clinicAddress: autoArea + ', ' + autoDistrict,
-      area: autoArea,
-      district: autoDistrict,
-      routeId: activeRoute?.id || 'route-karimganj-01',
-      latitude: lat,
-      longitude: lon,
-      geofenceRadiusMeters: 100,
-    });
-
-    setAddModalVisible(false);
-    setNewDocName('');
-    setNewDocSpecialty('');
-    setNewDocClinic('');
-    await loadData();
-    Alert.alert(
-      'Client Saved with Auto-GPS ✅',
-      `New doctor registered successfully with 100m geofence at GPS (${lat.toFixed(4)}, ${lon.toFixed(4)}) in ${autoArea}.`
-    );
-  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -345,85 +257,6 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
           <Text style={styles.shareBtnText}>Share</Text>
         </TouchableOpacity>
       </View>
-
-      {/* Floating Orange Add Doctor Button matching Image 36 */}
-      <TouchableOpacity style={styles.fabBtn} onPress={openAddModal}>
-        <Ionicons name="add" size={28} color="#ffffff" />
-      </TouchableOpacity>
-
-      {/* Add Client / Doctor Modal with Auto-GPS */}
-      <Modal visible={addModalVisible} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Add New Client / Doctor</Text>
-            <Text style={styles.modalSubtitle}>Barak Valley Regional Directory (Assam)</Text>
-
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Doctor Full Name (e.g. Dr. Abdul Basit)"
-              placeholderTextColor="#94A3B8"
-              value={newDocName}
-              onChangeText={setNewDocName}
-            />
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Specialty (e.g. Pediatrician / Surgeon)"
-              placeholderTextColor="#94A3B8"
-              value={newDocSpecialty}
-              onChangeText={setNewDocSpecialty}
-            />
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Clinic / Chamber Name"
-              placeholderTextColor="#94A3B8"
-              value={newDocClinic}
-              onChangeText={setNewDocClinic}
-            />
-
-            {/* User Selectable Doctor Tier */}
-            <Text style={styles.modalFieldLabel}>Doctor Tier / Category</Text>
-            <View style={styles.tierSelectorRow}>
-              {[
-                { id: 'A_PLUS', label: 'Tier A+' },
-                { id: 'A', label: 'Tier A' },
-                { id: 'B', label: 'Tier B' },
-                { id: 'C', label: 'Tier C' },
-              ].map(t => (
-                <TouchableOpacity
-                  key={t.id}
-                  style={[styles.tierOptionBtn, newDocTier === t.id && styles.tierOptionBtnActive]}
-                  onPress={() => setNewDocTier(t.id as Doctor['tier'])}
-                >
-                  <Text style={[styles.tierOptionText, newDocTier === t.id && styles.tierOptionTextActive]}>
-                    {t.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            {/* Auto-GPS Captured Area (Locked to GPS) */}
-            <View style={styles.autoGpsBox}>
-              <View style={styles.autoGpsHeader}>
-                <Ionicons name="location" size={16} color="#2563EB" />
-                <Text style={styles.autoGpsTitle}>Live GPS Captured Area (Auto-Locked)</Text>
-              </View>
-              <Text style={styles.autoGpsAreaText}>{gpsLoading ? 'Acquiring high-accuracy GPS...' : autoArea}</Text>
-              <Text style={styles.autoGpsCoords}>
-                Coordinates: {capturedGps ? `${capturedGps.latitude.toFixed(4)}, ${capturedGps.longitude.toFixed(4)}` : 'Fixing...'} • 100m Geofence
-              </Text>
-            </View>
-
-            <View style={styles.modalBtnRow}>
-              <TouchableOpacity style={[styles.modalBtn, { backgroundColor: '#94A3B8' }]} onPress={() => setAddModalVisible(false)}>
-                <Text style={styles.modalBtnText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.modalBtn, { backgroundColor: '#2563EB' }]} onPress={handleAddDoctor}>
-                <Text style={styles.modalBtnText}>Save Doctor</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 };
@@ -582,92 +415,4 @@ const styles = StyleSheet.create({
   },
   shareBtn: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   shareBtnText: { color: '#2563EB', fontSize: 13, fontWeight: '700' },
-
-  fabBtn: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: '#EA580C',
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...shadows.lg,
-  },
-
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 16,
-  },
-  modalCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: radius.md,
-    padding: 20,
-    width: '100%',
-    maxWidth: 380,
-    ...shadows.lg,
-  },
-  modalTitle: { fontSize: 16, fontWeight: '800', color: colors.textPrimary },
-  modalSubtitle: { fontSize: 11, color: '#64748B', marginBottom: 12 },
-  modalInput: {
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    borderRadius: radius.sm,
-    padding: 10,
-    fontSize: 13,
-    marginBottom: 8,
-    color: colors.textPrimary,
-  },
-  modalFieldLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.textPrimary,
-    marginTop: 6,
-    marginBottom: 4,
-  },
-  tierSelectorRow: {
-    flexDirection: 'row',
-    gap: 6,
-    marginBottom: 10,
-  },
-  tierOptionBtn: {
-    flex: 1,
-    paddingVertical: 7,
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    borderRadius: radius.sm,
-    alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-  },
-  tierOptionBtnActive: {
-    backgroundColor: '#EFF6FF',
-    borderColor: '#2563EB',
-  },
-  tierOptionText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#64748B',
-  },
-  tierOptionTextActive: {
-    color: '#2563EB',
-  },
-  autoGpsBox: {
-    backgroundColor: '#EFF6FF',
-    borderWidth: 1,
-    borderColor: '#BFDBFE',
-    borderRadius: radius.sm,
-    padding: 10,
-    marginVertical: 6,
-  },
-  autoGpsHeader: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 },
-  autoGpsTitle: { fontSize: 11, fontWeight: '700', color: '#1D4ED8' },
-  autoGpsAreaText: { fontSize: 12, fontWeight: '700', color: colors.textPrimary },
-  autoGpsCoords: { fontSize: 10, color: '#64748B', marginTop: 2 },
-  modalBtnRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 14 },
-  modalBtn: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: radius.sm },
-  modalBtnText: { color: '#ffffff', fontWeight: '700', fontSize: 12 },
 });

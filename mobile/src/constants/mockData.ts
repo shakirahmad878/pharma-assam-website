@@ -1885,9 +1885,9 @@ export interface LeaveEntitlement {
 }
 
 export const MOCK_LEAVE_BALANCE: LeaveEntitlement[] = [
-  { type: 'Casual Leave(CL)', code: 'CL', available: 8, total: 12 },
+  { type: 'Casual Leave(CL)', code: 'CL', available: 12, total: 12 },
   { type: 'Earn Leave(EL)', code: 'EL', available: 15, total: 15 },
-  { type: 'Sick Leave(SL)', code: 'SL', available: 1, total: 12 },
+  { type: 'Sick Leave(SL)', code: 'SL', available: 12, total: 12 },
 ];
 
 // Assam Regional Holiday Calendar (Image 24)
