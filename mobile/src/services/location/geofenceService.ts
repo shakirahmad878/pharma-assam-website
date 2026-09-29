@@ -27,7 +27,8 @@ export class GeofenceService {
   }
 
   /**
-   * Evaluates geofence status with location accuracy threshold gating.
+   * Evaluates geofence status with location accuracy threshold gating
+   * and strict mock location rejection.
    */
   public static evaluateGeofence(
     clinicLat: number,
@@ -35,7 +36,8 @@ export class GeofenceService {
     currentLat: number,
     currentLng: number,
     currentAccuracyMeters: number,
-    radiusMeters: number = 100
+    radiusMeters: number = 100,
+    isMockLocation: boolean = false
   ): {
     status: GeofenceStatus;
     distanceMeters: number;
@@ -43,6 +45,16 @@ export class GeofenceService {
     accuracyAcceptable: boolean;
     statusText: string;
   } {
+    if (isMockLocation) {
+      return {
+        status: 'OUTSIDE_RADIUS',
+        distanceMeters: 9999,
+        isWithinRadius: false,
+        accuracyAcceptable: false,
+        statusText: '🚫 Fake GPS Blocked: Developer mock location detected. Turn off mock apps in settings.'
+      };
+    }
+
     const distance = this.calculateDistanceMeters(clinicLat, clinicLng, currentLat, currentLng);
     const accuracyAcceptable = currentAccuracyMeters <= 35.0; // Max allowable accuracy tolerance
     const isWithinRadius = distance <= radiusMeters;

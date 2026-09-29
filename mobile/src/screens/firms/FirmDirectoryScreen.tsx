@@ -69,8 +69,14 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
     const loc = await LocationService.getCurrentLocation();
     setGpsLoading(false);
     if (loc) {
-      setCapturedGps(loc);
-      setAutoArea('Main Road & Station Area, Karimganj, Assam');
+      if (loc.isMockLocation) {
+        LocationService.validateAuthenticGps(loc, 'Firm / Retailer Geotagging');
+        setCapturedGps(null);
+        setAutoArea('⚠️ Fake GPS Detected (Blocked)');
+      } else {
+        setCapturedGps(loc);
+        setAutoArea('Main Road & Station Area, Karimganj, Assam');
+      }
     } else {
       setAutoArea('Karimganj, Assam');
     }
@@ -84,6 +90,10 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
   const handleAddFirm = async () => {
     if (!newFirmName.trim()) {
       Alert.alert('Missing Name', 'Please provide firm name.');
+      return;
+    }
+    if (capturedGps?.isMockLocation) {
+      Alert.alert('Fake GPS Blocked 🚫', 'Please turn off Developer Mock Location apps to register firm.');
       return;
     }
     const newEntry: FirmItem = {

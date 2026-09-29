@@ -156,10 +156,10 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack }) =>
     }
 
     const currentLoc = location || (await LocationService.getCurrentLocation());
-    if (!currentLoc) {
-      Alert.alert('GPS Satellite Lock Required', 'Unable to acquire satellite lock. Please enable GPS location services.');
+    if (!LocationService.validateAuthenticGps(currentLoc, 'Daily Duty Attendance')) {
       return;
     }
+    if (!currentLoc) return;
 
     setSubmitting(true);
     await AttendanceService.punchIn({

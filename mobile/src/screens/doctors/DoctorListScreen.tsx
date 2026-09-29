@@ -89,12 +89,16 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
     setNewDocArea('Hospital Road, Silchar');
     setAddModalVisible(true);
 
-    // Auto-capture GPS
+    // Auto-capture GPS with Anti-Mock verification
     setGpsLoading(true);
     try {
       const loc = await LocationService.getCurrentLocation();
       if (loc) {
-        setCapturedCoords({ lat: loc.latitude, lng: loc.longitude });
+        if (loc.isMockLocation) {
+          LocationService.validateAuthenticGps(loc, 'Doctor Clinic Geotagging');
+        } else {
+          setCapturedCoords({ lat: loc.latitude, lng: loc.longitude });
+        }
       }
     } catch {
       // fallback

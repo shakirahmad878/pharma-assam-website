@@ -65,6 +65,11 @@ export const POBBookingScreen: React.FC<POBBookingScreenProps> = ({ onBack, onOr
 
     setSubmitting(true);
     const loc = await LocationService.getCurrentLocation();
+    if (loc && loc.isMockLocation) {
+      LocationService.validateAuthenticGps(loc, 'POB Order Booking');
+      setSubmitting(false);
+      return;
+    }
 
     await OrderService.createOrder({
       buyerType: 'CHEMIST',

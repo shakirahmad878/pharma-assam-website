@@ -49,13 +49,18 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
     setCheckingLocation(false);
 
     if (loc) {
+      if (loc.isMockLocation) {
+        LocationService.validateAuthenticGps(loc, 'Doctor Clinic Visit');
+      }
+
       const evaluation = GeofenceService.evaluateGeofence(
         doc.latitude,
         doc.longitude,
         loc.latitude,
         loc.longitude,
         loc.accuracyMeters,
-        doc.geofenceRadiusMeters
+        doc.geofenceRadiusMeters,
+        loc.isMockLocation
       );
       setGeofenceEval(evaluation);
     } else {
