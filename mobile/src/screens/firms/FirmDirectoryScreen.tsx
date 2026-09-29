@@ -89,19 +89,32 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
 
   const handleAddFirm = async () => {
     if (!newFirmName.trim()) {
-      Alert.alert('Missing Name', 'Please provide firm name.');
+      Alert.alert('Missing Name', 'Please provide firm / pharmacy name.');
+      return;
+    }
+    if (!newPhone.trim()) {
+      Alert.alert('Contact Phone Required', 'Please enter a contact mobile number for the firm.');
+      return;
+    }
+    const cleanDigits = newPhone.trim().replace(/\D/g, '');
+    if (cleanDigits.length !== 10 || !/^[6-9]\d{9}$/.test(cleanDigits)) {
+      Alert.alert(
+        'Invalid Mobile Number',
+        'Please enter a valid 10-digit Indian mobile number (e.g. 9435012345).'
+      );
       return;
     }
     if (capturedGps?.isMockLocation) {
       Alert.alert('Fake GPS Blocked 🚫', 'Please turn off Developer Mock Location apps to register firm.');
       return;
     }
+    const formattedFirmPhone = `+91 ${cleanDigits}`;
     const newEntry: FirmItem = {
       id: 'firm-' + Date.now(),
       name: newFirmName.toUpperCase(),
       type: newFirmType,
       contactPerson: newContactPerson.trim() || 'Proprietor / Pharmacist',
-      phone: newPhone.trim() || '+91 9435000000',
+      phone: formattedFirmPhone,
       dlNumber: newDlNumber.trim() || 'AS-REG-2026-DL-0000',
       area: autoArea,
       district: 'Karimganj',

@@ -123,6 +123,17 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
       return;
     }
 
+    const cleanPhoneDigits = newDocPhone.trim().replace(/\D/g, '');
+    if (cleanPhoneDigits.length !== 10 || !/^[6-9]\d{9}$/.test(cleanPhoneDigits)) {
+      Alert.alert(
+        'Invalid Mobile Number',
+        'Please enter a valid 10-digit Indian mobile number (e.g. 9435012345).'
+      );
+      return;
+    }
+
+    const formattedPhone = `+91 ${cleanPhoneDigits}`;
+
     const formattedName = newDocName.trim().startsWith('Dr.')
       ? newDocName.trim()
       : `Dr. ${newDocName.trim()}`;
@@ -131,7 +142,7 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
       name: formattedName,
       specialty: newDocSpecialty.trim() || 'General Physician',
       clinicName: newDocClinic.trim(),
-      phone: newDocPhone.trim(),
+      phone: formattedPhone,
       tier: newDocTier,
       district: newDocDistrict,
       area: newDocArea,
