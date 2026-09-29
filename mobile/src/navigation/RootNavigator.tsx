@@ -226,8 +226,10 @@ export const RootNavigator: React.FC = () => {
 
         {currentScreen === 'DOCTORS' && (
           <DoctorListScreen
+            mode="MASTER"
             onBack={pop}
             onOpenDrawer={() => setDrawerVisible(true)}
+            onNavigateToFirms={() => push('FIRMS')}
             onSelectDoctor={docId => push('DOCTOR_DETAILS', { doctorId: docId })}
           />
         )}
@@ -254,8 +256,10 @@ export const RootNavigator: React.FC = () => {
 
         {currentScreen === 'VISIT_EXECUTION_LIST' && (
           <DoctorListScreen
+            mode="VISITS"
             onBack={pop}
             onOpenDrawer={() => setDrawerVisible(true)}
+            onNavigateToFirms={() => push('FIRMS')}
             onSelectDoctor={docId => push('DOCTOR_DETAILS', { doctorId: docId })}
           />
         )}

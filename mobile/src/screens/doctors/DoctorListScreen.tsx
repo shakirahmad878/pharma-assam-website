@@ -25,6 +25,7 @@ interface DoctorListScreenProps {
   onSelectDoctor: (doctorId: string) => void;
   onOpenDrawer?: () => void;
   onNavigateToFirms?: () => void;
+  mode?: 'VISITS' | 'MASTER';
 }
 
 const COMMON_SPECIALTIES = [
@@ -43,6 +44,7 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
   onSelectDoctor,
   onOpenDrawer,
   onNavigateToFirms,
+  mode = 'VISITS',
 }) => {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [topTab, setTopTab] = useState<'DOCTORS' | 'FIRMS'>('DOCTORS');
@@ -160,11 +162,11 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
       d.todayVisitStatus,
     ]);
     await PdfReportService.generateAndShareReport(
-      { title: 'Doctor Visits & DCR Report', subtitle: 'Barak Valley Division (Assam)' },
+      { title: mode === 'VISITS' ? 'Completed Doctor Visits & DCR Report' : 'Doctor Directory Report', subtitle: 'Barak Valley Division (Assam)' },
       headers,
       rows,
       [
-        { label: 'Total Doctors', value: filteredDoctors.length },
+        { label: mode === 'VISITS' ? 'Total Visits Marked' : 'Total Doctors', value: filteredDoctors.length },
         { label: 'Completed Visits', value: filteredDoctors.filter(d => d.todayVisitStatus === 'COMPLETED').length },
       ]
     );
@@ -180,6 +182,14 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
       doc.area.toLowerCase().includes(query) ||
       doc.district.toLowerCase().includes(query);
 
+    if (mode === 'VISITS') {
+      // In Visits mode, ONLY display doctors that have been marked/visited by the MR
+      if (subTab === 'TODAY') {
+        return matchesSearch && doc.todayVisitStatus === 'COMPLETED';
+      }
+      return matchesSearch && (doc.todayVisitStatus === 'COMPLETED' || doc.completedVisitsThisMonth > 0);
+    }
+
     if (subTab === 'TODAY') {
       return matchesSearch && (doc.todayVisitStatus === 'COMPLETED' || doc.todayVisitStatus === 'PENDING' || doc.todayVisitStatus === 'MISSED');
     }
@@ -194,7 +204,7 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
           <TouchableOpacity style={styles.menuBtn} onPress={onOpenDrawer || onBack}>
             <Ionicons name="menu-outline" size={24} color="#ffffff" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Visits</Text>
+          <Text style={styles.headerTitle}>{mode === 'VISITS' ? 'Visits' : 'Doctors'}</Text>
           <TouchableOpacity style={styles.refreshPill} onPress={loadData}>
             <Text style={styles.refreshPillText}>Refresh</Text>
           </TouchableOpacity>
@@ -355,26 +365,40 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
           );
         }}
         ListEmptyComponent={
-          <View style={styles.emptyBox}>
-            <Ionicons name="medkit-outline" size={48} color="#94A3B8" />
-            <Text style={[styles.emptyText, { fontWeight: '800', color: colors.textPrimary, fontSize: 15 }]}>
-              No Doctors Registered Yet
-            </Text>
-            <Text style={[styles.emptyText, { marginTop: 4, textAlign: 'center' }]}>
-              Tap the orange '+' button below to register a doctor with Tier and contact info.
-            </Text>
-          </View>
+          mode === 'VISITS' ? (
+            <View style={styles.emptyBox}>
+              <Ionicons name="clipboard-outline" size={52} color="#94A3B8" />
+              <Text style={[styles.emptyText, { fontWeight: '800', color: colors.textPrimary, fontSize: 16 }]}>
+                No Completed Visits Recorded
+              </Text>
+              <Text style={[styles.emptyText, { marginTop: 6, textAlign: 'center', color: '#64748B' }]}>
+                Visits will reflect here automatically once marked and completed by the MR in the field.
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.emptyBox}>
+              <Ionicons name="medkit-outline" size={48} color="#94A3B8" />
+              <Text style={[styles.emptyText, { fontWeight: '800', color: colors.textPrimary, fontSize: 15 }]}>
+                No Doctors Registered Yet
+              </Text>
+              <Text style={[styles.emptyText, { marginTop: 4, textAlign: 'center' }]}>
+                Tap the orange '+' button below to register a doctor with Tier and contact info.
+              </Text>
+            </View>
+          )
         }
       />
 
-      {/* Floating Orange '+' Action Button */}
-      <TouchableOpacity
-        style={styles.fabBtn}
-        activeOpacity={0.85}
-        onPress={handleOpenAddDoctorModal}
-      >
-        <Ionicons name="add" size={30} color="#FFFFFF" />
-      </TouchableOpacity>
+      {/* Floating Orange '+' Action Button - STRICTLY restricted to MASTER mode (hidden in VISITS) */}
+      {mode === 'MASTER' && (
+        <TouchableOpacity
+          style={styles.fabBtn}
+          activeOpacity={0.85}
+          onPress={handleOpenAddDoctorModal}
+        >
+          <Ionicons name="add" size={30} color="#FFFFFF" />
+        </TouchableOpacity>
+      )}
 
       {/* Bottom Bar with Share button */}
       <View style={styles.bottomBar}>
