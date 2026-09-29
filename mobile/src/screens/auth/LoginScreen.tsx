@@ -12,11 +12,11 @@ interface LoginScreenProps {
 }
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForgotPassword }) => {
-  const [selectedUserCode, setSelectedUserCode] = useState<'0002' | '0001'>('0002');
+  const [employeeId, setEmployeeId] = useState('');
   const [authMode, setAuthMode] = useState<'PIN' | 'PASSWORD'>('PIN');
   const [pin, setPin] = useState('');
-  const [email, setEmail] = useState('pranjal.mr@reppulse.com');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -34,6 +34,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
   const [requestingApproval, setRequestingApproval] = useState(false);
 
   const handlePinLogin = async (bypassCutoff = false) => {
+    if (!employeeId.trim()) {
+      setErrorMessage('Please enter your Employee ID or Mobile Number.');
+      return;
+    }
     if (pin.length !== 4) {
       setErrorMessage('Please enter your 4-digit Daily PIN.');
       return;
@@ -41,7 +45,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
     setLoading(true);
     setErrorMessage('');
 
-    const res = await AuthService.loginWithPin(pin, selectedUserCode, bypassCutoff);
+    const res = await AuthService.loginWithPin(pin, employeeId.trim(), bypassCutoff);
     setLoading(false);
 
     if (res.success) {
@@ -51,15 +55,23 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
       setLateCurrentTime(res.currentTimeStr || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
       setLateModalVisible(true);
     } else {
-      setErrorMessage(res.error || 'Incorrect PIN. Try 1234 or use password login.');
+      setErrorMessage(res.error || 'Incorrect PIN or Employee ID. Please try again.');
     }
   };
 
   const handlePasswordLogin = async (bypassCutoff = false) => {
+    if (!email.trim()) {
+      setErrorMessage('Please enter your Official Email or Employee ID.');
+      return;
+    }
+    if (!password) {
+      setErrorMessage('Please enter your password.');
+      return;
+    }
     setLoading(true);
     setErrorMessage('');
 
-    const res = await AuthService.login(email, password, bypassCutoff);
+    const res = await AuthService.login(email.trim(), password, bypassCutoff);
     setLoading(false);
 
     if (res.success) {
@@ -176,54 +188,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
 
         {/* Login Form Card */}
         <View style={styles.formCard}>
-          {/* User Account Switcher */}
-          <Text style={styles.accountSelectTitle}>Select Representative Profile:</Text>
-          <View style={styles.accountSwitcherRow}>
-            <TouchableOpacity
-              style={[styles.accountCard, selectedUserCode === '0002' && styles.accountCardActive]}
-              onPress={() => {
-                setSelectedUserCode('0002');
-                setEmail('pranjal.mr@reppulse.com');
-                setErrorMessage('');
-              }}
-            >
-              <View style={styles.accountAvatar}>
-                <Text style={styles.accountAvatarText}>PM</Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.accountName, selectedUserCode === '0002' && styles.accountNameActive]}>
-                  Pranjal Malakar
-                </Text>
-                <Text style={styles.accountRole}>MR • ID: 0002</Text>
-              </View>
-              {selectedUserCode === '0002' && (
-                <Ionicons name="checkmark-circle" size={18} color="#2563EB" />
-              )}
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.accountCard, selectedUserCode === '0001' && styles.accountCardActive]}
-              onPress={() => {
-                setSelectedUserCode('0001');
-                setEmail('bodrud.abm@reppulse.com');
-                setErrorMessage('');
-              }}
-            >
-              <View style={[styles.accountAvatar, { backgroundColor: '#DCFCE7' }]}>
-                <Text style={[styles.accountAvatarText, { color: '#16A34A' }]}>BJ</Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.accountName, selectedUserCode === '0001' && styles.accountNameActive]}>
-                  Bodrud Jaman Sadiol
-                </Text>
-                <Text style={styles.accountRole}>ABM • ID: 0001</Text>
-              </View>
-              {selectedUserCode === '0001' && (
-                <Ionicons name="checkmark-circle" size={18} color="#2563EB" />
-              )}
-            </TouchableOpacity>
-          </View>
-
           {/* Mode Switcher: 4-Digit PIN vs Password */}
           <View style={styles.modeSwitcher}>
             <TouchableOpacity
@@ -269,10 +233,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
 
           {authMode === 'PIN' ? (
             <View>
-              <Text style={styles.pinInstruction}>
-                Enter PIN to start duty as {selectedUserCode === '0001' ? 'Bodrud Jaman Sadiol (ABM)' : 'Pranjal Malakar (MR)'}
-              </Text>
-              
+              <Input
+                label="Employee ID / Mobile Number"
+                value={employeeId}
+                onChangeText={setEmployeeId}
+                placeholder="e.g. 0002 (MR) or 0001 (ABM)"
+                autoCapitalize="none"
+              />
+
+              <Text style={styles.inputLabelSmall}>Daily 4-Digit PIN</Text>
               <View style={styles.pinInputWrap}>
                 <TextInput
                   style={styles.bigPinInput}
@@ -289,7 +258,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
                   keyboardType="numeric"
                   secureTextEntry
                   maxLength={4}
-                  autoFocus
                 />
               </View>
 
@@ -297,11 +265,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
                 <TouchableOpacity onPress={() => setChangePinModalVisible(true)}>
                   <Text style={styles.changePinLink}>⚙️ Set / Change PIN</Text>
                 </TouchableOpacity>
-                <Text style={styles.defaultPinHint}>Default PIN: 1234</Text>
               </View>
 
               <Button
-                title={`Sign In as ${selectedUserCode === '0001' ? 'ABM Sadiol' : 'MR Pranjal'}`}
+                title="Sign In to Field Duty"
                 onPress={() => handlePinLogin(false)}
                 loading={loading}
                 variant="primary"
@@ -313,7 +280,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
                 label="Official Email or Employee ID"
                 value={email}
                 onChangeText={setEmail}
-                placeholder="e.g. 0002 or pranjal.mr@reppulse.com"
+                placeholder="e.g. 0002 or 0001"
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
@@ -338,12 +305,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
               />
             </View>
           )}
-
-          <View style={styles.demoHelper}>
-            <Text style={styles.demoHelperTitle}>Active Field Duty Credentials:</Text>
-            <Text style={styles.demoHelperText}>1. Bodrud Jaman Sadiol (ABM) • ID: 0001 • PIN: 1234</Text>
-            <Text style={styles.demoHelperText}>2. Pranjal Malakar (MR) • ID: 0002 • PIN: 1234</Text>
-          </View>
         </View>
       </ScrollView>
 

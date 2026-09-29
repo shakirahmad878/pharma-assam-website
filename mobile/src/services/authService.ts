@@ -143,9 +143,15 @@ export class AuthService {
       }
     }
 
+    const code = (targetEmployeeCode || '').trim().toLowerCase();
     const matchedTemplate =
-      ALL_APP_USERS.find(u => u.employeeCode === targetEmployeeCode) ||
-      (targetEmployeeCode === '0001' ? USER_BODRUD_ABM : USER_PRANJAL_MR);
+      ALL_APP_USERS.find(
+        u =>
+          u.employeeCode.toLowerCase() === code ||
+          u.email.toLowerCase() === code ||
+          (u.phone && u.phone.includes(code)) ||
+          u.name.toLowerCase().includes(code)
+      ) || (code === '0001' ? USER_BODRUD_ABM : USER_PRANJAL_MR);
 
     const user: UserProfile = {
       ...matchedTemplate,
