@@ -787,17 +787,109 @@ export const BusinessPlanningScreen: React.FC<{ onBack: () => void }> = ({ onBac
    6. MONTHLY SUMMARY & CIRCULAR GAUGES (Images 29 & 31)
    ========================================================================================= */
 export const MonthlySummaryScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+  const [selectedMonth, setSelectedMonth] = useState('September');
+  const [selectedYear, setSelectedYear] = useState('2026');
+  const [selectedAgent, setSelectedAgent] = useState({
+    id: 'usr-01',
+    name: 'Pranjal Malakar',
+    role: 'MEDICAL_REP',
+    territory: 'Karimganj Beat (Barak Valley)',
+  });
+  const [userRole, setUserRole] = useState<'MEDICAL_REP' | 'AREA_MANAGER'>('MEDICAL_REP');
+  
+  const [monthYearModalVisible, setMonthYearModalVisible] = useState(false);
+  const [agentModalVisible, setAgentModalVisible] = useState(false);
+
+  const teamAgents = [
+    { id: 'usr-01', name: 'Pranjal Malakar', role: 'MEDICAL_REP', territory: 'Karimganj Beat (Barak Valley)' },
+    { id: 'usr-02', name: 'Shakir Ahmad', role: 'MEDICAL_REP', territory: 'Silchar Central HQ' },
+    { id: 'usr-03', name: 'Rahul Das', role: 'MEDICAL_REP', territory: 'Hailakandi District' },
+    { id: 'usr-04', name: 'Bikash Paul', role: 'MEDICAL_REP', territory: 'Badarpur & Rural Corridor' },
+  ];
+
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const years = ['2025', '2026', '2027'];
+
+  const handleAgentClick = () => {
+    if (userRole === 'MEDICAL_REP') {
+      Alert.alert(
+        '🔒 Access Restricted to ABM / Admin',
+        'Medical Representatives (MR) are only authorized to view their own Monthly Performance Summary.\n\nOnly an Area Business Manager (ABM) or System Admin can inspect and switch between other agents.'
+      );
+    } else {
+      setAgentModalVisible(true);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <Header title="Monthly Summary" subtitle="Barak Division Field Performance" showBack onBack={onBack} />
+      
+      {/* Role Switcher Pill for Demo/Testing Authority */}
+      <View style={styles.authBadgeBanner}>
+        <Text style={styles.authBadgeLabel}>Current Authority:</Text>
+        <TouchableOpacity
+          style={[styles.authRolePill, userRole === 'AREA_MANAGER' && styles.authRolePillABM]}
+          onPress={() => {
+            const next = userRole === 'MEDICAL_REP' ? 'AREA_MANAGER' : 'MEDICAL_REP';
+            setUserRole(next);
+            Alert.alert(
+              `Switched to ${next === 'AREA_MANAGER' ? 'ABM (Admin Access)' : 'Medical Representative (MR)'}`,
+              next === 'AREA_MANAGER'
+                ? 'You now have full authority to select and view any field agent summary.'
+                : 'Locked mode: MR can only view their own profile summary.'
+            );
+          }}
+        >
+          <Ionicons
+            name={userRole === 'AREA_MANAGER' ? 'shield-checkmark' : 'lock-closed'}
+            size={13}
+            color={userRole === 'AREA_MANAGER' ? '#16A34A' : '#2563EB'}
+          />
+          <Text style={[styles.authRoleText, userRole === 'AREA_MANAGER' && styles.authRoleTextABM]}>
+            {userRole === 'AREA_MANAGER' ? 'ABM / Admin Mode' : 'MR Mode (Own Profile Only)'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Month and User Selector */}
+        {/* Month, Year & User Selector Card */}
         <View style={styles.summarySelectorCard}>
-          <View style={styles.summarySelectorRow}>
-            <Text style={styles.summarySelectorText}>September 2026</Text>
+          {/* Month & Year Row */}
+          <TouchableOpacity
+            style={styles.summarySelectorRow}
+            onPress={() => setMonthYearModalVisible(true)}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Ionicons name="calendar-outline" size={16} color="#2563EB" />
+              <Text style={styles.summarySelectorText}>{selectedMonth} {selectedYear}</Text>
+            </View>
             <Ionicons name="chevron-down" size={16} color="#64748B" />
-          </View>
-          <Text style={styles.summaryUserName}>Pranjal Malakar</Text>
+          </TouchableOpacity>
+
+          {/* Agent Row with ABM Authority Lock */}
+          <TouchableOpacity
+            style={styles.agentSelectorRow}
+            onPress={handleAgentClick}
+          >
+            <View style={{ flex: 1 }}>
+              <Text style={styles.summaryUserName}>{selectedAgent.name}</Text>
+              <Text style={styles.summaryUserTerritory}>{selectedAgent.territory}</Text>
+            </View>
+            <View style={styles.agentLockBadge}>
+              {userRole === 'AREA_MANAGER' ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+                  <Text style={styles.switchAgentText}>Switch Agent</Text>
+                  <Ionicons name="chevron-forward" size={14} color="#2563EB" />
+                </View>
+              ) : (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Ionicons name="lock-closed" size={12} color="#94A3B8" />
+                  <Text style={styles.lockedText}>Locked</Text>
+                </View>
+              )}
+            </View>
+          </TouchableOpacity>
         </View>
 
         {/* 3 Circular Dials / Gauges matching Images 29 & 31 */}
@@ -848,15 +940,115 @@ export const MonthlySummaryScreen: React.FC<{ onBack: () => void }> = ({ onBack 
           <Text style={styles.tpStatusText}>Approved</Text>
         </View>
       </ScrollView>
+
+      {/* Month & Year Selection Modal */}
+      <Modal visible={monthYearModalVisible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.createModalBox}>
+            <Text style={styles.modalHeaderTitle}>Select Month & Year</Text>
+            
+            <Text style={styles.modalFieldLabel}>Year</Text>
+            <View style={styles.pillSelectRow}>
+              {years.map(y => (
+                <TouchableOpacity
+                  key={y}
+                  style={[styles.pillOption, selectedYear === y && styles.pillOptionActive]}
+                  onPress={() => setSelectedYear(y)}
+                >
+                  <Text style={[styles.pillOptionText, selectedYear === y && styles.pillOptionTextActive]}>
+                    {y}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={styles.modalFieldLabel}>Month</Text>
+            <View style={[styles.pillSelectRow, { maxHeight: 180 }]}>
+              {months.map(m => (
+                <TouchableOpacity
+                  key={m}
+                  style={[styles.pillOption, selectedMonth === m && styles.pillOptionActive]}
+                  onPress={() => setSelectedMonth(m)}
+                >
+                  <Text style={[styles.pillOptionText, selectedMonth === m && styles.pillOptionTextActive]}>
+                    {m}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <TouchableOpacity
+              style={[styles.detailCloseBtn, { marginTop: 16 }]}
+              onPress={() => setMonthYearModalVisible(false)}
+            >
+              <Text style={styles.detailCloseBtnText}>Done</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Agent Selection Modal (ABM/Admin Authority) */}
+      <Modal visible={agentModalVisible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.createModalBox}>
+            <Text style={styles.modalHeaderTitle}>Select Field Representative (ABM)</Text>
+            <Text style={styles.modalSubtitle}>Barak Valley Division Team Members</Text>
+
+            <View style={{ marginVertical: 12, gap: 8 }}>
+              {teamAgents.map(ag => (
+                <TouchableOpacity
+                  key={ag.id}
+                  style={[
+                    styles.agentListItem,
+                    selectedAgent.id === ag.id && styles.agentListItemActive,
+                  ]}
+                  onPress={() => {
+                    setSelectedAgent(ag);
+                    setAgentModalVisible(false);
+                  }}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.agentListName, selectedAgent.id === ag.id && styles.agentListNameActive]}>
+                      {ag.name}
+                    </Text>
+                    <Text style={styles.agentListTerritory}>{ag.territory}</Text>
+                  </View>
+                  {selectedAgent.id === ag.id && (
+                    <Ionicons name="checkmark-circle" size={20} color="#2563EB" />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <TouchableOpacity
+              style={styles.modalCancelBtn}
+              onPress={() => setAgentModalVisible(false)}
+            >
+              <Text style={styles.modalCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
 
 /* =========================================================================================
-   7. REPORTS HUB (18+ Reports Grid from Images 1-5, 8-20)
+   7. REPORTS HUB (18+ Reports Grid with In-App Preview before Share)
    ========================================================================================= */
+interface ReportDataPayload {
+  id: string;
+  title: string;
+  subtitle: string;
+  kpis: { label: string; value: string }[];
+  headers: string[];
+  rows: string[][];
+}
+
 export const ReportsHubScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
-  const [selectedReport, setSelectedReport] = useState<string | null>(null);
+  const [activeReport, setActiveReport] = useState<ReportDataPayload | null>(null);
+  const [viewerModalVisible, setViewerModalVisible] = useState(false);
+  const [reportSearchQuery, setReportSearchQuery] = useState('');
 
   const reportItems = [
     { id: 'DOCTOR_PREFERRED_DAY', title: 'Doctor Preferred Day', icon: 'time-outline' },
@@ -881,32 +1073,131 @@ export const ReportsHubScreen: React.FC<{ onBack: () => void }> = ({ onBack }) =
     { id: 'RCPA_REPORT', title: 'RCPA Report', icon: 'newspaper-outline' },
   ];
 
-  const handleOpenReport = async (reportId: string, title: string) => {
-    setSelectedReport(reportId);
-    // Dynamically export PDF
-    const headers = ['Entity / Name', 'Category', 'Target / Scheduled', 'Achieved / Actual', 'Variance / %'];
-    const rows = [
-      ['Dr. Gautam Roy Sharma', 'Core Prescriber', '4 Calls', '4 Calls', '100%'],
-      ['Dr. Abul Hussain', 'General', '2 Calls', '1 Call', '50%'],
-      ['Asha Medical', 'Retailer', '₹40,000', '₹42,500', '+6.2%'],
-      ['Alif Medication', 'Retailer', '₹30,000', '₹28,000', '-6.6%'],
-      ['SMCH Tertiary Corridor', 'Hospital Beat', '12 Calls', '10 Calls', '83.3%'],
-    ];
+  const getReportData = (id: string, title: string): ReportDataPayload => {
+    switch (id) {
+      case 'DOCTOR_PREFERRED_DAY':
+        return {
+          id,
+          title,
+          subtitle: 'Doctor Calling Schedules & Preferred Time Windows',
+          kpis: [
+            { label: 'Total Doctors', value: '4 Prescribers' },
+            { label: 'Morning Visits', value: '3' },
+            { label: 'Evening Visits', value: '1' },
+          ],
+          headers: ['Doctor Name', 'Specialty', 'Preferred Day', 'Preferred Time', 'Area'],
+          rows: [
+            ['Dr. Sanjay Solanki', 'Cardiologist', 'Mon, Wed, Fri', '11:30 AM - 01:30 PM', 'Hospital Road, Silchar'],
+            ['Dr. Vijay Thakur', 'Orthopedic', 'Tue, Thu, Sat', '12:00 PM - 02:00 PM', 'SMCH Ghungoor, Silchar'],
+            ['Dr. Debashis Nath', 'Pediatrician', 'Daily', '05:00 PM - 07:30 PM', 'Park Road, Silchar'],
+            ['Dr. Abdul Basit', 'Physician', 'Mon, Thu', '10:30 AM - 01:00 PM', 'Station Road, Karimganj'],
+          ],
+        };
+      case 'DOCTORS_WISE_SALES':
+        return {
+          id,
+          title,
+          subtitle: 'Doctor-Level Secondary Rx & Sales Contribution',
+          kpis: [
+            { label: 'Total Target', value: '₹95,000' },
+            { label: 'Achieved Rx', value: '₹1,02,500' },
+            { label: 'Achievement', value: '107.8%' },
+          ],
+          headers: ['Doctor Name', 'Territory', 'Target (₹)', 'Achieved (₹)', 'Growth %'],
+          rows: [
+            ['Dr. Gautam Roy Sharma', 'Karimganj Town', '₹35,000', '₹38,200', '+9.1%'],
+            ['Dr. Sanjay Solanki', 'Silchar Central', '₹30,000', '₹32,500', '+8.3%'],
+            ['Dr. Abul Hussain', 'Karimganj Beat', '₹18,000', '₹19,800', '+10.0%'],
+            ['Dr. Vijay Thakur', 'SMCH Beat', '₹12,000', '₹12,000', '0.0%'],
+          ],
+        };
+      case 'ATTENDANCE_REPORT':
+        return {
+          id,
+          title,
+          subtitle: 'Monthly Field Check-In & GPS Geofence Attendance Log',
+          kpis: [
+            { label: 'Working Days', value: '26 Days' },
+            { label: 'Present / On Time', value: '24' },
+            { label: 'Late Approved', value: '2' },
+          ],
+          headers: ['Date', 'Check-In', 'Check-Out', 'GPS Accuracy', 'Status'],
+          rows: [
+            ['26 Sep 2026', '09:42 AM', '06:15 PM', '12m (High)', 'On Time ✅'],
+            ['25 Sep 2026', '09:50 AM', '06:30 PM', '10m (High)', 'On Time ✅'],
+            ['24 Sep 2026', '10:45 AM', '07:00 PM', '15m (High)', 'Late (Approved) ⚠️'],
+            ['23 Sep 2026', '09:30 AM', '06:00 PM', '8m (High)', 'On Time ✅'],
+            ['22 Sep 2026', '09:40 AM', '06:20 PM', '14m (High)', 'On Time ✅'],
+          ],
+        };
+      case 'EXPENSE_REPORT':
+        return {
+          id,
+          title,
+          subtitle: 'Standard Fare Chart (SFC) Verified Expense Claims',
+          kpis: [
+            { label: 'Total Claimed', value: '₹4,116' },
+            { label: 'Approved Claims', value: '4 of 5' },
+            { label: 'Total Travel', value: '332 Km' },
+          ],
+          headers: ['Date', 'Route Destination', 'Distance', 'TA/DA', 'Status'],
+          rows: [
+            ['26 Sep 2026', 'Karimganj Central Beat', '18 km', '₹304', 'UnApproved ⏳'],
+            ['25 Sep 2026', 'Patharkandi Route', '70 km', '₹710', 'Approved ✅'],
+            ['24 Sep 2026', 'Makunda Outstation', '154 km', '₹2,132', 'Approved ✅'],
+            ['23 Sep 2026', 'Badarpur Junction', '66 km', '₹648', 'Approved ✅'],
+            ['22 Sep 2026', 'Lakhibazar Route', '24 km', '₹322', 'Approved ✅'],
+          ],
+        };
+      default:
+        return {
+          id,
+          title,
+          subtitle: 'Barak Valley Division Territory MIS Analytics',
+          kpis: [
+            { label: 'Total Records', value: '5 Entries' },
+            { label: 'Target / Scheduled', value: '18 Calls' },
+            { label: 'Coverage Rate', value: '88.5%' },
+          ],
+          headers: ['Entity / Name', 'Category', 'Target / Scheduled', 'Achieved / Actual', 'Variance / %'],
+          rows: [
+            ['Dr. Gautam Roy Sharma', 'Core Prescriber', '4 Calls', '4 Calls', '100%'],
+            ['Dr. Abul Hussain', 'General Prescriber', '2 Calls', '1 Call', '50%'],
+            ['Asha Medical', 'Retail Pharmacy', '₹40,000', '₹42,500', '+6.2%'],
+            ['Alif Medication', 'Retail Pharmacy', '₹30,000', '₹28,000', '-6.6%'],
+            ['SMCH Tertiary Corridor', 'Hospital Beat', '12 Calls', '10 Calls', '83.3%'],
+          ],
+        };
+    }
+  };
+
+  const handleOpenReport = (reportId: string, title: string) => {
+    const data = getReportData(reportId, title);
+    setActiveReport(data);
+    setReportSearchQuery('');
+    setViewerModalVisible(true);
+  };
+
+  const handleShareCurrentReport = async () => {
+    if (!activeReport) return;
     await PdfReportService.generateAndShareReport(
-      { title, subtitle: 'Barak Valley Territory • Automated Compliance Engine' },
-      headers,
-      rows,
-      [
-        { label: 'Total Visits', value: '18 Calls' },
-        { label: 'Call Average', value: '10.2 / Day' },
-        { label: 'Coverage Rate', value: '88.5%' },
-      ]
+      { title: activeReport.title, subtitle: `${activeReport.subtitle} (Barak Valley)` },
+      activeReport.headers,
+      activeReport.rows,
+      activeReport.kpis
     );
   };
+
+  const filteredRows = activeReport
+    ? activeReport.rows.filter(row =>
+        row.some(cell => cell.toLowerCase().includes(reportSearchQuery.toLowerCase()))
+      )
+    : [];
 
   return (
     <SafeAreaView style={styles.container}>
       <Header title="Reports & Analytics" subtitle="18+ Strategic MIS Reports" showBack onBack={onBack} />
+      
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.reportsGrid}>
           {reportItems.map(item => (
@@ -923,6 +1214,125 @@ export const ReportsHubScreen: React.FC<{ onBack: () => void }> = ({ onBack }) =
           ))}
         </View>
       </ScrollView>
+
+      {/* In-App Report Viewer Modal */}
+      <Modal visible={viewerModalVisible} animationType="slide">
+        <SafeAreaView style={styles.viewerContainer}>
+          {activeReport && (
+            <>
+              {/* Top Viewer Header */}
+              <View style={styles.viewerHeader}>
+                <TouchableOpacity
+                  style={styles.viewerBackBtn}
+                  onPress={() => setViewerModalVisible(false)}
+                >
+                  <Ionicons name="arrow-back" size={24} color="#ffffff" />
+                </TouchableOpacity>
+                <View style={{ flex: 1, marginLeft: 8 }}>
+                  <Text style={styles.viewerHeaderTitle}>{activeReport.title}</Text>
+                  <Text style={styles.viewerHeaderSubtitle}>{activeReport.subtitle}</Text>
+                </View>
+              </View>
+
+              {/* KPI Summary Strip */}
+              <View style={styles.viewerKpiRow}>
+                {activeReport.kpis.map((kpi, idx) => (
+                  <View key={idx} style={styles.viewerKpiCard}>
+                    <Text style={styles.viewerKpiVal}>{kpi.value}</Text>
+                    <Text style={styles.viewerKpiLabel}>{kpi.label}</Text>
+                  </View>
+                ))}
+              </View>
+
+              {/* In-Report Search Bar */}
+              <View style={styles.viewerSearchBox}>
+                <Ionicons name="search-outline" size={16} color="#64748B" />
+                <TextInput
+                  style={styles.viewerSearchInput}
+                  placeholder={`Search in ${activeReport.title}...`}
+                  placeholderTextColor="#94A3B8"
+                  value={reportSearchQuery}
+                  onChangeText={setReportSearchQuery}
+                />
+                {reportSearchQuery.length > 0 && (
+                  <TouchableOpacity onPress={() => setReportSearchQuery('')}>
+                    <Ionicons name="close-circle" size={16} color="#94A3B8" />
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              {/* Scrollable Data Table Preview */}
+              <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 12, paddingBottom: 90 }}>
+                <View style={styles.tableCard}>
+                  {/* Table Header */}
+                  <View style={styles.tableHeaderRow}>
+                    {activeReport.headers.map((h, i) => (
+                      <Text
+                        key={i}
+                        style={[
+                          styles.tableHeaderCell,
+                          i === 0 ? { flex: 2 } : { flex: 1.2, textAlign: 'center' },
+                        ]}
+                      >
+                        {h}
+                      </Text>
+                    ))}
+                  </View>
+
+                  {/* Table Body Rows */}
+                  {filteredRows.map((row, rIdx) => (
+                    <View
+                      key={rIdx}
+                      style={[
+                        styles.tableDataRow,
+                        rIdx % 2 === 1 && { backgroundColor: '#F8FAFC' },
+                      ]}
+                    >
+                      {row.map((cell, cIdx) => (
+                        <Text
+                          key={cIdx}
+                          style={[
+                            styles.tableDataCell,
+                            cIdx === 0
+                              ? { flex: 2, fontWeight: '700', color: colors.textPrimary }
+                              : { flex: 1.2, textAlign: 'center' },
+                          ]}
+                        >
+                          {cell}
+                        </Text>
+                      ))}
+                    </View>
+                  ))}
+
+                  {filteredRows.length === 0 && (
+                    <View style={{ padding: 24, alignItems: 'center' }}>
+                      <Text style={{ color: '#64748B', fontSize: 13 }}>No matching records found.</Text>
+                    </View>
+                  )}
+                </View>
+              </ScrollView>
+
+              {/* Bottom Sticky Actions: Close & Share PDF */}
+              <View style={styles.viewerBottomBar}>
+                <TouchableOpacity
+                  style={styles.viewerCloseBtn}
+                  onPress={() => setViewerModalVisible(false)}
+                >
+                  <Text style={styles.viewerCloseText}>Close</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.viewerSharePdfBtn}
+                  onPress={handleShareCurrentReport}
+                >
+                  <Ionicons name="share-social-outline" size={18} color="#ffffff" />
+                  <Text style={styles.viewerSharePdfText}>Export & Share PDF</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -1366,7 +1776,31 @@ const styles = StyleSheet.create({
   },
   bpSubmitBtnText: { color: '#ffffff', fontWeight: '800', fontSize: 12 },
 
-  // Monthly Summary
+  // Monthly Summary & Authority Styles
+  authBadgeBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderColor: '#BFDBFE',
+  },
+  authBadgeLabel: { fontSize: 11, fontWeight: '700', color: '#1E40AF' },
+  authRolePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#DBEAFE',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  authRolePillABM: { backgroundColor: '#DCFCE7' },
+  authRoleText: { fontSize: 11, fontWeight: '800', color: '#1D4ED8' },
+  authRoleTextABM: { color: '#16A34A' },
+
   summarySelectorCard: {
     backgroundColor: '#ffffff',
     borderRadius: radius.md,
@@ -1374,9 +1808,47 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     ...shadows.sm,
   },
-  summarySelectorRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  summarySelectorRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderColor: '#F1F5F9',
+  },
   summarySelectorText: { fontSize: 14, fontWeight: '700', color: colors.textPrimary },
-  summaryUserName: { fontSize: 12, color: '#64748B', marginTop: 4 },
+  agentSelectorRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 10,
+  },
+  summaryUserName: { fontSize: 14, fontWeight: '800', color: colors.textPrimary },
+  summaryUserTerritory: { fontSize: 11, color: '#64748B', marginTop: 2 },
+  agentLockBadge: { flexDirection: 'row', alignItems: 'center' },
+  switchAgentText: { fontSize: 11, fontWeight: '800', color: '#2563EB' },
+  lockedText: { fontSize: 11, fontWeight: '700', color: '#94A3B8' },
+
+  agentListItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 12,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    backgroundColor: '#F8FAFC',
+  },
+  agentListItemActive: {
+    borderColor: '#2563EB',
+    backgroundColor: '#EFF6FF',
+  },
+  agentListName: { fontSize: 13, fontWeight: '700', color: colors.textPrimary },
+  agentListNameActive: { color: '#2563EB' },
+  agentListTerritory: { fontSize: 11, color: '#64748B', marginTop: 2 },
+  modalCancelBtn: { alignItems: 'center', paddingVertical: 10, marginTop: 8 },
+  modalCancelText: { color: '#64748B', fontWeight: '700', fontSize: 13 },
+
   gaugesContainer: { flexDirection: 'row', gap: 10, marginBottom: 14 },
   gaugeCard: {
     flex: 1,
@@ -1424,7 +1896,7 @@ const styles = StyleSheet.create({
   },
   tpStatusText: { fontSize: 13, fontWeight: '700', color: '#16A34A' },
 
-  // Reports Hub
+  // Reports Hub & Viewer
   reportsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   reportTile: {
     width: (width - 42) / 2,
@@ -1446,6 +1918,104 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   reportTileText: { fontSize: 12, fontWeight: '700', color: colors.textPrimary, textAlign: 'center' },
+
+  viewerContainer: { flex: 1, backgroundColor: '#F8FAFC' },
+  viewerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2563EB',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+  },
+  viewerBackBtn: { padding: 4 },
+  viewerHeaderTitle: { color: '#ffffff', fontSize: 16, fontWeight: '800' },
+  viewerHeaderSubtitle: { color: '#DBEAFE', fontSize: 11, marginTop: 2 },
+  viewerKpiRow: {
+    flexDirection: 'row',
+    backgroundColor: '#ffffff',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    gap: 8,
+    borderBottomWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  viewerKpiCard: {
+    flex: 1,
+    backgroundColor: '#EFF6FF',
+    padding: 8,
+    borderRadius: radius.sm,
+    alignItems: 'center',
+  },
+  viewerKpiVal: { fontSize: 13, fontWeight: '900', color: '#1D4ED8' },
+  viewerKpiLabel: { fontSize: 9, fontWeight: '700', color: '#64748B', marginTop: 2, textTransform: 'uppercase' },
+  viewerSearchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    marginHorizontal: 12,
+    marginTop: 10,
+    marginBottom: 6,
+    paddingHorizontal: 12,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+  },
+  viewerSearchInput: { flex: 1, paddingVertical: 8, paddingLeft: 6, fontSize: 12, color: colors.textPrimary },
+  tableCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: radius.sm,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    ...shadows.sm,
+  },
+  tableHeaderRow: {
+    flexDirection: 'row',
+    backgroundColor: '#3B82F6',
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+  },
+  tableHeaderCell: { color: '#ffffff', fontSize: 11, fontWeight: '800' },
+  tableDataRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  tableDataCell: { fontSize: 11, color: '#475569' },
+  viewerBottomBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    backgroundColor: '#ffffff',
+    padding: 12,
+    borderTopWidth: 1,
+    borderColor: '#E2E8F0',
+    gap: 10,
+  },
+  viewerCloseBtn: {
+    flex: 1,
+    backgroundColor: '#F1F5F9',
+    paddingVertical: 12,
+    borderRadius: radius.sm,
+    alignItems: 'center',
+  },
+  viewerCloseText: { color: '#475569', fontWeight: '800', fontSize: 13 },
+  viewerSharePdfBtn: {
+    flex: 2,
+    backgroundColor: '#2563EB',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: radius.sm,
+    gap: 6,
+  },
+  viewerSharePdfText: { color: '#ffffff', fontWeight: '800', fontSize: 13 },
 
   notifRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
   notifTitle: { fontSize: 13, fontWeight: '700', color: colors.textPrimary, marginLeft: 6 },
