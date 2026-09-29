@@ -1,14 +1,14 @@
 import { Doctor, Chemist, Product, UserProfile, RoutePlan, Hospital, StockistFirm, MonthlyTourProgramme } from '../types';
 
-export const CURRENT_USER: UserProfile = {
-  id: 'usr-mr-barak-01',
-  name: 'Shakir Ahmad',
-  email: 'shakirahmad878@gmail.com',
-  role: 'MEDICAL_REP',
-  employeeCode: 'REP-AS-904',
+export const USER_BODRUD_ABM: UserProfile = {
+  id: 'usr-abm-0001',
+  name: 'Bodrud Jaman Sadiol',
+  email: 'bodrud.abm@reppulse.com',
+  role: 'AREA_MANAGER',
+  employeeCode: '0001',
   territory: 'Barak Valley Division (Assam)',
   headquarter: 'Silchar HQ',
-  phone: '+91 8448440654',
+  phone: '',
   assignedRouteIds: [
     'route-cachar-01',
     'route-cachar-02',
@@ -19,6 +19,29 @@ export const CURRENT_USER: UserProfile = {
   ],
   activeRouteId: 'route-cachar-01',
 };
+
+export const USER_PRANJAL_MR: UserProfile = {
+  id: 'usr-mr-0002',
+  name: 'Pranjal Malakar',
+  email: 'pranjal.mr@reppulse.com',
+  role: 'MEDICAL_REP',
+  employeeCode: '0002',
+  territory: 'Barak Valley Division (Assam)',
+  headquarter: 'Silchar / Karimganj Beat',
+  phone: '',
+  assignedRouteIds: [
+    'route-cachar-01',
+    'route-cachar-02',
+    'route-cachar-03',
+    'route-karimganj-01',
+    'route-karimganj-02',
+    'route-hailakandi-01',
+  ],
+  activeRouteId: 'route-cachar-01',
+};
+
+export const CURRENT_USER: UserProfile = USER_PRANJAL_MR;
+export const ALL_APP_USERS: UserProfile[] = [USER_BODRUD_ABM, USER_PRANJAL_MR];
 
 export const BARAK_ROUTES: RoutePlan[] = [
   {

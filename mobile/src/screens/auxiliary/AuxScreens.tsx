@@ -801,10 +801,10 @@ export const MonthlySummaryScreen: React.FC<{ onBack: () => void }> = ({ onBack 
   const [agentModalVisible, setAgentModalVisible] = useState(false);
 
   const teamAgents = [
-    { id: 'usr-01', name: 'Pranjal Malakar', role: 'MEDICAL_REP', territory: 'Karimganj Beat (Barak Valley)' },
-    { id: 'usr-02', name: 'Shakir Ahmad', role: 'MEDICAL_REP', territory: 'Silchar Central HQ' },
-    { id: 'usr-03', name: 'Rahul Das', role: 'MEDICAL_REP', territory: 'Hailakandi District' },
-    { id: 'usr-04', name: 'Bikash Paul', role: 'MEDICAL_REP', territory: 'Badarpur & Rural Corridor' },
+    { id: 'usr-0002', name: 'Pranjal Malakar', role: 'MEDICAL_REP', employeeCode: '0002', territory: 'Silchar & Karimganj Beat (Barak Valley)' },
+    { id: 'usr-0001', name: 'Bodrud Jaman Sadiol', role: 'AREA_MANAGER', employeeCode: '0001', territory: 'Barak Valley Division HQ' },
+    { id: 'usr-0003', name: 'Rahul Das', role: 'MEDICAL_REP', employeeCode: '0003', territory: 'Hailakandi District' },
+    { id: 'usr-0004', name: 'Bikash Paul', role: 'MEDICAL_REP', employeeCode: '0004', territory: 'Badarpur & Rural Corridor' },
   ];
 
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];

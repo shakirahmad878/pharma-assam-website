@@ -1,7 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  ScrollView,
+  Alert,
+  TouchableOpacity,
+  TextInput,
+  Modal,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, typography, spacing, radius } from '../../constants/theme';
+import { colors, typography, spacing, radius, shadows } from '../../constants/theme';
 import { Header } from '../../components/common/Header';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
@@ -14,7 +24,28 @@ interface ProfileScreenProps {
 }
 
 export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBack, onLogout }) => {
-  const [user] = useState<UserProfile | null>(AuthService.getCurrentUser());
+  const [user, setUser] = useState<UserProfile>(AuthService.getCurrentUser());
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [phoneInput, setPhoneInput] = useState(user.phone || '');
+  const [emailInput, setEmailInput] = useState(user.email || '');
+  const [hqInput, setHqInput] = useState(user.headquarter || 'Silchar HQ');
+
+  const handleSaveContact = async () => {
+    if (!phoneInput.trim()) {
+      Alert.alert('Phone Number Required', 'Please enter your mobile contact number.');
+      return;
+    }
+
+    const updated = await AuthService.updateUserProfile({
+      phone: phoneInput.trim(),
+      email: emailInput.trim(),
+      headquarter: hqInput.trim(),
+    });
+
+    setUser(updated);
+    setEditModalVisible(false);
+    Alert.alert('Profile Updated ✅', 'Your contact details have been updated successfully.');
+  };
 
   const handleLogoutConfirm = () => {
     Alert.alert('Log Out', 'Are you sure you want to log out of field operations?', [
@@ -30,24 +61,80 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBack, onLogout }
     ]);
   };
 
+  const roleTitle =
+    user.role === 'AREA_MANAGER'
+      ? 'Area Business Manager (ABM)'
+      : user.role === 'REGIONAL_MANAGER'
+      ? 'Regional Business Manager (RBM)'
+      : 'Medical Representative (MR)';
+
   return (
     <SafeAreaView style={styles.container}>
       <Header title="Representative Profile" subtitle="Field Duty Credentials" showBack onBack={onBack} />
       <ScrollView contentContainerStyle={styles.content}>
-        {/* User Card */}
+        {/* User Identity Card */}
         <Card>
           <View style={styles.userRow}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{user?.name?.charAt(0) || 'S'}</Text>
+            <View style={[styles.avatar, user.role === 'AREA_MANAGER' && { backgroundColor: '#16A34A' }]}>
+              <Text style={styles.avatarText}>
+                {user.name ? user.name.split(' ').map(n => n.charAt(0)).join('').slice(0, 2).toUpperCase() : 'MR'}
+              </Text>
             </View>
             <View style={{ flex: 1, marginLeft: spacing.md }}>
-              <Text style={styles.userName}>{user?.name || 'Shakir Ahmad'}</Text>
-              <Text style={styles.userCode}>ID: {user?.employeeCode || 'REP-AS-904'}</Text>
+              <Text style={styles.userName}>{user.name}</Text>
+              <Text style={styles.userRoleText}>{roleTitle}</Text>
+              <Text style={styles.userCode}>Employee ID: #{user.employeeCode}</Text>
               <View style={styles.territoryRow}>
                 <Ionicons name="location-outline" size={14} color="#1D4ED8" />
-                <Text style={styles.userTerritory}>{user?.territory || 'Barak Valley Division (Assam)'}</Text>
+                <Text style={styles.userTerritory}>{user.territory || 'Barak Valley Division (Assam)'}</Text>
               </View>
             </View>
+          </View>
+        </Card>
+
+        {/* Contact Info Card */}
+        <Card>
+          <View style={styles.cardHeaderWithAction}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Ionicons name="call" size={18} color={colors.primary} />
+              <Text style={styles.sectionTitle}>Contact Information</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.editContactPill}
+              onPress={() => {
+                setPhoneInput(user.phone || '');
+                setEmailInput(user.email || '');
+                setHqInput(user.headquarter || 'Silchar HQ');
+                setEditModalVisible(true);
+              }}
+            >
+              <Ionicons name="create-outline" size={14} color="#2563EB" />
+              <Text style={styles.editContactPillText}>
+                {user.phone ? 'Edit Contact' : '+ Fill Contact'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Mobile Number:</Text>
+            <Text style={[styles.infoVal, !user.phone && styles.unsetText]}>
+              {user.phone ? user.phone : 'Not Set (Tap Fill Contact)'}
+            </Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Official Email:</Text>
+            <Text style={styles.infoVal}>{user.email || 'Not configured'}</Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Headquarter Base:</Text>
+            <Text style={styles.infoVal}>{user.headquarter || 'Silchar HQ'}</Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Assigned Routes:</Text>
+            <Text style={styles.infoVal}>6 Core Corridors (Cachar, Karimganj, Hailakandi)</Text>
           </View>
         </Card>
 
@@ -68,10 +155,10 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBack, onLogout }
         {/* App Info */}
         <Card>
           <Text style={styles.sectionTitle}>Application Information</Text>
-          <Text style={styles.infoText}>Version: 1.2.0 (Barak Division Release)</Text>
-          <Text style={styles.infoText}>Target: Google Play Store (AAB / APK)</Text>
+          <Text style={styles.infoText}>Version: 1.2.0 (Barak Division Production Build)</Text>
+          <Text style={styles.infoText}>Target: Google Play Store (AAB / Standalone APK)</Text>
           <Text style={styles.infoText}>Platform: RepPulse Enterprise SFA</Text>
-          <Text style={styles.infoText}>Headquarter: Silchar HQ (Cachar, Karimganj, Hailakandi)</Text>
+          <Text style={styles.infoText}>Territory: Barak Valley Division (Assam)</Text>
         </Card>
 
         {/* Logout Action */}
@@ -79,6 +166,67 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBack, onLogout }
           <Button title="🚪 Log Out of Account" onPress={handleLogoutConfirm} variant="danger" />
         </View>
       </ScrollView>
+
+      {/* Contact Info Edit Modal */}
+      <Modal visible={editModalVisible} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeaderRow}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="call" size={20} color={colors.primary} />
+                <Text style={styles.modalHeaderTitle}>Update Contact Details</Text>
+              </View>
+              <TouchableOpacity onPress={() => setEditModalVisible(false)}>
+                <Ionicons name="close" size={22} color="#64748B" />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.modalSubDescription}>
+              Enter mobile phone number and contact details for {user.name} ({roleTitle}).
+            </Text>
+
+            <View style={{ marginBottom: 12 }}>
+              <Text style={styles.inputLabelSmall}>Mobile Phone Number *</Text>
+              <TextInput
+                style={styles.modalTextInput}
+                placeholder="e.g. +91 9435012345"
+                placeholderTextColor="#94A3B8"
+                value={phoneInput}
+                onChangeText={setPhoneInput}
+                keyboardType="phone-pad"
+              />
+            </View>
+
+            <View style={{ marginBottom: 12 }}>
+              <Text style={styles.inputLabelSmall}>Official Email Address</Text>
+              <TextInput
+                style={styles.modalTextInput}
+                placeholder="e.g. pranjal.mr@reppulse.com"
+                placeholderTextColor="#94A3B8"
+                value={emailInput}
+                onChangeText={setEmailInput}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </View>
+
+            <View style={{ marginBottom: 16 }}>
+              <Text style={styles.inputLabelSmall}>Headquarter Station Base</Text>
+              <TextInput
+                style={styles.modalTextInput}
+                placeholder="e.g. Silchar / Karimganj HQ"
+                placeholderTextColor="#94A3B8"
+                value={hqInput}
+                onChangeText={setHqInput}
+              />
+            </View>
+
+            <TouchableOpacity style={styles.saveContactBtn} onPress={handleSaveContact}>
+              <Text style={styles.saveContactBtnText}>Save Contact Details</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -95,13 +243,111 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: { color: '#FFFFFF', fontSize: 24, fontWeight: 'bold' },
+  avatarText: { color: '#FFFFFF', fontSize: 20, fontWeight: 'bold' },
   userName: { color: colors.textPrimary, fontSize: typography.fontSize.lg, fontWeight: typography.fontWeight.black },
+  userRoleText: { color: colors.primary, fontSize: 12, fontWeight: '700', marginTop: 1 },
   userCode: { color: colors.textSecondary, fontSize: typography.fontSize.xs, marginTop: 2 },
-  territoryRow: { flexDirection: 'row', alignItems: 'center', marginTop: 2 },
+  territoryRow: { flexDirection: 'row', alignItems: 'center', marginTop: 3 },
   userTerritory: { color: '#1D4ED8', fontSize: typography.fontSize.xs, fontWeight: typography.fontWeight.semibold, marginLeft: 2 },
-  sectionTitle: { color: colors.textPrimary, fontSize: typography.fontSize.md, fontWeight: typography.fontWeight.bold, marginBottom: spacing.xs },
+  
+  cardHeaderWithAction: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  sectionTitle: { color: colors.textPrimary, fontSize: typography.fontSize.md, fontWeight: typography.fontWeight.bold },
+  editContactPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+  },
+  editContactPillText: {
+    color: '#2563EB',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  infoLabel: { fontSize: 12, color: '#64748B', fontWeight: '500' },
+  infoVal: { fontSize: 12, color: colors.textPrimary, fontWeight: '700', maxWidth: '60%', textAlign: 'right' },
+  unsetText: { color: '#DC2626', fontStyle: 'italic', fontWeight: '600' },
+
   privacyDesc: { color: colors.textSecondary, fontSize: typography.fontSize.xs, lineHeight: 18, marginVertical: 2 },
   infoText: { color: colors.textSecondary, fontSize: typography.fontSize.xs, marginVertical: 2 },
   logoutBtn: { marginTop: spacing.lg },
+
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.lg,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 400,
+    backgroundColor: colors.surface,
+    borderRadius: radius.xl,
+    padding: spacing.xl,
+    ...shadows.card,
+  },
+  modalHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  modalHeaderTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: colors.textPrimary,
+  },
+  modalSubDescription: {
+    fontSize: 12,
+    color: '#64748B',
+    marginBottom: spacing.md,
+    lineHeight: 16,
+  },
+  inputLabelSmall: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    marginBottom: 4,
+  },
+  modalTextInput: {
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: colors.textPrimary,
+  },
+  saveContactBtn: {
+    backgroundColor: colors.primary,
+    paddingVertical: 12,
+    borderRadius: radius.lg,
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  saveContactBtnText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '800',
+  },
 });

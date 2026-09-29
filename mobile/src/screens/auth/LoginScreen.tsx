@@ -12,9 +12,10 @@ interface LoginScreenProps {
 }
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForgotPassword }) => {
+  const [selectedUserCode, setSelectedUserCode] = useState<'0002' | '0001'>('0002');
   const [authMode, setAuthMode] = useState<'PIN' | 'PASSWORD'>('PIN');
   const [pin, setPin] = useState('');
-  const [email, setEmail] = useState('shakir.mr@reppulse.com');
+  const [email, setEmail] = useState('pranjal.mr@reppulse.com');
   const [password, setPassword] = useState('password123');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -40,7 +41,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
     setLoading(true);
     setErrorMessage('');
 
-    const res = await AuthService.loginWithPin(pin, bypassCutoff);
+    const res = await AuthService.loginWithPin(pin, selectedUserCode, bypassCutoff);
     setLoading(false);
 
     if (res.success) {
@@ -175,6 +176,54 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
 
         {/* Login Form Card */}
         <View style={styles.formCard}>
+          {/* User Account Switcher */}
+          <Text style={styles.accountSelectTitle}>Select Representative Profile:</Text>
+          <View style={styles.accountSwitcherRow}>
+            <TouchableOpacity
+              style={[styles.accountCard, selectedUserCode === '0002' && styles.accountCardActive]}
+              onPress={() => {
+                setSelectedUserCode('0002');
+                setEmail('pranjal.mr@reppulse.com');
+                setErrorMessage('');
+              }}
+            >
+              <View style={styles.accountAvatar}>
+                <Text style={styles.accountAvatarText}>PM</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.accountName, selectedUserCode === '0002' && styles.accountNameActive]}>
+                  Pranjal Malakar
+                </Text>
+                <Text style={styles.accountRole}>MR • ID: 0002</Text>
+              </View>
+              {selectedUserCode === '0002' && (
+                <Ionicons name="checkmark-circle" size={18} color="#2563EB" />
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.accountCard, selectedUserCode === '0001' && styles.accountCardActive]}
+              onPress={() => {
+                setSelectedUserCode('0001');
+                setEmail('bodrud.abm@reppulse.com');
+                setErrorMessage('');
+              }}
+            >
+              <View style={[styles.accountAvatar, { backgroundColor: '#DCFCE7' }]}>
+                <Text style={[styles.accountAvatarText, { color: '#16A34A' }]}>BJ</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.accountName, selectedUserCode === '0001' && styles.accountNameActive]}>
+                  Bodrud Jaman Sadiol
+                </Text>
+                <Text style={styles.accountRole}>ABM • ID: 0001</Text>
+              </View>
+              {selectedUserCode === '0001' && (
+                <Ionicons name="checkmark-circle" size={18} color="#2563EB" />
+              )}
+            </TouchableOpacity>
+          </View>
+
           {/* Mode Switcher: 4-Digit PIN vs Password */}
           <View style={styles.modeSwitcher}>
             <TouchableOpacity
@@ -220,7 +269,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
 
           {authMode === 'PIN' ? (
             <View>
-              <Text style={styles.pinInstruction}>Enter your 4-digit representative PIN to start duty</Text>
+              <Text style={styles.pinInstruction}>
+                Enter PIN to start duty as {selectedUserCode === '0001' ? 'Bodrud Jaman Sadiol (ABM)' : 'Pranjal Malakar (MR)'}
+              </Text>
               
               <View style={styles.pinInputWrap}>
                 <TextInput
@@ -250,7 +301,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
               </View>
 
               <Button
-                title="Sign In with PIN"
+                title={`Sign In as ${selectedUserCode === '0001' ? 'ABM Sadiol' : 'MR Pranjal'}`}
                 onPress={() => handlePinLogin(false)}
                 loading={loading}
                 variant="primary"
@@ -259,10 +310,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
           ) : (
             <View>
               <Input
-                label="Official Email ID"
+                label="Official Email or Employee ID"
                 value={email}
                 onChangeText={setEmail}
-                placeholder="e.g. shakir.mr@reppulse.com"
+                placeholder="e.g. 0002 or pranjal.mr@reppulse.com"
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
@@ -289,9 +340,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
           )}
 
           <View style={styles.demoHelper}>
-            <Text style={styles.demoHelperTitle}>Active Field Representative:</Text>
-            <Text style={styles.demoHelperText}>Shakir Ahmad (MR - Barak Division)</Text>
-            <Text style={styles.demoHelperText}>Daily PIN: 1234 | Email: shakir.mr@reppulse.com</Text>
+            <Text style={styles.demoHelperTitle}>Active Field Duty Credentials:</Text>
+            <Text style={styles.demoHelperText}>1. Bodrud Jaman Sadiol (ABM) • ID: 0001 • PIN: 1234</Text>
+            <Text style={styles.demoHelperText}>2. Pranjal Malakar (MR) • ID: 0002 • PIN: 1234</Text>
           </View>
         </View>
       </ScrollView>
@@ -822,5 +873,58 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '800',
+  },
+
+  // Account Switcher Styles
+  accountSelectTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    marginBottom: 8,
+  },
+  accountSwitcherRow: {
+    gap: 8,
+    marginBottom: spacing.md,
+  },
+  accountCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    borderRadius: radius.md,
+    padding: 10,
+    gap: 10,
+  },
+  accountCardActive: {
+    backgroundColor: '#EFF6FF',
+    borderColor: '#2563EB',
+    ...shadows.sm,
+  },
+  accountAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#DBEAFE',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  accountAvatarText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#1D4ED8',
+  },
+  accountName: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.textPrimary,
+  },
+  accountNameActive: {
+    color: '#1D4ED8',
+  },
+  accountRole: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 1,
   },
 });

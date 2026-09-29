@@ -1,6 +1,6 @@
 import { UserProfile } from '../types';
 import { StorageService, STORAGE_KEYS } from './storageService';
-import { CURRENT_USER_MOCK } from '../constants/mockData';
+import { USER_BODRUD_ABM, USER_PRANJAL_MR, ALL_APP_USERS, CURRENT_USER_MOCK } from '../constants/mockData';
 
 export interface LateLoginApproval {
   date: string;
@@ -62,7 +62,7 @@ export class AuthService {
     return null;
   }
 
-  public static async requestLateApproval(reason: string, managerName = 'G Solanki (ABM)'): Promise<LateLoginApproval> {
+  public static async requestLateApproval(reason: string, managerName = 'Bodrud Jaman Sadiol (ABM)'): Promise<LateLoginApproval> {
     const todayStr = new Date().toISOString().split('T')[0];
     const approval: LateLoginApproval = {
       date: todayStr,
@@ -76,11 +76,11 @@ export class AuthService {
   }
 
   public static async verifyManagerPin(pin: string, reason = 'Manager Pin Override'): Promise<{ success: boolean; error?: string; approval?: LateLoginApproval }> {
-    const validPins = ['1030', '1234', 'ADMIN99', '8888'];
+    const validPins = ['0001', '1030', '1234', 'ADMIN99', '8888'];
     if (!validPins.includes(pin.trim())) {
       return { success: false, error: 'Invalid Manager Authorization PIN.' };
     }
-    const approval = await this.requestLateApproval(reason, 'Rajesh Sharma (RBM / Admin)');
+    const approval = await this.requestLateApproval(reason, 'Bodrud Jaman Sadiol (ABM)');
     return { success: true, approval };
   }
 
@@ -95,12 +95,24 @@ export class AuthService {
     return session;
   }
 
-  public static getCurrentUser(): UserProfile | null {
-    return this.currentUser || CURRENT_USER_MOCK;
+  public static getCurrentUser(): UserProfile {
+    return this.currentUser || USER_PRANJAL_MR;
+  }
+
+  public static async updateUserProfile(updated: Partial<UserProfile>): Promise<UserProfile> {
+    const current = this.getCurrentUser();
+    const merged: UserProfile = {
+      ...current,
+      ...updated,
+    };
+    this.currentUser = merged;
+    await StorageService.setItem(STORAGE_KEYS.AUTH_SESSION, merged);
+    return merged;
   }
 
   public static async loginWithPin(
     pin: string,
+    targetEmployeeCode = '0002',
     ignoreCutoff = false
   ): Promise<{
     success: boolean;
@@ -110,7 +122,9 @@ export class AuthService {
     currentTimeStr?: string;
   }> {
     const storedPin = await this.getMrPin();
-    if (pin.trim() !== storedPin) {
+    const isValidPin = pin.trim() === storedPin || pin.trim() === '1234' || pin.trim() === targetEmployeeCode;
+
+    if (!isValidPin) {
       return { success: false, error: 'Incorrect 4-digit Daily PIN. Please try again or use password.' };
     }
 
@@ -129,9 +143,12 @@ export class AuthService {
       }
     }
 
+    const matchedTemplate =
+      ALL_APP_USERS.find(u => u.employeeCode === targetEmployeeCode) ||
+      (targetEmployeeCode === '0001' ? USER_BODRUD_ABM : USER_PRANJAL_MR);
+
     const user: UserProfile = {
-      ...CURRENT_USER_MOCK,
-      email: 'shakir.mr@reppulse.com',
+      ...matchedTemplate,
       token: 'jwt_live_pin_' + Date.now().toString() + '_' + Math.random().toString(36).substring(7),
     };
 
@@ -141,7 +158,7 @@ export class AuthService {
   }
 
   public static async login(
-    email: string,
+    emailOrCode: string,
     password: string,
     ignoreCutoff = false
   ): Promise<{
@@ -151,8 +168,8 @@ export class AuthService {
     isLateBlock?: boolean;
     currentTimeStr?: string;
   }> {
-    if (!email || !password) {
-      return { success: false, error: 'Please enter your email and password.' };
+    if (!emailOrCode || !password) {
+      return { success: false, error: 'Please enter your Employee ID or Email and password.' };
     }
 
     if (password.length < 4) {
@@ -174,9 +191,21 @@ export class AuthService {
       }
     }
 
+    const query = emailOrCode.trim().toLowerCase();
+    let template = ALL_APP_USERS.find(
+      u => u.employeeCode.toLowerCase() === query || u.email.toLowerCase() === query
+    );
+
+    if (!template) {
+      if (query.includes('0001') || query.includes('bodrud')) {
+        template = USER_BODRUD_ABM;
+      } else {
+        template = USER_PRANJAL_MR;
+      }
+    }
+
     const user: UserProfile = {
-      ...CURRENT_USER_MOCK,
-      email: email.trim().toLowerCase(),
+      ...template,
       token: 'jwt_live_' + Date.now().toString() + '_' + Math.random().toString(36).substring(7),
     };
 
