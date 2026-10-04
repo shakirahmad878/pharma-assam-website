@@ -15,6 +15,7 @@ import { AuthService } from '../../services/authService';
 import { RouteService } from '../../services/routeService';
 import { SyncService } from '../../services/sync/syncService';
 import { AttendanceService } from '../../services/attendanceService';
+import { SyncStatusBar } from '../../components/common/SyncStatusBar';
 import { UserProfile, RoutePlan, MTPDayPlan } from '../../types';
 
 interface DashboardScreenProps {
@@ -119,6 +120,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           <Text style={styles.hoCityText}>HO : Silchar</Text>
         </View>
       </View>
+
+      {/* Offline Sync Status & Quick Sync Bar */}
+      <SyncStatusBar onOpenSyncCenter={() => onNavigate('SYNC_CENTER')} />
 
       {/* Dark Charcoal Action Grid */}
       <ScrollView
@@ -283,16 +287,14 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             <Text style={styles.tileTitle}>ORDERS</Text>
           </TouchableOpacity>
 
-          {/* Tile 16: COURSEWORK */}
+          {/* Tile 16: SYNC CENTER */}
           <TouchableOpacity
             style={styles.tileCard}
-            onPress={() => {
-              Alert.alert('Medical Product Training', 'Product detailing coursework for CardioPulse & CefoPulse series is complete.');
-            }}
+            onPress={() => onNavigate('SYNC_CENTER')}
             activeOpacity={0.75}
           >
-            <Ionicons name="document-text-outline" size={32} color="#FFFFFF" />
-            <Text style={styles.tileTitle}>COURSEWORK</Text>
+            <Ionicons name="cloud-upload-outline" size={32} color="#60A5FA" />
+            <Text style={styles.tileTitle}>SYNC CENTER</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, UserRole } from '../../types';
 import { OfflineSyncService } from '../../services/offlineSyncService';
-import { Shield, Radio, Activity, Wifi, WifiOff, KeyRound, LogIn, LogOut, Sparkles } from 'lucide-react';
+import { Shield, Radio, Activity, Wifi, WifiOff, KeyRound, LogIn, LogOut, Sparkles, Database } from 'lucide-react';
 
 interface NavbarProps {
   currentUser: User;
@@ -11,6 +11,7 @@ interface NavbarProps {
   onOpenDemoTour?: () => void;
   onOpenChangePassword?: () => void;
   onOpenLogin?: () => void;
+  onOpenDatabaseSync?: () => void;
   onLogout?: () => void;
 }
 
@@ -22,6 +23,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenDemoTour,
   onOpenChangePassword,
   onOpenLogin,
+  onOpenDatabaseSync,
   onLogout,
 }) => {
   const [isOnline, setIsOnline] = useState(true);
@@ -107,6 +109,18 @@ export const Navbar: React.FC<NavbarProps> = ({
             <Radio className={`w-3.5 h-3.5 ${isSimulatingTelemetry ? 'animate-ping text-teal-400' : 'text-teal-400'}`} />
             <span className="hidden lg:inline">GPS Ping</span>
           </button>
+
+          {/* Database Sync & Backup Button */}
+          {onOpenDatabaseSync && (
+            <button
+              onClick={onOpenDatabaseSync}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-teal-500/20 hover:bg-teal-500/30 text-teal-300 border border-teal-500/30 transition-colors cursor-pointer"
+              title="Database Backup, Restore & Sync Across Devices"
+            >
+              <Database className="w-3.5 h-3.5 text-teal-400" />
+              <span className="hidden md:inline">Sync Data</span>
+            </button>
+          )}
 
           {/* Change Password Button */}
           {onOpenChangePassword && (

@@ -8,6 +8,7 @@ interface DCREntryModalProps {
   doctors: Doctor[];
   products: Product[];
   currentUser: User;
+  initialDoctorId?: string;
   onClose: () => void;
   onSubmitDCR: (dcr: DCRRecord) => void;
 }
@@ -16,10 +17,11 @@ export const DCREntryModal: React.FC<DCREntryModalProps> = ({
   doctors,
   products,
   currentUser,
+  initialDoctorId,
   onClose,
   onSubmitDCR,
 }) => {
-  const [selectedDoctorId, setSelectedDoctorId] = useState<string>(doctors[0]?.id || '');
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string>(initialDoctorId || doctors[0]?.id || '');
   const [checkInTime, setCheckInTime] = useState('09:30 AM');
   const [checkOutTime, setCheckOutTime] = useState('09:55 AM');
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([products[0]?.id || '']);

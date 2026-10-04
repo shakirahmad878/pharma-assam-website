@@ -162,7 +162,7 @@ export const DatabaseStudio: React.FC<DatabaseStudioProps> = ({
       setDocSpecialty('Cardiology');
       setDocTier('A');
       setDocClinic('');
-      setDocAddress('Hospital Road, Silchar, Assam');
+      setDocAddress('');
       setDocLat('24.814674');
       setDocLng('92.803754');
       setDocGeofence('100');
@@ -175,7 +175,7 @@ export const DatabaseStudio: React.FC<DatabaseStudioProps> = ({
       setChemDL(`DL-${Math.floor(Math.random() * 89999 + 10000)}/AS`);
       setChemGST(`18AABCS${Math.floor(Math.random() * 8999 + 1000)}D1Z2`);
       setChemPhone('+91 94350 ');
-      setChemAddress('Park Road, Silchar, Assam');
+      setChemAddress('');
       setChemLat('24.816200');
       setChemLng('92.801500');
       setChemTurnover('450000');

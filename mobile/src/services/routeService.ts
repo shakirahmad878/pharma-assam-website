@@ -1,4 +1,5 @@
 import { StorageService, STORAGE_KEYS } from './storageService';
+import { SyncService } from './sync/syncService';
 import { RoutePlan, RouteChangeRequest, MonthlyTourProgramme, MTPDayPlan } from '../types';
 import { BARAK_ROUTES, CURRENT_USER, SEPTEMBER_2026_MTP } from '../constants/mockData';
 
@@ -99,7 +100,17 @@ export class RouteService {
   public static async submitMTPForApproval(mtp: MonthlyTourProgramme): Promise<boolean> {
     const key = `${MTP_STORAGE_KEY}_${mtp.month.toUpperCase()}_${mtp.year}`;
     mtp.status = 'PENDING_APPROVAL';
-    return await StorageService.setItem(key, mtp);
+    const saved = await StorageService.setItem(key, mtp);
+    if (saved) {
+      await SyncService.enqueue('TOUR_PLAN', {
+        id: `mtp_${mtp.month}_${mtp.year}_${Date.now()}`,
+        month: mtp.month,
+        year: mtp.year,
+        totalWorkingDays: mtp.totalWorkingDays,
+        status: mtp.status,
+      });
+    }
+    return saved;
   }
 
   public static async getTodayMTPDay(): Promise<MTPDayPlan | null> {
@@ -145,6 +156,10 @@ export class RouteService {
     const existing = await this.getRouteChangeRequests();
     const updated = [request, ...existing];
     await StorageService.setItem(ROUTE_REQUESTS_KEY, updated);
+
+    // Queue for cloud sync
+    await SyncService.enqueue('ROUTE_REQUEST', request);
+
     return request;
   }
 

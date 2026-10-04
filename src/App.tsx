@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   User, 
   UserRole, 
@@ -13,17 +13,10 @@ import {
   TourPlanItem 
 } from './types';
 import { 
-  INITIAL_USERS, 
-  INITIAL_COMPANIES,
-  INITIAL_AUDIT_LOGS,
-  INITIAL_DOCTORS, 
-  INITIAL_CHEMISTS, 
-  INITIAL_PRODUCTS, 
-  INITIAL_TERRITORIES, 
-  INITIAL_TELEMETRY_LOGS, 
-  INITIAL_DCR_LOGS 
+  INITIAL_TELEMETRY_LOGS 
 } from './data/mockData';
 import { AuthService } from './services/authService';
+import { StorageService } from './services/storageService';
 import { TelemetryService } from './services/telemetryService';
 import { Navbar } from './components/layout/Navbar';
 import { Sidebar, NavTab } from './components/layout/Sidebar';
@@ -45,6 +38,7 @@ import { GuidedDemoModal } from './components/demo/GuidedDemoModal';
 import { LoginPage } from './components/auth/LoginPage';
 import { LoginModal } from './components/auth/LoginModal';
 import { ChangePasswordModal } from './components/auth/ChangePasswordModal';
+import { DatabaseSyncModal } from './components/common/DatabaseSyncModal';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(() => AuthService.getCurrentUser());
@@ -69,43 +63,29 @@ export default function App() {
   const [isDemoTourOpen, setIsDemoTourOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
+  const [isDatabaseSyncModalOpen, setIsDatabaseSyncModalOpen] = useState(false);
   
-  // Master Multi-Tenant State
-  const [companies, setCompanies] = useState<Company[]>(INITIAL_COMPANIES);
-  const [users, setUsers] = useState<User[]>(INITIAL_USERS);
-  const [doctors, setDoctors] = useState<Doctor[]>(INITIAL_DOCTORS);
-  const [chemists, setChemists] = useState<Chemist[]>(INITIAL_CHEMISTS);
-  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
-  const [territories, setTerritories] = useState<Territory[]>(INITIAL_TERRITORIES);
-  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(INITIAL_AUDIT_LOGS);
+  // Master Multi-Tenant State - Initialized from Persistent StorageService
+  const [companies, setCompanies] = useState<Company[]>(() => StorageService.getCompanies());
+  const [users, setUsers] = useState<User[]>(() => StorageService.getUsers());
+  const [doctors, setDoctors] = useState<Doctor[]>(() => StorageService.getDoctors());
+  const [chemists, setChemists] = useState<Chemist[]>(() => StorageService.getChemists());
+  const [products, setProducts] = useState<Product[]>(() => StorageService.getProducts());
+  const [territories, setTerritories] = useState<Territory[]>(() => StorageService.getTerritories());
+  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(() => StorageService.getAuditLogs());
 
   // Field Telemetry & Reports State
   const [telemetryLogs, setTelemetryLogs] = useState<LocationTelemetryPoint[]>(INITIAL_TELEMETRY_LOGS);
-  const [dcrLogs, setDcrLogs] = useState<DCRRecord[]>(INITIAL_DCR_LOGS);
+  const [dcrLogs, setDcrLogs] = useState<DCRRecord[]>(() => StorageService.getDCRLogs());
 
-  // Tour Plans State
-  const [tourPlans, setTourPlans] = useState<TourPlanItem[]>([
-    {
-      id: 'tp-01',
-      userId: 'usr-mr-01',
-      userName: 'Shakir Ahmad',
-      date: '2026-09-29',
-      territoryId: 'terr-cachar-01',
-      territoryName: 'Silchar Central & Hospital Road',
-      routeTitle: 'Hospital Road Cardiac & Diab Beat',
-      plannedDoctorsCount: 2,
-      plannedChemistsCount: 1,
-      doctorIds: ['doc-01', 'doc-02'],
-      chemistIds: ['chem-01'],
-      status: 'APPROVED',
-      approvalComments: 'Approved by ASM G Solanki. Focus on CardioPulse-AM.',
-    }
-  ]);
+  // Tour Plans & Planned Visits State
+  const [tourPlans, setTourPlans] = useState<TourPlanItem[]>(() => StorageService.getTourPlans());
+  const [plannedVisits, setPlannedVisits] = useState<string[]>(() => StorageService.getPlannedVisits());
   
   const [isSimulatingPing, setIsSimulatingPing] = useState(false);
 
   // Sync tab with URL Hash
-  React.useEffect(() => {
+  useEffect(() => {
     const parseHash = () => {
       const hash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
       if (hash === 'admin' || hash === 'admin_portal' || hash === 'admin-portal') {
@@ -148,6 +128,20 @@ export default function App() {
     window.location.hash = tab === 'admin_portal' ? 'admin' : tab;
   };
 
+  // Reload state from StorageService (e.g. after JSON backup import)
+  const handleDatabaseUpdated = () => {
+    setCompanies(StorageService.getCompanies());
+    setUsers(StorageService.getUsers());
+    setDoctors(StorageService.getDoctors());
+    setChemists(StorageService.getChemists());
+    setProducts(StorageService.getProducts());
+    setTerritories(StorageService.getTerritories());
+    setDcrLogs(StorageService.getDCRLogs());
+    setTourPlans(StorageService.getTourPlans());
+    setPlannedVisits(StorageService.getPlannedVisits());
+    setAuditLogs(StorageService.getAuditLogs());
+  };
+
   // Helper to log audit entries automatically
   const logAudit = (
     action: AuditLogEntry['action'],
@@ -171,7 +165,11 @@ export default function App() {
       companyName: currentUser.companyName,
       details,
     };
-    setAuditLogs(prev => [entry, ...prev]);
+    setAuditLogs(prev => {
+      const updated = [entry, ...prev];
+      StorageService.saveAuditLogs(updated);
+      return updated;
+    });
   };
 
   // Login handler
@@ -215,12 +213,20 @@ export default function App() {
 
   // User CRUD Handlers
   const handleAddUser = (newUser: User) => {
-    setUsers(prev => [newUser, ...prev]);
+    setUsers(prev => {
+      const updated = [newUser, ...prev];
+      StorageService.saveUsers(updated);
+      return updated;
+    });
     logAudit('CREATE', 'USER', newUser.id, newUser.name, `Created user account with role ${newUser.role} in ${newUser.companyName || 'company'}`);
   };
 
   const handleUpdateUser = (updatedUser: User) => {
-    setUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u));
+    setUsers(prev => {
+      const updated = prev.map(u => u.id === updatedUser.id ? updatedUser : u);
+      StorageService.saveUsers(updated);
+      return updated;
+    });
     if (currentUser && updatedUser.id === currentUser.id) {
       setCurrentUser(updatedUser);
       AuthService.setCurrentUser(updatedUser);
@@ -230,7 +236,11 @@ export default function App() {
 
   const handleDeleteUser = (userId: string) => {
     const target = users.find(u => u.id === userId);
-    setUsers(prev => prev.filter(u => u.id !== userId));
+    setUsers(prev => {
+      const updated = prev.filter(u => u.id !== userId);
+      StorageService.saveUsers(updated);
+      return updated;
+    });
     if (target) {
       logAudit('DELETE', 'USER', userId, target.name, `Removed user account ${target.name} (${target.employeeCode})`);
     }
@@ -238,56 +248,129 @@ export default function App() {
 
   // Company CRUD Handlers
   const handleAddCompany = (newCompany: Company) => {
-    setCompanies(prev => [newCompany, ...prev]);
+    setCompanies(prev => {
+      const updated = [newCompany, ...prev];
+      StorageService.saveCompanies(updated);
+      return updated;
+    });
     logAudit('CREATE', 'COMPANY', newCompany.id, newCompany.name, `Provisioned new multi-tenant organization (${newCompany.code}) with ${newCompany.subscriptionPlan} plan`);
   };
 
   const handleUpdateCompany = (updatedCompany: Company) => {
-    setCompanies(prev => prev.map(c => c.id === updatedCompany.id ? updatedCompany : c));
+    setCompanies(prev => {
+      const updated = prev.map(c => c.id === updatedCompany.id ? updatedCompany : c);
+      StorageService.saveCompanies(updated);
+      return updated;
+    });
     logAudit('UPDATE', 'COMPANY', updatedCompany.id, updatedCompany.name, `Updated company profile / status to ${updatedCompany.status}`);
   };
 
   const handleDeleteCompany = (companyId: string) => {
     const target = companies.find(c => c.id === companyId);
-    setCompanies(prev => prev.filter(c => c.id !== companyId));
+    setCompanies(prev => {
+      const updated = prev.filter(c => c.id !== companyId);
+      StorageService.saveCompanies(updated);
+      return updated;
+    });
     if (target) {
       logAudit('DELETE', 'COMPANY', companyId, target.name, `Deleted company tenant ${target.name}`);
     }
   };
 
-  // Doctor CRUD Handlers
+  // Doctor CRUD Handlers with LocalStorage Persistence
   const handleAddDoctor = (newDoc: Doctor) => {
-    setDoctors(prev => [newDoc, ...prev]);
+    setDoctors(prev => {
+      const updated = [newDoc, ...prev];
+      StorageService.saveDoctors(updated);
+      return updated;
+    });
     logAudit('CREATE', 'DOCTOR', newDoc.id, newDoc.name, `Added Doctor to Master DB (${newDoc.specialty}, Tier ${newDoc.tier})`);
   };
 
   const handleUpdateDoctor = (updatedDoc: Doctor) => {
-    setDoctors(prev => prev.map(d => d.id === updatedDoc.id ? updatedDoc : d));
+    setDoctors(prev => {
+      const updated = prev.map(d => d.id === updatedDoc.id ? updatedDoc : d);
+      StorageService.saveDoctors(updated);
+      return updated;
+    });
     logAudit('UPDATE', 'DOCTOR', updatedDoc.id, updatedDoc.name, `Updated Doctor record (${updatedDoc.clinicName})`);
   };
 
   const handleDeleteDoctor = (docId: string) => {
     const target = doctors.find(d => d.id === docId);
-    setDoctors(prev => prev.filter(d => d.id !== docId));
+    setDoctors(prev => {
+      const updated = prev.filter(d => d.id !== docId);
+      StorageService.saveDoctors(updated);
+      return updated;
+    });
+    setPlannedVisits(prev => {
+      const updated = prev.filter(id => id !== docId);
+      StorageService.savePlannedVisits(updated);
+      return updated;
+    });
     if (target) {
       logAudit('DELETE', 'DOCTOR', docId, target.name, `Deleted Doctor from Master DB: ${target.name}`);
     }
   };
 
+  // "Add to Visit" Planning Queue Handlers
+  const handleTogglePlanVisit = (doctorId: string) => {
+    setPlannedVisits(prev => {
+      const exists = prev.includes(doctorId);
+      const updated = exists ? prev.filter(id => id !== doctorId) : [...prev, doctorId];
+      StorageService.savePlannedVisits(updated);
+      return updated;
+    });
+  };
+
+  const handleBatchAddPlannedVisits = (doctorIds: string[]) => {
+    setPlannedVisits(prev => {
+      const set = new Set([...prev, ...doctorIds]);
+      const updated = Array.from(set);
+      StorageService.savePlannedVisits(updated);
+      return updated;
+    });
+  };
+
+  const handleRemovePlannedDoctor = (doctorId: string) => {
+    setPlannedVisits(prev => {
+      const updated = prev.filter(id => id !== doctorId);
+      StorageService.savePlannedVisits(updated);
+      return updated;
+    });
+  };
+
+  const handleClearPlannedDoctors = () => {
+    setPlannedVisits([]);
+    StorageService.savePlannedVisits([]);
+  };
+
   // Chemist CRUD Handlers
   const handleAddChemist = (newChem: Chemist) => {
-    setChemists(prev => [newChem, ...prev]);
+    setChemists(prev => {
+      const updated = [newChem, ...prev];
+      StorageService.saveChemists(updated);
+      return updated;
+    });
     logAudit('CREATE', 'CHEMIST', newChem.id, newChem.shopName, `Registered Chemist / Pharmacy in Master DB (${newChem.drugLicenseNumber})`);
   };
 
   const handleUpdateChemist = (updatedChem: Chemist) => {
-    setChemists(prev => prev.map(c => c.id === updatedChem.id ? updatedChem : c));
+    setChemists(prev => {
+      const updated = prev.map(c => c.id === updatedChem.id ? updatedChem : c);
+      StorageService.saveChemists(updated);
+      return updated;
+    });
     logAudit('UPDATE', 'CHEMIST', updatedChem.id, updatedChem.shopName, `Updated Chemist profile ${updatedChem.shopName}`);
   };
 
   const handleDeleteChemist = (chemId: string) => {
     const target = chemists.find(c => c.id === chemId);
-    setChemists(prev => prev.filter(c => c.id !== chemId));
+    setChemists(prev => {
+      const updated = prev.filter(c => c.id !== chemId);
+      StorageService.saveChemists(updated);
+      return updated;
+    });
     if (target) {
       logAudit('DELETE', 'CHEMIST', chemId, target.shopName, `Removed Chemist from Master DB: ${target.shopName}`);
     }
@@ -295,18 +378,30 @@ export default function App() {
 
   // Product CRUD Handlers
   const handleAddProduct = (newProd: Product) => {
-    setProducts(prev => [newProd, ...prev]);
+    setProducts(prev => {
+      const updated = [newProd, ...prev];
+      StorageService.saveProducts(updated);
+      return updated;
+    });
     logAudit('CREATE', 'PRODUCT', newProd.id, newProd.name, `Added Product SKU ${newProd.name} (MRP ₹${newProd.mrp})`);
   };
 
   const handleUpdateProduct = (updatedProd: Product) => {
-    setProducts(prev => prev.map(p => p.id === updatedProd.id ? updatedProd : p));
+    setProducts(prev => {
+      const updated = prev.map(p => p.id === updatedProd.id ? updatedProd : p);
+      StorageService.saveProducts(updated);
+      return updated;
+    });
     logAudit('UPDATE', 'PRODUCT', updatedProd.id, updatedProd.name, `Updated Product pricing and details for ${updatedProd.name}`);
   };
 
   const handleDeleteProduct = (prodId: string) => {
     const target = products.find(p => p.id === prodId);
-    setProducts(prev => prev.filter(p => p.id !== prodId));
+    setProducts(prev => {
+      const updated = prev.filter(p => p.id !== prodId);
+      StorageService.saveProducts(updated);
+      return updated;
+    });
     if (target) {
       logAudit('DELETE', 'PRODUCT', prodId, target.name, `Removed Product SKU: ${target.name}`);
     }
@@ -314,18 +409,30 @@ export default function App() {
 
   // Territory CRUD Handlers
   const handleAddTerritory = (newTerr: Territory) => {
-    setTerritories(prev => [newTerr, ...prev]);
+    setTerritories(prev => {
+      const updated = [newTerr, ...prev];
+      StorageService.saveTerritories(updated);
+      return updated;
+    });
     logAudit('CREATE', 'TERRITORY', newTerr.id, newTerr.name, `Created Territory ${newTerr.name} (${newTerr.code})`);
   };
 
   const handleUpdateTerritory = (updatedTerr: Territory) => {
-    setTerritories(prev => prev.map(t => t.id === updatedTerr.id ? updatedTerr : t));
+    setTerritories(prev => {
+      const updated = prev.map(t => t.id === updatedTerr.id ? updatedTerr : t);
+      StorageService.saveTerritories(updated);
+      return updated;
+    });
     logAudit('UPDATE', 'TERRITORY', updatedTerr.id, updatedTerr.name, `Updated Territory alignment ${updatedTerr.name}`);
   };
 
   const handleDeleteTerritory = (terrId: string) => {
     const target = territories.find(t => t.id === terrId);
-    setTerritories(prev => prev.filter(t => t.id !== terrId));
+    setTerritories(prev => {
+      const updated = prev.filter(t => t.id !== terrId);
+      StorageService.saveTerritories(updated);
+      return updated;
+    });
     if (target) {
       logAudit('DELETE', 'TERRITORY', terrId, target.name, `Deleted Territory: ${target.name}`);
     }
@@ -333,17 +440,29 @@ export default function App() {
 
   // Add new DCR handler
   const handleAddDCR = (newDcr: DCRRecord) => {
-    setDcrLogs(prev => [newDcr, ...prev]);
+    setDcrLogs(prev => {
+      const updated = [newDcr, ...prev];
+      StorageService.saveDCRLogs(updated);
+      return updated;
+    });
   };
 
   // Add new Tour Plan
   const handleAddTourPlan = (newPlan: TourPlanItem) => {
-    setTourPlans(prev => [newPlan, ...prev]);
+    setTourPlans(prev => {
+      const updated = [newPlan, ...prev];
+      StorageService.saveTourPlans(updated);
+      return updated;
+    });
   };
 
   // Tour plan status update
   const handleUpdateTourPlanStatus = (id: string, newStatus: 'APPROVED' | 'REJECTED', comments?: string) => {
-    setTourPlans(prev => prev.map(tp => tp.id === id ? { ...tp, status: newStatus, approvalComments: comments } : tp));
+    setTourPlans(prev => {
+      const updated = prev.map(tp => tp.id === id ? { ...tp, status: newStatus, approvalComments: comments } : tp);
+      StorageService.saveTourPlans(updated);
+      return updated;
+    });
   };
 
   // 15-Minute Background Telemetry Simulator
@@ -394,6 +513,7 @@ export default function App() {
         onOpenDemoTour={() => setIsDemoTourOpen(true)}
         onOpenChangePassword={() => setIsChangePasswordModalOpen(true)}
         onOpenLogin={() => setIsLoginModalOpen(true)}
+        onOpenDatabaseSync={() => setIsDatabaseSyncModalOpen(true)}
         onLogout={handleLogout}
       />
 
@@ -467,6 +587,9 @@ export default function App() {
               doctors={doctors}
               products={products}
               currentUser={currentUser}
+              plannedDoctorIds={plannedVisits}
+              onRemovePlannedDoctor={handleRemovePlannedDoctor}
+              onClearPlannedDoctors={handleClearPlannedDoctors}
               onAddDCR={handleAddDCR}
             />
           )}
@@ -522,6 +645,10 @@ export default function App() {
             <DoctorDirectory
               doctors={doctors}
               currentUser={currentUser}
+              plannedVisitDoctorIds={plannedVisits}
+              onTogglePlanVisit={handleTogglePlanVisit}
+              onBatchAddPlannedVisits={handleBatchAddPlannedVisits}
+              onNavigateToVisits={() => handleTabChange('dcr')}
               onAddDoctor={handleAddDoctor}
               onUpdateDoctor={handleUpdateDoctor}
               onDeleteDoctor={handleDeleteDoctor}
@@ -558,6 +685,13 @@ export default function App() {
 
       </div>
 
+      {/* Database Backup / Restore & Cross-Device Sync Modal */}
+      <DatabaseSyncModal
+        isOpen={isDatabaseSyncModalOpen}
+        onClose={() => setIsDatabaseSyncModalOpen(false)}
+        onDatabaseUpdated={handleDatabaseUpdated}
+      />
+
       {/* Authentication Login Modal (For switching accounts while in session) */}
       <LoginModal
         isOpen={isLoginModalOpen}
@@ -576,7 +710,11 @@ export default function App() {
         currentUser={currentUser}
         users={users}
         onPasswordChanged={(updatedUser) => {
-          setUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u));
+          setUsers(prev => {
+            const updated = prev.map(u => u.id === updatedUser.id ? updatedUser : u);
+            StorageService.saveUsers(updated);
+            return updated;
+          });
           setCurrentUser(updatedUser);
           logAudit('UPDATE', 'USER', updatedUser.id, updatedUser.name, `User ${updatedUser.name} updated account password`);
         }}
