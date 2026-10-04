@@ -1,23 +1,22 @@
 /**
- * RepPulse Firebase & Cloud Firestore Configuration
- * ----------------------------------------------------
- * When you create your Firebase project at https://console.firebase.google.com:
- * 1. Create a Web App in your Firebase console.
- * 2. Copy the firebaseConfig object and replace the values below.
- * 3. The app will immediately start syncing Doctors, Visits, Attendance, and Orders in real-time!
+ * RepPulse Firebase & Cloud Firestore Live Configuration
+ * --------------------------------------------------------
+ * Project: reppulse-pharma
+ * Cloud Provider: Google Firebase & Cloud Firestore
  */
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getFirestore, Firestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
+import { getFirestore, Firestore } from 'firebase/firestore';
 import { getAuth, Auth } from 'firebase/auth';
 
 export const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "reppulse-pharma-sfa.firebaseapp.com",
-  projectId: "reppulse-pharma-sfa",
-  storageBucket: "reppulse-pharma-sfa.appspot.com",
-  messagingSenderId: "1234567890",
-  appId: "1:1234567890:web:abcdef123456"
+  apiKey: "AIzaSyCn5xwRvSFtpOnCFTrKCbTLSN6gWgmXPEM",
+  authDomain: "reppulse-pharma.firebaseapp.com",
+  projectId: "reppulse-pharma",
+  storageBucket: "reppulse-pharma.firebasestorage.app",
+  messagingSenderId: "181266998449",
+  appId: "1:181266998449:web:2f6d9df48356ff2c04ee90",
+  measurementId: "G-EKG0GYXHD2",
 };
 
 let app: FirebaseApp | null = null;
@@ -27,9 +26,9 @@ let auth: Auth | null = null;
 export const isFirebaseConfigured = (): boolean => {
   return (
     Boolean(firebaseConfig.apiKey) &&
-    firebaseConfig.apiKey !== "YOUR_API_KEY" &&
+    firebaseConfig.apiKey.startsWith("AIza") &&
     Boolean(firebaseConfig.projectId) &&
-    firebaseConfig.projectId !== "reppulse-pharma-sfa"
+    firebaseConfig.projectId === "reppulse-pharma"
   );
 };
 
@@ -53,7 +52,7 @@ try {
     console.warn('[Firebase] Auth init notice:', authErr);
   }
 } catch (err) {
-  console.warn('[Firebase] Initialization skipped or pending config:', err);
+  console.warn('[Firebase] Initialization error:', err);
 }
 
 export { app, db, auth };
