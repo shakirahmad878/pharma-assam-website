@@ -1,0 +1,44 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Allow read/write during development or when authenticated
+    match /{document=**} {
+      allow read, write: if true; // Set to isAuthenticated() for production lockdown
+    }
+    
+    // Collection specific rules for RepPulse SFA
+    match /doctors/{doctorId} {
+      allow read, write: if true;
+    }
+    
+    match /doctor_deletion_requests/{requestId} {
+      allow read, write: if true;
+    }
+    
+    match /firms/{firmId} {
+      allow read, write: if true;
+    }
+    
+    match /visits/{visitId} {
+      allow read, write: if true;
+    }
+    
+    match /attendance/{attendanceId} {
+      allow read, write: if true;
+    }
+    
+    match /location_telemetry/{telemetryId} {
+      allow read, write: if true;
+    }
+    
+    match /monthly_tour_programmes/{programmeId} {
+      allow read, write: if true;
+    }
+  }
+}

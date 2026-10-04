@@ -1,11 +1,10 @@
 import { Doctor } from '../types';
 import { StorageService, STORAGE_KEYS } from './storageService';
-import { MOCK_DOCTORS } from '../constants/mockData';
+import { FirestoreDbService, DoctorDeletionRequest } from './firebase/firestoreDbService';
 
 export class DoctorService {
   public static async getDoctors(): Promise<Doctor[]> {
-    const cached = await StorageService.getItem<Doctor[]>(STORAGE_KEYS.DOCTORS_CACHE, []);
-    return cached || [];
+    return await FirestoreDbService.fetchDoctors();
   }
 
   public static async clearAllDoctors(): Promise<void> {
@@ -26,17 +25,18 @@ export class DoctorService {
     const doctors = await this.getDoctors();
     const doc = doctors.find(d => d.id === id);
     if (doc) {
-      doc.todayVisitStatus = status;
+      const updates: Partial<Doctor> = {
+        todayVisitStatus: status,
+      };
       if (status === 'COMPLETED') {
-        doc.completedVisitsThisMonth += 1;
-        doc.lastVisitDate = new Date().toISOString().split('T')[0];
+        updates.completedVisitsThisMonth = (doc.completedVisitsThisMonth || 0) + 1;
+        updates.lastVisitDate = new Date().toISOString().split('T')[0];
       }
-      await StorageService.setItem(STORAGE_KEYS.DOCTORS_CACHE, doctors);
+      await FirestoreDbService.updateDoctor(id, updates);
     }
   }
 
   public static async addDoctor(newDoc: Partial<Doctor>): Promise<Doctor> {
-    const doctors = await this.getDoctors();
     const doc: Doctor = {
       id: 'doc-barak-' + Date.now(),
       name: newDoc.name || 'New Doctor',
@@ -57,39 +57,29 @@ export class DoctorService {
       todayVisitStatus: 'PENDING',
       isAssignedToMe: true,
     };
-    const updated = [doc, ...doctors];
-    await StorageService.setItem(STORAGE_KEYS.DOCTORS_CACHE, updated);
+    await FirestoreDbService.addDoctor(doc);
     return doc;
   }
 
   public static async updateDoctorTier(id: string, tier: Doctor['tier']): Promise<void> {
-    const doctors = await this.getDoctors();
-    const doc = doctors.find(d => d.id === id);
-    if (doc) {
-      doc.tier = tier;
-      await StorageService.setItem(STORAGE_KEYS.DOCTORS_CACHE, doctors);
-    }
+    await FirestoreDbService.updateDoctor(id, { tier });
   }
 
   public static async updateDoctor(id: string, updatedFields: Partial<Doctor>): Promise<Doctor | null> {
     const doctors = await this.getDoctors();
-    const index = doctors.findIndex(d => d.id === id);
-    if (index === -1) return null;
+    const current = doctors.find(d => d.id === id);
+    if (!current) return null;
 
-    const current = doctors[index];
     const updated: Doctor = {
       ...current,
       ...updatedFields,
     };
-    doctors[index] = updated;
-    await StorageService.setItem(STORAGE_KEYS.DOCTORS_CACHE, doctors);
+    await FirestoreDbService.updateDoctor(id, updatedFields);
     return updated;
   }
 
   public static async deleteDoctor(id: string): Promise<boolean> {
-    const doctors = await this.getDoctors();
-    const filtered = doctors.filter(d => d.id !== id);
-    await StorageService.setItem(STORAGE_KEYS.DOCTORS_CACHE, filtered);
+    await FirestoreDbService.deleteDoctor(id);
     return true;
   }
 
@@ -99,21 +89,24 @@ export class DoctorService {
     reason: string,
     mrName = 'Pranjal Malakar (MR)'
   ): Promise<{ success: boolean; requestId: string }> {
-    const existing = await StorageService.getItem<any[]>(STORAGE_KEYS.DOCTOR_DELETE_REQUESTS, []);
-    const request = {
-      id: 'del-req-' + Date.now(),
+    const requestId = await FirestoreDbService.submitDeletionRequest({
       doctorId,
       doctorName,
       reason: reason.trim() || 'Duplicate / Wrong entry',
       requestedBy: mrName,
-      requestedAt: new Date().toISOString(),
-      status: 'PENDING',
-    };
-    await StorageService.setItem(STORAGE_KEYS.DOCTOR_DELETE_REQUESTS, [request, ...existing]);
-    return { success: true, requestId: request.id };
+    });
+    return { success: true, requestId };
   }
 
-  public static async getPendingDeletionRequests(): Promise<any[]> {
-    return await StorageService.getItem<any[]>(STORAGE_KEYS.DOCTOR_DELETE_REQUESTS, []);
+  public static async getPendingDeletionRequests(): Promise<DoctorDeletionRequest[]> {
+    return await FirestoreDbService.getPendingDeletionRequests();
+  }
+
+  public static async approveDoctorDeletion(
+    requestId: string,
+    doctorId: string,
+    managerName = 'Bodrud Jaman Sadiol (RSM)'
+  ): Promise<void> {
+    await FirestoreDbService.approveDeletionRequest(requestId, doctorId, managerName);
   }
 }

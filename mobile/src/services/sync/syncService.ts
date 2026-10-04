@@ -1,5 +1,6 @@
 import { SyncQueueItem, SyncEntityType, VisitRecord, POBOrder, AttendanceRecord } from '../../types';
 import { StorageService, STORAGE_KEYS } from '../storageService';
+import { FirestoreDbService } from '../firebase/firestoreDbService';
 
 export interface SyncStats {
   pending: number;
@@ -104,14 +105,19 @@ export class SyncService {
       this.notifyListeners();
 
       try {
-        // Simulate controlled cloud upload with latency
-        await new Promise(resolve => setTimeout(resolve, 350));
-
-        // Mark item as synced
-        item.status = 'SYNCED';
         const serverId = `srv_${Date.now()}_${Math.random().toString(36).substring(7)}`;
         item.payload.serverId = serverId;
         item.payload.syncStatus = 'SYNCED';
+
+        // Cloud Firestore dispatch
+        if (item.entityType === 'VISIT') {
+          await FirestoreDbService.recordVisit(item.payload);
+        } else if (item.entityType === 'ATTENDANCE') {
+          await FirestoreDbService.recordAttendance(item.payload);
+        }
+
+        // Mark item as synced
+        item.status = 'SYNCED';
         processedCount++;
 
         // Update corresponding local caches
