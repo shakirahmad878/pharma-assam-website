@@ -23,6 +23,15 @@ const STORAGE_KEYS = {
   PLANNED_VISITS: 'reppulse_today_planned_visits',
 };
 
+// Known mock IDs to purge if found in old cache
+const MOCK_DOC_IDS = new Set(['doc-01', 'doc-02', 'doc-03', 'doc-04', 'doc-05', 'doc-06', 'doc-07', 'doc-08', 'doc-09', 'doc-10', 'doc-11']);
+const MOCK_CHEM_IDS = new Set(['chem-01', 'chem-02', 'chem-03', 'chem-04']);
+const MOCK_PROD_IDS = new Set(['prod-01', 'prod-02', 'prod-03', 'prod-04']);
+const MOCK_COMP_IDS = new Set(['comp-02', 'comp-03']);
+const MOCK_USER_IDS = new Set(['usr-admin-comp-02', 'usr-mgr-01', 'usr-mgr-02', 'usr-mr-01', 'usr-mr-02', 'usr-mr-03']);
+const MOCK_AUDIT_IDS = new Set(['aud-01', 'aud-02', 'aud-03', 'aud-04', 'aud-05']);
+const MOCK_TP_IDS = new Set(['tp-01']);
+
 export class StorageService {
   // Safe generic getItem
   private static getItem<T>(key: string, fallback: T): T {
@@ -48,7 +57,8 @@ export class StorageService {
   // Doctors
   static getDoctors(): Doctor[] {
     const doctors = this.getItem<Doctor[]>(STORAGE_KEYS.DOCTORS, INITIAL_DOCTORS);
-    return Array.isArray(doctors) && doctors.length > 0 ? doctors : INITIAL_DOCTORS;
+    if (!Array.isArray(doctors)) return [];
+    return doctors.filter(d => !MOCK_DOC_IDS.has(d.id));
   }
 
   static saveDoctors(doctors: Doctor[]): void {
@@ -58,7 +68,8 @@ export class StorageService {
   // Chemists
   static getChemists(): Chemist[] {
     const chemists = this.getItem<Chemist[]>(STORAGE_KEYS.CHEMISTS, INITIAL_CHEMISTS);
-    return Array.isArray(chemists) && chemists.length > 0 ? chemists : INITIAL_CHEMISTS;
+    if (!Array.isArray(chemists)) return [];
+    return chemists.filter(c => !MOCK_CHEM_IDS.has(c.id));
   }
 
   static saveChemists(chemists: Chemist[]): void {
@@ -68,7 +79,8 @@ export class StorageService {
   // Products
   static getProducts(): Product[] {
     const products = this.getItem<Product[]>(STORAGE_KEYS.PRODUCTS, INITIAL_PRODUCTS);
-    return Array.isArray(products) && products.length > 0 ? products : INITIAL_PRODUCTS;
+    if (!Array.isArray(products)) return [];
+    return products.filter(p => !MOCK_PROD_IDS.has(p.id));
   }
 
   static saveProducts(products: Product[]): void {
@@ -78,7 +90,9 @@ export class StorageService {
   // Users
   static getUsers(): User[] {
     const users = this.getItem<User[]>(STORAGE_KEYS.USERS, INITIAL_USERS);
-    return Array.isArray(users) && users.length > 0 ? users : INITIAL_USERS;
+    if (!Array.isArray(users) || users.length === 0) return INITIAL_USERS;
+    const filtered = users.filter(u => !MOCK_USER_IDS.has(u.id));
+    return filtered.length > 0 ? filtered : INITIAL_USERS;
   }
 
   static saveUsers(users: User[]): void {
@@ -88,7 +102,9 @@ export class StorageService {
   // Companies
   static getCompanies(): Company[] {
     const companies = this.getItem<Company[]>(STORAGE_KEYS.COMPANIES, INITIAL_COMPANIES);
-    return Array.isArray(companies) && companies.length > 0 ? companies : INITIAL_COMPANIES;
+    if (!Array.isArray(companies) || companies.length === 0) return INITIAL_COMPANIES;
+    const filtered = companies.filter(c => !MOCK_COMP_IDS.has(c.id));
+    return filtered.length > 0 ? filtered : INITIAL_COMPANIES;
   }
 
   static saveCompanies(companies: Company[]): void {
@@ -107,8 +123,8 @@ export class StorageService {
 
   // DCR Logs
   static getDCRLogs(): DCRRecord[] {
-    const dcr = this.getItem<DCRRecord[]>(STORAGE_KEYS.DCR_LOGS, INITIAL_DCR_LOGS);
-    return Array.isArray(dcr) ? dcr : INITIAL_DCR_LOGS;
+    const dcr = this.getItem<DCRRecord[]>(STORAGE_KEYS.DCR_LOGS, []);
+    return Array.isArray(dcr) ? dcr.filter(d => d.id !== 'dcr-01') : [];
   }
 
   static saveDCRLogs(logs: DCRRecord[]): void {
@@ -117,24 +133,8 @@ export class StorageService {
 
   // Tour Plans
   static getTourPlans(): TourPlanItem[] {
-    const plans = this.getItem<TourPlanItem[]>(STORAGE_KEYS.TOUR_PLANS, [
-      {
-        id: 'tp-01',
-        userId: 'usr-mr-01',
-        userName: 'Shakir Ahmad',
-        date: new Date().toISOString().split('T')[0],
-        territoryId: 'terr-cachar-01',
-        territoryName: 'Silchar Central & Hospital Road',
-        routeTitle: 'Hospital Road Cardiac & Diab Beat',
-        plannedDoctorsCount: 2,
-        plannedChemistsCount: 1,
-        doctorIds: ['doc-01', 'doc-02'],
-        chemistIds: ['chem-01'],
-        status: 'APPROVED',
-        approvalComments: 'Approved by ASM G Solanki. Focus on CardioPulse-AM.',
-      }
-    ]);
-    return Array.isArray(plans) ? plans : [];
+    const plans = this.getItem<TourPlanItem[]>(STORAGE_KEYS.TOUR_PLANS, []);
+    return Array.isArray(plans) ? plans.filter(p => !MOCK_TP_IDS.has(p.id)) : [];
   }
 
   static saveTourPlans(plans: TourPlanItem[]): void {
@@ -144,10 +144,8 @@ export class StorageService {
   // Audit Logs
   static getAuditLogs(): AuditLogEntry[] {
     const logs = this.getItem<AuditLogEntry[]>(STORAGE_KEYS.AUDIT_LOGS, []);
-    const filtered = (Array.isArray(logs) ? logs : []).filter(
-      l => !['aud-01', 'aud-02', 'aud-03', 'aud-04', 'aud-05'].includes(l.id)
-    );
-    return filtered;
+    if (!Array.isArray(logs)) return [];
+    return logs.filter(l => !MOCK_AUDIT_IDS.has(l.id));
   }
 
   static saveAuditLogs(logs: AuditLogEntry[]): void {
@@ -157,7 +155,7 @@ export class StorageService {
   // Today's Planned Visits (The "Add to Visit" Queue)
   static getPlannedVisits(): string[] {
     const visits = this.getItem<string[]>(STORAGE_KEYS.PLANNED_VISITS, []);
-    return Array.isArray(visits) ? visits : [];
+    return Array.isArray(visits) ? visits.filter(id => !MOCK_DOC_IDS.has(id)) : [];
   }
 
   static savePlannedVisits(doctorIds: string[]): void {
