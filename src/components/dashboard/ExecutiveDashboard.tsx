@@ -166,22 +166,33 @@ export const ExecutiveDashboard: React.FC<ExecutiveDashboardProps> = ({
             <p className="text-xs text-slate-500 mb-4">Doctor relationship density in active territories.</p>
 
             <div className="space-y-3">
-              {[
-                { label: 'Cardiology', count: 3, color: 'bg-teal-500' },
-                { label: 'Diabetology & Endocrinology', count: 2, color: 'bg-blue-500' },
-                { label: 'Orthopedics', count: 2, color: 'bg-emerald-500' },
-                { label: 'Pediatrics', count: 1, color: 'bg-amber-500' },
-              ].map((item, idx) => (
-                <div key={idx} className="text-xs">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-medium text-slate-700">{item.label}</span>
-                    <span className="font-bold text-slate-900">{item.count} Clinics</span>
-                  </div>
-                  <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                    <div className={`${item.color} h-full rounded-full`} style={{ width: `${item.count * 25}%` }}></div>
-                  </div>
+              {doctors.length === 0 ? (
+                <div className="py-6 text-center text-slate-400 text-xs">
+                  No doctors registered yet. Add doctors in Doctor Master to see specialty breakdown.
                 </div>
-              ))}
+              ) : (
+                Object.entries(
+                  doctors.reduce((acc: Record<string, number>, d) => {
+                    acc[d.specialty] = (acc[d.specialty] || 0) + 1;
+                    return acc;
+                  }, {})
+                ).map(([specialty, count], idx) => {
+                  const colors = ['bg-teal-500', 'bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-amber-500'];
+                  const color = colors[idx % colors.length];
+                  const percent = Math.min(100, Math.round((count / (doctors.length || 1)) * 100));
+                  return (
+                    <div key={specialty} className="text-xs">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-medium text-slate-700">{specialty}</span>
+                        <span className="font-bold text-slate-900">{count} Clinics ({percent}%)</span>
+                      </div>
+                      <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                        <div className={`${color} h-full rounded-full`} style={{ width: `${percent}%` }}></div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
 

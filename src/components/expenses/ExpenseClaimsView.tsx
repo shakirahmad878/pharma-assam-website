@@ -19,46 +19,9 @@ interface ExpenseClaimsViewProps {
 }
 
 export const ExpenseClaimsView: React.FC<ExpenseClaimsViewProps> = ({ currentUser }) => {
-  const isManager = currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'AREA_MANAGER';
+  const isManager = currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN' || currentUser.role === 'MANAGER';
 
-  const [claims, setClaims] = useState<ExpenseClaim[]>([
-    {
-      id: 'exp-01',
-      claimNumber: 'EXP-2026-0941',
-      userId: currentUser.id,
-      userName: currentUser.name,
-      territoryName: currentUser.territoryName,
-      date: '2026-09-05',
-      totalDistanceKm: 42.6,
-      ratePerKm: 7.50, // ₹7.50 / km
-      mileageAmount: 319.50,
-      dailyAllowance: 250.00,
-      otherExpensesTotal: 180.00,
-      grandTotal: 749.50,
-      items: [
-        {
-          id: 'item-1',
-          category: 'TRAVEL_KM_RATE',
-          description: 'GPS Verified Route (Bandra West to Linking Road & Khar)',
-          amount: 319.50,
-          verifiedKm: 42.6,
-        },
-        {
-          id: 'item-2',
-          category: 'DAILY_ALLOWANCE',
-          description: 'Standard Field Daily Allowance (HQ)',
-          amount: 250.00,
-        },
-        {
-          id: 'item-3',
-          category: 'TOLL_PARKING',
-          description: 'Lilavati Hospital & Turner Road Clinic Parking',
-          amount: 180.00,
-        }
-      ],
-      status: 'SUBMITTED',
-    }
-  ]);
+  const [claims, setClaims] = useState<ExpenseClaim[]>([]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [claimDate, setClaimDate] = useState('2026-09-05');
@@ -142,8 +105,19 @@ export const ExpenseClaimsView: React.FC<ExpenseClaimsViewProps> = ({ currentUse
       </div>
 
       {/* Claims List */}
-      <div className="space-y-4">
-        {claims.map((claim) => (
+      {claims.length === 0 ? (
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center space-y-3">
+          <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 mx-auto flex items-center justify-center">
+            <Receipt className="w-6 h-6" />
+          </div>
+          <h3 className="font-bold text-slate-800 text-sm">No Expense Claims Submitted</h3>
+          <p className="text-xs text-slate-500 max-w-sm mx-auto">
+            Click "Submit Daily Expense Claim" to record mileage, daily allowance (DA), and field expense receipts.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {claims.map((claim) => (
           <div key={claim.id} className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
               <div>
@@ -208,7 +182,8 @@ export const ExpenseClaimsView: React.FC<ExpenseClaimsViewProps> = ({ currentUse
             )}
           </div>
         ))}
-      </div>
+        </div>
+      )}
 
       {/* Submit Claim Modal */}
       {isModalOpen && (

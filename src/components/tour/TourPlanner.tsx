@@ -35,10 +35,10 @@ export const TourPlanner: React.FC<TourPlannerProps> = ({
   const isManager = currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'AREA_MANAGER' || currentUser.role === 'REGIONAL_MANAGER';
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [planDate, setPlanDate] = useState('2026-09-08');
-  const [routeTitle, setRouteTitle] = useState('Bandra West Cardiac & Diab Route');
-  const [selectedDoctorIds, setSelectedDoctorIds] = useState<string[]>(['doc-01', 'doc-02']);
-  const [selectedChemistIds, setSelectedChemistIds] = useState<string[]>(['chem-01']);
+  const [planDate, setPlanDate] = useState(new Date().toISOString().split('T')[0]);
+  const [routeTitle, setRouteTitle] = useState('Hospital Road & Rangirkhari Beat');
+  const [selectedDoctorIds, setSelectedDoctorIds] = useState<string[]>([]);
+  const [selectedChemistIds, setSelectedChemistIds] = useState<string[]>([]);
 
   const handleCreatePlan = (e: React.FormEvent) => {
     e.preventDefault();

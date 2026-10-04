@@ -578,6 +578,8 @@ export default function App() {
             <LiveFleetMap
               userRole={currentUser.role}
               telemetryLogs={telemetryLogs}
+              doctors={doctors}
+              dcrLogs={dcrLogs}
             />
           )}
 

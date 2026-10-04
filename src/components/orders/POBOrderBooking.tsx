@@ -15,44 +15,7 @@ export const POBOrderBooking: React.FC<POBOrderBookingProps> = ({
   chemists,
   currentUser,
 }) => {
-  const [orders, setOrders] = useState<POBOrder[]>([
-    {
-      id: 'pob-01',
-      orderNumber: 'POB-2026-0891',
-      userId: currentUser.id,
-      userName: currentUser.name,
-      chemistOrStockistId: 'chem-01',
-      buyerName: 'HealthPlus Super Chemist',
-      buyerType: 'CHEMIST',
-      territoryName: 'Mumbai West & Bandra',
-      orderDate: '2026-09-05',
-      expectedDeliveryDate: '2026-09-07',
-      items: [
-        {
-          productId: 'prod-01',
-          productName: 'CardioVast 20 (10x10)',
-          packSize: '10x10',
-          quantity: 20,
-          freeQuantity: 2,
-          rate: 132.14,
-          totalAmount: 2642.80,
-        },
-        {
-          productId: 'prod-02',
-          productName: 'GlucoFree-M 500 (15s)',
-          packSize: '15s',
-          quantity: 15,
-          freeQuantity: 1,
-          rate: 171.42,
-          totalAmount: 2571.30,
-        }
-      ],
-      subTotal: 5214.10,
-      gstAmount: 625.69,
-      grandTotal: 5839.79,
-      status: 'BOOKED',
-    }
-  ]);
+  const [orders, setOrders] = useState<POBOrder[]>([]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedChemistId, setSelectedChemistId] = useState(chemists[0]?.id || '');
@@ -127,77 +90,89 @@ export const POBOrderBooking: React.FC<POBOrderBookingProps> = ({
       </div>
 
       {/* Orders List */}
-      <div className="space-y-4">
-        {orders.map((ord) => (
-          <div key={ord.id} className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="font-bold text-base text-slate-900">{ord.buyerName}</h3>
-                  <Badge variant="primary">{ord.orderNumber}</Badge>
-                  <Badge variant="success">{ord.status}</Badge>
-                </div>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Booked by: <strong>{ord.userName}</strong> • Order Date: {ord.orderDate} • Delivery Target: {ord.expectedDeliveryDate}
-                </p>
-              </div>
-
-              <div className="text-right">
-                <button
-                  onClick={() => setSelectedOrderReceipt(ord)}
-                  className="flex items-center gap-1 text-xs text-teal-600 hover:text-teal-700 font-semibold"
-                >
-                  <FileText className="w-3.5 h-3.5" />
-                  View Receipt
-                </button>
-              </div>
-            </div>
-
-            {/* Items Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs text-left">
-                <thead className="bg-slate-50 text-slate-500 uppercase font-semibold">
-                  <tr>
-                    <th className="p-2.5">Product SKU</th>
-                    <th className="p-2.5">Pack</th>
-                    <th className="p-2.5">Qty</th>
-                    <th className="p-2.5">Free Scheme</th>
-                    <th className="p-2.5">Rate (PTR)</th>
-                    <th className="p-2.5 text-right">Amount</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {ord.items.map((item, idx) => (
-                    <tr key={idx}>
-                      <td className="p-2.5 font-semibold text-slate-800">{item.productName}</td>
-                      <td className="p-2.5 text-slate-500">{item.packSize}</td>
-                      <td className="p-2.5 font-mono font-bold">{item.quantity}</td>
-                      <td className="p-2.5 font-mono text-emerald-700 font-semibold">+{item.freeQuantity} Free</td>
-                      <td className="p-2.5 font-mono">₹{item.rate.toFixed(2)}</td>
-                      <td className="p-2.5 font-mono font-bold text-right">₹{item.totalAmount.toFixed(2)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Total Footer */}
-            <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-6 text-xs">
-              <div>
-                <span className="text-slate-400">Subtotal:</span>{' '}
-                <span className="font-mono font-semibold">₹{ord.subTotal.toFixed(2)}</span>
-              </div>
-              <div>
-                <span className="text-slate-400">GST (12%):</span>{' '}
-                <span className="font-mono font-semibold">₹{ord.gstAmount.toFixed(2)}</span>
-              </div>
-              <div className="bg-teal-50 px-3 py-1 rounded-lg border border-teal-100 font-bold text-teal-900 text-sm">
-                Grand Total: ₹{ord.grandTotal.toFixed(2)}
-              </div>
-            </div>
+      {orders.length === 0 ? (
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center space-y-3">
+          <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 mx-auto flex items-center justify-center">
+            <ShoppingCart className="w-6 h-6" />
           </div>
-        ))}
-      </div>
+          <h3 className="font-bold text-slate-800 text-sm">No POB Orders Booked Yet</h3>
+          <p className="text-xs text-slate-500 max-w-sm mx-auto">
+            Click "Book New Order" to record product orders booked directly at chemist counters.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {orders.map((ord) => (
+            <div key={ord.id} className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-base text-slate-900">{ord.buyerName}</h3>
+                    <Badge variant="primary">{ord.orderNumber}</Badge>
+                    <Badge variant="success">{ord.status}</Badge>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Booked by: <strong>{ord.userName}</strong> • Order Date: {ord.orderDate} • Delivery Target: {ord.expectedDeliveryDate}
+                  </p>
+                </div>
+
+                <div className="text-right">
+                  <button
+                    onClick={() => setSelectedOrderReceipt(ord)}
+                    className="flex items-center gap-1 text-xs text-teal-600 hover:text-teal-700 font-semibold"
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    View Receipt
+                  </button>
+                </div>
+              </div>
+
+              {/* Items Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left">
+                  <thead className="bg-slate-50 text-slate-500 uppercase font-semibold">
+                    <tr>
+                      <th className="p-2.5">Product SKU</th>
+                      <th className="p-2.5">Pack</th>
+                      <th className="p-2.5">Qty</th>
+                      <th className="p-2.5">Free Scheme</th>
+                      <th className="p-2.5">Rate (PTR)</th>
+                      <th className="p-2.5 text-right">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {ord.items.map((item, idx) => (
+                      <tr key={idx}>
+                        <td className="p-2.5 font-semibold text-slate-800">{item.productName}</td>
+                        <td className="p-2.5 text-slate-500">{item.packSize}</td>
+                        <td className="p-2.5 font-mono font-bold">{item.quantity}</td>
+                        <td className="p-2.5 font-mono text-emerald-700 font-semibold">+{item.freeQuantity} Free</td>
+                        <td className="p-2.5 font-mono">₹{item.rate.toFixed(2)}</td>
+                        <td className="p-2.5 font-mono font-bold text-right">₹{item.totalAmount.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Total Footer */}
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-6 text-xs">
+                <div>
+                  <span className="text-slate-400">Subtotal:</span>{' '}
+                  <span className="font-mono font-semibold">₹{ord.subTotal.toFixed(2)}</span>
+                </div>
+                <div>
+                  <span className="text-slate-400">GST (12%):</span>{' '}
+                  <span className="font-mono font-semibold">₹{ord.gstAmount.toFixed(2)}</span>
+                </div>
+                <div className="bg-teal-50 px-3 py-1 rounded-lg border border-teal-100 font-bold text-teal-900 text-sm">
+                  Grand Total: ₹{ord.grandTotal.toFixed(2)}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Book Order Modal */}
       {isModalOpen && (
