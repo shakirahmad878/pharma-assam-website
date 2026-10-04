@@ -20,11 +20,15 @@ export class AuthService {
     return hours > 10 || (hours === 10 && minutes > 30);
   }
 
-  public static isPast730PM(): boolean {
+  public static isPast1159PM(): boolean {
     const now = new Date();
     const hours = now.getHours();
     const minutes = now.getMinutes();
-    return hours > 19 || (hours === 19 && minutes >= 30);
+    return hours === 23 && minutes >= 59;
+  }
+
+  public static isPast730PM(): boolean {
+    return this.isPast1159PM();
   }
 
   public static async getMrPin(): Promise<string> {
@@ -40,11 +44,11 @@ export class AuthService {
   }
 
   public static async checkAutoLogout(): Promise<{ autoLoggedOut: boolean; reason?: string }> {
-    if (this.currentUser && this.isPast730PM()) {
+    if (this.currentUser && this.isPast1159PM()) {
       await this.logout();
       return {
         autoLoggedOut: true,
-        reason: 'Daily duty shift concluded at 7:30 PM (19:30). Automatically logged out for the day.',
+        reason: 'Daily duty shift concluded at 11:59 PM (23:59). Automatically logged out for the day.',
       };
     }
     return { autoLoggedOut: false };
@@ -85,8 +89,8 @@ export class AuthService {
   }
 
   public static async restoreSession(): Promise<UserProfile | null> {
-    // If past 7:30 PM, auto logout
-    if (this.isPast730PM()) {
+    // If past 11:59 PM, auto logout
+    if (this.isPast1159PM()) {
       await this.logout();
       return null;
     }

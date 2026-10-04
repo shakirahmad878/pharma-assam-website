@@ -79,7 +79,7 @@ export const RootNavigator: React.FC = () => {
       setCurrentUser(user);
     });
 
-    // Check for 7:30 PM auto-logout every 30 seconds
+    // Check for 11:59 PM auto-logout every 30 seconds
     const timer = setInterval(async () => {
       const check = await AuthService.checkAutoLogout();
       if (check.autoLoggedOut) {
@@ -87,7 +87,7 @@ export const RootNavigator: React.FC = () => {
         setCurrentUser(null);
         historyRef.current = [];
         if (Platform.OS === 'android') {
-          ToastAndroid.show('Shift Concluded (7:30 PM). Automatically logged out.', ToastAndroid.LONG);
+          ToastAndroid.show('Shift Concluded (11:59 PM). Automatically logged out.', ToastAndroid.LONG);
         }
       }
     }, 30000);

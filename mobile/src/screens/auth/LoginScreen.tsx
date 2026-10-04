@@ -179,10 +179,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
             <Text style={styles.dutyWindowTitle}>FIELD DUTY TIMINGS</Text>
           </View>
           <Text style={styles.dutyWindowText}>
-            • Morning Login: <Text style={styles.dutyHighlight}>Before 10:30 AM</Text> (Late entry requires ABM approval)
+            • Morning Login: <Text style={styles.dutyHighlight}>Before 10:30 AM</Text> (Late entry requires RSM approval)
           </Text>
           <Text style={styles.dutyWindowText}>
-            • Evening Wrap-up: <Text style={styles.dutyHighlight}>7:30 PM (19:30)</Text> automatic shift logout
+            • Evening Wrap-up: <Text style={styles.dutyHighlight}>11:59 PM (23:59)</Text> automatic shift logout
           </Text>
         </View>
 
