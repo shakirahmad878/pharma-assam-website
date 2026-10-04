@@ -63,7 +63,7 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
   const [newDocPhone, setNewDocPhone] = useState('');
   const [newDocTier, setNewDocTier] = useState<'A_PLUS' | 'A' | 'B' | 'C'>('A');
   const [newDocDistrict, setNewDocDistrict] = useState<'Cachar' | 'Karimganj' | 'Hailakandi'>('Cachar');
-  const [newDocArea, setNewDocArea] = useState('Hospital Road, Silchar');
+  const [newDocArea, setNewDocArea] = useState('');
   const [gpsLoading, setGpsLoading] = useState(false);
   const [capturedCoords, setCapturedCoords] = useState<{ lat: number; lng: number }>({
     lat: 24.8215,
@@ -88,7 +88,7 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
     setNewDocPhone('');
     setNewDocTier('A');
     setNewDocDistrict('Cachar');
-    setNewDocArea('Hospital Road, Silchar');
+    setNewDocArea('');
     setAddModalVisible(true);
 
     // Auto-capture GPS with Anti-Mock verification
@@ -109,6 +109,42 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
     }
   };
 
+  const handleToggleAddToVisit = async (doc: Doctor, e?: any) => {
+    if (e && e.stopPropagation) {
+      e.stopPropagation();
+    }
+    if (doc.todayVisitStatus === 'COMPLETED') {
+      Alert.alert('Visit Completed', `You have already completed the visit for ${doc.name} today.`);
+      return;
+    }
+    if (doc.todayVisitStatus === 'PENDING') {
+      Alert.alert(
+        'Remove from Today\'s Visits',
+        `Do you want to remove ${doc.name} from today's visit list?`,
+        [
+          { text: 'Keep in List', style: 'cancel' },
+          {
+            text: 'Remove',
+            style: 'destructive',
+            onPress: async () => {
+              await DoctorService.updateDoctorTodayStatus(doc.id, 'MISSED');
+              await loadData();
+            },
+          },
+        ]
+      );
+      return;
+    }
+
+    // Add to today's visit
+    await DoctorService.updateDoctorTodayStatus(doc.id, 'PENDING');
+    await loadData();
+    Alert.alert(
+      'Added to Today\'s Visit Plan ✅',
+      `${doc.name} has been added to your Daily Visit Plan. Switch to the 'Visits' tab to execute and record your call.`
+    );
+  };
+
   const handleSaveDoctor = async () => {
     if (!newDocName.trim()) {
       Alert.alert('Required Field', 'Please enter Doctor Full Name.');
@@ -116,6 +152,10 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
     }
     if (!newDocClinic.trim()) {
       Alert.alert('Required Field', 'Please enter Clinic / Hospital / Chamber Name.');
+      return;
+    }
+    if (!newDocArea.trim()) {
+      Alert.alert('Required Field', 'Please enter Area / Street / Landmark.');
       return;
     }
     if (!newDocPhone.trim()) {
@@ -145,8 +185,8 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
       phone: formattedPhone,
       tier: newDocTier,
       district: newDocDistrict,
-      area: newDocArea,
-      clinicAddress: `${newDocClinic.trim()}, ${newDocArea}, ${newDocDistrict}`,
+      area: newDocArea.trim(),
+      clinicAddress: `${newDocClinic.trim()}, ${newDocArea.trim()}, ${newDocDistrict}`,
       latitude: capturedCoords.lat,
       longitude: capturedCoords.lng,
       monthlyVisitTarget: newDocTier === 'A_PLUS' ? 12 : newDocTier === 'A' ? 8 : 4,
@@ -194,11 +234,11 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
       doc.district.toLowerCase().includes(query);
 
     if (mode === 'VISITS') {
-      // In Visits mode, ONLY display doctors that have been marked/visited by the MR
+      // In Visits mode, display doctors that are queued for today (PENDING) or completed
       if (subTab === 'TODAY') {
-        return matchesSearch && doc.todayVisitStatus === 'COMPLETED';
+        return matchesSearch && (doc.todayVisitStatus === 'PENDING' || doc.todayVisitStatus === 'COMPLETED');
       }
-      return matchesSearch && (doc.todayVisitStatus === 'COMPLETED' || doc.completedVisitsThisMonth > 0);
+      return matchesSearch && (doc.todayVisitStatus === 'COMPLETED' || doc.completedVisitsThisMonth > 0 || doc.todayVisitStatus === 'PENDING');
     }
 
     if (subTab === 'TODAY') {
@@ -350,25 +390,28 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
                       <Text style={styles.prefDayLink}>Pref Day/Time</Text>
                     </TouchableOpacity>
 
-                    {/* Status Badge */}
-                    <View style={styles.statusWrap}>
-                      {isOpen && (
-                        <View style={styles.statusOpenBadge}>
-                          <View style={styles.openDot} />
-                          <Text style={styles.statusOpenText}>Open</Text>
-                        </View>
-                      )}
-                      {isCompleted && (
-                        <View style={styles.statusClosedBadge}>
-                          <Text style={styles.statusClosedText}>✔ Closed (Today)</Text>
-                        </View>
-                      )}
-                      {isSkipped && (
-                        <View style={styles.statusSkippedBadge}>
-                          <Text style={styles.statusSkippedText}>Skipped</Text>
-                        </View>
-                      )}
-                    </View>
+                    {/* Quick Visit Action Button */}
+                    {item.todayVisitStatus === 'COMPLETED' ? (
+                      <View style={styles.statusClosedBadge}>
+                        <Text style={styles.statusClosedText}>✔ Visited</Text>
+                      </View>
+                    ) : item.todayVisitStatus === 'PENDING' ? (
+                      <TouchableOpacity
+                        style={styles.inPlanPill}
+                        onPress={(e) => handleToggleAddToVisit(item, e)}
+                      >
+                        <Ionicons name="checkmark-circle" size={13} color="#16A34A" />
+                        <Text style={styles.inPlanPillText}>In Today's Plan</Text>
+                      </TouchableOpacity>
+                    ) : (
+                      <TouchableOpacity
+                        style={styles.addToVisitPill}
+                        onPress={(e) => handleToggleAddToVisit(item, e)}
+                      >
+                        <Ionicons name="add-circle-outline" size={13} color="#2563EB" />
+                        <Text style={styles.addToVisitPillText}>+ Add to Visit</Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
                 </View>
               </View>
@@ -479,10 +522,20 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
               <Text style={styles.inputLabel}>Clinic / Chamber Name *</Text>
               <TextInput
                 style={styles.formInput}
-                placeholder="e.g. Apollo Clinic, Station Road"
+                placeholder="e.g. Apollo Clinic, Chamber #2"
                 placeholderTextColor="#94A3B8"
                 value={newDocClinic}
                 onChangeText={setNewDocClinic}
+              />
+
+              {/* Area / Street / Landmark */}
+              <Text style={styles.inputLabel}>Area / Street / Landmark *</Text>
+              <TextInput
+                style={styles.formInput}
+                placeholder="e.g. Park Road / Station Road / Tarapur"
+                placeholderTextColor="#94A3B8"
+                value={newDocArea}
+                onChangeText={setNewDocArea}
               />
 
               {/* Contact Info / Mobile Number */}
@@ -717,6 +770,30 @@ const styles = StyleSheet.create({
     borderColor: '#F8FAFC',
   },
   prefDayLink: { fontSize: 11, fontWeight: '700', color: '#2563EB' },
+  addToVisitPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  addToVisitPillText: { fontSize: 11, fontWeight: '700', color: '#2563EB' },
+  inPlanPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#DCFCE7',
+    borderWidth: 1,
+    borderColor: '#86EFAC',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  inPlanPillText: { fontSize: 11, fontWeight: '800', color: '#16A34A' },
   statusWrap: { flexDirection: 'row', alignItems: 'center' },
   statusOpenBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#DCFCE7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
   openDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#16A34A', marginRight: 4 },

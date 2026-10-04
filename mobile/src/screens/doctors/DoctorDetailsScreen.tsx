@@ -371,15 +371,56 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
           <Text style={styles.historyText}>Last Visit Logged: {doctor.lastVisitDate || 'No visits this month'}</Text>
         </Card>
 
+        {/* Add to Today's Visit Plan Quick Button */}
+        {doctor.todayVisitStatus !== 'COMPLETED' && (
+          <TouchableOpacity
+            style={[
+              styles.planToggleBtn,
+              doctor.todayVisitStatus === 'PENDING' ? styles.planToggleBtnActive : styles.planToggleBtnInactive,
+            ]}
+            onPress={async () => {
+              if (doctor.todayVisitStatus === 'PENDING') {
+                await DoctorService.updateDoctorTodayStatus(doctor.id, 'MISSED');
+                setDoctor({ ...doctor, todayVisitStatus: 'MISSED' });
+                Alert.alert('Removed', `${doctor.name} removed from today's visit plan.`);
+              } else {
+                await DoctorService.updateDoctorTodayStatus(doctor.id, 'PENDING');
+                setDoctor({ ...doctor, todayVisitStatus: 'PENDING' });
+                Alert.alert('Added to Today\'s Visits ✅', `${doctor.name} added to today's visit plan. You can also execute your visit from the 'Visits' tab.`);
+              }
+            }}
+          >
+            <Ionicons
+              name={doctor.todayVisitStatus === 'PENDING' ? "checkmark-circle" : "add-circle-outline"}
+              size={18}
+              color={doctor.todayVisitStatus === 'PENDING' ? "#16A34A" : "#2563EB"}
+            />
+            <Text
+              style={[
+                styles.planToggleBtnText,
+                doctor.todayVisitStatus === 'PENDING' ? { color: '#16A34A' } : { color: '#2563EB' },
+              ]}
+            >
+              {doctor.todayVisitStatus === 'PENDING' ? "In Today's Visit Plan (Tap to Remove)" : "+ Add to Today's Visit Plan"}
+            </Text>
+          </TouchableOpacity>
+        )}
+
         {/* CTA Button */}
         <View style={styles.ctaContainer}>
           <Button
             title={
-              geofenceEval.isWithinRadius
+              doctor.todayVisitStatus === 'COMPLETED'
+                ? "✔ Visit Completed Today"
+                : geofenceEval.isWithinRadius
                 ? "✓ Start Geofence Verified Visit"
                 : `🚫 Out of Range (${Math.round(geofenceEval.distanceMeters)}m Away)`
             }
             onPress={() => {
+              if (doctor.todayVisitStatus === 'COMPLETED') {
+                Alert.alert('Visit Done', `You have already logged today's visit for ${doctor.name}.`);
+                return;
+              }
               if (geofenceEval.isWithinRadius) {
                 onStartVisit(doctor, true, geofenceEval.distanceMeters);
               } else {
@@ -389,7 +430,7 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
                 );
               }
             }}
-            variant={geofenceEval.isWithinRadius ? "primary" : "secondary"}
+            variant={geofenceEval.isWithinRadius && doctor.todayVisitStatus !== 'COMPLETED' ? "primary" : "secondary"}
           />
         </View>
 
@@ -645,6 +686,28 @@ const styles = StyleSheet.create({
   clinicAddr: { color: colors.textSecondary, fontSize: typography.fontSize.sm, marginTop: 2 },
   clinicPhone: { color: colors.primary, fontSize: typography.fontSize.sm, marginTop: 4, fontWeight: typography.fontWeight.semibold },
   historyText: { color: colors.textSecondary, fontSize: typography.fontSize.sm, marginTop: 3 },
+  planToggleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    marginTop: spacing.md,
+  },
+  planToggleBtnActive: {
+    backgroundColor: '#DCFCE7',
+    borderColor: '#86EFAC',
+  },
+  planToggleBtnInactive: {
+    backgroundColor: '#EFF6FF',
+    borderColor: '#BFDBFE',
+  },
+  planToggleBtnText: {
+    fontSize: 14,
+    fontWeight: '800',
+  },
   ctaContainer: { marginTop: spacing.md },
 
   deleteDoctorBtn: {
