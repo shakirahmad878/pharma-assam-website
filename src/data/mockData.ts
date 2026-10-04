@@ -301,74 +301,7 @@ export const INITIAL_USERS: User[] = [
   }
 ];
 
-export const INITIAL_AUDIT_LOGS: AuditLogEntry[] = [
-  {
-    id: 'aud-01',
-    timestamp: '2026-09-29T11:30:00.000Z',
-    actorId: 'usr-admin-01',
-    actorName: 'Rajesh Sharma',
-    actorRole: 'SUPER_ADMIN',
-    action: 'CREATE',
-    entityType: 'COMPANY',
-    entityId: 'comp-01',
-    entityName: 'Pharma Assam Healthcare Pvt Ltd',
-    details: 'Provisioned enterprise multi-tenant company workspace with 50 seats allocation.',
-  },
-  {
-    id: 'aud-02',
-    timestamp: '2026-09-29T11:45:00.000Z',
-    actorId: 'usr-admin-comp-01',
-    actorName: 'Dr. Amitav Ghosh',
-    actorRole: 'ADMIN',
-    action: 'CREATE',
-    entityType: 'USER',
-    entityId: 'usr-mgr-01',
-    entityName: 'G Solanki (Manager)',
-    companyId: 'comp-01',
-    companyName: 'Pharma Assam Healthcare Pvt Ltd',
-    details: 'Created Area Manager profile for Barak Valley Division and granted DCR & Tour Plan approval permissions.',
-  },
-  {
-    id: 'aud-03',
-    timestamp: '2026-09-29T12:05:00.000Z',
-    actorId: 'usr-admin-comp-01',
-    actorName: 'Dr. Amitav Ghosh',
-    actorRole: 'ADMIN',
-    action: 'PERMISSIONS_UPDATE',
-    entityType: 'USER',
-    entityId: 'usr-mgr-01',
-    entityName: 'G Solanki',
-    companyId: 'comp-01',
-    companyName: 'Pharma Assam Healthcare Pvt Ltd',
-    details: 'Enabled Doctor Master creation and Chemist Master editing permissions for Area Manager.',
-  },
-  {
-    id: 'aud-04',
-    timestamp: '2026-09-29T12:20:00.000Z',
-    actorId: 'usr-admin-comp-01',
-    actorName: 'Dr. Amitav Ghosh',
-    actorRole: 'ADMIN',
-    action: 'CREATE',
-    entityType: 'DOCTOR',
-    entityId: 'doc-01',
-    entityName: 'Dr. Debabrata Dutta',
-    companyId: 'comp-01',
-    companyName: 'Pharma Assam Healthcare Pvt Ltd',
-    details: 'Added A+ Tier Cardiologist with 100m geofence coordinate verification in Silchar Central.',
-  },
-  {
-    id: 'aud-05',
-    timestamp: '2026-09-29T12:35:00.000Z',
-    actorId: 'usr-admin-01',
-    actorName: 'Rajesh Sharma',
-    actorRole: 'SUPER_ADMIN',
-    action: 'UPDATE',
-    entityType: 'DATABASE_RECORD',
-    entityId: 'db-schema-v4',
-    entityName: 'RepPulse Master Database',
-    details: 'Synchronized multi-tenant company partitions and refreshed geofenced location telemetry indices.',
-  }
-];
+export const INITIAL_AUDIT_LOGS: AuditLogEntry[] = [];
 
 export const INITIAL_TERRITORIES: Territory[] = [
   {

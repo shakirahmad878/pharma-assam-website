@@ -143,8 +143,11 @@ export class StorageService {
 
   // Audit Logs
   static getAuditLogs(): AuditLogEntry[] {
-    const logs = this.getItem<AuditLogEntry[]>(STORAGE_KEYS.AUDIT_LOGS, INITIAL_AUDIT_LOGS);
-    return Array.isArray(logs) ? logs : INITIAL_AUDIT_LOGS;
+    const logs = this.getItem<AuditLogEntry[]>(STORAGE_KEYS.AUDIT_LOGS, []);
+    const filtered = (Array.isArray(logs) ? logs : []).filter(
+      l => !['aud-01', 'aud-02', 'aud-03', 'aud-04', 'aud-05'].includes(l.id)
+    );
+    return filtered;
   }
 
   static saveAuditLogs(logs: AuditLogEntry[]): void {
