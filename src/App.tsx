@@ -41,9 +41,11 @@ import { LoginPage } from './components/auth/LoginPage';
 import { LoginModal } from './components/auth/LoginModal';
 import { ChangePasswordModal } from './components/auth/ChangePasswordModal';
 import { DatabaseSyncModal } from './components/common/DatabaseSyncModal';
+import { ShieldCheck, Users, Stethoscope, FileText, LayoutDashboard, Menu } from 'lucide-react';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(() => AuthService.getCurrentUser());
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<NavTab>(() => {
     const hash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
     if (hash === 'admin' || hash === 'admin_portal' || hash === 'admin-portal') return 'admin_portal';
@@ -602,20 +604,23 @@ export default function App() {
         onOpenLogin={() => setIsLoginModalOpen(true)}
         onOpenDatabaseSync={() => setIsDatabaseSyncModalOpen(true)}
         onLogout={handleLogout}
+        onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
       />
 
       {/* Main Workspace Layout */}
-      <div className="flex-1 flex max-w-7xl w-full mx-auto">
+      <div className="flex-1 flex max-w-7xl w-full mx-auto relative min-w-0 pb-16 lg:pb-0">
         
-        {/* Left Navigation Sidebar */}
+        {/* Left Navigation Sidebar (Desktop sticky + Mobile slide-over drawer) */}
         <Sidebar
           activeTab={activeTab}
           onSelectTab={handleTabChange}
           userRole={currentUser.role}
+          isMobileOpen={isMobileMenuOpen}
+          onCloseMobile={() => setIsMobileMenuOpen(false)}
         />
 
         {/* Dynamic Main Content Area */}
-        <main className="flex-1 p-6 overflow-y-auto max-w-5xl">
+        <main className="flex-1 p-3 sm:p-5 md:p-6 overflow-y-auto max-w-full lg:max-w-5xl w-full min-w-0">
           {/* Admin Control Center Portal */}
           {activeTab === 'admin_portal' && (
             <AdminPortal
@@ -786,6 +791,70 @@ export default function App() {
         </main>
 
       </div>
+
+      {/* Modern App-Like Mobile Bottom Navigation Bar (Visible on < lg screens) */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 flex items-center justify-around py-2 px-1 shadow-2xl safe-area-inset-bottom">
+        {/* Admin / Staff Tab */}
+        <button
+          onClick={() => handleTabChange(AuthService.canAccessAdminPortal(currentUser) ? 'admin_portal' : 'staff')}
+          className={`flex flex-col items-center justify-center py-1 px-2 rounded-lg transition-all ${
+            activeTab === 'admin_portal' || activeTab === 'staff'
+              ? 'text-teal-400'
+              : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <ShieldCheck className="w-5 h-5" />
+          <span className="text-[10px] font-medium mt-0.5">Admin</span>
+        </button>
+
+        {/* Doctors Tab */}
+        <button
+          onClick={() => handleTabChange('doctors')}
+          className={`flex flex-col items-center justify-center py-1 px-2 rounded-lg transition-all ${
+            activeTab === 'doctors'
+              ? 'text-teal-400'
+              : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <Stethoscope className="w-5 h-5" />
+          <span className="text-[10px] font-medium mt-0.5">Doctors</span>
+        </button>
+
+        {/* DCR Visits Tab */}
+        <button
+          onClick={() => handleTabChange('dcr')}
+          className={`flex flex-col items-center justify-center py-1 px-2 rounded-lg transition-all ${
+            activeTab === 'dcr'
+              ? 'text-teal-400'
+              : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <FileText className="w-5 h-5" />
+          <span className="text-[10px] font-medium mt-0.5">DCR Calls</span>
+        </button>
+
+        {/* Overview Tab */}
+        <button
+          onClick={() => handleTabChange('dashboard')}
+          className={`flex flex-col items-center justify-center py-1 px-2 rounded-lg transition-all ${
+            activeTab === 'dashboard'
+              ? 'text-teal-400'
+              : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <LayoutDashboard className="w-5 h-5" />
+          <span className="text-[10px] font-medium mt-0.5">Overview</span>
+        </button>
+
+        {/* All Menus Drawer Button */}
+        <button
+          onClick={() => setIsMobileMenuOpen(true)}
+          className="flex flex-col items-center justify-center py-1 px-2 rounded-lg text-slate-400 hover:text-teal-300 transition-all"
+        >
+          <Menu className="w-5 h-5" />
+          <span className="text-[10px] font-medium mt-0.5">All Menus</span>
+        </button>
+      </nav>
 
       {/* Database Backup / Restore & Cross-Device Sync Modal */}
       <DatabaseSyncModal

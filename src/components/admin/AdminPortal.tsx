@@ -117,27 +117,27 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   return (
     <div className="space-y-6 pb-12">
       {/* Top Header Card */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 text-white shadow-xl relative overflow-hidden">
         {/* Background glow accent */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
 
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
           <div className="space-y-2">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-400 to-emerald-600 flex items-center justify-center text-slate-950 font-black shadow-lg shadow-teal-500/30">
+            <div className="flex items-start sm:items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-400 to-emerald-600 flex items-center justify-center text-slate-950 font-black shadow-lg shadow-teal-500/30 shrink-0">
                 <Shield className="w-5 h-5 stroke-[2.5]" />
               </div>
               <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-extrabold tracking-tight text-white">
-                    RepPulse Admin & RBAC Control Studio
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                  <h1 className="text-base sm:text-xl font-extrabold tracking-tight text-white">
+                    RepPulse Admin & RBAC Studio
                   </h1>
-                  <span className="text-[10px] uppercase font-bold tracking-widest bg-teal-500/20 text-teal-300 px-2 py-0.5 rounded border border-teal-500/40">
-                    Phase 4 Enterprise
+                  <span className="text-[9px] sm:text-[10px] uppercase font-bold tracking-widest bg-teal-500/20 text-teal-300 px-2 py-0.5 rounded border border-teal-500/40">
+                    Enterprise
                   </span>
                 </div>
-                <p className="text-xs text-slate-300">
-                  Centralized Multi-Tenant Authorization, Master Database Studio, and User Access Hub.
+                <p className="text-xs text-slate-300 mt-0.5">
+                  Centralized Multi-Tenant Authorization & Master Database Studio.
                 </p>
               </div>
             </div>
