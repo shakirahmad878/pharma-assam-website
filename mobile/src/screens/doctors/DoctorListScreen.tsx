@@ -18,7 +18,9 @@ import { DoctorService } from '../../services/doctorService';
 import { RouteService } from '../../services/routeService';
 import { LocationService } from '../../services/location/locationService';
 import { PdfReportService } from '../../services/pdfReportService';
-import { Doctor, RoutePlan } from '../../types';
+import { AuthService } from '../../services/authService';
+import { DivisionService, DivisionType, DIVISIONS } from '../../services/divisionService';
+import { Doctor, RoutePlan, UserProfile } from '../../types';
 
 interface DoctorListScreenProps {
   onBack: () => void;
@@ -46,14 +48,22 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
   onNavigateToFirms,
   mode = 'VISITS',
 }) => {
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(AuthService.getCurrentUser());
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [topTab, setTopTab] = useState<'DOCTORS' | 'FIRMS'>('DOCTORS');
   const [subTab, setSubTab] = useState<'TODAY' | 'ALL'>('TODAY');
   const [selectedYear, setSelectedYear] = useState('2026');
-  const [selectedMonth, setSelectedMonth] = useState('September');
+  const [selectedMonth, setSelectedMonth] = useState('October');
   const [statusFilter, setStatusFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeRoute, setActiveRoute] = useState<RoutePlan | null>(null);
+
+  // Division Filter State
+  const isManager = DivisionService.isManager(currentUser);
+  const userDivision = DivisionService.getUserDivision(currentUser);
+  const [selectedDivision, setSelectedDivision] = useState<DivisionType>(
+    isManager ? 'ALL' : userDivision
+  );
 
   // Add Doctor Modal State
   const [addModalVisible, setAddModalVisible] = useState(false);
@@ -62,7 +72,9 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
   const [newDocClinic, setNewDocClinic] = useState('');
   const [newDocPhone, setNewDocPhone] = useState('');
   const [newDocTier, setNewDocTier] = useState<'A_PLUS' | 'A' | 'B' | 'C'>('A');
-  const [newDocDistrict, setNewDocDistrict] = useState<'Cachar' | 'Karimganj' | 'Hailakandi'>('Cachar');
+  const [newDocDistrict, setNewDocDistrict] = useState<'Cachar' | 'Karimganj' | 'Hailakandi'>(
+    userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : 'Cachar'
+  );
   const [newDocArea, setNewDocArea] = useState('');
   const [gpsLoading, setGpsLoading] = useState(false);
   const [capturedCoords, setCapturedCoords] = useState<{ lat: number; lng: number }>({
@@ -71,6 +83,13 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
   });
 
   useEffect(() => {
+    const user = AuthService.getCurrentUser();
+    setCurrentUser(user);
+    if (DivisionService.isManager(user)) {
+      setSelectedDivision('ALL');
+    } else {
+      setSelectedDivision(DivisionService.getUserDivision(user));
+    }
     loadData();
   }, []);
 
@@ -87,7 +106,10 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
     setNewDocClinic('');
     setNewDocPhone('');
     setNewDocTier('A');
-    setNewDocDistrict('Cachar');
+    
+    // Auto-lock district for MR, allow choice for Manager
+    const defaultDist = userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : 'Cachar';
+    setNewDocDistrict(defaultDist);
     setNewDocArea('');
     setAddModalVisible(true);
 
@@ -178,15 +200,20 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
       ? newDocName.trim()
       : `Dr. ${newDocName.trim()}`;
 
+    // Target District
+    const targetDist = !isManager
+      ? (userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : 'Cachar')
+      : newDocDistrict;
+
     await DoctorService.addDoctor({
       name: formattedName,
       specialty: newDocSpecialty.trim() || 'General Physician',
       clinicName: newDocClinic.trim(),
       phone: formattedPhone,
       tier: newDocTier,
-      district: newDocDistrict,
+      district: targetDist,
       area: newDocArea.trim(),
-      clinicAddress: `${newDocClinic.trim()}, ${newDocArea.trim()}, ${newDocDistrict}`,
+      clinicAddress: `${newDocClinic.trim()}, ${newDocArea.trim()}, ${targetDist}`,
       latitude: capturedCoords.lat,
       longitude: capturedCoords.lng,
       monthlyVisitTarget: newDocTier === 'A_PLUS' ? 12 : newDocTier === 'A' ? 8 : 4,
@@ -197,33 +224,47 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
 
     Alert.alert(
       'Doctor Added ✅',
-      `${formattedName} (Tier ${newDocTier.replace('_', '+')}) registered with contact ${newDocPhone.trim()} and Auto-GPS Geofence!`
+      `${formattedName} (Tier ${newDocTier.replace('_', '+')}) registered in ${targetDist} Division with Auto-GPS Geofence!`
     );
   };
 
   const handleShareVisits = async () => {
-    const headers = ['Doctor Name', 'Specialty', 'Tier', 'Phone', 'Location', 'Target', 'Status'];
-    const rows = filteredDoctors.map(d => [
+    const headers = ['Doctor Name', 'Specialty', 'Tier', 'Phone', 'Location', 'Division', 'Target', 'Status'];
+    const rows = filteredDoctors.map((d) => [
       d.name,
       d.specialty,
       `Tier ${d.tier ? d.tier.replace('_', '+') : 'A'}`,
       d.phone || 'N/A',
       `${d.area}, ${d.district}`,
+      d.district,
       `${d.completedVisitsThisMonth}/${d.monthlyVisitTarget}`,
       d.todayVisitStatus,
     ]);
     await PdfReportService.generateAndShareReport(
-      { title: mode === 'VISITS' ? 'Completed Doctor Visits & DCR Report' : 'Doctor Directory Report', subtitle: 'Barak Valley Division (Assam)' },
+      {
+        title: mode === 'VISITS' ? 'Completed Doctor Visits & DCR Report' : 'Doctor Directory Report',
+        subtitle: isManager
+          ? `Barak Valley Division (${DivisionService.getDivisionLabel(selectedDivision)})`
+          : `${DivisionService.getDivisionLabel(userDivision)} Division MR Report`,
+      },
       headers,
       rows,
       [
         { label: mode === 'VISITS' ? 'Total Visits Marked' : 'Total Doctors', value: filteredDoctors.length },
-        { label: 'Completed Visits', value: filteredDoctors.filter(d => d.todayVisitStatus === 'COMPLETED').length },
+        { label: 'Completed Visits', value: filteredDoctors.filter((d) => d.todayVisitStatus === 'COMPLETED').length },
       ]
     );
   };
 
-  const filteredDoctors = doctors.filter(doc => {
+  // 1. Division Filter (Strict for MR, Selectable for Manager)
+  const divisionScopedDocs = DivisionService.filterDoctorsByDivision(
+    doctors,
+    selectedDivision,
+    currentUser
+  );
+
+  // 2. Search & Tab Filter
+  const filteredDoctors = divisionScopedDocs.filter((doc) => {
     const query = searchQuery.toLowerCase();
     const matchesSearch =
       doc.name.toLowerCase().includes(query) ||
@@ -234,7 +275,6 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
       doc.district.toLowerCase().includes(query);
 
     if (mode === 'VISITS') {
-      // In Visits mode, display doctors that are queued for today (PENDING) or completed
       if (subTab === 'TODAY') {
         return matchesSearch && (doc.todayVisitStatus === 'PENDING' || doc.todayVisitStatus === 'COMPLETED');
       }
@@ -249,13 +289,18 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header Banner matching Images */}
+      {/* Header Banner */}
       <View style={styles.headerBanner}>
         <View style={styles.headerTopRow}>
           <TouchableOpacity style={styles.menuBtn} onPress={onOpenDrawer || onBack}>
             <Ionicons name="menu-outline" size={24} color="#ffffff" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>{mode === 'VISITS' ? 'Visits' : 'Doctors'}</Text>
+          <View style={{ flex: 1, marginLeft: 8 }}>
+            <Text style={styles.headerTitle}>{mode === 'VISITS' ? 'Visits' : 'Doctors'}</Text>
+            <Text style={styles.headerSubtitleText}>
+              {currentUser?.name || 'Representative'} ({isManager ? 'RSM' : 'MR'})
+            </Text>
+          </View>
           <TouchableOpacity style={styles.refreshPill} onPress={loadData}>
             <Text style={styles.refreshPillText}>Refresh</Text>
           </TouchableOpacity>
@@ -301,7 +346,49 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
         </TouchableOpacity>
       </View>
 
-      {/* Filters Bar: 2026 | September | All */}
+      {/* Division Isolation Banner & Controls */}
+      {isManager ? (
+        <View style={styles.divisionSelectorContainer}>
+          <View style={styles.divisionHeaderRow}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Ionicons name="business" size={14} color="#1D4ED8" />
+              <Text style={styles.divisionHeaderTitle}>SELECT DIVISION (RSM ACCESS):</Text>
+            </View>
+            <Text style={styles.divisionCountBadge}>{filteredDoctors.length} Doctors</Text>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.divisionPillScroll}>
+            {DIVISIONS.map((div) => {
+              const isActive = selectedDivision === div.id;
+              return (
+                <TouchableOpacity
+                  key={div.id}
+                  style={[styles.divisionPill, isActive && styles.divisionPillActive]}
+                  onPress={() => setSelectedDivision(div.id)}
+                >
+                  <Text style={[styles.divisionPillText, isActive && styles.divisionPillTextActive]}>
+                    {div.id === 'ALL' ? '🌐 ' : '📍 '}
+                    {div.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+      ) : (
+        <View style={styles.mrDivisionLockedBanner}>
+          <View style={styles.mrDivisionHeader}>
+            <Ionicons name="shield-checkmark" size={15} color="#15803D" />
+            <Text style={styles.mrDivisionTitle}>
+              ASSIGNED DIVISION: {DivisionService.getDivisionLabel(userDivision).toUpperCase()}
+            </Text>
+          </View>
+          <Text style={styles.mrDivisionNotice}>
+            🔒 MR Restricted View: Strictly limited to your assigned beat ({DivisionService.getDivisionLabel(userDivision)}). Data from other divisions is isolated by company policy.
+          </Text>
+        </View>
+      )}
+
+      {/* Filters Bar: Year | Month | Status */}
       <View style={styles.filterDropdownsRow}>
         <View style={styles.dropdownBox}>
           <Text style={styles.dropdownText}>{selectedYear}</Text>
@@ -322,7 +409,7 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
         <Ionicons name="search-outline" size={18} color="#64748B" />
         <TextInput
           style={styles.searchInput}
-          placeholder="Search by Doctor, Phone, City, Specialty"
+          placeholder={`Search ${isManager ? 'all divisions' : DivisionService.getDivisionLabel(userDivision)} doctors...`}
           placeholderTextColor="#94A3B8"
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -337,14 +424,19 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
       {/* List of Doctor Visit Cards */}
       <FlatList
         data={filteredDoctors}
-        keyExtractor={item => item.id}
+        keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
+        ListEmptyComponent={() => (
+          <View style={styles.emptyBox}>
+            <Text style={{ fontSize: 36 }}>👨‍⚕️</Text>
+            <Text style={styles.emptyText}>
+              No doctors found for {isManager ? DivisionService.getDivisionLabel(selectedDivision) : DivisionService.getDivisionLabel(userDivision)} division.
+            </Text>
+          </View>
+        )}
         renderItem={({ item }) => {
           const cleanName = item.name.replace(/^Dr\.\s*/i, '');
           const initial = cleanName.length > 0 ? cleanName.charAt(0).toUpperCase() : 'D';
-          const isOpen = item.todayVisitStatus === 'PENDING';
-          const isCompleted = item.todayVisitStatus === 'COMPLETED';
-          const isSkipped = item.todayVisitStatus === 'MISSED';
 
           const tierLabel = item.tier === 'A_PLUS' ? 'Tier A+' : item.tier ? `Tier ${item.tier}` : 'Tier A';
           const tierBg = item.tier === 'A_PLUS' ? '#FEF3C7' : item.tier === 'A' ? '#EFF6FF' : '#F1F5F9';
@@ -368,11 +460,14 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
                     <Text style={styles.docNameText}>
                       {item.name} ({item.completedVisitsThisMonth}/{item.monthlyVisitTarget})
                     </Text>
+                    <View style={styles.divisionPillBadge}>
+                      <Text style={styles.divisionPillBadgeText}>{item.district}</Text>
+                    </View>
                   </View>
 
-                  <Text style={styles.docCodeText}>PJDDR6 | ID #{item.id.replace(/\D/g, '') || '1833'}</Text>
+                  <Text style={styles.docCodeText}>ID #{item.id.replace(/\D/g, '') || '1833'} • {item.clinicName}</Text>
                   <Text style={styles.docLocationText}>📍 {item.area}, {item.district}</Text>
-                  
+
                   {item.phone ? (
                     <Text style={styles.docPhoneText}>📞 {item.phone}</Text>
                   ) : null}
@@ -418,219 +513,168 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
             </TouchableOpacity>
           );
         }}
-        ListEmptyComponent={
-          mode === 'VISITS' ? (
-            <View style={styles.emptyBox}>
-              <Ionicons name="clipboard-outline" size={52} color="#94A3B8" />
-              <Text style={[styles.emptyText, { fontWeight: '800', color: colors.textPrimary, fontSize: 16 }]}>
-                No Completed Visits Recorded
-              </Text>
-              <Text style={[styles.emptyText, { marginTop: 6, textAlign: 'center', color: '#64748B' }]}>
-                Visits will reflect here automatically once marked and completed by the MR in the field.
-              </Text>
-            </View>
-          ) : (
-            <View style={styles.emptyBox}>
-              <Ionicons name="medkit-outline" size={48} color="#94A3B8" />
-              <Text style={[styles.emptyText, { fontWeight: '800', color: colors.textPrimary, fontSize: 15 }]}>
-                No Doctors Registered Yet
-              </Text>
-              <Text style={[styles.emptyText, { marginTop: 4, textAlign: 'center' }]}>
-                Tap the orange '+' button below to register a doctor with Tier and contact info.
-              </Text>
-            </View>
-          )
-        }
       />
 
-      {/* Floating Orange '+' Action Button - STRICTLY restricted to MASTER mode (hidden in VISITS) */}
-      {mode === 'MASTER' && (
-        <TouchableOpacity
-          style={styles.fabBtn}
-          activeOpacity={0.85}
-          onPress={handleOpenAddDoctorModal}
-        >
-          <Ionicons name="add" size={30} color="#FFFFFF" />
-        </TouchableOpacity>
-      )}
+      {/* Floating Add Doctor Button */}
+      <TouchableOpacity
+        style={styles.fabBtn}
+        onPress={handleOpenAddDoctorModal}
+        activeOpacity={0.85}
+      >
+        <Ionicons name="add" size={28} color="#ffffff" />
+      </TouchableOpacity>
 
-      {/* Bottom Bar with Share button */}
+      {/* Bottom Share Bar */}
       <View style={styles.bottomBar}>
         <TouchableOpacity style={styles.shareBtn} onPress={handleShareVisits}>
-          <Ionicons name="share-social-outline" size={20} color="#2563EB" />
-          <Text style={styles.shareBtnText}>Share</Text>
+          <Ionicons name="share-social-outline" size={16} color="#2563EB" />
+          <Text style={styles.shareBtnText}>
+            Share {isManager ? DivisionService.getDivisionLabel(selectedDivision) : DivisionService.getDivisionLabel(userDivision)} PDF Report
+          </Text>
         </TouchableOpacity>
       </View>
 
-      {/* Add New Doctor Modal */}
+      {/* Add Doctor Modal */}
       <Modal visible={addModalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <View style={styles.modalHeaderRow}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="person-add" size={22} color={colors.primary} />
-                <Text style={styles.modalHeaderTitle}>Add New Client / Doctor</Text>
+                <Ionicons name="person-add" size={20} color="#F97316" />
+                <Text style={styles.modalHeaderTitle}>Add Doctor to Division</Text>
               </View>
               <TouchableOpacity onPress={() => setAddModalVisible(false)}>
-                <Ionicons name="close" size={24} color="#64748B" />
+                <Ionicons name="close-circle" size={24} color="#64748B" />
               </TouchableOpacity>
             </View>
 
             <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+              {/* Division Locking Notice */}
+              <View style={styles.modalDivisionNotice}>
+                <Ionicons name="location" size={16} color="#1E40AF" />
+                <Text style={styles.modalDivisionNoticeText}>
+                  Target Division: <Text style={{ fontWeight: 'bold' }}>{isManager ? newDocDistrict : DivisionService.getDivisionLabel(userDivision)}</Text>
+                  {!isManager ? ' (Locked to your assigned territory)' : ''}
+                </Text>
+              </View>
+
+              {/* District Picker for Managers */}
+              {isManager && (
+                <View style={{ marginBottom: 10 }}>
+                  <Text style={styles.inputLabel}>Division / District</Text>
+                  <View style={styles.districtChipsRow}>
+                    {(['Cachar', 'Hailakandi', 'Karimganj'] as const).map((dist) => (
+                      <TouchableOpacity
+                        key={dist}
+                        style={[styles.districtChip, newDocDistrict === dist && styles.districtChipActive]}
+                        onPress={() => setNewDocDistrict(dist)}
+                      >
+                        <Text style={[styles.districtChipText, newDocDistrict === dist && styles.districtChipTextActive]}>
+                          {dist === 'Cachar' ? 'Silchar (Cachar)' : dist}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              )}
+
               {/* Doctor Name */}
               <Text style={styles.inputLabel}>Doctor Full Name *</Text>
               <TextInput
                 style={styles.formInput}
-                placeholder="e.g. Dr. Bikram Nath"
+                placeholder="e.g. Dr. Sudip Paul"
                 placeholderTextColor="#94A3B8"
                 value={newDocName}
                 onChangeText={setNewDocName}
               />
 
-              {/* Specialty Selector & Chips */}
-              <Text style={styles.inputLabel}>Specialty *</Text>
-              <TextInput
-                style={styles.formInput}
-                placeholder="e.g. Cardiologist"
-                placeholderTextColor="#94A3B8"
-                value={newDocSpecialty}
-                onChangeText={setNewDocSpecialty}
-              />
+              {/* Specialty */}
+              <Text style={styles.inputLabel}>Medical Specialty</Text>
               <View style={styles.chipsContainer}>
-                {COMMON_SPECIALTIES.map(spec => (
+                {COMMON_SPECIALTIES.map((spec) => (
                   <TouchableOpacity
                     key={spec}
-                    style={[
-                      styles.chipItem,
-                      newDocSpecialty === spec && styles.chipItemActive,
-                    ]}
+                    style={[styles.chipItem, newDocSpecialty === spec && styles.chipItemActive]}
                     onPress={() => setNewDocSpecialty(spec)}
                   >
-                    <Text
-                      style={[
-                        styles.chipText,
-                        newDocSpecialty === spec && styles.chipTextActive,
-                      ]}
-                    >
+                    <Text style={[styles.chipText, newDocSpecialty === spec && styles.chipTextActive]}>
                       {spec}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </View>
 
-              {/* Clinic / Chamber */}
+              {/* Clinic / Hospital */}
               <Text style={styles.inputLabel}>Clinic / Chamber Name *</Text>
               <TextInput
                 style={styles.formInput}
-                placeholder="e.g. Apollo Clinic, Chamber #2"
+                placeholder="e.g. City Care Polyclinic / Chamber"
                 placeholderTextColor="#94A3B8"
                 value={newDocClinic}
                 onChangeText={setNewDocClinic}
               />
 
-              {/* Area / Street / Landmark */}
+              {/* Area */}
               <Text style={styles.inputLabel}>Area / Street / Landmark *</Text>
               <TextInput
                 style={styles.formInput}
-                placeholder="e.g. Park Road / Station Road / Tarapur"
+                placeholder="e.g. Hospital Road / Station Road"
                 placeholderTextColor="#94A3B8"
                 value={newDocArea}
                 onChangeText={setNewDocArea}
               />
 
-              {/* Contact Info / Mobile Number */}
-              <Text style={styles.inputLabel}>Contact Info / Mobile Number *</Text>
+              {/* Phone */}
+              <Text style={styles.inputLabel}>Doctor Contact Mobile *</Text>
               <View style={styles.inputWithIcon}>
-                <Ionicons name="call-outline" size={18} color="#64748B" style={{ marginLeft: 10 }} />
+                <Text style={{ paddingLeft: 10, color: '#64748B', fontWeight: 'bold' }}>+91</Text>
                 <TextInput
                   style={styles.innerTextInput}
-                  placeholder="e.g. +91 9435012345"
+                  placeholder="9435012345"
                   placeholderTextColor="#94A3B8"
                   value={newDocPhone}
-                  onChangeText={setNewDocPhone}
+                  onChangeText={(val) => setNewDocPhone(val.replace(/\D/g, '').slice(0, 10))}
                   keyboardType="phone-pad"
+                  maxLength={10}
                 />
               </View>
 
-              {/* Doctor Tier Selector */}
-              <Text style={styles.inputLabel}>Doctor Classification Tier *</Text>
+              {/* Tier Selection */}
+              <Text style={styles.inputLabel}>Doctor Strategic Tier</Text>
               <View style={styles.tierSelectorRow}>
-                {[
-                  { id: 'A_PLUS', label: 'Tier A+', desc: 'VIP / Core' },
-                  { id: 'A', label: 'Tier A', desc: 'High Priority' },
-                  { id: 'B', label: 'Tier B', desc: 'Regular' },
-                  { id: 'C', label: 'Tier C', desc: 'Potential' },
-                ].map(t => (
+                {(['A_PLUS', 'A', 'B', 'C'] as const).map((t) => (
                   <TouchableOpacity
-                    key={t.id}
-                    style={[
-                      styles.tierOptionBtn,
-                      newDocTier === t.id && styles.tierOptionBtnActive,
-                    ]}
-                    onPress={() => setNewDocTier(t.id as any)}
+                    key={t}
+                    style={[styles.tierOptionBtn, newDocTier === t && styles.tierOptionBtnActive]}
+                    onPress={() => setNewDocTier(t)}
                   >
-                    <Text
-                      style={[
-                        styles.tierOptionLabel,
-                        newDocTier === t.id && styles.tierOptionLabelActive,
-                      ]}
-                    >
-                      {t.label}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.tierOptionDesc,
-                        newDocTier === t.id && styles.tierOptionDescActive,
-                      ]}
-                    >
-                      {t.desc}
+                    <Text style={[styles.tierOptionLabel, newDocTier === t && styles.tierOptionLabelActive]}>
+                      {t === 'A_PLUS' ? 'Tier A+' : `Tier ${t}`}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </View>
 
-              {/* Territory District */}
-              <Text style={styles.inputLabel}>Territory District</Text>
-              <View style={styles.districtRow}>
-                {(['Cachar', 'Karimganj', 'Hailakandi'] as const).map(d => (
-                  <TouchableOpacity
-                    key={d}
-                    style={[
-                      styles.districtChip,
-                      newDocDistrict === d && styles.districtChipActive,
-                    ]}
-                    onPress={() => setNewDocDistrict(d)}
-                  >
-                    <Text
-                      style={[
-                        styles.districtChipText,
-                        newDocDistrict === d && styles.districtChipTextActive,
-                      ]}
-                    >
-                      {d}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              {/* Live Auto-GPS Banner */}
+              {/* GPS Geotag Status */}
               <View style={styles.gpsBanner}>
-                <Ionicons name="location-outline" size={20} color="#059669" />
-                <View style={{ flex: 1, marginLeft: 8 }}>
-                  <Text style={styles.gpsBannerTitle}>Live Auto-GPS Location</Text>
-                  {gpsLoading ? (
-                    <ActivityIndicator size="small" color="#059669" style={{ alignSelf: 'flex-start', marginTop: 2 }} />
-                  ) : (
-                    <Text style={styles.gpsBannerSub}>
-                      {newDocArea} ({capturedCoords.lat.toFixed(4)}° N, {capturedCoords.lng.toFixed(4)}° E)
+                {gpsLoading ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <ActivityIndicator size="small" color="#F97316" />
+                    <Text style={styles.gpsBannerText}>Capturing GPS coordinates...</Text>
+                  </View>
+                ) : (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Ionicons name="location" size={18} color="#16A34A" />
+                    <Text style={styles.gpsBannerText}>
+                      GPS Geofence: {capturedCoords.lat.toFixed(4)}° N, {capturedCoords.lng.toFixed(4)}° E (100m Radius)
                     </Text>
-                  )}
-                </View>
+                  </View>
+                )}
               </View>
 
               {/* Save Button */}
-              <TouchableOpacity style={styles.submitBtn} onPress={handleSaveDoctor}>
-                <Text style={styles.submitBtnText}>Save Doctor & Schedule Visits</Text>
+              <TouchableOpacity style={styles.saveBtn} onPress={handleSaveDoctor}>
+                <Text style={styles.saveBtnText}>Save Doctor Record</Text>
               </TouchableOpacity>
             </ScrollView>
           </View>
@@ -641,59 +685,175 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8FAFC' },
-
-  // Header Banner
+  container: { flex: 1, backgroundColor: colors.background },
   headerBanner: {
-    backgroundColor: '#3B82F6',
-    paddingTop: 10,
-    paddingBottom: 12,
-    paddingHorizontal: 16,
+    backgroundColor: '#0F172A',
+    paddingTop: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.sm,
   },
   headerTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginBottom: spacing.xs,
   },
   menuBtn: { padding: 4 },
-  headerTitle: { color: '#ffffff', fontSize: 18, fontWeight: '700' },
+  headerTitle: {
+    color: '#ffffff',
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.black,
+  },
+  headerSubtitleText: {
+    color: '#94A3B8',
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 1,
+  },
   refreshPill: {
-    backgroundColor: '#2563EB',
-    paddingHorizontal: 14,
-    paddingVertical: 5,
-    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: radius.full,
   },
   refreshPillText: { color: '#ffffff', fontSize: 11, fontWeight: '700' },
-
   segmentedRow: {
     flexDirection: 'row',
-    backgroundColor: '#2563EB',
-    borderRadius: radius.sm,
-    padding: 3,
-    marginTop: 12,
+    borderBottomWidth: 2,
+    borderColor: '#334155',
+    marginTop: spacing.xs,
   },
-  segmentBtn: { flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: 4 },
-  segmentBtnActive: { backgroundColor: '#ffffff' },
-  segmentText: { color: '#BFDBFE', fontSize: 12, fontWeight: '800' },
-  segmentTextActive: { color: '#1E40AF', fontWeight: '800' },
-
-  // Sub Tabs: TODAY | ALL
+  segmentBtn: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: 'center',
+  },
+  segmentBtnActive: {
+    borderBottomWidth: 3,
+    borderColor: '#F97316',
+  },
+  segmentText: {
+    color: '#94A3B8',
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  segmentTextActive: {
+    color: '#ffffff',
+  },
   subTabRow: {
     flexDirection: 'row',
     backgroundColor: '#ffffff',
     borderBottomWidth: 1,
     borderColor: '#E2E8F0',
   },
-  subTabItem: { flex: 1, paddingVertical: 10, alignItems: 'center' },
-  subTabItemActive: { borderBottomWidth: 2, borderColor: '#3B82F6' },
-  subTabText: { fontSize: 12, fontWeight: '700', color: '#64748B' },
-  subTabTextActive: { color: '#3B82F6' },
+  subTabItem: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  subTabItemActive: {
+    borderBottomWidth: 2.5,
+    borderColor: '#2563EB',
+  },
+  subTabText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#64748B',
+  },
+  subTabTextActive: {
+    color: '#2563EB',
+    fontWeight: '800',
+  },
 
-  // Filter Dropdowns Row
+  // Division Controls
+  divisionSelectorContainer: {
+    backgroundColor: '#EFF6FF',
+    borderBottomWidth: 1,
+    borderColor: '#BFDBFE',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  divisionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  divisionHeaderTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#1E40AF',
+    letterSpacing: 0.5,
+  },
+  divisionCountBadge: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#2563EB',
+    backgroundColor: '#DBEAFE',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  divisionPillScroll: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  divisionPill: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: radius.full,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
+  divisionPillActive: {
+    backgroundColor: '#2563EB',
+    borderColor: '#1D4ED8',
+  },
+  divisionPillText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#475569',
+  },
+  divisionPillTextActive: {
+    color: '#FFFFFF',
+  },
+
+  // MR Division Locked Banner
+  mrDivisionLockedBanner: {
+    backgroundColor: '#F0FDF4',
+    borderBottomWidth: 1,
+    borderColor: '#BBF7D0',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  mrDivisionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  mrDivisionTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#15803D',
+    letterSpacing: 0.5,
+  },
+  mrDivisionNotice: {
+    fontSize: 10,
+    color: '#166534',
+    marginTop: 2,
+    lineHeight: 14,
+  },
+
+  // Filters Bar
   filterDropdownsRow: {
     flexDirection: 'row',
+    backgroundColor: '#F8FAFC',
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderColor: '#E2E8F0',
     gap: 8,
   },
   dropdownBox: {
@@ -702,56 +862,75 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: '#ffffff',
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#CBD5E1',
+    borderRadius: radius.sm,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
   },
-  dropdownText: { fontSize: 12, color: colors.textPrimary, fontWeight: '600' },
-
-  // Search Bar
+  dropdownText: { fontSize: 11, color: '#334155', fontWeight: '600' },
   searchBarBox: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#ffffff',
     marginHorizontal: 12,
-    marginBottom: 8,
-    paddingHorizontal: 12,
-    borderRadius: radius.sm,
+    marginTop: 8,
+    marginBottom: 4,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#CBD5E1',
+    borderRadius: radius.md,
+    paddingHorizontal: 10,
+    height: 38,
   },
-  searchInput: { flex: 1, paddingVertical: 8, paddingLeft: 6, fontSize: 13, color: colors.textPrimary },
+  searchInput: {
+    flex: 1,
+    fontSize: 13,
+    color: '#1E293B',
+    marginLeft: 6,
+  },
+  listContent: {
+    padding: 12,
+    paddingBottom: 90,
+  },
 
-  listContent: { paddingHorizontal: 12, paddingBottom: 100 },
-
-  // Doctor Card
+  // Doctor Card Styles
   docCard: {
     backgroundColor: '#ffffff',
-    borderRadius: radius.md,
-    padding: 14,
+    borderRadius: radius.lg,
+    padding: 12,
     marginBottom: 10,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     ...shadows.sm,
   },
-  docCardContent: { flexDirection: 'row', alignItems: 'flex-start' },
+  docCardContent: { flexDirection: 'row', gap: 10 },
   avatarCircle: {
     width: 44,
     height: 44,
     borderRadius: 22,
     backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: '#BFDBFE',
+    borderColor: '#DBEAFE',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
   },
   avatarText: { fontSize: 16, fontWeight: '800', color: '#2563EB' },
   docInfoCol: { flex: 1 },
   docNameRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  docNameText: { fontSize: 14, fontWeight: '800', color: colors.textPrimary },
+  docNameText: { fontSize: 14, fontWeight: '800', color: colors.textPrimary, flex: 1 },
+  divisionPillBadge: {
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  divisionPillBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#475569',
+  },
   docCodeText: { fontSize: 11, color: '#64748B', marginTop: 2 },
   docLocationText: { fontSize: 12, color: '#475569', marginTop: 2 },
   docPhoneText: { fontSize: 12, color: '#0369A1', marginTop: 2, fontWeight: '600' },
@@ -794,17 +973,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   inPlanPillText: { fontSize: 11, fontWeight: '800', color: '#16A34A' },
-  statusWrap: { flexDirection: 'row', alignItems: 'center' },
-  statusOpenBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#DCFCE7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
-  openDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#16A34A', marginRight: 4 },
-  statusOpenText: { fontSize: 10, fontWeight: '800', color: '#16A34A' },
   statusClosedBadge: { backgroundColor: '#F1F5F9', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
   statusClosedText: { fontSize: 10, fontWeight: '700', color: '#475569' },
-  statusSkippedBadge: { backgroundColor: '#FEE2E2', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
-  statusSkippedText: { fontSize: 10, fontWeight: '800', color: '#DC2626' },
 
   emptyBox: { alignItems: 'center', justifyContent: 'center', paddingVertical: 40 },
-  emptyText: { fontSize: 13, color: '#64748B', marginTop: 10 },
+  emptyText: { fontSize: 13, color: '#64748B', marginTop: 10, textAlign: 'center', paddingHorizontal: 20 },
 
   // Floating Action Button
   fabBtn: {
@@ -866,6 +1039,48 @@ const styles = StyleSheet.create({
   },
   modalBody: {
     marginBottom: 10,
+  },
+  modalDivisionNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+    padding: 8,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    gap: 6,
+    marginBottom: 10,
+  },
+  modalDivisionNoticeText: {
+    fontSize: 12,
+    color: '#1E40AF',
+  },
+  districtChipsRow: {
+    flexDirection: 'row',
+    gap: 6,
+    marginTop: 4,
+  },
+  districtChip: {
+    flex: 1,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    backgroundColor: '#F1F5F9',
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    alignItems: 'center',
+  },
+  districtChipActive: {
+    backgroundColor: '#2563EB',
+    borderColor: '#1D4ED8',
+  },
+  districtChipText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#475569',
+  },
+  districtChipTextActive: {
+    color: '#FFFFFF',
   },
   inputLabel: {
     fontSize: 12,
@@ -949,78 +1164,36 @@ const styles = StyleSheet.create({
   },
   tierOptionLabel: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#475569',
   },
   tierOptionLabelActive: {
     color: '#B45309',
-  },
-  tierOptionDesc: {
-    fontSize: 9,
-    color: '#94A3B8',
-    marginTop: 2,
-  },
-  tierOptionDescActive: {
-    color: '#92400E',
-    fontWeight: '600',
-  },
-  districtRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 4,
-  },
-  districtChip: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    borderRadius: radius.md,
-    paddingVertical: 8,
-    alignItems: 'center',
-  },
-  districtChipActive: {
-    backgroundColor: '#EFF6FF',
-    borderColor: '#2563EB',
-  },
-  districtChipText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#475569',
-  },
-  districtChipTextActive: {
-    color: '#2563EB',
     fontWeight: '800',
   },
   gpsBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ECFDF5',
+    backgroundColor: '#F0FDF4',
     borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: '#A7F3D0',
     padding: 10,
-    marginTop: 14,
-    marginBottom: 16,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
   },
-  gpsBannerTitle: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#065F46',
-  },
-  gpsBannerSub: {
+  gpsBannerText: {
     fontSize: 11,
-    color: '#047857',
-    marginTop: 1,
+    color: '#166534',
+    fontWeight: '600',
   },
-  submitBtn: {
-    backgroundColor: '#2563EB',
-    paddingVertical: 13,
+  saveBtn: {
+    backgroundColor: '#F97316',
+    paddingVertical: 12,
     borderRadius: radius.lg,
     alignItems: 'center',
+    marginTop: 16,
     marginBottom: 20,
     ...shadows.sm,
   },
-  submitBtnText: {
+  saveBtnText: {
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '800',

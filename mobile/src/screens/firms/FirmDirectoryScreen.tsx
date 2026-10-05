@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   TextInput,
   Modal,
+  ScrollView,
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,6 +16,8 @@ import { colors, typography, spacing, radius, shadows } from '../../constants/th
 import { LocationService, LocationResult } from '../../services/location/locationService';
 import { StorageService, STORAGE_KEYS } from '../../services/storageService';
 import { AuthService } from '../../services/authService';
+import { DivisionService, DivisionType, DIVISIONS } from '../../services/divisionService';
+import { UserProfile } from '../../types';
 
 interface FirmItem {
   id: string;
@@ -34,15 +37,29 @@ interface FirmDirectoryScreenProps {
 }
 
 export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack }) => {
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(AuthService.getCurrentUser());
   const [firms, setFirms] = useState<FirmItem[]>(INITIAL_FIRMS);
   const [filterType, setFilterType] = useState<'All' | 'Retailer' | 'Distributor' | 'Stockist'>('All');
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [currentDateStr, setCurrentDateStr] = useState('');
 
-  const currentUser = AuthService.getCurrentUser();
+  // Division Filter State
+  const isManager = DivisionService.isManager(currentUser);
+  const userDivision = DivisionService.getUserDivision(currentUser);
+  const [selectedDivision, setSelectedDivision] = useState<DivisionType>(
+    isManager ? 'ALL' : userDivision
+  );
 
   useEffect(() => {
+    const user = AuthService.getCurrentUser();
+    setCurrentUser(user);
+    if (DivisionService.isManager(user)) {
+      setSelectedDivision('ALL');
+    } else {
+      setSelectedDivision(DivisionService.getUserDivision(user));
+    }
+
     loadFirms();
     const now = new Date();
     const day = now.getDate();
@@ -71,6 +88,9 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
   const [newPhone, setNewPhone] = useState('');
   const [newDlNumber, setNewDlNumber] = useState('');
   const [newFirmType, setNewFirmType] = useState<'Retailer' | 'Distributor' | 'Stockist'>('Retailer');
+  const [newFirmDistrict, setNewFirmDistrict] = useState<'Cachar' | 'Karimganj' | 'Hailakandi'>(
+    userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : 'Cachar'
+  );
   const [capturedGps, setCapturedGps] = useState<LocationResult | null>(null);
   const [autoArea, setAutoArea] = useState('Acquiring GPS...');
   const [gpsLoading, setGpsLoading] = useState(false);
@@ -79,6 +99,10 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
     setGpsLoading(true);
     const loc = await LocationService.getCurrentLocation();
     setGpsLoading(false);
+    const targetDist = !isManager
+      ? (userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : 'Cachar')
+      : newFirmDistrict;
+
     if (loc) {
       if (loc.isMockLocation) {
         LocationService.validateAuthenticGps(loc, 'Firm / Retailer Geotagging');
@@ -86,14 +110,16 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
         setAutoArea('⚠️ Fake GPS Detected (Blocked)');
       } else {
         setCapturedGps(loc);
-        setAutoArea('Main Road & Station Area, Karimganj, Assam');
+        setAutoArea(`Commercial Hub & Main Market, ${targetDist}, Assam`);
       }
     } else {
-      setAutoArea('Karimganj, Assam');
+      setAutoArea(`${targetDist}, Assam`);
     }
   };
 
   const openAddModal = () => {
+    const defaultDist = userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : 'Cachar';
+    setNewFirmDistrict(defaultDist);
     setAddModalVisible(true);
     fetchGpsForFirm();
   };
@@ -119,6 +145,11 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
       Alert.alert('Fake GPS Blocked 🚫', 'Please turn off Developer Mock Location apps to register firm.');
       return;
     }
+
+    const targetDist = !isManager
+      ? (userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : 'Cachar')
+      : newFirmDistrict;
+
     const formattedFirmPhone = `+91 ${cleanDigits}`;
     const newEntry: FirmItem = {
       id: 'firm-' + Date.now(),
@@ -128,7 +159,7 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
       phone: formattedFirmPhone,
       dlNumber: newDlNumber.trim() || 'AS-REG-2026-DL-0000',
       area: autoArea,
-      district: 'Karimganj',
+      district: targetDist,
     };
     const updatedList = [newEntry, ...firms];
     setFirms(updatedList);
@@ -140,46 +171,99 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
     setNewPhone('');
     setNewDlNumber('');
     Alert.alert(
-      'Firm Registered with Contact Info ✅',
-      `${newEntry.name} (${newEntry.type}) registered with Contact: ${newEntry.contactPerson} (${newEntry.phone}) and Auto-GPS at ${autoArea}.`
+      'Firm Registered in Division ✅',
+      `${newEntry.name} (${newEntry.type}) registered in ${targetDist} Division with Contact: ${newEntry.contactPerson} (${newEntry.phone}).`
     );
   };
 
-  const filtered = firms.filter(f => {
+  // 1. Division Isolation
+  const divisionScopedFirms = DivisionService.filterFirmsByDivision(
+    firms,
+    selectedDivision,
+    currentUser
+  );
+
+  // 2. Type & Search Filtering
+  const filtered = divisionScopedFirms.filter((f) => {
     const matchFilter = filterType === 'All' || f.type === filterType;
     const matchSearch =
       f.name.toLowerCase().includes(search.toLowerCase()) ||
-      f.area.toLowerCase().includes(search.toLowerCase());
+      f.area.toLowerCase().includes(search.toLowerCase()) ||
+      f.district.toLowerCase().includes(search.toLowerCase());
     return matchFilter && matchSearch;
   });
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header matching Image 33 */}
+      {/* Header */}
       <View style={styles.headerBar}>
         <TouchableOpacity style={styles.backBtn} onPress={onBack}>
           <Ionicons name="arrow-back" size={22} color="#ffffff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>FIRMS</Text>
         <View style={styles.headerRightMeta}>
-          <Text style={styles.headerUserName}>{currentUser?.name || 'Representative'}</Text>
+          <Text style={styles.headerUserName}>
+            {currentUser?.name || 'Representative'} ({isManager ? 'RSM' : 'MR'})
+          </Text>
           <Text style={styles.headerDateText}>{currentDateStr}</Text>
         </View>
       </View>
 
-      {/* Filter Row with Dropdown matching Image 33 */}
+      {/* Division Isolation Banner & Controls */}
+      {isManager ? (
+        <View style={styles.divisionSelectorContainer}>
+          <View style={styles.divisionHeaderRow}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Ionicons name="business" size={14} color="#1D4ED8" />
+              <Text style={styles.divisionHeaderTitle}>SELECT DIVISION (RSM ACCESS):</Text>
+            </View>
+            <Text style={styles.divisionCountBadge}>{filtered.length} Firms</Text>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.divisionPillScroll}>
+            {DIVISIONS.map((div) => {
+              const isActive = selectedDivision === div.id;
+              return (
+                <TouchableOpacity
+                  key={div.id}
+                  style={[styles.divisionPill, isActive && styles.divisionPillActive]}
+                  onPress={() => setSelectedDivision(div.id)}
+                >
+                  <Text style={[styles.divisionPillText, isActive && styles.divisionPillTextActive]}>
+                    {div.id === 'ALL' ? '🌐 ' : '📍 '}
+                    {div.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+      ) : (
+        <View style={styles.mrDivisionLockedBanner}>
+          <View style={styles.mrDivisionHeader}>
+            <Ionicons name="shield-checkmark" size={15} color="#15803D" />
+            <Text style={styles.mrDivisionTitle}>
+              ASSIGNED DIVISION: {DivisionService.getDivisionLabel(userDivision).toUpperCase()}
+            </Text>
+          </View>
+          <Text style={styles.mrDivisionNotice}>
+            🔒 MR Restricted View: Strictly limited to your assigned beat ({DivisionService.getDivisionLabel(userDivision)}). Firms from other divisions are isolated.
+          </Text>
+        </View>
+      )}
+
+      {/* Filter Row with Dropdown */}
       <View style={styles.filterBar}>
         <TouchableOpacity
           style={styles.dropdownTrigger}
           onPress={() => setDropdownOpen(!dropdownOpen)}
         >
-          <Text style={styles.dropdownTriggerText}>{filterType}</Text>
+          <Text style={styles.dropdownTriggerText}>Type: {filterType}</Text>
           <Ionicons name={dropdownOpen ? 'chevron-up' : 'chevron-down'} size={16} color="#64748B" />
         </TouchableOpacity>
 
         {dropdownOpen && (
           <View style={styles.dropdownMenu}>
-            {(['All', 'Retailer', 'Distributor', 'Stockist'] as const).map(t => (
+            {(['All', 'Retailer', 'Distributor', 'Stockist'] as const).map((t) => (
               <TouchableOpacity
                 key={t}
                 style={[styles.dropdownMenuItem, filterType === t && styles.dropdownMenuItemActive]}
@@ -197,131 +281,171 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
         )}
       </View>
 
-      {/* Firms List matching Image 33 */}
+      {/* Firms List */}
       <FlatList
         data={filtered}
-        keyExtractor={item => item.id}
+        keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
-        renderItem={({ item }) => {
-          const initial = item.name.charAt(0).toUpperCase();
-          return (
-            <TouchableOpacity
-              style={styles.firmCard}
-              activeOpacity={0.8}
-              onPress={() =>
-                Alert.alert(item.name, `${item.type}\nLocation: ${item.area}\nWould you like to book POB order or log visit?`, [
-                  { text: 'Cancel', style: 'cancel' },
-                  { text: 'Log Visit', onPress: () => Alert.alert('Visit Logged', `DCR visit noted for ${item.name}.`) },
-                ])
-              }
-            >
-              <View style={styles.avatarCircle}>
-                <Text style={styles.avatarText}>{initial}</Text>
-              </View>
-              <View style={styles.firmDetailsCol}>
-                <Text style={styles.firmNameText}>{item.name}</Text>
-                <View style={styles.firmMetaRow}>
-                  <Ionicons name="person-outline" size={13} color="#64748B" />
-                  <Text style={styles.firmTypeText}>{item.type} • {item.contactPerson || 'Proprietor'}</Text>
-                </View>
-                {item.phone && (
-                  <View style={styles.firmMetaRow}>
-                    <Ionicons name="call-outline" size={13} color="#2563EB" />
-                    <Text style={styles.firmPhoneText}>{item.phone}</Text>
-                  </View>
-                )}
-                <View style={styles.firmMetaRow}>
-                  <Ionicons name="location-outline" size={13} color="#64748B" />
-                  <Text style={styles.firmAreaText}>{item.area}</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-          );
-        }}
-        ListEmptyComponent={
-          <View style={styles.emptyBox}>
-            <Ionicons name="business-outline" size={48} color="#94A3B8" />
-            <Text style={styles.emptyTitle}>No Firms / Retailers Registered</Text>
-            <Text style={styles.emptySubtitle}>Tap the '+' button below to register a firm during field visits.</Text>
+        ListEmptyComponent={() => (
+          <View style={styles.emptyContainer}>
+            <Ionicons name="storefront-outline" size={48} color="#CBD5E1" />
+            <Text style={styles.emptyTitle}>No Firms Found</Text>
+            <Text style={styles.emptySubtitle}>
+              No {filterType !== 'All' ? filterType : ''} firms recorded in {isManager ? DivisionService.getDivisionLabel(selectedDivision) : DivisionService.getDivisionLabel(userDivision)} division. Tap '+' to register a new firm.
+            </Text>
           </View>
-        }
+        )}
+        renderItem={({ item }) => (
+          <View style={styles.firmCard}>
+            <View style={styles.firmHeaderRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.firmName}>{item.name}</Text>
+                <Text style={styles.firmTypeTag}>🏷️ {item.type.toUpperCase()}</Text>
+              </View>
+              <View style={styles.divisionBadge}>
+                <Text style={styles.divisionBadgeText}>{item.district}</Text>
+              </View>
+            </View>
+
+            <View style={styles.firmMetaRow}>
+              <Ionicons name="person-outline" size={14} color="#64748B" />
+              <Text style={styles.firmMetaText}>Contact: {item.contactPerson || 'Proprietor'}</Text>
+            </View>
+
+            {item.phone ? (
+              <View style={styles.firmMetaRow}>
+                <Ionicons name="call-outline" size={14} color="#0284C7" />
+                <Text style={[styles.firmMetaText, { color: '#0284C7', fontWeight: 'bold' }]}>
+                  {item.phone}
+                </Text>
+              </View>
+            ) : null}
+
+            <View style={styles.firmMetaRow}>
+              <Ionicons name="location-outline" size={14} color="#64748B" />
+              <Text style={styles.firmMetaText}>{item.area}, {item.district}</Text>
+            </View>
+
+            <View style={styles.firmMetaRow}>
+              <Ionicons name="document-text-outline" size={14} color="#64748B" />
+              <Text style={styles.firmMetaText}>DL: {item.dlNumber || 'AS-REG-2026-DL-0000'}</Text>
+            </View>
+          </View>
+        )}
       />
 
-      {/* Floating Action Button `+` matching Image 33 */}
-      <TouchableOpacity style={styles.fabBtn} onPress={openAddModal}>
-        <Ionicons name="add" size={26} color="#ffffff" />
+      {/* Floating Add Firm Button */}
+      <TouchableOpacity style={styles.fab} onPress={openAddModal}>
+        <Ionicons name="add" size={28} color="#ffffff" />
       </TouchableOpacity>
 
-      {/* Add Firm Modal with Contact Info */}
+      {/* Add Firm Modal */}
       <Modal visible={addModalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Add New Firm / Retailer</Text>
-            <Text style={styles.modalSubtitle}>Karimganj / Barak Valley Directory</Text>
-
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Firm / Pharmacy Name"
-              placeholderTextColor="#94A3B8"
-              value={newFirmName}
-              onChangeText={setNewFirmName}
-            />
-
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Contact Person / Pharmacist Name"
-              placeholderTextColor="#94A3B8"
-              value={newContactPerson}
-              onChangeText={setNewContactPerson}
-            />
-
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Contact Mobile Number (e.g. +91 9435012345)"
-              placeholderTextColor="#94A3B8"
-              value={newPhone}
-              onChangeText={setNewPhone}
-              keyboardType="phone-pad"
-            />
-
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Drug License (DL) Number"
-              placeholderTextColor="#94A3B8"
-              value={newDlNumber}
-              onChangeText={setNewDlNumber}
-            />
-
-            <Text style={styles.modalLabel}>Category Type</Text>
-            <View style={styles.typeSelectorRow}>
-              {(['Retailer', 'Distributor', 'Stockist'] as const).map(t => (
-                <TouchableOpacity
-                  key={t}
-                  style={[styles.typeOptionBtn, newFirmType === t && styles.typeOptionBtnActive]}
-                  onPress={() => setNewFirmType(t)}
-                >
-                  <Text style={[styles.typeOptionText, newFirmType === t && styles.typeOptionTextActive]}>{t}</Text>
-                </TouchableOpacity>
-              ))}
+            <View style={styles.modalHeaderRow}>
+              <Text style={styles.modalHeaderTitle}>Register New Firm / Pharmacy</Text>
+              <TouchableOpacity onPress={() => setAddModalVisible(false)}>
+                <Ionicons name="close" size={24} color="#64748B" />
+              </TouchableOpacity>
             </View>
 
-            {/* Live Auto-GPS */}
-            <View style={styles.autoGpsBox}>
-              <View style={styles.autoGpsHeader}>
-                <Ionicons name="location" size={16} color="#2563EB" />
-                <Text style={styles.autoGpsTitle}>Live Auto-GPS Area</Text>
+            <ScrollView style={{ marginBottom: 12 }} showsVerticalScrollIndicator={false}>
+              {/* Division Notice */}
+              <View style={styles.modalDivisionNotice}>
+                <Ionicons name="location" size={16} color="#1E40AF" />
+                <Text style={styles.modalDivisionNoticeText}>
+                  Target Division: <Text style={{ fontWeight: 'bold' }}>{isManager ? newFirmDistrict : DivisionService.getDivisionLabel(userDivision)}</Text>
+                  {!isManager ? ' (Locked to your assigned territory)' : ''}
+                </Text>
               </View>
-              <Text style={styles.autoGpsAreaText}>{gpsLoading ? 'Acquiring GPS...' : autoArea}</Text>
-            </View>
 
-            <View style={styles.modalBtnRow}>
-              <TouchableOpacity style={[styles.modalBtn, { backgroundColor: '#94A3B8' }]} onPress={() => setAddModalVisible(false)}>
-                <Text style={styles.modalBtnText}>Cancel</Text>
+              {/* District Picker for Managers */}
+              {isManager && (
+                <View style={{ marginBottom: 10 }}>
+                  <Text style={styles.inputLabelSmall}>Division / District</Text>
+                  <View style={styles.districtChipsRow}>
+                    {(['Cachar', 'Hailakandi', 'Karimganj'] as const).map((dist) => (
+                      <TouchableOpacity
+                        key={dist}
+                        style={[styles.districtChip, newFirmDistrict === dist && styles.districtChipActive]}
+                        onPress={() => setNewFirmDistrict(dist)}
+                      >
+                        <Text style={[styles.districtChipText, newFirmDistrict === dist && styles.districtChipTextActive]}>
+                          {dist === 'Cachar' ? 'Silchar (Cachar)' : dist}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              )}
+
+              <Text style={styles.inputLabelSmall}>Firm / Medical Store Name *</Text>
+              <TextInput
+                style={styles.modalInput}
+                placeholder="e.g. LIFELINE PHARMA"
+                value={newFirmName}
+                onChangeText={setNewFirmName}
+              />
+
+              <Text style={styles.inputLabelSmall}>Firm Type</Text>
+              <View style={styles.firmTypeRow}>
+                {(['Retailer', 'Distributor', 'Stockist'] as const).map((t) => (
+                  <TouchableOpacity
+                    key={t}
+                    style={[styles.firmTypePill, newFirmType === t && styles.firmTypePillActive]}
+                    onPress={() => setNewFirmType(t)}
+                  >
+                    <Text style={[styles.firmTypePillText, newFirmType === t && styles.firmTypePillTextActive]}>
+                      {t}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={styles.inputLabelSmall}>Contact Person (Pharmacist / Proprietor)</Text>
+              <TextInput
+                style={styles.modalInput}
+                placeholder="e.g. Ratan Debnath"
+                value={newContactPerson}
+                onChangeText={setNewContactPerson}
+              />
+
+              <Text style={styles.inputLabelSmall}>Contact Mobile Number *</Text>
+              <View style={styles.inputWithIcon}>
+                <Text style={{ paddingLeft: 10, color: '#64748B', fontWeight: 'bold' }}>+91</Text>
+                <TextInput
+                  style={styles.innerTextInput}
+                  placeholder="9435012345"
+                  placeholderTextColor="#94A3B8"
+                  value={newPhone}
+                  onChangeText={(val) => setNewPhone(val.replace(/\D/g, '').slice(0, 10))}
+                  keyboardType="phone-pad"
+                  maxLength={10}
+                />
+              </View>
+
+              <Text style={styles.inputLabelSmall}>Drug License (DL) Number</Text>
+              <TextInput
+                style={styles.modalInput}
+                placeholder="e.g. AS-SIL-2026-DL-8821"
+                value={newDlNumber}
+                onChangeText={setNewDlNumber}
+              />
+
+              {/* GPS Banner */}
+              <View style={styles.gpsBanner}>
+                {gpsLoading ? (
+                  <Text style={styles.gpsBannerText}>Capturing GPS coordinates...</Text>
+                ) : (
+                  <Text style={styles.gpsBannerText}>📍 Auto-GPS: {autoArea}</Text>
+                )}
+              </View>
+
+              <TouchableOpacity style={styles.saveFirmBtn} onPress={handleAddFirm}>
+                <Text style={styles.saveFirmBtnText}>Register Firm Record</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.modalBtn, { backgroundColor: '#2563EB' }]} onPress={handleAddFirm}>
-                <Text style={styles.modalBtnText}>Save Firm</Text>
-              </TouchableOpacity>
-            </View>
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -331,147 +455,404 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8FAFC' },
-
-  // Header Bar matching Image 33
   headerBar: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#0F172A',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    justifyContent: 'space-between',
   },
-  backBtn: { padding: 4, marginRight: 8 },
-  headerTitle: { color: '#ffffff', fontSize: 16, fontWeight: '800', flex: 1 },
-  headerRightMeta: { alignItems: 'flex-end' },
-  headerUserName: { color: '#ffffff', fontSize: 11, fontWeight: '700' },
-  headerDateText: { color: '#BFDBFE', fontSize: 10, marginTop: 1 },
+  backBtn: { padding: 4 },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#ffffff',
+    letterSpacing: 0.5,
+  },
+  headerRightMeta: {
+    alignItems: 'flex-end',
+  },
+  headerUserName: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#ffffff',
+  },
+  headerDateText: {
+    fontSize: 10,
+    color: '#94A3B8',
+    marginTop: 2,
+  },
 
-  // Filter Bar
-  filterBar: { paddingHorizontal: 16, paddingVertical: 10, zIndex: 100 },
+  // Division Controls
+  divisionSelectorContainer: {
+    backgroundColor: '#EFF6FF',
+    borderBottomWidth: 1,
+    borderColor: '#BFDBFE',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  divisionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  divisionHeaderTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#1E40AF',
+    letterSpacing: 0.5,
+  },
+  divisionCountBadge: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#2563EB',
+    backgroundColor: '#DBEAFE',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  divisionPillScroll: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  divisionPill: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: radius.full,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
+  divisionPillActive: {
+    backgroundColor: '#2563EB',
+    borderColor: '#1D4ED8',
+  },
+  divisionPillText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#475569',
+  },
+  divisionPillTextActive: {
+    color: '#FFFFFF',
+  },
+
+  // MR Division Locked Banner
+  mrDivisionLockedBanner: {
+    backgroundColor: '#F0FDF4',
+    borderBottomWidth: 1,
+    borderColor: '#BBF7D0',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  mrDivisionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  mrDivisionTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#15803D',
+    letterSpacing: 0.5,
+  },
+  mrDivisionNotice: {
+    fontSize: 10,
+    color: '#166534',
+    marginTop: 2,
+    lineHeight: 14,
+  },
+
+  filterBar: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderColor: '#E2E8F0',
+    zIndex: 10,
+  },
   dropdownTrigger: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: radius.md,
     borderWidth: 1,
     borderColor: '#CBD5E1',
-    borderRadius: radius.sm,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    width: 140,
-    ...shadows.sm,
   },
-  dropdownTriggerText: { fontSize: 13, fontWeight: '700', color: colors.textPrimary },
+  dropdownTriggerText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#1E293B',
+  },
   dropdownMenu: {
-    position: 'absolute',
-    top: 48,
-    left: 16,
-    width: 140,
-    backgroundColor: '#ffffff',
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    ...shadows.lg,
-    zIndex: 100,
-  },
-  dropdownMenuItem: { paddingVertical: 10, paddingHorizontal: 14, borderBottomWidth: 1, borderColor: '#F1F5F9' },
-  dropdownMenuItemActive: { backgroundColor: '#EFF6FF' },
-  dropdownMenuItemText: { fontSize: 13, color: colors.textPrimary, fontWeight: '600' },
-  dropdownMenuItemTextActive: { color: '#2563EB', fontWeight: '800' },
-
-  listContent: { paddingHorizontal: 16, paddingBottom: 80 },
-
-  // Firm Card matching Image 33
-  firmCard: {
+    marginTop: 6,
     backgroundColor: '#ffffff',
     borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    ...shadows.card,
+  },
+  dropdownMenuItem: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  dropdownMenuItemActive: {
+    backgroundColor: '#EFF6FF',
+  },
+  dropdownMenuItemText: {
+    fontSize: 13,
+    color: '#334155',
+  },
+  dropdownMenuItemTextActive: {
+    color: '#2563EB',
+    fontWeight: '700',
+  },
+  listContent: {
+    padding: 16,
+    paddingBottom: 90,
+  },
+  firmCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: radius.lg,
     padding: 14,
-    marginBottom: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
+    marginBottom: 10,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     ...shadows.sm,
   },
-  avatarCircle: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: '#EFF6FF',
+  firmHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 6,
+  },
+  firmName: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  firmTypeTag: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#D97706',
+    marginTop: 2,
+  },
+  divisionBadge: {
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 4,
     borderWidth: 1,
-    borderColor: '#BFDBFE',
+    borderColor: '#E2E8F0',
+  },
+  divisionBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#475569',
+  },
+  firmMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4,
+  },
+  firmMetaText: {
+    fontSize: 12,
+    color: '#475569',
+  },
+  emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    paddingVertical: 60,
+    paddingHorizontal: 20,
   },
-  avatarText: { fontSize: 16, fontWeight: '800', color: '#2563EB' },
-  firmDetailsCol: { flex: 1 },
-  firmNameText: { fontSize: 13, fontWeight: '800', color: colors.textPrimary, letterSpacing: 0.3 },
-  firmMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 },
-  firmTypeText: { fontSize: 11, color: '#64748B', fontWeight: '600' },
-  firmPhoneText: { fontSize: 11, color: '#2563EB', fontWeight: '700' },
-  firmAreaText: { fontSize: 11, color: '#475569' },
-
-  fabBtn: {
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#475569',
+    marginTop: 12,
+  },
+  emptySubtitle: {
+    fontSize: 12,
+    color: '#94A3B8',
+    textAlign: 'center',
+    marginTop: 4,
+    lineHeight: 18,
+  },
+  fab: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 24,
     right: 20,
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: '#2563EB',
     alignItems: 'center',
     justifyContent: 'center',
     ...shadows.lg,
+    elevation: 8,
   },
 
+  // Modal Styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 16,
+    backgroundColor: 'rgba(15, 23, 42, 0.7)',
+    justifyContent: 'flex-end',
   },
   modalCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: radius.md,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: '90%',
     padding: 20,
-    width: '100%',
-    maxWidth: 380,
-    ...shadows.lg,
+    ...shadows.card,
   },
-  modalTitle: { fontSize: 16, fontWeight: '800', color: colors.textPrimary },
-  modalSubtitle: { fontSize: 11, color: '#64748B', marginBottom: 12 },
-  modalInput: {
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    borderRadius: radius.sm,
-    padding: 10,
-    fontSize: 13,
-    marginBottom: 10,
-    color: colors.textPrimary,
+  modalHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderColor: '#E2E8F0',
   },
-  modalLabel: { fontSize: 11, fontWeight: '700', color: '#475569', marginBottom: 4 },
-  typeSelectorRow: { flexDirection: 'row', gap: 6, marginBottom: 10 },
-  typeOptionBtn: { flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: radius.sm, backgroundColor: '#F1F5F9' },
-  typeOptionBtnActive: { backgroundColor: '#2563EB' },
-  typeOptionText: { fontSize: 11, color: '#64748B', fontWeight: '600' },
-  typeOptionTextActive: { color: '#ffffff', fontWeight: '800' },
-  autoGpsBox: {
+  modalHeaderTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  modalDivisionNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#EFF6FF',
+    padding: 8,
+    borderRadius: radius.md,
     borderWidth: 1,
     borderColor: '#BFDBFE',
-    borderRadius: radius.sm,
-    padding: 10,
+    gap: 6,
     marginBottom: 10,
   },
-  autoGpsHeader: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 },
-  autoGpsTitle: { fontSize: 11, fontWeight: '700', color: '#1D4ED8' },
-  autoGpsAreaText: { fontSize: 12, fontWeight: '700', color: colors.textPrimary },
-  modalBtnRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 8 },
-  modalBtn: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: radius.sm },
-  modalBtnText: { color: '#ffffff', fontWeight: '700', fontSize: 12 },
-  emptyBox: { alignItems: 'center', justifyContent: 'center', paddingVertical: 60, paddingHorizontal: 24 },
-  emptyTitle: { fontSize: 15, fontWeight: '800', color: colors.textPrimary, marginTop: 12 },
-  emptySubtitle: { fontSize: 12, color: '#64748B', textAlign: 'center', marginTop: 6 },
+  modalDivisionNoticeText: {
+    fontSize: 12,
+    color: '#1E40AF',
+  },
+  districtChipsRow: {
+    flexDirection: 'row',
+    gap: 6,
+    marginTop: 4,
+  },
+  districtChip: {
+    flex: 1,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    backgroundColor: '#F1F5F9',
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    alignItems: 'center',
+  },
+  districtChipActive: {
+    backgroundColor: '#2563EB',
+    borderColor: '#1D4ED8',
+  },
+  districtChipText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#475569',
+  },
+  districtChipTextActive: {
+    color: '#FFFFFF',
+  },
+  inputLabelSmall: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#334155',
+    marginBottom: 4,
+    marginTop: 8,
+  },
+  modalInput: {
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: radius.md,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 13,
+    color: '#0F172A',
+  },
+  inputWithIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: radius.md,
+  },
+  innerTextInput: {
+    flex: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: 13,
+    color: '#0F172A',
+  },
+  firmTypeRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 4,
+  },
+  firmTypePill: {
+    flex: 1,
+    paddingVertical: 8,
+    backgroundColor: '#F1F5F9',
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    alignItems: 'center',
+  },
+  firmTypePillActive: {
+    backgroundColor: '#EFF6FF',
+    borderColor: '#2563EB',
+  },
+  firmTypePillText: {
+    fontSize: 12,
+    color: '#475569',
+    fontWeight: '600',
+  },
+  firmTypePillTextActive: {
+    color: '#2563EB',
+    fontWeight: '800',
+  },
+  gpsBanner: {
+    backgroundColor: '#F0FDF4',
+    padding: 10,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+    marginTop: 12,
+  },
+  gpsBannerText: {
+    fontSize: 11,
+    color: '#166534',
+    fontWeight: '600',
+  },
+  saveFirmBtn: {
+    backgroundColor: '#2563EB',
+    paddingVertical: 12,
+    borderRadius: radius.lg,
+    alignItems: 'center',
+    marginTop: 16,
+    marginBottom: 20,
+    ...shadows.sm,
+  },
+  saveFirmBtnText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '800',
+  },
 });

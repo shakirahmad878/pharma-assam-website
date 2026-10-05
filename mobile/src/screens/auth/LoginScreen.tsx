@@ -310,7 +310,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
                       {u.name}
                     </Text>
                     <Text style={styles.quickUserSub}>
-                      {u.role === 'REGIONAL_MANAGER' ? 'RSM' : 'MR'} • Code: {u.employeeCode} • +91 {u.phone}
+                      {u.role === 'REGIONAL_MANAGER' ? 'RSM (All Divisions)' : `MR (${u.territory})`} • Code: {u.employeeCode} • +91 {u.phone}
                     </Text>
                   </View>
                 </TouchableOpacity>

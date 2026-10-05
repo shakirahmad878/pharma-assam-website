@@ -37,22 +37,55 @@ export const USER_PRANJAL_MR: UserProfile = {
   email: 'pranjal.mr@reppulse.com',
   role: 'MEDICAL_REP',
   employeeCode: '0002',
-  territory: 'Barak Valley Division (Assam)',
+  territory: 'Silchar Division (Cachar)',
   headquarter: 'Silchar HQ',
   phone: '9435000002',
   assignedRouteIds: [
     'route-cachar-01',
     'route-cachar-02',
     'route-cachar-03',
-    'route-karimganj-01',
-    'route-karimganj-02',
-    'route-hailakandi-01',
   ],
   activeRouteId: 'route-cachar-01',
 };
 
+export const USER_RAHUL_MR: UserProfile = {
+  id: 'usr-mr-0003',
+  name: 'Rahul Das',
+  email: 'rahul.mr@reppulse.com',
+  role: 'MEDICAL_REP',
+  employeeCode: '0003',
+  territory: 'Hailakandi Division',
+  headquarter: 'Hailakandi HQ',
+  phone: '9435000003',
+  assignedRouteIds: [
+    'route-hailakandi-01',
+  ],
+  activeRouteId: 'route-hailakandi-01',
+};
+
+export const USER_BIKASH_MR: UserProfile = {
+  id: 'usr-mr-0004',
+  name: 'Bikash Paul',
+  email: 'bikash.mr@reppulse.com',
+  role: 'MEDICAL_REP',
+  employeeCode: '0004',
+  territory: 'Karimganj Division (Shribhumi)',
+  headquarter: 'Karimganj HQ',
+  phone: '9435000004',
+  assignedRouteIds: [
+    'route-karimganj-01',
+    'route-karimganj-02',
+  ],
+  activeRouteId: 'route-karimganj-01',
+};
+
 export const CURRENT_USER: UserProfile = USER_PRANJAL_MR;
-export const ALL_APP_USERS: UserProfile[] = [USER_BODRUD_RSM, USER_PRANJAL_MR];
+export const ALL_APP_USERS: UserProfile[] = [
+  USER_BODRUD_RSM,
+  USER_PRANJAL_MR,
+  USER_RAHUL_MR,
+  USER_BIKASH_MR,
+];
 
 export const BARAK_ROUTES: RoutePlan[] = [
   {
