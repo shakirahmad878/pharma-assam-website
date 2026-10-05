@@ -22,6 +22,7 @@ import { TelemetryService } from './services/telemetryService';
 import { Navbar } from './components/layout/Navbar';
 import { Sidebar, NavTab } from './components/layout/Sidebar';
 import { AdminPortal } from './components/admin/AdminPortal';
+import { UserAccessManager } from './components/admin/UserAccessManager';
 import { ExecutiveDashboard } from './components/dashboard/ExecutiveDashboard';
 import { LiveFleetMap } from './components/maps/LiveFleetMap';
 import { DoctorDirectory } from './components/doctors/DoctorDirectory';
@@ -46,6 +47,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<NavTab>(() => {
     const hash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
     if (hash === 'admin' || hash === 'admin_portal' || hash === 'admin-portal') return 'admin_portal';
+    if (hash === 'staff' || hash === 'users' || hash === 'employees' || hash === 'team') return 'staff';
     if (hash === 'dashboard' || hash === 'manager') return 'dashboard';
     if (hash === 'doctors') return 'doctors';
     if (hash === 'chemists') return 'chemists';
@@ -117,6 +119,8 @@ export default function App() {
         setActiveTab('mis_reports');
       } else if (hash === 'fleet_tracking' || hash === 'fleet') {
         setActiveTab('fleet_tracking');
+      } else if (hash === 'staff' || hash === 'users' || hash === 'employees' || hash === 'team') {
+        setActiveTab('staff');
       }
     };
 
@@ -764,6 +768,19 @@ export default function App() {
             <TerritoryStaffView
               territories={territories}
               users={users}
+            />
+          )}
+
+          {activeTab === 'staff' && (
+            <UserAccessManager
+              users={users}
+              companies={companies}
+              territories={territories}
+              currentUser={currentUser}
+              onAddUser={handleAddUser}
+              onUpdateUser={handleUpdateUser}
+              onDeleteUser={handleDeleteUser}
+              onSwitchUser={handleSwitchUser}
             />
           )}
         </main>

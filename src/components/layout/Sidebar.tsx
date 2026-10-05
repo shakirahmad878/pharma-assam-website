@@ -15,12 +15,14 @@ import {
   UserCheck,
   Receipt,
   BarChart3,
+  Users,
   ShieldCheck
 } from 'lucide-react';
 
 export type NavTab = 
   | 'admin_portal'
   | 'dashboard' 
+  | 'staff'
   | 'fleet_tracking' 
   | 'dcr' 
   | 'tour_plans' 
@@ -54,6 +56,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab, userRo
       isHighlight: true,
       restricted: !canAccessAdminPage
     },
+    { 
+      id: 'staff' as NavTab, 
+      label: 'Staff & Team Access', 
+      icon: Users, 
+      badge: 'Add / Edit MRs',
+      isHighlight: false,
+    },
     { id: 'dashboard' as NavTab, label: 'Overview', icon: LayoutDashboard },
     { 
       id: 'fleet_tracking' as NavTab, 
@@ -72,7 +81,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab, userRo
     { id: 'doctors' as NavTab, label: 'Doctor Master', icon: Stethoscope },
     { id: 'chemists' as NavTab, label: 'Chemists & Stockists', icon: Store },
     { id: 'products' as NavTab, label: 'Product Catalog', icon: Pill },
-    { id: 'territories' as NavTab, label: 'Territories & Staff', icon: Map },
+    { id: 'territories' as NavTab, label: 'Territories & Beats', icon: Map },
   ];
 
   return (
