@@ -12,7 +12,7 @@ interface InputProps {
   keyboardType?: any;
   autoCapitalize?: any;
   multiline?: boolean;
-  numberOfLines?: number;
+  maxLength?: number;
   style?: any;
 }
 

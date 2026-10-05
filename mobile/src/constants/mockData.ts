@@ -17,7 +17,7 @@ export const USER_BODRUD_RSM: UserProfile = {
   employeeCode: '0001',
   territory: 'Barak Valley Division (Assam)',
   headquarter: 'Silchar HQ',
-  phone: '',
+  phone: '9435000001',
   assignedRouteIds: [
     'route-cachar-01',
     'route-cachar-02',
@@ -39,7 +39,7 @@ export const USER_PRANJAL_MR: UserProfile = {
   employeeCode: '0002',
   territory: 'Barak Valley Division (Assam)',
   headquarter: 'Silchar HQ',
-  phone: '',
+  phone: '9435000002',
   assignedRouteIds: [
     'route-cachar-01',
     'route-cachar-02',

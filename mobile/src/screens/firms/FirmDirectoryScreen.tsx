@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, typography, spacing, radius, shadows } from '../../constants/theme';
 import { LocationService, LocationResult } from '../../services/location/locationService';
 import { StorageService, STORAGE_KEYS } from '../../services/storageService';
+import { AuthService } from '../../services/authService';
 
 interface FirmItem {
   id: string;
@@ -37,9 +38,19 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
   const [filterType, setFilterType] = useState<'All' | 'Retailer' | 'Distributor' | 'Stockist'>('All');
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const [currentDateStr, setCurrentDateStr] = useState('');
+
+  const currentUser = AuthService.getCurrentUser();
 
   useEffect(() => {
     loadFirms();
+    const now = new Date();
+    const day = now.getDate();
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
+    const month = monthNames[now.getMonth()];
+    const year = now.getFullYear();
+    const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+    setCurrentDateStr(`${day} ${month} ${year} ${time}`);
   }, []);
 
   const loadFirms = async () => {
@@ -151,8 +162,8 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
         </TouchableOpacity>
         <Text style={styles.headerTitle}>FIRMS</Text>
         <View style={styles.headerRightMeta}>
-          <Text style={styles.headerUserName}>Pranjal Malakar</Text>
-          <Text style={styles.headerDateText}>26 Sept 2026 11:18</Text>
+          <Text style={styles.headerUserName}>{currentUser?.name || 'Representative'}</Text>
+          <Text style={styles.headerDateText}>{currentDateStr}</Text>
         </View>
       </View>
 

@@ -1,10 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, TextInput, Modal, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  Modal,
+  Alert,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, typography, spacing, radius, shadows } from '../../constants/theme';
 import { Input } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
 import { AuthService } from '../../services/authService';
+import { ALL_APP_USERS } from '../../constants/mockData';
 
 interface LoginScreenProps {
   onLoginSuccess: () => void;
@@ -12,19 +23,32 @@ interface LoginScreenProps {
 }
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForgotPassword }) => {
-  const [employeeId, setEmployeeId] = useState('');
-  const [authMode, setAuthMode] = useState<'PIN' | 'PASSWORD'>('PIN');
+  const [authMode, setAuthMode] = useState<'PIN' | 'OTP' | 'PASSWORD'>('PIN');
+  
+  // PIN Login State
+  const [employeeId, setEmployeeId] = useState('0002');
   const [pin, setPin] = useState('');
+  
+  // OTP 1st Time Login State
+  const [mobileNumber, setMobileNumber] = useState('9435000002');
+  const [otpSent, setOtpSent] = useState(false);
+  const [generatedOtpHint, setGeneratedOtpHint] = useState('');
+  const [enteredOtp, setEnteredOtp] = useState('');
+  
+  // Password State
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  
+  // Common States
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
   // Set / Change PIN Modal States
-  const [changePinModalVisible, setChangePinModalVisible] = useState(false);
-  const [currentPinInput, setCurrentPinInput] = useState('');
+  const [pinModalVisible, setPinModalVisible] = useState(false);
+  const [targetEmployeeForPin, setTargetEmployeeForPin] = useState('');
   const [newPinInput, setNewPinInput] = useState('');
   const [confirmPinInput, setConfirmPinInput] = useState('');
+  const [isFirstTimeSetup, setIsFirstTimeSetup] = useState(false);
 
   // Late Login Modal States
   const [lateModalVisible, setLateModalVisible] = useState(false);
@@ -33,9 +57,19 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
   const [managerPin, setManagerPin] = useState('');
   const [requestingApproval, setRequestingApproval] = useState(false);
 
+  // Auto prefill for quick user switching
+  const selectQuickUser = (code: string, phone: string) => {
+    setEmployeeId(code);
+    setMobileNumber(phone);
+    setPin('');
+    setEnteredOtp('');
+    setOtpSent(false);
+    setErrorMessage('');
+  };
+
   const handlePinLogin = async (bypassCutoff = false) => {
     if (!employeeId.trim()) {
-      setErrorMessage('Please enter your Employee ID or Mobile Number.');
+      setErrorMessage('Please enter your Employee ID or Registered Mobile Number.');
       return;
     }
     if (pin.length !== 4) {
@@ -55,7 +89,68 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
       setLateCurrentTime(res.currentTimeStr || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
       setLateModalVisible(true);
     } else {
-      setErrorMessage(res.error || 'Incorrect PIN or Employee ID. Please try again.');
+      setErrorMessage(res.error || 'Incorrect PIN or Employee ID. Please try again or use OTP.');
+    }
+  };
+
+  const handleSendOtp = async () => {
+    const cleanDigits = mobileNumber.trim().replace(/\D/g, '');
+    if (cleanDigits.length !== 10) {
+      setErrorMessage('Please enter a valid 10-digit registered mobile number.');
+      return;
+    }
+    setLoading(true);
+    setErrorMessage('');
+
+    const res = await AuthService.sendOtp(cleanDigits);
+    setLoading(false);
+
+    if (res.success && res.otp) {
+      setOtpSent(true);
+      setGeneratedOtpHint(res.otp);
+      Alert.alert(
+        'OTP Sent 📲',
+        `A 6-digit verification code has been sent to +91 ${cleanDigits}.\n\nYour Verification OTP is: ${res.otp}\n(Master OTP: 123456)`,
+        [{ text: 'OK' }]
+      );
+    } else {
+      setErrorMessage(res.error || 'Failed to send OTP. Please check mobile number.');
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (enteredOtp.length !== 6) {
+      setErrorMessage('Please enter the 6-digit OTP code.');
+      return;
+    }
+    setLoading(true);
+    setErrorMessage('');
+
+    const res = await AuthService.verifyOtp(mobileNumber, enteredOtp);
+    setLoading(false);
+
+    if (res.success && res.user) {
+      const user = res.user;
+      setTargetEmployeeForPin(user.employeeCode);
+      
+      // If user has not set a custom PIN yet, prompt them to set their 4-digit PIN
+      if (!res.hasSetPin) {
+        setIsFirstTimeSetup(true);
+        setPinModalVisible(true);
+      } else {
+        Alert.alert(
+          'Login Successful ✅',
+          `Welcome back, ${user.name} (${user.role === 'REGIONAL_MANAGER' ? 'RSM' : 'MR'}).`,
+          [
+            {
+              text: 'Start Field Duty',
+              onPress: () => onLoginSuccess(),
+            },
+          ]
+        );
+      }
+    } else {
+      setErrorMessage(res.error || 'Invalid OTP. Please check and try again.');
     }
   };
 
@@ -85,7 +180,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
     }
   };
 
-  const handleSaveNewPin = async () => {
+  const handleSavePin = async () => {
     if (newPinInput.length !== 4 || !/^\d{4}$/.test(newPinInput)) {
       Alert.alert('Invalid PIN', 'PIN must be exactly 4 digits.');
       return;
@@ -94,22 +189,33 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
       Alert.alert('Mismatch', 'New PIN and confirmation PIN do not match.');
       return;
     }
-    const currentStored = await AuthService.getMrPin();
-    if (currentStored && currentPinInput !== currentStored && currentPinInput !== '1234') {
-      Alert.alert('Incorrect Current PIN', 'Please enter your current PIN to authorize this change.');
-      return;
-    }
 
-    const success = await AuthService.setMrPin(newPinInput);
+    const codeToUpdate = targetEmployeeForPin || employeeId || '0002';
+    const success = await AuthService.setUserPin(codeToUpdate, newPinInput);
+
     if (success) {
-      Alert.alert('PIN Updated ✅', 'Your new 4-digit login PIN has been configured successfully.');
       setPin(newPinInput);
-      setChangePinModalVisible(false);
-      setCurrentPinInput('');
+      setPinModalVisible(false);
       setNewPinInput('');
       setConfirmPinInput('');
+
+      if (isFirstTimeSetup) {
+        setIsFirstTimeSetup(false);
+        Alert.alert(
+          'PIN Configured Successfully 🎉',
+          'Your 4-digit Daily PIN is set! You can now use your Employee ID or Mobile Number with this PIN for daily login.',
+          [
+            {
+              text: 'Enter Field Duty',
+              onPress: () => onLoginSuccess(),
+            },
+          ]
+        );
+      } else {
+        Alert.alert('PIN Updated ✅', 'Your daily 4-digit PIN has been saved successfully.');
+      }
     } else {
-      Alert.alert('Error', 'Failed to update PIN. Please try again.');
+      Alert.alert('Error', 'Failed to save PIN. Please try again.');
     }
   };
 
@@ -134,9 +240,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
     );
   };
 
-  const handleVerifyPin = async () => {
+  const handleVerifyManagerPin = async () => {
     if (!managerPin.trim()) {
-      Alert.alert('PIN Required', 'Please enter 4-digit Manager Override PIN (e.g. 1030 or 1234).');
+      Alert.alert('PIN Required', 'Please enter 4-digit Manager Override PIN (e.g. 1030, 0001, or 1234).');
       return;
     }
     setRequestingApproval(true);
@@ -146,7 +252,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
     if (res.success) {
       Alert.alert(
         'Manager Override Verified ✅',
-        'Authorized by Regional Business Manager. Starting shift now.',
+        'Authorized by Regional Sales Manager (Bodrud Jaman Sadiol). Starting shift now.',
         [
           {
             text: 'Proceed to Field Duty',
@@ -186,9 +292,36 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
           </Text>
         </View>
 
+        {/* Quick Employee Switcher (For easy field demo) */}
+        <View style={styles.quickUserContainer}>
+          <Text style={styles.quickUserTitle}>SELECT ACTIVE EMPLOYEE:</Text>
+          <View style={styles.quickUserRow}>
+            {ALL_APP_USERS.map((u) => {
+              const isSelected = employeeId === u.employeeCode || mobileNumber === u.phone;
+              return (
+                <TouchableOpacity
+                  key={u.id}
+                  style={[styles.quickUserCard, isSelected && styles.quickUserCardActive]}
+                  onPress={() => selectQuickUser(u.employeeCode, u.phone || '')}
+                >
+                  <View style={[styles.userBadgeDot, isSelected && styles.userBadgeDotActive]} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.quickUserName, isSelected && styles.quickUserNameActive]}>
+                      {u.name}
+                    </Text>
+                    <Text style={styles.quickUserSub}>
+                      {u.role === 'REGIONAL_MANAGER' ? 'RSM' : 'MR'} • Code: {u.employeeCode} • +91 {u.phone}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
         {/* Login Form Card */}
         <View style={styles.formCard}>
-          {/* Mode Switcher: 4-Digit PIN vs Password */}
+          {/* 3 Modes Switcher: PIN vs OTP (1st Time) vs Password */}
           <View style={styles.modeSwitcher}>
             <TouchableOpacity
               style={[styles.modeBtn, authMode === 'PIN' && styles.modeBtnActive]}
@@ -199,11 +332,28 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
             >
               <Ionicons
                 name="keypad-outline"
-                size={16}
+                size={15}
                 color={authMode === 'PIN' ? colors.primary : '#64748B'}
               />
               <Text style={[styles.modeBtnText, authMode === 'PIN' && styles.modeBtnTextActive]}>
                 Daily PIN
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.modeBtn, authMode === 'OTP' && styles.modeBtnActive]}
+              onPress={() => {
+                setAuthMode('OTP');
+                setErrorMessage('');
+              }}
+            >
+              <Ionicons
+                name="phone-portrait-outline"
+                size={15}
+                color={authMode === 'OTP' ? colors.primary : '#64748B'}
+              />
+              <Text style={[styles.modeBtnText, authMode === 'OTP' && styles.modeBtnTextActive]}>
+                OTP / 1st Time
               </Text>
             </TouchableOpacity>
 
@@ -216,7 +366,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
             >
               <Ionicons
                 name="lock-closed-outline"
-                size={16}
+                size={15}
                 color={authMode === 'PASSWORD' ? colors.primary : '#64748B'}
               />
               <Text style={[styles.modeBtnText, authMode === 'PASSWORD' && styles.modeBtnTextActive]}>
@@ -231,13 +381,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
             </View>
           ) : null}
 
-          {authMode === 'PIN' ? (
+          {/* MODE 1: DAILY PIN */}
+          {authMode === 'PIN' && (
             <View>
               <Input
-                label="Employee ID / Mobile Number"
+                label="Employee ID or Registered Mobile"
                 value={employeeId}
                 onChangeText={setEmployeeId}
-                placeholder="e.g. 0002 (MR) or 0001 (ABM)"
+                placeholder="e.g. 0001 (RSM) or 0002 (MR)"
                 autoCapitalize="none"
               />
 
@@ -262,8 +413,18 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
               </View>
 
               <View style={styles.pinHelperRow}>
-                <TouchableOpacity onPress={() => setChangePinModalVisible(true)}>
+                <TouchableOpacity
+                  onPress={() => {
+                    setTargetEmployeeForPin(employeeId);
+                    setIsFirstTimeSetup(false);
+                    setPinModalVisible(true);
+                  }}
+                >
                   <Text style={styles.changePinLink}>⚙️ Set / Change PIN</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity onPress={() => setAuthMode('OTP')}>
+                  <Text style={styles.otpSwitchLink}>📲 First time? Login via OTP</Text>
                 </TouchableOpacity>
               </View>
 
@@ -274,13 +435,95 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
                 variant="primary"
               />
             </View>
-          ) : (
+          )}
+
+          {/* MODE 2: MOBILE OTP (1ST TIME LOGIN & ACTIVATION) */}
+          {authMode === 'OTP' && (
+            <View>
+              <Input
+                label="Company Registered 10-Digit Mobile Number"
+                value={mobileNumber}
+                onChangeText={(val) => {
+                  setMobileNumber(val.replace(/\D/g, '').slice(0, 10));
+                  setOtpSent(false);
+                }}
+                placeholder="e.g. 9435000001 (RSM) or 9435000002 (MR)"
+                keyboardType="phone-pad"
+                maxLength={10}
+              />
+
+              {!otpSent ? (
+                <View style={{ marginTop: spacing.sm }}>
+                  <Button
+                    title="Send Verification OTP"
+                    onPress={handleSendOtp}
+                    loading={loading}
+                    variant="primary"
+                  />
+                  <Text style={styles.otpNoticeText}>
+                    💡 Registered mobile number receives an instant 6-digit OTP code to verify identity and configure personal daily PIN.
+                  </Text>
+                </View>
+              ) : (
+                <View style={{ marginTop: spacing.xs }}>
+                  <View style={styles.otpSentBanner}>
+                    <Ionicons name="checkmark-circle" size={18} color="#16A34A" />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.otpSentBannerText}>
+                        OTP sent to +91 {mobileNumber}
+                      </Text>
+                      {generatedOtpHint ? (
+                        <Text style={styles.otpCodeHint}>
+                          Active Code: <Text style={{ fontWeight: 'bold' }}>{generatedOtpHint}</Text> (or test code 123456)
+                        </Text>
+                      ) : null}
+                    </View>
+                  </View>
+
+                  <Text style={styles.inputLabelSmall}>Enter 6-Digit OTP</Text>
+                  <View style={styles.pinInputWrap}>
+                    <TextInput
+                      style={styles.bigOtpInput}
+                      value={enteredOtp}
+                      onChangeText={(val) => {
+                        const cleaned = val.replace(/\D/g, '').slice(0, 6);
+                        setEnteredOtp(cleaned);
+                      }}
+                      placeholder="• • • • • •"
+                      placeholderTextColor="#CBD5E1"
+                      keyboardType="numeric"
+                      maxLength={6}
+                    />
+                  </View>
+
+                  <Button
+                    title="Verify OTP & Continue"
+                    onPress={handleVerifyOtp}
+                    loading={loading}
+                    variant="primary"
+                  />
+
+                  <View style={styles.otpActionRow}>
+                    <TouchableOpacity onPress={handleSendOtp} disabled={loading}>
+                      <Text style={styles.resendOtpLink}>🔁 Resend Code</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => setOtpSent(false)}>
+                      <Text style={styles.changePhoneLink}>✏️ Change Mobile</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* MODE 3: PASSWORD */}
+          {authMode === 'PASSWORD' && (
             <View>
               <Input
                 label="Official Email or Employee ID"
                 value={email}
                 onChangeText={setEmail}
-                placeholder="e.g. 0002 or 0001"
+                placeholder="e.g. 0001 or 0002"
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
@@ -309,43 +552,36 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
       </ScrollView>
 
       {/* Set / Change PIN Modal */}
-      <Modal visible={changePinModalVisible} transparent animationType="slide">
+      <Modal visible={pinModalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <View style={styles.modalHeaderRow}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Ionicons name="keypad" size={22} color={colors.primary} />
-                <Text style={styles.modalHeaderTitle}>Set / Change Daily PIN</Text>
+                <Text style={styles.modalHeaderTitle}>
+                  {isFirstTimeSetup ? 'Set Your Daily 4-Digit PIN' : 'Set / Update Daily PIN'}
+                </Text>
               </View>
-              <TouchableOpacity onPress={() => setChangePinModalVisible(false)}>
-                <Ionicons name="close" size={22} color="#64748B" />
-              </TouchableOpacity>
+              {!isFirstTimeSetup && (
+                <TouchableOpacity onPress={() => setPinModalVisible(false)}>
+                  <Ionicons name="close" size={22} color="#64748B" />
+                </TouchableOpacity>
+              )}
             </View>
 
             <Text style={styles.modalSubDescription}>
-              Set a secure 4-digit numeric PIN for quick everyday login before 10:30 AM.
+              {isFirstTimeSetup
+                ? 'Welcome! Set a personal 4-digit numeric PIN for quick everyday login before 10:30 AM.'
+                : `Set a new 4-digit daily PIN for Employee ${targetEmployeeForPin || employeeId}.`}
             </Text>
 
             <View style={{ marginBottom: 12 }}>
-              <Text style={styles.inputLabelSmall}>Current PIN (default is 1234)</Text>
+              <Text style={styles.inputLabelSmall}>Enter New 4-Digit PIN</Text>
               <TextInput
                 style={styles.modalTextInput}
-                placeholder="Enter current PIN"
-                value={currentPinInput}
-                onChangeText={setCurrentPinInput}
-                keyboardType="numeric"
-                secureTextEntry
-                maxLength={4}
-              />
-            </View>
-
-            <View style={{ marginBottom: 12 }}>
-              <Text style={styles.inputLabelSmall}>New 4-Digit PIN</Text>
-              <TextInput
-                style={styles.modalTextInput}
-                placeholder="Enter 4-digit PIN"
+                placeholder="e.g. 1234"
                 value={newPinInput}
-                onChangeText={setNewPinInput}
+                onChangeText={(v) => setNewPinInput(v.replace(/\D/g, '').slice(0, 4))}
                 keyboardType="numeric"
                 secureTextEntry
                 maxLength={4}
@@ -353,20 +589,20 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
             </View>
 
             <View style={{ marginBottom: 16 }}>
-              <Text style={styles.inputLabelSmall}>Confirm New 4-Digit PIN</Text>
+              <Text style={styles.inputLabelSmall}>Confirm 4-Digit PIN</Text>
               <TextInput
                 style={styles.modalTextInput}
                 placeholder="Re-enter 4-digit PIN"
                 value={confirmPinInput}
-                onChangeText={setConfirmPinInput}
+                onChangeText={(v) => setConfirmPinInput(v.replace(/\D/g, '').slice(0, 4))}
                 keyboardType="numeric"
                 secureTextEntry
                 maxLength={4}
               />
             </View>
 
-            <TouchableOpacity style={styles.savePinBtn} onPress={handleSaveNewPin}>
-              <Text style={styles.savePinBtnText}>Save & Set Daily PIN</Text>
+            <TouchableOpacity style={styles.savePinBtn} onPress={handleSavePin}>
+              <Text style={styles.savePinBtnText}>Save & Proceed to Field Duty</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -385,7 +621,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
             </View>
 
             <Text style={styles.lateNoticeBody}>
-              Standard morning attendance cut-off is <Text style={{ fontWeight: 'bold' }}>10:30 AM</Text>. Company policy requires explicit permission from your Area Business Manager (ABM G Solanki) or Regional Business Manager (Rajesh Sharma) to commence field operations.
+              Standard morning attendance cut-off is <Text style={{ fontWeight: 'bold' }}>10:30 AM</Text>. Company policy requires explicit permission from your Regional Sales Manager (Bodrud Jaman Sadiol) to commence field operations.
             </Text>
 
             {/* Quick Reason Pills */}
@@ -419,7 +655,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
               disabled={requestingApproval}
             >
               <Text style={styles.requestApprovalBtnText}>
-                {requestingApproval ? 'Sending Request...' : '📨 Request Manager Approval (ABM Solanki)'}
+                {requestingApproval ? 'Sending Request...' : '📨 Request RSM Approval (Bodrud Sadiol)'}
               </Text>
             </TouchableOpacity>
 
@@ -432,7 +668,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
             <View style={styles.pinRow}>
               <TextInput
                 style={styles.pinInput}
-                placeholder="Manager PIN (1030)"
+                placeholder="RSM PIN (0001 or 1030)"
                 placeholderTextColor="#94A3B8"
                 value={managerPin}
                 onChangeText={setManagerPin}
@@ -442,7 +678,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
               />
               <TouchableOpacity
                 style={styles.pinSubmitBtn}
-                onPress={handleVerifyPin}
+                onPress={handleVerifyManagerPin}
                 disabled={requestingApproval}
               >
                 <Text style={styles.pinSubmitBtnText}>Authorize</Text>
@@ -464,18 +700,18 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  scrollContent: { padding: spacing.xl, justifyContent: 'center', minHeight: '100%' },
-  brandContainer: { alignItems: 'center', marginBottom: spacing.xl },
+  scrollContent: { padding: spacing.lg, justifyContent: 'center', minHeight: '100%' },
+  brandContainer: { alignItems: 'center', marginBottom: spacing.md },
   logoBadge: {
-    width: 64,
-    height: 64,
-    borderRadius: 20,
+    width: 58,
+    height: 58,
+    borderRadius: 18,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.xs,
   },
-  logoText: { fontSize: 32 },
+  logoText: { fontSize: 28 },
   appTitle: {
     color: '#0F172A',
     fontSize: typography.fontSize.xxl,
@@ -484,9 +720,9 @@ const styles = StyleSheet.create({
   },
   appTagline: {
     color: '#64748B',
-    fontSize: typography.fontSize.sm,
+    fontSize: typography.fontSize.xs,
     fontWeight: typography.fontWeight.medium,
-    marginTop: 4,
+    marginTop: 2,
   },
   territoryTag: {
     color: colors.primaryDark,
@@ -494,23 +730,64 @@ const styles = StyleSheet.create({
     fontWeight: typography.fontWeight.semibold,
     marginTop: 2,
   },
+  quickUserContainer: {
+    marginBottom: spacing.md,
+  },
+  quickUserTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#64748B',
+    letterSpacing: 0.5,
+    marginBottom: 6,
+  },
+  quickUserRow: {
+    gap: 6,
+  },
+  quickUserCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    gap: 8,
+  },
+  quickUserCardActive: {
+    backgroundColor: '#F0FDF4',
+    borderColor: '#16A34A',
+    ...shadows.sm,
+  },
+  userBadgeDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#CBD5E1',
+  },
+  userBadgeDotActive: {
+    backgroundColor: '#16A34A',
+  },
+  quickUserName: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#1E293B',
+  },
+  quickUserNameActive: {
+    color: '#15803D',
+  },
+  quickUserSub: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 1,
+  },
   formCard: {
     backgroundColor: colors.surface,
     borderRadius: radius.xl,
-    padding: spacing.xl,
+    padding: spacing.lg,
     borderWidth: 1,
     borderColor: colors.borderLight,
-  },
-  formTitle: {
-    color: colors.textPrimary,
-    fontSize: typography.fontSize.xl,
-    fontWeight: typography.fontWeight.bold,
-  },
-  formSub: {
-    color: colors.textSecondary,
-    fontSize: typography.fontSize.sm,
-    marginTop: 2,
-    marginBottom: spacing.lg,
+    ...shadows.card,
   },
   errorBox: {
     backgroundColor: '#FEE2E2',
@@ -523,17 +800,6 @@ const styles = StyleSheet.create({
   errorBoxText: { color: '#DC2626', fontSize: typography.fontSize.sm },
   forgotBtn: { alignSelf: 'flex-end', marginBottom: spacing.lg },
   forgotText: { color: colors.primary, fontSize: typography.fontSize.sm, fontWeight: typography.fontWeight.semibold },
-  demoHelper: {
-    marginTop: spacing.lg,
-    padding: spacing.md,
-    backgroundColor: '#EFF6FF',
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: '#BFDBFE',
-  },
-  demoHelperTitle: { color: colors.primaryDark, fontSize: typography.fontSize.xs, fontWeight: typography.fontWeight.bold },
-  demoHelperText: { color: colors.primary, fontSize: typography.fontSize.xs, marginTop: 2 },
-  demoRuleText: { color: '#B45309', fontSize: typography.fontSize.xs, fontWeight: typography.fontWeight.semibold, marginTop: 6 },
   
   // Late Modal Styles
   modalOverlay: {
@@ -692,7 +958,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FEF3C7',
     borderRadius: radius.lg,
     padding: spacing.md,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
     borderWidth: 1,
     borderColor: '#FDE68A',
   },
@@ -724,14 +990,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#F1F5F9',
     borderRadius: radius.md,
     padding: 3,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
   modeBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    gap: 4,
     paddingVertical: 8,
     borderRadius: radius.sm,
   },
@@ -740,7 +1006,7 @@ const styles = StyleSheet.create({
     ...shadows.sm,
   },
   modeBtnText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
     color: '#64748B',
   },
@@ -749,15 +1015,9 @@ const styles = StyleSheet.create({
   },
 
   // PIN Input Styles
-  pinInstruction: {
-    color: colors.textSecondary,
-    fontSize: typography.fontSize.sm,
-    textAlign: 'center',
-    marginBottom: spacing.md,
-  },
   pinInputWrap: {
     alignItems: 'center',
-    marginVertical: spacing.md,
+    marginVertical: spacing.sm,
   },
   bigPinInput: {
     backgroundColor: '#F8FAFC',
@@ -765,18 +1025,31 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
     borderRadius: radius.lg,
     width: 180,
-    height: 54,
-    fontSize: 28,
+    height: 52,
+    fontSize: 26,
     fontWeight: 'bold',
     textAlign: 'center',
     letterSpacing: 16,
+    color: colors.textPrimary,
+  },
+  bigOtpInput: {
+    backgroundColor: '#F8FAFC',
+    borderWidth: 2,
+    borderColor: colors.primary,
+    borderRadius: radius.lg,
+    width: 220,
+    height: 52,
+    fontSize: 22,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    letterSpacing: 10,
     color: colors.textPrimary,
   },
   pinHelperRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
     paddingHorizontal: 4,
   },
   changePinLink: {
@@ -784,8 +1057,56 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.primary,
   },
-  defaultPinHint: {
+  otpSwitchLink: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#2563EB',
+  },
+
+  // OTP Mode Styles
+  otpNoticeText: {
     fontSize: 11,
+    color: '#64748B',
+    lineHeight: 16,
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  otpSentBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+    borderRadius: radius.md,
+    padding: spacing.sm,
+    marginBottom: spacing.sm,
+    gap: 8,
+  },
+  otpSentBannerText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#15803D',
+  },
+  otpCodeHint: {
+    fontSize: 11,
+    color: '#166534',
+    marginTop: 2,
+  },
+  otpActionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: spacing.md,
+    paddingHorizontal: 6,
+  },
+  resendOtpLink: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  changePhoneLink: {
+    fontSize: 12,
+    fontWeight: '600',
     color: '#64748B',
   },
 
@@ -834,58 +1155,5 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '800',
-  },
-
-  // Account Switcher Styles
-  accountSelectTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.textPrimary,
-    marginBottom: 8,
-  },
-  accountSwitcherRow: {
-    gap: 8,
-    marginBottom: spacing.md,
-  },
-  accountCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1.5,
-    borderColor: '#E2E8F0',
-    borderRadius: radius.md,
-    padding: 10,
-    gap: 10,
-  },
-  accountCardActive: {
-    backgroundColor: '#EFF6FF',
-    borderColor: '#2563EB',
-    ...shadows.sm,
-  },
-  accountAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#DBEAFE',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  accountAvatarText: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: '#1D4ED8',
-  },
-  accountName: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.textPrimary,
-  },
-  accountNameActive: {
-    color: '#1D4ED8',
-  },
-  accountRole: {
-    fontSize: 11,
-    color: '#64748B',
-    marginTop: 1,
   },
 });

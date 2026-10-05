@@ -30,6 +30,7 @@ import {
   RetailerSalesPlan,
 } from '../../constants/mockData';
 import { PdfReportService } from '../../services/pdfReportService';
+import { AuthService } from '../../services/authService';
 
 const { width } = Dimensions.get('window');
 
@@ -787,28 +788,38 @@ export const BusinessPlanningScreen: React.FC<{ onBack: () => void }> = ({ onBac
    6. MONTHLY SUMMARY & CIRCULAR GAUGES (Images 29 & 31)
    ========================================================================================= */
 export const MonthlySummaryScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
-  const [selectedMonth, setSelectedMonth] = useState('September');
-  const [selectedYear, setSelectedYear] = useState('2026');
-  const [selectedAgent, setSelectedAgent] = useState({
-    id: 'usr-01',
-    name: 'Pranjal Malakar',
-    role: 'MEDICAL_REP',
-    territory: 'Karimganj Beat (Barak Valley)',
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const years = ['2025', '2026', '2027'];
+
+  const currentMonthIdx = new Date().getMonth();
+  const currentMonthName = months[currentMonthIdx] || 'October';
+  const currentYearStr = new Date().getFullYear().toString();
+
+  const currentUser = AuthService.getCurrentUser();
+  const isManager = currentUser?.role === 'REGIONAL_MANAGER' || currentUser?.role === 'AREA_MANAGER';
+
+  const [selectedMonth, setSelectedMonth] = useState(currentMonthName);
+  const [selectedYear, setSelectedYear] = useState(currentYearStr);
+  const [selectedAgent, setSelectedAgent] = useState<{ id: string; name: string; role: any; territory: string; employeeCode?: string }>({
+    id: currentUser?.id || 'usr-0001',
+    name: currentUser?.name || 'Bodrud Jaman Sadiol',
+    role: currentUser?.role || 'REGIONAL_MANAGER',
+    territory: currentUser?.territory || 'Barak Valley Division (Assam)',
+    employeeCode: currentUser?.employeeCode || '0001',
   });
-  const [userRole, setUserRole] = useState<'MEDICAL_REP' | 'AREA_MANAGER'>('MEDICAL_REP');
+  const [userRole, setUserRole] = useState<'MEDICAL_REP' | 'REGIONAL_MANAGER'>(
+    isManager ? 'REGIONAL_MANAGER' : 'MEDICAL_REP'
+  );
   
   const [monthYearModalVisible, setMonthYearModalVisible] = useState(false);
   const [agentModalVisible, setAgentModalVisible] = useState(false);
 
   const teamAgents = [
-    { id: 'usr-0002', name: 'Pranjal Malakar', role: 'MEDICAL_REP', employeeCode: '0002', territory: 'Silchar & Karimganj Beat (Barak Valley)' },
-    { id: 'usr-0001', name: 'Bodrud Jaman Sadiol', role: 'REGIONAL_MANAGER', employeeCode: '0001', territory: 'Barak Valley Division HQ' },
-    { id: 'usr-0003', name: 'Rahul Das', role: 'MEDICAL_REP', employeeCode: '0003', territory: 'Hailakandi District' },
-    { id: 'usr-0004', name: 'Bikash Paul', role: 'MEDICAL_REP', employeeCode: '0004', territory: 'Badarpur & Rural Corridor' },
+    { id: 'usr-0001', name: 'Bodrud Jaman Sadiol', role: 'REGIONAL_MANAGER' as const, employeeCode: '0001', territory: 'Barak Valley Division (Silchar HQ)' },
+    { id: 'usr-0002', name: 'Pranjal Malakar', role: 'MEDICAL_REP' as const, employeeCode: '0002', territory: 'Silchar & Karimganj Beat (Barak Valley)' },
+    { id: 'usr-0003', name: 'Rahul Das', role: 'MEDICAL_REP' as const, employeeCode: '0003', territory: 'Hailakandi District' },
+    { id: 'usr-0004', name: 'Bikash Paul', role: 'MEDICAL_REP' as const, employeeCode: '0004', territory: 'Badarpur & Rural Corridor' },
   ];
-
-  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-  const years = ['2025', '2026', '2027'];
 
   const handleAgentClick = () => {
     if (userRole === 'MEDICAL_REP') {
@@ -825,31 +836,19 @@ export const MonthlySummaryScreen: React.FC<{ onBack: () => void }> = ({ onBack 
     <SafeAreaView style={styles.container}>
       <Header title="Monthly Summary" subtitle="Barak Division Field Performance" showBack onBack={onBack} />
       
-      {/* Role Switcher Pill for Demo/Testing Authority */}
+      {/* Role Authority Banner */}
       <View style={styles.authBadgeBanner}>
         <Text style={styles.authBadgeLabel}>Current Authority:</Text>
-        <TouchableOpacity
-          style={[styles.authRolePill, userRole === 'AREA_MANAGER' && styles.authRolePillABM]}
-          onPress={() => {
-            const next = userRole === 'MEDICAL_REP' ? 'AREA_MANAGER' : 'MEDICAL_REP';
-            setUserRole(next);
-            Alert.alert(
-              `Switched to ${next === 'AREA_MANAGER' ? 'ABM (Admin Access)' : 'Medical Representative (MR)'}`,
-              next === 'AREA_MANAGER'
-                ? 'You now have full authority to select and view any field agent summary.'
-                : 'Locked mode: MR can only view their own profile summary.'
-            );
-          }}
-        >
+        <View style={[styles.authRolePill, userRole === 'REGIONAL_MANAGER' && styles.authRolePillABM]}>
           <Ionicons
-            name={userRole === 'AREA_MANAGER' ? 'shield-checkmark' : 'lock-closed'}
+            name={userRole === 'REGIONAL_MANAGER' ? 'shield-checkmark' : 'lock-closed'}
             size={13}
-            color={userRole === 'AREA_MANAGER' ? '#16A34A' : '#2563EB'}
+            color={userRole === 'REGIONAL_MANAGER' ? '#16A34A' : '#2563EB'}
           />
-          <Text style={[styles.authRoleText, userRole === 'AREA_MANAGER' && styles.authRoleTextABM]}>
-            {userRole === 'AREA_MANAGER' ? 'ABM / Admin Mode' : 'MR Mode (Own Profile Only)'}
+          <Text style={[styles.authRoleText, userRole === 'REGIONAL_MANAGER' && styles.authRoleTextABM]}>
+            {userRole === 'REGIONAL_MANAGER' ? 'RSM Mode (Manager Access)' : 'MR Mode (Own Profile Only)'}
           </Text>
-        </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -877,7 +876,7 @@ export const MonthlySummaryScreen: React.FC<{ onBack: () => void }> = ({ onBack 
               <Text style={styles.summaryUserTerritory}>{selectedAgent.territory}</Text>
             </View>
             <View style={styles.agentLockBadge}>
-              {userRole === 'AREA_MANAGER' ? (
+              {userRole === 'REGIONAL_MANAGER' ? (
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
                   <Text style={styles.switchAgentText}>Switch Agent</Text>
                   <Ionicons name="chevron-forward" size={14} color="#2563EB" />
