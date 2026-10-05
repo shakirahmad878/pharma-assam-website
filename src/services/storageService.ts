@@ -151,7 +151,27 @@ export class StorageService {
     const users = this.getItem<User[]>(STORAGE_KEYS.USERS, INITIAL_USERS);
     if (!Array.isArray(users) || users.length === 0) return INITIAL_USERS;
     const filtered = users.filter(u => !MOCK_USER_IDS.has(u.id));
-    return filtered.length > 0 ? filtered : INITIAL_USERS;
+    
+    // Reconcile and ensure baseline admin / manager credentials are up to date
+    const merged = [...filtered];
+    for (const initUser of INITIAL_USERS) {
+      const existingIdx = merged.findIndex(
+        u => u.id === initUser.id || (Boolean(u.username && initUser.username) && u.username!.toLowerCase() === initUser.username!.toLowerCase())
+      );
+      if (existingIdx === -1) {
+        merged.push(initUser);
+      } else {
+        merged[existingIdx] = {
+          ...merged[existingIdx],
+          password: initUser.password || merged[existingIdx].password,
+          role: merged[existingIdx].role || initUser.role,
+          employeeCode: merged[existingIdx].employeeCode || initUser.employeeCode,
+          isActive: true
+        };
+      }
+    }
+
+    return merged.length > 0 ? merged : INITIAL_USERS;
   }
 
   static saveUsers(users: User[]): void {

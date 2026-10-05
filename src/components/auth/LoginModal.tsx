@@ -156,7 +156,47 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             </button>
           </form>
 
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
+          {/* Quick select pills */}
+          <div className="pt-2 border-t border-slate-100">
+            <p className="text-[11px] font-semibold text-slate-500 mb-1.5">Quick Fill Demo Accounts:</p>
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setIdentifier('shakir878');
+                  setPassword('Shakir@2026');
+                  if (errorMessage) setErrorMessage('');
+                }}
+                className="px-2 py-1 bg-slate-100 hover:bg-teal-50 text-slate-700 hover:text-teal-700 border border-slate-200 rounded-lg text-[10px] font-medium transition-colors"
+              >
+                Super Admin (shakir878)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIdentifier('bodrudsadiol');
+                  setPassword('Bodrud@2026');
+                  if (errorMessage) setErrorMessage('');
+                }}
+                className="px-2 py-1 bg-slate-100 hover:bg-teal-50 text-slate-700 hover:text-teal-700 border border-slate-200 rounded-lg text-[10px] font-medium transition-colors"
+              >
+                RSM (bodrudsadiol)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIdentifier('0002');
+                  setPassword('1234');
+                  if (errorMessage) setErrorMessage('');
+                }}
+                className="px-2 py-1 bg-slate-100 hover:bg-teal-50 text-slate-700 hover:text-teal-700 border border-slate-200 rounded-lg text-[10px] font-medium transition-colors"
+              >
+                Field Rep (0002)
+              </button>
+            </div>
+          </div>
+
+          <div className="pt-2 flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
             <ShieldCheck className="w-3.5 h-3.5 text-teal-600" />
             <span>Encrypted Authentication & Session Security</span>
           </div>

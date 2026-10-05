@@ -166,6 +166,94 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, users }) =
 
         </div>
 
+        {/* Quick Credentials Card */}
+        <div className="mt-6 bg-slate-900/90 border border-slate-800/90 rounded-2xl p-5 shadow-xl">
+          <div className="flex items-center gap-2 text-xs font-semibold text-slate-300 mb-3">
+            <Lock className="w-3.5 h-3.5 text-teal-400" />
+            <span>Authorized Login Credentials (1-Click Fill)</span>
+          </div>
+
+          <div className="space-y-2.5">
+            {/* Super Admin */}
+            <div 
+              onClick={() => {
+                setIdentifier('shakir878');
+                setPassword('Shakir@2026');
+                if (error) setError(null);
+              }}
+              className="p-2.5 bg-slate-950/60 hover:bg-slate-800 border border-slate-800 hover:border-teal-500/40 rounded-xl cursor-pointer transition-all flex items-center justify-between group"
+            >
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-white group-hover:text-teal-400 transition-colors">Super Admin</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal-500/10 text-teal-300 border border-teal-500/20 font-mono">Full Access</span>
+                </div>
+                <div className="text-[11px] text-slate-400 mt-0.5">
+                  User: <span className="font-mono text-slate-200">shakir878</span> • Pass: <span className="font-mono text-slate-200">Shakir@2026</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="text-[11px] font-bold text-teal-400 group-hover:text-teal-300 bg-teal-500/10 hover:bg-teal-500/20 px-2.5 py-1 rounded-lg transition-colors"
+              >
+                Auto Fill
+              </button>
+            </div>
+
+            {/* Regional Manager */}
+            <div 
+              onClick={() => {
+                setIdentifier('bodrudsadiol');
+                setPassword('Bodrud@2026');
+                if (error) setError(null);
+              }}
+              className="p-2.5 bg-slate-950/60 hover:bg-slate-800 border border-slate-800 hover:border-teal-500/40 rounded-xl cursor-pointer transition-all flex items-center justify-between group"
+            >
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-white group-hover:text-teal-400 transition-colors">Regional Manager (RSM)</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-300 border border-sky-500/20 font-mono">Barak Valley</span>
+                </div>
+                <div className="text-[11px] text-slate-400 mt-0.5">
+                  User: <span className="font-mono text-slate-200">bodrudsadiol</span> • Pass: <span className="font-mono text-slate-200">Bodrud@2026</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="text-[11px] font-bold text-sky-400 group-hover:text-sky-300 bg-sky-500/10 hover:bg-sky-500/20 px-2.5 py-1 rounded-lg transition-colors"
+              >
+                Auto Fill
+              </button>
+            </div>
+
+            {/* Field MR */}
+            <div 
+              onClick={() => {
+                setIdentifier('0002');
+                setPassword('1234');
+                if (error) setError(null);
+              }}
+              className="p-2.5 bg-slate-950/60 hover:bg-slate-800 border border-slate-800 hover:border-teal-500/40 rounded-xl cursor-pointer transition-all flex items-center justify-between group"
+            >
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-white group-hover:text-teal-400 transition-colors">Medical Representative</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20 font-mono">Field Rep</span>
+                </div>
+                <div className="text-[11px] text-slate-400 mt-0.5">
+                  User: <span className="font-mono text-slate-200">0002</span> • Pass: <span className="font-mono text-slate-200">1234</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="text-[11px] font-bold text-amber-400 group-hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 px-2.5 py-1 rounded-lg transition-colors"
+              >
+                Auto Fill
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Support note */}
         <p className="mt-6 text-center text-xs text-slate-500">
           Need access or password reset? Contact your System Administrator.
