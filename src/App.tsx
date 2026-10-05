@@ -17,6 +17,7 @@ import {
 } from './data/mockData';
 import { AuthService } from './services/authService';
 import { StorageService } from './services/storageService';
+import { FirestoreService } from './services/firestoreService';
 import { TelemetryService } from './services/telemetryService';
 import { Navbar } from './components/layout/Navbar';
 import { Sidebar, NavTab } from './components/layout/Sidebar';
@@ -121,6 +122,88 @@ export default function App() {
 
     window.addEventListener('hashchange', parseHash);
     return () => window.removeEventListener('hashchange', parseHash);
+  }, []);
+
+  // Real-time Two-Way Sync with Google Cloud Firestore
+  useEffect(() => {
+    if (!FirestoreService.isConnected()) return;
+
+    // 1. Subscribe to live Doctor updates from Cloud
+    const unsubDoctors = FirestoreService.subscribeDoctors((cloudDocs) => {
+      if (cloudDocs && cloudDocs.length > 0) {
+        setDoctors(cloudDocs);
+        StorageService.saveDoctors(cloudDocs);
+      }
+    });
+
+    // 2. Subscribe to live Chemists updates from Cloud
+    const unsubChemists = FirestoreService.subscribeChemists((cloudChems) => {
+      if (cloudChems && cloudChems.length > 0) {
+        setChemists(cloudChems);
+        StorageService.saveChemists(cloudChems);
+      }
+    });
+
+    // 3. Subscribe to live Products updates from Cloud
+    const unsubProducts = FirestoreService.subscribeProducts((cloudProds) => {
+      if (cloudProds && cloudProds.length > 0) {
+        setProducts(cloudProds);
+        StorageService.saveProducts(cloudProds);
+      }
+    });
+
+    // 4. Subscribe to live Territories updates from Cloud
+    const unsubTerritories = FirestoreService.subscribeTerritories((cloudTerrs) => {
+      if (cloudTerrs && cloudTerrs.length > 0) {
+        setTerritories(cloudTerrs);
+        StorageService.saveTerritories(cloudTerrs);
+      }
+    });
+
+    // 5. Subscribe to live Users updates from Cloud
+    const unsubUsers = FirestoreService.subscribeUsers((cloudUsers) => {
+      if (cloudUsers && cloudUsers.length > 0) {
+        setUsers(cloudUsers);
+        StorageService.saveUsers(cloudUsers);
+      }
+    });
+
+    // 6. Subscribe to live Field Visits / DCR from Cloud
+    const unsubDCR = FirestoreService.subscribeDCRLogs((cloudDcr) => {
+      if (cloudDcr && cloudDcr.length > 0) {
+        setDcrLogs(cloudDcr);
+        StorageService.saveDCRLogs(cloudDcr);
+      }
+    });
+
+    // Initial check: if cloud has no doctors, seed local baseline to cloud
+    FirestoreService.fetchDoctors().then((existingCloudDocs) => {
+      if (!existingCloudDocs || existingCloudDocs.length === 0) {
+        const localDocs = StorageService.getDoctors();
+        const localChems = StorageService.getChemists();
+        const localProds = StorageService.getProducts();
+        if (localDocs.length > 0 || localChems.length > 0) {
+          FirestoreService.syncAllLocalToCloud({
+            doctors: localDocs,
+            chemists: localChems,
+            products: localProds,
+            users: StorageService.getUsers(),
+            companies: StorageService.getCompanies(),
+            territories: StorageService.getTerritories(),
+            dcrLogs: StorageService.getDCRLogs(),
+          }).catch((err) => console.warn('[Firestore] Initial auto-seed error:', err));
+        }
+      }
+    });
+
+    return () => {
+      unsubDoctors();
+      unsubChemists();
+      unsubProducts();
+      unsubTerritories();
+      unsubUsers();
+      unsubDCR();
+    };
   }, []);
 
   const handleTabChange = (tab: NavTab) => {

@@ -9,6 +9,7 @@ import {
   INITIAL_DCR_LOGS,
   INITIAL_AUDIT_LOGS
 } from '../data/mockData';
+import { FirestoreService } from './firestoreService';
 
 const STORAGE_KEYS = {
   DOCTORS: 'reppulse_master_doctors',
@@ -34,7 +35,7 @@ const MOCK_TP_IDS = new Set(['tp-01']);
 
 export class StorageService {
   // Safe generic getItem
-  private static getItem<T>(key: string, fallback: T): T {
+  public static getItem<T>(key: string, fallback: T): T {
     try {
       const stored = localStorage.getItem(key);
       if (!stored) return fallback;
@@ -46,7 +47,7 @@ export class StorageService {
   }
 
   // Safe generic setItem
-  private static setItem<T>(key: string, value: T): void {
+  public static setItem<T>(key: string, value: T): void {
     try {
       localStorage.setItem(key, JSON.stringify(value));
     } catch (e) {
@@ -62,7 +63,26 @@ export class StorageService {
   }
 
   static saveDoctors(doctors: Doctor[]): void {
-    this.setItem(STORAGE_KEYS.DOCTORS, doctors);
+    const clean = doctors.filter(d => !MOCK_DOC_IDS.has(d.id));
+    this.setItem(STORAGE_KEYS.DOCTORS, clean);
+  }
+
+  static async addOrUpdateDoctor(doc: Doctor): Promise<void> {
+    const current = this.getDoctors();
+    const updated = [doc, ...current.filter(d => d.id !== doc.id)];
+    this.saveDoctors(updated);
+    if (FirestoreService.isConnected()) {
+      await FirestoreService.saveDoctor(doc);
+    }
+  }
+
+  static async deleteDoctor(docId: string): Promise<void> {
+    const current = this.getDoctors();
+    const updated = current.filter(d => d.id !== docId);
+    this.saveDoctors(updated);
+    if (FirestoreService.isConnected()) {
+      await FirestoreService.deleteDoctor(docId);
+    }
   }
 
   // Chemists
@@ -73,7 +93,26 @@ export class StorageService {
   }
 
   static saveChemists(chemists: Chemist[]): void {
-    this.setItem(STORAGE_KEYS.CHEMISTS, chemists);
+    const clean = chemists.filter(c => !MOCK_CHEM_IDS.has(c.id));
+    this.setItem(STORAGE_KEYS.CHEMISTS, clean);
+  }
+
+  static async addOrUpdateChemist(chem: Chemist): Promise<void> {
+    const current = this.getChemists();
+    const updated = [chem, ...current.filter(c => c.id !== chem.id)];
+    this.saveChemists(updated);
+    if (FirestoreService.isConnected()) {
+      await FirestoreService.saveChemist(chem);
+    }
+  }
+
+  static async deleteChemist(chemId: string): Promise<void> {
+    const current = this.getChemists();
+    const updated = current.filter(c => c.id !== chemId);
+    this.saveChemists(updated);
+    if (FirestoreService.isConnected()) {
+      await FirestoreService.deleteChemist(chemId);
+    }
   }
 
   // Products
@@ -84,7 +123,26 @@ export class StorageService {
   }
 
   static saveProducts(products: Product[]): void {
-    this.setItem(STORAGE_KEYS.PRODUCTS, products);
+    const clean = products.filter(p => !MOCK_PROD_IDS.has(p.id));
+    this.setItem(STORAGE_KEYS.PRODUCTS, clean);
+  }
+
+  static async addOrUpdateProduct(prod: Product): Promise<void> {
+    const current = this.getProducts();
+    const updated = [prod, ...current.filter(p => p.id !== prod.id)];
+    this.saveProducts(updated);
+    if (FirestoreService.isConnected()) {
+      await FirestoreService.saveProduct(prod);
+    }
+  }
+
+  static async deleteProduct(prodId: string): Promise<void> {
+    const current = this.getProducts();
+    const updated = current.filter(p => p.id !== prodId);
+    this.saveProducts(updated);
+    if (FirestoreService.isConnected()) {
+      await FirestoreService.deleteProduct(prodId);
+    }
   }
 
   // Users
@@ -97,6 +155,24 @@ export class StorageService {
 
   static saveUsers(users: User[]): void {
     this.setItem(STORAGE_KEYS.USERS, users);
+  }
+
+  static async addOrUpdateUser(user: User): Promise<void> {
+    const current = this.getUsers();
+    const updated = [user, ...current.filter(u => u.id !== user.id)];
+    this.saveUsers(updated);
+    if (FirestoreService.isConnected()) {
+      await FirestoreService.saveUser(user);
+    }
+  }
+
+  static async deleteUser(userId: string): Promise<void> {
+    const current = this.getUsers();
+    const updated = current.filter(u => u.id !== userId);
+    this.saveUsers(updated);
+    if (FirestoreService.isConnected()) {
+      await FirestoreService.deleteUser(userId);
+    }
   }
 
   // Companies
@@ -121,6 +197,24 @@ export class StorageService {
     this.setItem(STORAGE_KEYS.TERRITORIES, territories);
   }
 
+  static async addOrUpdateTerritory(terr: Territory): Promise<void> {
+    const current = this.getTerritories();
+    const updated = [terr, ...current.filter(t => t.id !== terr.id)];
+    this.saveTerritories(updated);
+    if (FirestoreService.isConnected()) {
+      await FirestoreService.saveTerritory(terr);
+    }
+  }
+
+  static async deleteTerritory(terrId: string): Promise<void> {
+    const current = this.getTerritories();
+    const updated = current.filter(t => t.id !== terrId);
+    this.saveTerritories(updated);
+    if (FirestoreService.isConnected()) {
+      await FirestoreService.deleteTerritory(terrId);
+    }
+  }
+
   // DCR Logs
   static getDCRLogs(): DCRRecord[] {
     const dcr = this.getItem<DCRRecord[]>(STORAGE_KEYS.DCR_LOGS, []);
@@ -129,6 +223,15 @@ export class StorageService {
 
   static saveDCRLogs(logs: DCRRecord[]): void {
     this.setItem(STORAGE_KEYS.DCR_LOGS, logs);
+  }
+
+  static async addDCRLog(log: DCRRecord): Promise<void> {
+    const current = this.getDCRLogs();
+    const updated = [log, ...current.filter(l => l.id !== log.id)];
+    this.saveDCRLogs(updated);
+    if (FirestoreService.isConnected()) {
+      await FirestoreService.saveDCRLog(log);
+    }
   }
 
   // Tour Plans
@@ -167,6 +270,7 @@ export class StorageService {
     const fullBackup = {
       version: '1.0',
       exportedAt: new Date().toISOString(),
+      database: 'Google Cloud Firestore (reppulse-pharma)',
       doctors: this.getDoctors(),
       chemists: this.getChemists(),
       products: this.getProducts(),
@@ -196,9 +300,22 @@ export class StorageService {
       if (Array.isArray(data.tourPlans)) this.saveTourPlans(data.tourPlans);
       if (Array.isArray(data.plannedVisits)) this.savePlannedVisits(data.plannedVisits);
 
+      // Also trigger cloud sync if connected
+      if (FirestoreService.isConnected()) {
+        FirestoreService.syncAllLocalToCloud({
+          doctors: this.getDoctors(),
+          chemists: this.getChemists(),
+          products: this.getProducts(),
+          users: this.getUsers(),
+          companies: this.getCompanies(),
+          territories: this.getTerritories(),
+          dcrLogs: this.getDCRLogs(),
+        }).catch(err => console.warn('[Firestore] Auto-sync on import error:', err));
+      }
+
       return {
         success: true,
-        message: `Database restored successfully! (${data.doctors?.length || 0} Doctors, ${data.chemists?.length || 0} Chemists, ${data.products?.length || 0} Products)`,
+        message: `Database restored and synced to Cloud Firestore! (${data.doctors?.length || 0} Doctors, ${data.chemists?.length || 0} Chemists, ${data.products?.length || 0} Products)`,
         counts: {
           doctors: data.doctors?.length || 0,
           chemists: data.chemists?.length || 0,

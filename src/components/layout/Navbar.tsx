@@ -110,15 +110,16 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span className="hidden lg:inline">GPS Ping</span>
           </button>
 
-          {/* Database Sync & Backup Button */}
+          {/* Database Sync & Cloud Firestore Status */}
           {onOpenDatabaseSync && (
             <button
               onClick={onOpenDatabaseSync}
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-teal-500/20 hover:bg-teal-500/30 text-teal-300 border border-teal-500/30 transition-colors cursor-pointer"
-              title="Database Backup, Restore & Sync Across Devices"
+              title="Database Backup, Restore & Cloud Firestore Sync"
             >
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
               <Database className="w-3.5 h-3.5 text-teal-400" />
-              <span className="hidden md:inline">Sync Data</span>
+              <span className="hidden md:inline">Cloud DB</span>
             </button>
           )}
 
