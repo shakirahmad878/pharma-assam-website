@@ -9,7 +9,6 @@ import {
   collection,
   doc,
   getDocs,
-  getDoc,
   setDoc,
   updateDoc,
   deleteDoc,
@@ -25,9 +24,6 @@ import {
   Company,
   Territory,
   DCRRecord,
-  TourPlanItem,
-  AuditLogEntry,
-  LocationTelemetryPoint,
 } from '../types';
 
 export interface DoctorDeletionRequest {
@@ -43,10 +39,134 @@ export interface DoctorDeletionRequest {
   reviewComment?: string;
 }
 
+/**
+ * Universal Data Normalizers to guarantee no missing nested fields (e.g. clinicLocation)
+ */
+export function normalizeDoctor(raw: any): Doctor {
+  if (!raw) {
+    return {
+      id: `doc-${Date.now()}`,
+      name: 'Dr. Physician',
+      qualification: 'MBBS',
+      specialty: 'General Medicine',
+      tier: 'A',
+      clinicName: 'Clinic Chamber',
+      clinicLocation: { latitude: 24.8146, longitude: 92.8037, address: 'Silchar, Assam' },
+      geofenceRadiusMeters: 100,
+      territoryId: 'TER-01',
+      territoryName: 'Silchar Central',
+      phone: '+91 9435000000',
+      visitingHours: '10:00 AM - 02:00 PM, 05:00 PM - 08:30 PM',
+      preferredVisitDays: ['Mon', 'Wed', 'Fri'],
+      averagePatientsPerDay: 35,
+      potentialScore: 85,
+      monthlyVisitTarget: 4,
+      monthlyVisitsCompleted: 0,
+      companyId: 'comp-01',
+      companyName: 'Pharma Assam Healthcare Pvt Ltd',
+    };
+  }
+
+  const lat = typeof raw.clinicLocation?.latitude === 'number'
+    ? raw.clinicLocation.latitude
+    : typeof raw.latitude === 'number'
+    ? raw.latitude
+    : 24.8146;
+
+  const lng = typeof raw.clinicLocation?.longitude === 'number'
+    ? raw.clinicLocation.longitude
+    : typeof raw.longitude === 'number'
+    ? raw.longitude
+    : 92.8037;
+
+  const address = raw.clinicLocation?.address || raw.clinicAddress || raw.address || '';
+
+  return {
+    id: String(raw.id || `doc-${Date.now()}`),
+    name: raw.name || 'Doctor',
+    qualification: raw.qualification || 'MBBS',
+    specialty: raw.specialty || 'Cardiology',
+    tier: raw.tier || 'A',
+    clinicName: raw.clinicName || 'Clinic Chamber',
+    clinicLocation: {
+      latitude: lat,
+      longitude: lng,
+      address: address,
+    },
+    geofenceRadiusMeters: typeof raw.geofenceRadiusMeters === 'number' ? raw.geofenceRadiusMeters : 100,
+    territoryId: raw.territoryId || raw.routeId || 'TER-01',
+    territoryName: raw.territoryName || raw.area || 'Silchar Central',
+    phone: raw.phone || '+91 9435000000',
+    email: raw.email || '',
+    visitingHours: raw.visitingHours || '10:00 AM - 02:00 PM, 05:00 PM - 08:30 PM',
+    preferredVisitDays: Array.isArray(raw.preferredVisitDays) ? raw.preferredVisitDays : ['Mon', 'Wed', 'Fri'],
+    averagePatientsPerDay: typeof raw.averagePatientsPerDay === 'number' ? raw.averagePatientsPerDay : 35,
+    potentialScore: typeof raw.potentialScore === 'number' ? raw.potentialScore : 85,
+    lastVisitedDate: raw.lastVisitedDate || raw.lastVisitDate,
+    monthlyVisitTarget: typeof raw.monthlyVisitTarget === 'number' ? raw.monthlyVisitTarget : 4,
+    monthlyVisitsCompleted: typeof raw.monthlyVisitsCompleted === 'number' ? raw.monthlyVisitsCompleted : (raw.completedVisitsThisMonth || 0),
+    companyId: raw.companyId || 'comp-01',
+    companyName: raw.companyName || 'Pharma Assam Healthcare Pvt Ltd',
+  };
+}
+
+export function normalizeChemist(raw: any): Chemist {
+  if (!raw) {
+    return {
+      id: `chem-${Date.now()}`,
+      name: 'Chemist Proprietor',
+      shopName: 'Pharmacy Store',
+      drugLicenseNumber: 'DL-18/AS',
+      gstNumber: '18AABCS1234D1Z2',
+      phone: '+91 9435000000',
+      contactPerson: 'Chemist',
+      associatedDoctors: [],
+      location: { latitude: 24.8162, longitude: 92.8015, address: 'Silchar, Assam' },
+      averageMonthlyTurnover: 450000,
+      territoryId: 'TER-01',
+      territoryName: 'Silchar Central',
+      companyId: 'comp-01',
+      companyName: 'Pharma Assam Healthcare Pvt Ltd',
+    };
+  }
+
+  const lat = typeof raw.location?.latitude === 'number'
+    ? raw.location.latitude
+    : typeof raw.latitude === 'number'
+    ? raw.latitude
+    : 24.8162;
+
+  const lng = typeof raw.location?.longitude === 'number'
+    ? raw.location.longitude
+    : typeof raw.longitude === 'number'
+    ? raw.longitude
+    : 92.8015;
+
+  const address = raw.location?.address || raw.address || raw.firmAddress || '';
+
+  return {
+    id: String(raw.id || `chem-${Date.now()}`),
+    name: raw.name || raw.contactPerson || 'Proprietor',
+    shopName: raw.shopName || raw.firmName || 'Pharmacy Store',
+    drugLicenseNumber: raw.drugLicenseNumber || raw.dlNumber || 'DL-18/AS',
+    gstNumber: raw.gstNumber || '18AABCS1234D1Z2',
+    phone: raw.phone || '+91 9435000000',
+    contactPerson: raw.contactPerson || raw.name || 'Pharmacist',
+    associatedDoctors: Array.isArray(raw.associatedDoctors) ? raw.associatedDoctors : [],
+    location: {
+      latitude: lat,
+      longitude: lng,
+      address: address,
+    },
+    averageMonthlyTurnover: typeof raw.averageMonthlyTurnover === 'number' ? raw.averageMonthlyTurnover : 450000,
+    territoryId: raw.territoryId || raw.routeId || 'TER-01',
+    territoryName: raw.territoryName || raw.area || 'Silchar Central',
+    companyId: raw.companyId || 'comp-01',
+    companyName: raw.companyName || 'Pharma Assam Healthcare Pvt Ltd',
+  };
+}
+
 export class FirestoreService {
-  /**
-   * Check if Cloud Firestore is active & configured
-   */
   public static isConnected(): boolean {
     return isFirebaseConfigured() && db !== null;
   }
@@ -62,8 +182,7 @@ export class FirestoreService {
       const snap = await getDocs(colRef);
       const list: Doctor[] = [];
       snap.forEach((d) => {
-        const data = d.data() as Doctor;
-        list.push({ ...data, id: d.id });
+        list.push(normalizeDoctor({ ...d.data(), id: d.id }));
       });
       return list;
     } catch (err) {
@@ -80,7 +199,7 @@ export class FirestoreService {
         colRef,
         (snap) => {
           const docs: Doctor[] = [];
-          snap.forEach((d) => docs.push({ ...(d.data() as Doctor), id: d.id }));
+          snap.forEach((d) => docs.push(normalizeDoctor({ ...d.data(), id: d.id })));
           onUpdate(docs);
         },
         (err) => {
@@ -139,8 +258,7 @@ export class FirestoreService {
       const snap = await getDocs(colRef);
       const list: Chemist[] = [];
       snap.forEach((d) => {
-        const data = d.data() as Chemist;
-        list.push({ ...data, id: d.id });
+        list.push(normalizeChemist({ ...d.data(), id: d.id }));
       });
       return list;
     } catch (err) {
@@ -157,7 +275,7 @@ export class FirestoreService {
         colRef,
         (snap) => {
           const list: Chemist[] = [];
-          snap.forEach((d) => list.push({ ...(d.data() as Chemist), id: d.id }));
+          snap.forEach((d) => list.push(normalizeChemist({ ...d.data(), id: d.id })));
           onUpdate(list);
         },
         (err) => {
@@ -206,7 +324,7 @@ export class FirestoreService {
   }
 
   // ==========================================
-  // 3. PRODUCTS & FORMULATIONS
+  // 3. PRODUCTS
   // ==========================================
 
   public static async fetchProducts(): Promise<Product[]> {
@@ -283,7 +401,7 @@ export class FirestoreService {
   }
 
   // ==========================================
-  // 4. USERS & ROLES
+  // 4. USERS
   // ==========================================
 
   public static async fetchUsers(): Promise<User[]> {
@@ -491,7 +609,7 @@ export class FirestoreService {
   }
 
   // ==========================================
-  // 7. DOCTOR DELETION REQUESTS (APPROVAL WORKFLOW)
+  // 7. DOCTOR DELETION REQUESTS
   // ==========================================
 
   public static async fetchDeletionRequests(): Promise<DoctorDeletionRequest[]> {
@@ -531,41 +649,8 @@ export class FirestoreService {
     }
   }
 
-  public static async approveDeletionRequest(requestId: string, doctorId: string, reviewerName: string): Promise<void> {
-    if (!this.isConnected() || !db) return;
-    try {
-      // 1. Delete doctor
-      await this.deleteDoctor(doctorId);
-
-      // 2. Mark request as APPROVED
-      const reqRef = doc(db, 'doctor_deletion_requests', requestId);
-      await updateDoc(reqRef, {
-        status: 'APPROVED',
-        reviewedBy: reviewerName,
-        reviewedAt: new Date().toISOString(),
-      });
-    } catch (err) {
-      console.warn('[Firestore] approveDeletionRequest error:', err);
-    }
-  }
-
-  public static async rejectDeletionRequest(requestId: string, reviewerName: string, comment: string): Promise<void> {
-    if (!this.isConnected() || !db) return;
-    try {
-      const reqRef = doc(db, 'doctor_deletion_requests', requestId);
-      await updateDoc(reqRef, {
-        status: 'REJECTED',
-        reviewedBy: reviewerName,
-        reviewedAt: new Date().toISOString(),
-        reviewComment: comment,
-      });
-    } catch (err) {
-      console.warn('[Firestore] rejectDeletionRequest error:', err);
-    }
-  }
-
   // ==========================================
-  // 8. ONE-CLICK MASS SEED / SYNC ALL TO CLOUD
+  // 8. MASS SYNC
   // ==========================================
 
   public static async syncAllLocalToCloud(data: {
@@ -582,23 +667,18 @@ export class FirestoreService {
     }
 
     try {
-      // Sync Doctors
       for (const d of data.doctors) {
-        await setDoc(doc(db, 'doctors', d.id), { ...d, updatedAt: serverTimestamp() }, { merge: true });
+        await setDoc(doc(db, 'doctors', d.id), { ...normalizeDoctor(d), updatedAt: serverTimestamp() }, { merge: true });
       }
-      // Sync Chemists
       for (const c of data.chemists) {
-        await setDoc(doc(db, 'chemists', c.id), { ...c, updatedAt: serverTimestamp() }, { merge: true });
+        await setDoc(doc(db, 'chemists', c.id), { ...normalizeChemist(c), updatedAt: serverTimestamp() }, { merge: true });
       }
-      // Sync Products
       for (const p of data.products) {
         await setDoc(doc(db, 'products', p.id), { ...p, updatedAt: serverTimestamp() }, { merge: true });
       }
-      // Sync Territories
       for (const t of data.territories) {
         await setDoc(doc(db, 'territories', t.id), { ...t, updatedAt: serverTimestamp() }, { merge: true });
       }
-      // Sync Users
       for (const u of data.users) {
         await setDoc(doc(db, 'users', u.id), { ...u, updatedAt: serverTimestamp() }, { merge: true });
       }

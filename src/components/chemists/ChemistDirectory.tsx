@@ -38,12 +38,15 @@ export const ChemistDirectory: React.FC<ChemistDirectoryProps> = ({
 
   const canModify = !currentUser || currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN' || currentUser.role === 'MANAGER' || !!currentUser.permissions?.canModifyDatabase;
 
-  const filteredChemists = chemists.filter(c => 
-    c.shopName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.drugLicenseNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.contactPerson.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredChemists = chemists.filter(c => {
+    if (!c) return false;
+    return (
+      (c.shopName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (c.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (c.drugLicenseNumber || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (c.contactPerson || '').toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
   const handleOpenAdd = () => {
     setFormData({
@@ -52,7 +55,7 @@ export const ChemistDirectory: React.FC<ChemistDirectoryProps> = ({
       drugLicenseNumber: 'AS/CA/2026/DL-',
       contactPerson: '',
       phone: '+91 94350 ',
-      address: 'Hospital Road, Silchar, Assam',
+      address: '',
       latitude: '24.8146',
       longitude: '92.8037',
       averageMonthlyTurnover: 350000,
@@ -75,7 +78,7 @@ export const ChemistDirectory: React.FC<ChemistDirectoryProps> = ({
       location: {
         latitude: parseFloat(formData.latitude) || 24.8146,
         longitude: parseFloat(formData.longitude) || 92.8037,
-        address: formData.address,
+        address: formData.address || '',
       },
       territoryId: 'terr-cachar-01',
       territoryName: 'Silchar Central & Hospital Road',
@@ -90,15 +93,15 @@ export const ChemistDirectory: React.FC<ChemistDirectoryProps> = ({
   const handleStartEdit = (chem: Chemist) => {
     setEditingChemist(chem);
     setFormData({
-      name: chem.name,
-      shopName: chem.shopName,
-      drugLicenseNumber: chem.drugLicenseNumber,
-      contactPerson: chem.contactPerson,
-      phone: chem.phone,
-      address: chem.location.address || '',
-      latitude: chem.location.latitude.toString(),
-      longitude: chem.location.longitude.toString(),
-      averageMonthlyTurnover: chem.averageMonthlyTurnover,
+      name: chem.name || '',
+      shopName: chem.shopName || '',
+      drugLicenseNumber: chem.drugLicenseNumber || '',
+      contactPerson: chem.contactPerson || '',
+      phone: chem.phone || '',
+      address: chem.location?.address || '',
+      latitude: (chem.location?.latitude || 24.8162).toString(),
+      longitude: (chem.location?.longitude || 92.8015).toString(),
+      averageMonthlyTurnover: chem.averageMonthlyTurnover || 450000,
     });
   };
 
@@ -108,18 +111,18 @@ export const ChemistDirectory: React.FC<ChemistDirectoryProps> = ({
 
     const updated: Chemist = {
       ...editingChemist,
-      name: formData.name,
-      shopName: formData.shopName,
-      drugLicenseNumber: formData.drugLicenseNumber,
-      contactPerson: formData.contactPerson,
-      phone: formData.phone,
+      name: formData.name || editingChemist.name,
+      shopName: formData.shopName || editingChemist.shopName,
+      drugLicenseNumber: formData.drugLicenseNumber || editingChemist.drugLicenseNumber,
+      contactPerson: formData.contactPerson || editingChemist.contactPerson,
+      phone: formData.phone || editingChemist.phone,
       location: {
-        ...editingChemist.location,
-        address: formData.address,
-        latitude: parseFloat(formData.latitude) || editingChemist.location.latitude,
-        longitude: parseFloat(formData.longitude) || editingChemist.location.longitude,
+        ...(editingChemist.location || {}),
+        address: formData.address || '',
+        latitude: parseFloat(formData.latitude) || editingChemist.location?.latitude || 24.8162,
+        longitude: parseFloat(formData.longitude) || editingChemist.location?.longitude || 92.8015,
       },
-      averageMonthlyTurnover: Number(formData.averageMonthlyTurnover) || editingChemist.averageMonthlyTurnover,
+      averageMonthlyTurnover: Number(formData.averageMonthlyTurnover) || editingChemist.averageMonthlyTurnover || 450000,
     };
 
     onUpdateChemist(updated);
@@ -200,7 +203,7 @@ export const ChemistDirectory: React.FC<ChemistDirectoryProps> = ({
               <div className="mt-4 space-y-2 text-xs text-slate-600">
                 <p className="flex items-start gap-1.5 text-slate-600">
                   <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
-                  <span>{chem.location.address}</span>
+                  <span>{chem.location?.address || 'Hospital Road, Silchar'}</span>
                 </p>
 
                 <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 text-[11px]">

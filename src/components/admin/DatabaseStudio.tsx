@@ -203,29 +203,29 @@ export const DatabaseStudio: React.FC<DatabaseStudioProps> = ({
   const handleOpenEdit = (item: any) => {
     setEditingItem(item);
     if (activeTable === 'doctors') {
-      setDocName(item.name);
-      setDocQual(item.qualification);
-      setDocSpecialty(item.specialty);
-      setDocTier(item.tier);
-      setDocClinic(item.clinicName);
-      setDocAddress(item.clinicLocation.address || '');
-      setDocLat(String(item.clinicLocation.latitude));
-      setDocLng(String(item.clinicLocation.longitude));
-      setDocGeofence(String(item.geofenceRadiusMeters));
-      setDocPhone(item.phone);
-      setDocTerritoryId(item.territoryId);
-      setDocTarget(String(item.monthlyVisitTarget));
+      setDocName(item.name || '');
+      setDocQual(item.qualification || '');
+      setDocSpecialty(item.specialty || 'Cardiology');
+      setDocTier(item.tier || 'A');
+      setDocClinic(item.clinicName || '');
+      setDocAddress(item.clinicLocation?.address || item.clinicAddress || item.address || '');
+      setDocLat(String(item.clinicLocation?.latitude || item.latitude || '24.814674'));
+      setDocLng(String(item.clinicLocation?.longitude || item.longitude || '92.803754'));
+      setDocGeofence(String(item.geofenceRadiusMeters || '100'));
+      setDocPhone(item.phone || '');
+      setDocTerritoryId(item.territoryId || territories[0]?.id || '');
+      setDocTarget(String(item.monthlyVisitTarget || '4'));
     } else if (activeTable === 'chemists') {
-      setChemName(item.name);
-      setChemShop(item.shopName);
-      setChemDL(item.drugLicenseNumber);
-      setChemGST(item.gstNumber);
-      setChemPhone(item.phone);
-      setChemAddress(item.location.address || '');
-      setChemLat(String(item.location.latitude));
-      setChemLng(String(item.location.longitude));
-      setChemTurnover(String(item.averageMonthlyTurnover));
-      setChemTerritoryId(item.territoryId);
+      setChemName(item.name || '');
+      setChemShop(item.shopName || '');
+      setChemDL(item.drugLicenseNumber || item.dlNumber || '');
+      setChemGST(item.gstNumber || '');
+      setChemPhone(item.phone || '');
+      setChemAddress(item.location?.address || item.address || '');
+      setChemLat(String(item.location?.latitude || item.latitude || '24.816200'));
+      setChemLng(String(item.location?.longitude || item.longitude || '92.801500'));
+      setChemTurnover(String(item.averageMonthlyTurnover || '450000'));
+      setChemTerritoryId(item.territoryId || territories[0]?.id || '');
     } else if (activeTable === 'products') {
       setProdName(item.name);
       setProdGeneric(item.genericComposition);
@@ -587,21 +587,21 @@ export const DatabaseStudio: React.FC<DatabaseStudioProps> = ({
                       </span>
                     </td>
                     <td className="py-3 px-4">
-                      <div className="font-semibold text-slate-800">{doc.clinicName}</div>
+                      <div className="font-semibold text-slate-800">{doc.clinicName || 'Clinic'}</div>
                       <div className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
                         <MapPin className="w-3 h-3 text-teal-600 shrink-0" />
                         <span className="font-mono text-[10px]">
-                          {doc.clinicLocation.latitude.toFixed(4)}, {doc.clinicLocation.longitude.toFixed(4)} ({doc.geofenceRadiusMeters}m fence)
+                          {(doc.clinicLocation?.latitude || 24.8146).toFixed(4)}, {(doc.clinicLocation?.longitude || 92.8037).toFixed(4)} ({doc.geofenceRadiusMeters || 100}m fence)
                         </span>
                       </div>
                     </td>
                     <td className="py-3 px-4">
-                      <div className="font-semibold text-slate-900">{doc.territoryName}</div>
+                      <div className="font-semibold text-slate-900">{doc.territoryName || 'Assam Beat'}</div>
                       <div className="text-[10px] text-slate-400">{doc.companyName || 'Pharma Assam'}</div>
                     </td>
                     <td className="py-3 px-4 text-center">
                       <span className="font-bold text-slate-900 bg-slate-100 px-2 py-1 rounded">
-                        {doc.monthlyVisitTarget} Visits / mo
+                        {doc.monthlyVisitTarget || 4} Visits / mo
                       </span>
                     </td>
                     <td className="py-3 px-4 text-right">
@@ -655,8 +655,8 @@ export const DatabaseStudio: React.FC<DatabaseStudioProps> = ({
                 {filteredChemists.map((chem) => (
                   <tr key={chem.id} className="hover:bg-slate-50 transition-colors">
                     <td className="py-3 px-4">
-                      <div className="font-bold text-slate-900">{chem.shopName}</div>
-                      <div className="text-[11px] text-slate-500">{chem.location.address || 'Hospital Road, Silchar'}</div>
+                      <div className="font-bold text-slate-900">{chem.shopName || 'Chemist Store'}</div>
+                      <div className="text-[11px] text-slate-500">{chem.location?.address || 'Hospital Road, Silchar'}</div>
                     </td>
                     <td className="py-3 px-4 font-mono text-[11px]">
                       <div className="text-slate-800">DL: {chem.drugLicenseNumber}</div>

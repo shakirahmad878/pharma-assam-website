@@ -9,7 +9,7 @@ import {
   INITIAL_DCR_LOGS,
   INITIAL_AUDIT_LOGS
 } from '../data/mockData';
-import { FirestoreService } from './firestoreService';
+import { FirestoreService, normalizeDoctor, normalizeChemist } from './firestoreService';
 
 const STORAGE_KEYS = {
   DOCTORS: 'reppulse_master_doctors',
@@ -57,22 +57,23 @@ export class StorageService {
 
   // Doctors
   static getDoctors(): Doctor[] {
-    const doctors = this.getItem<Doctor[]>(STORAGE_KEYS.DOCTORS, INITIAL_DOCTORS);
+    const doctors = this.getItem<any[]>(STORAGE_KEYS.DOCTORS, INITIAL_DOCTORS);
     if (!Array.isArray(doctors)) return [];
-    return doctors.filter(d => !MOCK_DOC_IDS.has(d.id));
+    return doctors.filter(d => d && !MOCK_DOC_IDS.has(d.id)).map(normalizeDoctor);
   }
 
   static saveDoctors(doctors: Doctor[]): void {
-    const clean = doctors.filter(d => !MOCK_DOC_IDS.has(d.id));
+    const clean = (doctors || []).filter(d => d && !MOCK_DOC_IDS.has(d.id)).map(normalizeDoctor);
     this.setItem(STORAGE_KEYS.DOCTORS, clean);
   }
 
   static async addOrUpdateDoctor(doc: Doctor): Promise<void> {
+    const normalized = normalizeDoctor(doc);
     const current = this.getDoctors();
-    const updated = [doc, ...current.filter(d => d.id !== doc.id)];
+    const updated = [normalized, ...current.filter(d => d.id !== normalized.id)];
     this.saveDoctors(updated);
     if (FirestoreService.isConnected()) {
-      await FirestoreService.saveDoctor(doc);
+      await FirestoreService.saveDoctor(normalized);
     }
   }
 
@@ -87,13 +88,13 @@ export class StorageService {
 
   // Chemists
   static getChemists(): Chemist[] {
-    const chemists = this.getItem<Chemist[]>(STORAGE_KEYS.CHEMISTS, INITIAL_CHEMISTS);
+    const chemists = this.getItem<any[]>(STORAGE_KEYS.CHEMISTS, INITIAL_CHEMISTS);
     if (!Array.isArray(chemists)) return [];
-    return chemists.filter(c => !MOCK_CHEM_IDS.has(c.id));
+    return chemists.filter(c => c && !MOCK_CHEM_IDS.has(c.id)).map(normalizeChemist);
   }
 
   static saveChemists(chemists: Chemist[]): void {
-    const clean = chemists.filter(c => !MOCK_CHEM_IDS.has(c.id));
+    const clean = (chemists || []).filter(c => c && !MOCK_CHEM_IDS.has(c.id)).map(normalizeChemist);
     this.setItem(STORAGE_KEYS.CHEMISTS, clean);
   }
 

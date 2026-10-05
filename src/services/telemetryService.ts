@@ -26,8 +26,8 @@ export class TelemetryService {
     const dist = this.calculateDistanceMeters(
       lat,
       lon,
-      doctor.clinicLocation.latitude,
-      doctor.clinicLocation.longitude
+      doctor.clinicLocation?.latitude || 24.8146,
+      doctor.clinicLocation?.longitude || 92.8037
     );
     return {
       isWithin: dist <= doctor.geofenceRadiusMeters,

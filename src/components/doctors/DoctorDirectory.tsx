@@ -104,11 +104,12 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
   const canModify = !currentUser || currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN' || currentUser.role === 'MANAGER' || !!currentUser.permissions?.canModifyDatabase;
 
   const filteredDoctors = doctors.filter(doc => {
+    if (!doc) return false;
     const matchesSearch = 
-      doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.clinicName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.specialty.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (doc.clinicLocation.address && doc.clinicLocation.address.toLowerCase().includes(searchTerm.toLowerCase()));
+      (doc.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (doc.clinicName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (doc.specialty || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      Boolean(doc.clinicLocation?.address && doc.clinicLocation.address.toLowerCase().includes(searchTerm.toLowerCase()));
 
     const matchesSpecialty = selectedSpecialty === 'ALL' || doc.specialty === selectedSpecialty;
     const matchesTier = selectedTier === 'ALL' || doc.tier === selectedTier;
@@ -166,17 +167,17 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
   const handleStartEdit = (doc: Doctor) => {
     setEditingDoctor(doc);
     setEditForm({
-      name: doc.name,
-      qualification: doc.qualification,
-      specialty: doc.specialty,
-      tier: doc.tier,
-      clinicName: doc.clinicName,
-      address: doc.clinicLocation.address || '',
-      latitude: doc.clinicLocation.latitude.toString(),
-      longitude: doc.clinicLocation.longitude.toString(),
-      phone: doc.phone,
-      visitingHours: doc.visitingHours,
-      monthlyVisitTarget: doc.monthlyVisitTarget,
+      name: doc.name || '',
+      qualification: doc.qualification || '',
+      specialty: doc.specialty || 'Cardiology',
+      tier: doc.tier || 'A',
+      clinicName: doc.clinicName || '',
+      address: doc.clinicLocation?.address || '',
+      latitude: (doc.clinicLocation?.latitude || 24.8146).toString(),
+      longitude: (doc.clinicLocation?.longitude || 92.8037).toString(),
+      phone: doc.phone || '',
+      visitingHours: doc.visitingHours || '',
+      monthlyVisitTarget: doc.monthlyVisitTarget || 2,
       geofenceRadiusMeters: doc.geofenceRadiusMeters || 100
     });
   };
@@ -193,9 +194,9 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
       tier: editForm.tier,
       clinicName: editForm.clinicName.trim(),
       clinicLocation: {
-        ...editingDoctor.clinicLocation,
-        latitude: parseFloat(editForm.latitude) || editingDoctor.clinicLocation.latitude,
-        longitude: parseFloat(editForm.longitude) || editingDoctor.clinicLocation.longitude,
+        ...(editingDoctor.clinicLocation || {}),
+        latitude: parseFloat(editForm.latitude) || editingDoctor.clinicLocation?.latitude || 24.8146,
+        longitude: parseFloat(editForm.longitude) || editingDoctor.clinicLocation?.longitude || 92.8037,
         address: editForm.address.trim(),
       },
       phone: editForm.phone.trim(),
@@ -433,8 +434,8 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
                   </div>
 
                   <div className="text-slate-600">
-                    <p className="font-semibold text-slate-800">{doc.clinicName}</p>
-                    {doc.clinicLocation.address ? (
+                    <p className="font-semibold text-slate-800">{doc.clinicName || 'Clinic'}</p>
+                    {doc.clinicLocation?.address ? (
                       <p className="text-[11px] text-slate-500 flex items-start gap-1 mt-0.5">
                         <MapPin className="w-3 h-3 text-slate-400 shrink-0 mt-0.5" />
                         <span>{doc.clinicLocation.address}</span>
@@ -894,7 +895,7 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
                   <span className="text-slate-500">Clinic / Hospital:</span>
                   <span className="font-semibold text-slate-800">{viewingDoctor.clinicName}</span>
                 </div>
-                {viewingDoctor.clinicLocation.address && (
+                {viewingDoctor.clinicLocation?.address && (
                   <div>
                     <span className="text-slate-500 block mb-0.5">Address:</span>
                     <span className="text-slate-700">{viewingDoctor.clinicLocation.address}</span>

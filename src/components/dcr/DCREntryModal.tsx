@@ -57,7 +57,7 @@ export const DCREntryModal: React.FC<DCREntryModalProps> = ({
       checkInLocation: {
         latitude: repLat,
         longitude: repLng,
-        address: selectedDoctor.clinicLocation.address,
+        address: selectedDoctor.clinicLocation?.address || '',
       },
       isGeofenceVerified: geofenceCheck.isWithin,
       distanceFromClinicMeters: geofenceCheck.distanceMeters,
