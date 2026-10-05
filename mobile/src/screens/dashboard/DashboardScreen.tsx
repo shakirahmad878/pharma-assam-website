@@ -245,16 +245,14 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             <Text style={styles.tileTitle}>NOTIFICATIONS</Text>
           </TouchableOpacity>
 
-          {/* Tile 12: APP TUTORIAL */}
+          {/* Tile 12: TEAM & EMPLOYEES */}
           <TouchableOpacity
             style={styles.tileCard}
-            onPress={() => {
-              Alert.alert('RepPulse SFA Guide', '1. Complete morning selfie attendance by 10:30 AM.\n2. Execute DCR doctor visits within 100m geofence.\n3. Submit monthly tour plan in Calendar.');
-            }}
+            onPress={() => onNavigate('TEAM_MANAGEMENT')}
             activeOpacity={0.75}
           >
-            <Ionicons name="help-circle-outline" size={32} color="#FFFFFF" />
-            <Text style={styles.tileTitle}>APP TUTORIAL</Text>
+            <Ionicons name="people-circle-outline" size={32} color="#60A5FA" />
+            <Text style={styles.tileTitleCenter}>TEAM &{"\n"}EMPLOYEES</Text>
           </TouchableOpacity>
 
           {/* Tile 13: MONTHLY SUMMARY */}

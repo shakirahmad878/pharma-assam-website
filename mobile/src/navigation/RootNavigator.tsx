@@ -29,6 +29,7 @@ import { HospitalDirectoryScreen } from '../screens/hospitals/HospitalDirectoryS
 import { FirmDirectoryScreen } from '../screens/firms/FirmDirectoryScreen';
 import { CommandsScreen } from '../screens/commands/CommandsScreen';
 import { AuxScreen } from '../screens/auxiliary/AuxScreens';
+import { TeamManagementScreen } from '../screens/team/TeamManagementScreen';
 
 import { Doctor, UserProfile } from '../types';
 
@@ -55,7 +56,8 @@ export type ScreenName =
   | 'HOLIDAYS'
   | 'BUSINESS_PLAN'
   | 'REPORTS'
-  | 'MONTHLY_SUMMARY';
+  | 'MONTHLY_SUMMARY'
+  | 'TEAM_MANAGEMENT';
 
 interface StackEntry {
   screen: ScreenName;
@@ -383,6 +385,10 @@ export const RootNavigator: React.FC = () => {
             onBack={pop}
             type="NOTIFICATIONS"
           />
+        )}
+
+        {currentScreen === 'TEAM_MANAGEMENT' && (
+          <TeamManagementScreen onBack={pop} />
         )}
       </View>
     </SafeAreaView>

@@ -56,7 +56,7 @@ export const DrawerMenu: React.FC<DrawerMenuProps> = ({
     { key: 'SYNC', label: 'Synchronize', icon: 'cloud-upload-outline' },
     { key: 'NOTIFICATIONS', label: 'Notification', icon: 'notifications-outline' },
     { key: 'FILES', label: 'Files & e-Detailing', icon: 'folder-open-outline' },
-    { key: 'COMMANDS', label: 'Commands', icon: 'terminal-outline' },
+    { key: 'TEAM_MANAGEMENT', label: 'Team & Employees', icon: 'people-circle-outline' },
     { key: 'PROFILE', label: 'My Info', icon: 'person-outline' },
   ];
 
