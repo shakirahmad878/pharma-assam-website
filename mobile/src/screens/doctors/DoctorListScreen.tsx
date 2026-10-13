@@ -72,8 +72,8 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
   const [newDocClinic, setNewDocClinic] = useState('');
   const [newDocPhone, setNewDocPhone] = useState('');
   const [newDocTier, setNewDocTier] = useState<'A_PLUS' | 'A' | 'B' | 'C'>('A');
-  const [newDocDistrict, setNewDocDistrict] = useState<'Cachar' | 'Karimganj' | 'Hailakandi'>(
-    userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : 'Cachar'
+  const [newDocDistrict, setNewDocDistrict] = useState<'Cachar' | 'Karimganj' | 'Hailakandi' | 'Aizawl' | 'Tripura'>(
+    userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : userDivision === 'Aizawl' ? 'Aizawl' : userDivision === 'Tripura' ? 'Tripura' : 'Cachar'
   );
   const [newDocArea, setNewDocArea] = useState('');
   const [gpsLoading, setGpsLoading] = useState(false);
@@ -108,7 +108,7 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
     setNewDocTier('A');
     
     // Auto-lock district for MR, allow choice for Manager
-    const defaultDist = userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : 'Cachar';
+    const defaultDist = userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : userDivision === 'Aizawl' ? 'Aizawl' : userDivision === 'Tripura' ? 'Tripura' : 'Cachar';
     setNewDocDistrict(defaultDist);
     setNewDocArea('');
     setAddModalVisible(true);
@@ -202,7 +202,7 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
 
     // Target District
     const targetDist = !isManager
-      ? (userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : 'Cachar')
+      ? (userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : userDivision === 'Aizawl' ? 'Aizawl' : userDivision === 'Tripura' ? 'Tripura' : 'Cachar')
       : newDocDistrict;
 
     await DoctorService.addDoctor({
@@ -563,14 +563,14 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
                 <View style={{ marginBottom: 10 }}>
                   <Text style={styles.inputLabel}>Division / District</Text>
                   <View style={styles.districtChipsRow}>
-                    {(['Cachar', 'Hailakandi', 'Karimganj'] as const).map((dist) => (
+                    {(['Cachar', 'Hailakandi', 'Karimganj', 'Aizawl', 'Tripura'] as const).map((dist) => (
                       <TouchableOpacity
                         key={dist}
                         style={[styles.districtChip, newDocDistrict === dist && styles.districtChipActive]}
                         onPress={() => setNewDocDistrict(dist)}
                       >
                         <Text style={[styles.districtChipText, newDocDistrict === dist && styles.districtChipTextActive]}>
-                          {dist === 'Cachar' ? 'Silchar (Cachar)' : dist}
+                          {dist === 'Cachar' ? 'Silchar' : dist === 'Aizawl' ? 'Aizawl (MZ)' : dist === 'Tripura' ? 'Tripura (TR)' : dist}
                         </Text>
                       </TouchableOpacity>
                     ))}
@@ -1057,13 +1057,13 @@ const styles = StyleSheet.create({
   },
   districtChipsRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 6,
     marginTop: 4,
   },
   districtChip: {
-    flex: 1,
     paddingVertical: 6,
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
     backgroundColor: '#F1F5F9',
     borderRadius: radius.md,
     borderWidth: 1,

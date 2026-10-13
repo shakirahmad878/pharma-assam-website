@@ -88,8 +88,8 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
   const [newPhone, setNewPhone] = useState('');
   const [newDlNumber, setNewDlNumber] = useState('');
   const [newFirmType, setNewFirmType] = useState<'Retailer' | 'Distributor' | 'Stockist'>('Retailer');
-  const [newFirmDistrict, setNewFirmDistrict] = useState<'Cachar' | 'Karimganj' | 'Hailakandi'>(
-    userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : 'Cachar'
+  const [newFirmDistrict, setNewFirmDistrict] = useState<'Cachar' | 'Karimganj' | 'Hailakandi' | 'Aizawl' | 'Tripura'>(
+    userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : userDivision === 'Aizawl' ? 'Aizawl' : userDivision === 'Tripura' ? 'Tripura' : 'Cachar'
   );
   const [capturedGps, setCapturedGps] = useState<LocationResult | null>(null);
   const [autoArea, setAutoArea] = useState('Acquiring GPS...');
@@ -100,7 +100,7 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
     const loc = await LocationService.getCurrentLocation();
     setGpsLoading(false);
     const targetDist = !isManager
-      ? (userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : 'Cachar')
+      ? (userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : userDivision === 'Aizawl' ? 'Aizawl' : userDivision === 'Tripura' ? 'Tripura' : 'Cachar')
       : newFirmDistrict;
 
     if (loc) {
@@ -110,15 +110,15 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
         setAutoArea('⚠️ Fake GPS Detected (Blocked)');
       } else {
         setCapturedGps(loc);
-        setAutoArea(`Commercial Hub & Main Market, ${targetDist}, Assam`);
+        setAutoArea(`Commercial Hub & Main Market, ${targetDist}`);
       }
     } else {
-      setAutoArea(`${targetDist}, Assam`);
+      setAutoArea(`${targetDist}`);
     }
   };
 
   const openAddModal = () => {
-    const defaultDist = userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : 'Cachar';
+    const defaultDist = userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : userDivision === 'Aizawl' ? 'Aizawl' : userDivision === 'Tripura' ? 'Tripura' : 'Cachar';
     setNewFirmDistrict(defaultDist);
     setAddModalVisible(true);
     fetchGpsForFirm();
@@ -147,7 +147,7 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
     }
 
     const targetDist = !isManager
-      ? (userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : 'Cachar')
+      ? (userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : userDivision === 'Aizawl' ? 'Aizawl' : userDivision === 'Tripura' ? 'Tripura' : 'Cachar')
       : newFirmDistrict;
 
     const formattedFirmPhone = `+91 ${cleanDigits}`;
@@ -365,14 +365,14 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
                 <View style={{ marginBottom: 10 }}>
                   <Text style={styles.inputLabelSmall}>Division / District</Text>
                   <View style={styles.districtChipsRow}>
-                    {(['Cachar', 'Hailakandi', 'Karimganj'] as const).map((dist) => (
+                    {(['Cachar', 'Hailakandi', 'Karimganj', 'Aizawl', 'Tripura'] as const).map((dist) => (
                       <TouchableOpacity
                         key={dist}
                         style={[styles.districtChip, newFirmDistrict === dist && styles.districtChipActive]}
                         onPress={() => setNewFirmDistrict(dist)}
                       >
                         <Text style={[styles.districtChipText, newFirmDistrict === dist && styles.districtChipTextActive]}>
-                          {dist === 'Cachar' ? 'Silchar (Cachar)' : dist}
+                          {dist === 'Cachar' ? 'Silchar' : dist === 'Aizawl' ? 'Aizawl (MZ)' : dist === 'Tripura' ? 'Tripura (TR)' : dist}
                         </Text>
                       </TouchableOpacity>
                     ))}
@@ -744,13 +744,13 @@ const styles = StyleSheet.create({
   },
   districtChipsRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 6,
     marginTop: 4,
   },
   districtChip: {
-    flex: 1,
     paddingVertical: 6,
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
     backgroundColor: '#F1F5F9',
     borderRadius: radius.md,
     borderWidth: 1,

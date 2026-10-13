@@ -15,8 +15,8 @@ export const USER_BODRUD_RSM: UserProfile = {
   email: 'bodrud.rsm@reppulse.com',
   role: 'REGIONAL_MANAGER',
   employeeCode: '0001',
-  territory: 'Barak Valley Division (Assam)',
-  headquarter: 'Silchar HQ',
+  territory: 'Barak Valley & Extended Divisions (Silchar, Hailakandi, Karimganj, Aizawl, Tripura)',
+  headquarter: 'Silchar Regional HQ',
   phone: '9435000001',
   assignedRouteIds: [
     'route-cachar-01',
@@ -25,6 +25,8 @@ export const USER_BODRUD_RSM: UserProfile = {
     'route-karimganj-01',
     'route-karimganj-02',
     'route-hailakandi-01',
+    'route-aizawl-01',
+    'route-tripura-01',
   ],
   activeRouteId: 'route-cachar-01',
 };
@@ -79,12 +81,44 @@ export const USER_BIKASH_MR: UserProfile = {
   activeRouteId: 'route-karimganj-01',
 };
 
+export const USER_AIZAWL_MR: UserProfile = {
+  id: 'usr-mr-0005',
+  name: 'Lalremruata Chhangte',
+  email: 'lalremruata.mr@reppulse.com',
+  role: 'MEDICAL_REP',
+  employeeCode: '0005',
+  territory: 'Aizawl Division (Mizoram)',
+  headquarter: 'Aizawl HQ',
+  phone: '9435000005',
+  assignedRouteIds: [
+    'route-aizawl-01',
+  ],
+  activeRouteId: 'route-aizawl-01',
+};
+
+export const USER_TRIPURA_MR: UserProfile = {
+  id: 'usr-mr-0006',
+  name: 'Debabrata Debnath',
+  email: 'debabrata.mr@reppulse.com',
+  role: 'MEDICAL_REP',
+  employeeCode: '0006',
+  territory: 'Tripura Division (Agartala)',
+  headquarter: 'Agartala HQ',
+  phone: '9435000006',
+  assignedRouteIds: [
+    'route-tripura-01',
+  ],
+  activeRouteId: 'route-tripura-01',
+};
+
 export const CURRENT_USER: UserProfile = USER_PRANJAL_MR;
 export const ALL_APP_USERS: UserProfile[] = [
   USER_BODRUD_RSM,
   USER_PRANJAL_MR,
   USER_RAHUL_MR,
   USER_BIKASH_MR,
+  USER_AIZAWL_MR,
+  USER_TRIPURA_MR,
 ];
 
 export const BARAK_ROUTES: RoutePlan[] = [
@@ -165,6 +199,32 @@ export const BARAK_ROUTES: RoutePlan[] = [
     isAssigned: true,
     isActiveToday: false,
     description: 'Peripheral subdivision clinics, CHCs, and tea garden hospital network.',
+  },
+  {
+    id: 'route-aizawl-01',
+    code: 'ROUTE-AIZ-01',
+    name: 'Aizawl Central - Civil Hospital, Chanmari & Bawngkawn',
+    district: 'Aizawl',
+    areas: ['Dawrpui Civil Hospital', 'Bara Bazar', 'Chanmari', 'Bawngkawn', 'ZMC Falkawn'],
+    totalDoctors: 15,
+    totalHospitals: 4,
+    totalChemists: 20,
+    isAssigned: true,
+    isActiveToday: false,
+    description: 'Capital healthcare corridor covering Civil Hospital, Chanmari specialty chambers, and ZMC.',
+  },
+  {
+    id: 'route-tripura-01',
+    code: 'ROUTE-AGR-01',
+    name: 'Agartala Core - AGMC, Kunjaban, ILS & Akhaura Road',
+    district: 'Tripura',
+    areas: ['Kunjaban AGMC & GBP', 'Capital Complex ILS', 'Akhaura Road', 'Post Office Chowmuhani', 'Hapania TMC'],
+    totalDoctors: 18,
+    totalHospitals: 5,
+    totalChemists: 24,
+    isAssigned: true,
+    isActiveToday: false,
+    description: 'Premier medical college and specialty hospital hub in Agartala & West Tripura.',
   },
 ];
 

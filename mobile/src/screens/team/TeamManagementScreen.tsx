@@ -80,6 +80,8 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onBa
     const territoryLower = (emp.territory || '').toLowerCase();
     if (territoryLower.includes('hailakandi')) setFormDivision('Hailakandi');
     else if (territoryLower.includes('karimganj')) setFormDivision('Karimganj');
+    else if (territoryLower.includes('aizawl') || territoryLower.includes('mizoram')) setFormDivision('Aizawl');
+    else if (territoryLower.includes('tripura') || territoryLower.includes('agartala')) setFormDivision('Tripura');
     else setFormDivision('Cachar');
 
     setFormHq(emp.headquarter || 'Silchar HQ');
@@ -109,6 +111,10 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onBa
         ? 'Hailakandi Division'
         : formDivision === 'Karimganj'
         ? 'Karimganj Division (Shribhumi)'
+        : formDivision === 'Aizawl'
+        ? 'Aizawl Division (Mizoram)'
+        : formDivision === 'Tripura'
+        ? 'Tripura Division (Agartala)'
         : 'Silchar Division (Cachar)';
 
     if (isEditing) {
@@ -172,7 +178,9 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onBa
       selectedDivision === 'ALL' ||
       (selectedDivision === 'Cachar' && (emp.territory?.toLowerCase().includes('cachar') || emp.territory?.toLowerCase().includes('silchar') || emp.headquarter?.toLowerCase().includes('silchar'))) ||
       (selectedDivision === 'Hailakandi' && (emp.territory?.toLowerCase().includes('hailakandi') || emp.headquarter?.toLowerCase().includes('hailakandi'))) ||
-      (selectedDivision === 'Karimganj' && (emp.territory?.toLowerCase().includes('karimganj') || emp.headquarter?.toLowerCase().includes('karimganj')));
+      (selectedDivision === 'Karimganj' && (emp.territory?.toLowerCase().includes('karimganj') || emp.headquarter?.toLowerCase().includes('karimganj'))) ||
+      (selectedDivision === 'Aizawl' && (emp.territory?.toLowerCase().includes('aizawl') || emp.territory?.toLowerCase().includes('mizoram') || emp.headquarter?.toLowerCase().includes('aizawl'))) ||
+      (selectedDivision === 'Tripura' && (emp.territory?.toLowerCase().includes('tripura') || emp.territory?.toLowerCase().includes('agartala') || emp.headquarter?.toLowerCase().includes('agartala')));
 
     // 2. Search Filter
     const query = searchQuery.toLowerCase();
@@ -439,6 +447,8 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onBa
                     { key: 'Cachar', label: 'Silchar (Cachar)' },
                     { key: 'Hailakandi', label: 'Hailakandi' },
                     { key: 'Karimganj', label: 'Karimganj' },
+                    { key: 'Aizawl', label: 'Aizawl (MZ)' },
+                    { key: 'Tripura', label: 'Tripura (TR)' },
                   ] as const
                 ).map((d) => (
                   <TouchableOpacity
@@ -448,6 +458,8 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onBa
                       setFormDivision(d.key);
                       if (d.key === 'Hailakandi') setFormHq('Hailakandi HQ');
                       else if (d.key === 'Karimganj') setFormHq('Karimganj HQ');
+                      else if (d.key === 'Aizawl') setFormHq('Aizawl HQ');
+                      else if (d.key === 'Tripura') setFormHq('Agartala HQ');
                       else setFormHq('Silchar HQ');
                     }}
                   >
@@ -826,12 +838,13 @@ const styles = StyleSheet.create({
   },
   divisionPickRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 6,
     marginTop: 2,
   },
   divisionPickPill: {
-    flex: 1,
     paddingVertical: 7,
+    paddingHorizontal: 10,
     backgroundColor: '#F1F5F9',
     borderRadius: radius.md,
     borderWidth: 1,

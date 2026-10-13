@@ -30,7 +30,7 @@ export interface RoutePlan {
   id: string;
   code: string;
   name: string;
-  district: 'Cachar' | 'Karimganj' | 'Hailakandi';
+  district: 'Cachar' | 'Karimganj' | 'Hailakandi' | 'Aizawl' | 'Tripura' | string;
   areas?: string[];
   totalDoctors: number;
   totalHospitals: number;
@@ -156,7 +156,7 @@ export interface Doctor {
   tier: 'A_PLUS' | 'A' | 'B' | 'C';
   clinicName: string;
   clinicAddress: string;
-  district: 'Cachar' | 'Karimganj' | 'Hailakandi';
+  district: 'Cachar' | 'Karimganj' | 'Hailakandi' | 'Aizawl' | 'Tripura' | string;
   area: string;
   routeId: string;
   latitude: number;
@@ -176,7 +176,7 @@ export interface Chemist {
   contactPerson: string;
   drugLicenseNumber: string;
   gstNumber?: string;
-  district: 'Cachar' | 'Karimganj' | 'Hailakandi';
+  district: 'Cachar' | 'Karimganj' | 'Hailakandi' | 'Aizawl' | 'Tripura' | string;
   area: string;
   routeId: string;
   phone: string;

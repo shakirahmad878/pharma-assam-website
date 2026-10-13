@@ -1,0 +1,18 @@
+{
+  "exportedAt": "2026-10-13T08:52:56.385Z",
+  "projectId": "reppulse-pharma",
+  "collections": {
+    "employees": [],
+    "doctors": [],
+    "chemists": [],
+    "firms": [],
+    "products": [],
+    "users": [],
+    "territories": [],
+    "visits": [],
+    "doctor_deletion_requests": [],
+    "monthly_tour_programmes": [],
+    "location_telemetry": [],
+    "attendance": []
+  }
+}
