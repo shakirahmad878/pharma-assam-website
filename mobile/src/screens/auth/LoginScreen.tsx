@@ -15,7 +15,6 @@ import { colors, typography, spacing, radius, shadows } from '../../constants/th
 import { Input } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
 import { AuthService } from '../../services/authService';
-import { ALL_APP_USERS } from '../../constants/mockData';
 
 interface LoginScreenProps {
   onLoginSuccess: () => void;
@@ -26,11 +25,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
   const [authMode, setAuthMode] = useState<'PIN' | 'OTP' | 'PASSWORD'>('PIN');
   
   // PIN Login State
-  const [employeeId, setEmployeeId] = useState('0002');
+  const [employeeId, setEmployeeId] = useState('');
   const [pin, setPin] = useState('');
   
   // OTP 1st Time Login State
-  const [mobileNumber, setMobileNumber] = useState('9435000002');
+  const [mobileNumber, setMobileNumber] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [generatedOtpHint, setGeneratedOtpHint] = useState('');
   const [enteredOtp, setEnteredOtp] = useState('');
@@ -57,15 +56,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
   const [managerPin, setManagerPin] = useState('');
   const [requestingApproval, setRequestingApproval] = useState(false);
 
-  // Auto prefill for quick user switching
-  const selectQuickUser = (code: string, phone: string) => {
-    setEmployeeId(code);
-    setMobileNumber(phone);
-    setPin('');
-    setEnteredOtp('');
-    setOtpSent(false);
-    setErrorMessage('');
-  };
+
 
   const handlePinLogin = async (bypassCutoff = false) => {
     if (!employeeId.trim()) {
@@ -290,33 +281,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
           <Text style={styles.dutyWindowText}>
             • Evening Wrap-up: <Text style={styles.dutyHighlight}>11:59 PM (23:59)</Text> automatic shift logout
           </Text>
-        </View>
-
-        {/* Quick Employee Switcher (For easy field demo) */}
-        <View style={styles.quickUserContainer}>
-          <Text style={styles.quickUserTitle}>SELECT ACTIVE EMPLOYEE:</Text>
-          <View style={styles.quickUserRow}>
-            {ALL_APP_USERS.map((u) => {
-              const isSelected = employeeId === u.employeeCode || mobileNumber === u.phone;
-              return (
-                <TouchableOpacity
-                  key={u.id}
-                  style={[styles.quickUserCard, isSelected && styles.quickUserCardActive]}
-                  onPress={() => selectQuickUser(u.employeeCode, u.phone || '')}
-                >
-                  <View style={[styles.userBadgeDot, isSelected && styles.userBadgeDotActive]} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.quickUserName, isSelected && styles.quickUserNameActive]}>
-                      {u.name}
-                    </Text>
-                    <Text style={styles.quickUserSub}>
-                      {u.role === 'REGIONAL_MANAGER' ? 'RSM (All Divisions)' : `MR (${u.territory})`} • Code: {u.employeeCode} • +91 {u.phone}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
         </View>
 
         {/* Login Form Card */}
@@ -729,57 +693,6 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSize.xs,
     fontWeight: typography.fontWeight.semibold,
     marginTop: 2,
-  },
-  quickUserContainer: {
-    marginBottom: spacing.md,
-  },
-  quickUserTitle: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#64748B',
-    letterSpacing: 0.5,
-    marginBottom: 6,
-  },
-  quickUserRow: {
-    gap: 6,
-  },
-  quickUserCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: radius.md,
-    borderWidth: 1.5,
-    borderColor: '#E2E8F0',
-    gap: 8,
-  },
-  quickUserCardActive: {
-    backgroundColor: '#F0FDF4',
-    borderColor: '#16A34A',
-    ...shadows.sm,
-  },
-  userBadgeDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#CBD5E1',
-  },
-  userBadgeDotActive: {
-    backgroundColor: '#16A34A',
-  },
-  quickUserName: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#1E293B',
-  },
-  quickUserNameActive: {
-    color: '#15803D',
-  },
-  quickUserSub: {
-    fontSize: 11,
-    color: '#64748B',
-    marginTop: 1,
   },
   formCard: {
     backgroundColor: colors.surface,

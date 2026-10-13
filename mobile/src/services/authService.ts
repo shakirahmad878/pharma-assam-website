@@ -1,6 +1,7 @@
 import { UserProfile } from '../types';
 import { StorageService, STORAGE_KEYS } from './storageService';
 import { USER_BODRUD_ABM, USER_PRANJAL_MR, ALL_APP_USERS, CURRENT_USER_MOCK } from '../constants/mockData';
+import { EmployeeService } from './employeeService';
 
 export interface LateLoginApproval {
   date: string;
@@ -77,9 +78,16 @@ export class AuthService {
       return { success: false, error: 'Invalid or expired OTP. Please check and try again.' };
     }
 
-    // Find or link registered user
-    let userTemplate = ALL_APP_USERS.find(
-      u => (u.phone && u.phone.includes(cleanDigits)) || u.employeeCode === cleanDigits
+    // Find or link registered user from live Supabase/Firestore data
+    let employees: UserProfile[] = [];
+    try {
+      employees = await EmployeeService.getEmployees();
+    } catch {
+      employees = ALL_APP_USERS;
+    }
+
+    let userTemplate = employees.find(
+      u => (u.phone && (u.phone === cleanDigits || u.phone.includes(cleanDigits))) || u.employeeCode === cleanDigits
     );
 
     if (!userTemplate) {
@@ -221,8 +229,15 @@ export class AuthService {
     const code = (targetEmployeeCode || '').trim().toLowerCase();
     const cleanDigits = code.replace(/\D/g, '');
 
+    let employees: UserProfile[] = [];
+    try {
+      employees = await EmployeeService.getEmployees();
+    } catch {
+      employees = ALL_APP_USERS;
+    }
+
     const matchedTemplate =
-      ALL_APP_USERS.find(
+      employees.find(
         u =>
           u.employeeCode.toLowerCase() === code ||
           u.email.toLowerCase() === code ||

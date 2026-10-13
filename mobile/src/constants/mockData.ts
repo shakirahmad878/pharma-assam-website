@@ -39,15 +39,14 @@ export const USER_PRANJAL_MR: UserProfile = {
   email: 'pranjal.mr@reppulse.com',
   role: 'MEDICAL_REP',
   employeeCode: '0002',
-  territory: 'Silchar Division (Cachar)',
-  headquarter: 'Silchar HQ',
+  territory: 'Karimganj Division (Shribhumi)',
+  headquarter: 'Karimganj HQ',
   phone: '9435000002',
   assignedRouteIds: [
-    'route-cachar-01',
-    'route-cachar-02',
-    'route-cachar-03',
+    'route-karimganj-01',
+    'route-karimganj-02',
   ],
-  activeRouteId: 'route-cachar-01',
+  activeRouteId: 'route-karimganj-01',
 };
 
 export const USER_RAHUL_MR: UserProfile = {
