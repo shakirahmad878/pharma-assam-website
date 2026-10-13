@@ -1,7 +1,8 @@
 import { Doctor } from '../types';
 import { StorageService, STORAGE_KEYS } from './storageService';
-import { FirestoreDbService, DoctorDeletionRequest } from './firebase/firestoreDbService';
-import { SupabaseDbService } from './supabase/supabaseDbService';
+import { SupabaseDbService, DoctorDeletionRequest } from './supabase/supabaseDbService';
+
+export { DoctorDeletionRequest };
 
 export class DoctorService {
   public static async getDoctors(): Promise<Doctor[]> {
@@ -12,10 +13,10 @@ export class DoctorService {
           return docs;
         }
       } catch (err) {
-        console.warn('[DoctorService] Supabase fetch error, trying Firestore fallback:', err);
+        console.warn('[DoctorService] Supabase fetch error, using local cache:', err);
       }
     }
-    return await FirestoreDbService.fetchDoctors();
+    return await StorageService.getItem<Doctor[]>(STORAGE_KEYS.DOCTORS_CACHE, []);
   }
 
   public static async clearAllDoctors(): Promise<void> {
@@ -44,7 +45,6 @@ export class DoctorService {
         updates.lastVisitDate = new Date().toISOString().split('T')[0];
       }
       await SupabaseDbService.updateDoctor(id, updates);
-      await FirestoreDbService.updateDoctor(id, updates);
     }
   }
 
@@ -70,13 +70,11 @@ export class DoctorService {
       isAssignedToMe: true,
     };
     await SupabaseDbService.addDoctor(doc);
-    await FirestoreDbService.addDoctor(doc);
     return doc;
   }
 
   public static async updateDoctorTier(id: string, tier: Doctor['tier']): Promise<void> {
     await SupabaseDbService.updateDoctor(id, { tier });
-    await FirestoreDbService.updateDoctor(id, { tier });
   }
 
   public static async updateDoctor(id: string, updatedFields: Partial<Doctor>): Promise<Doctor | null> {
@@ -89,13 +87,11 @@ export class DoctorService {
       ...updatedFields,
     };
     await SupabaseDbService.updateDoctor(id, updatedFields);
-    await FirestoreDbService.updateDoctor(id, updatedFields);
     return updated;
   }
 
   public static async deleteDoctor(id: string): Promise<boolean> {
     await SupabaseDbService.deleteDoctor(id);
-    await FirestoreDbService.deleteDoctor(id);
     return true;
   }
 
@@ -111,17 +107,11 @@ export class DoctorService {
       reason: reason.trim() || 'Duplicate / Wrong entry',
       requestedBy: mrName,
     });
-    await FirestoreDbService.submitDeletionRequest({
-      doctorId,
-      doctorName,
-      reason: reason.trim() || 'Duplicate / Wrong entry',
-      requestedBy: mrName,
-    });
     return { success: true, requestId };
   }
 
   public static async getPendingDeletionRequests(): Promise<DoctorDeletionRequest[]> {
-    return await FirestoreDbService.getPendingDeletionRequests();
+    return await SupabaseDbService.getPendingDeletionRequests();
   }
 
   public static async approveDoctorDeletion(
@@ -129,6 +119,6 @@ export class DoctorService {
     doctorId: string,
     managerName = 'Bodrud Jaman Sadiol (RSM)'
   ): Promise<void> {
-    await FirestoreDbService.approveDeletionRequest(requestId, doctorId, managerName);
+    await SupabaseDbService.approveDeletionRequest(requestId, doctorId, managerName);
   }
 }

@@ -50,7 +50,7 @@ export class FirestoreDbService {
    * Helper: Check if Cloud Firestore is active & configured
    */
   public static isConnected(): boolean {
-    return isFirebaseConfigured() && db !== null;
+    return false;
   }
 
   // ==========================================

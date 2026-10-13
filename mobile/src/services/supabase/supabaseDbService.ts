@@ -224,6 +224,70 @@ export class SupabaseDbService {
     return id;
   }
 
+  public static async getPendingDeletionRequests(): Promise<DoctorDeletionRequest[]> {
+    const cached = await StorageService.getItem<DoctorDeletionRequest[]>(STORAGE_KEYS.DOCTOR_DELETE_REQUESTS, []);
+    if (!this.isConnected()) return cached;
+
+    try {
+      const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/doctor_deletion_requests?status=eq.PENDING&order=requested_at.desc`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+      if (res.ok) {
+        const raw = await res.json();
+        const reqs: DoctorDeletionRequest[] = raw.map((r: any) => ({
+          id: r.id,
+          doctorId: r.doctor_id,
+          doctorName: r.doctor_name,
+          reason: r.reason,
+          requestedBy: r.requested_by_name || r.requested_by_employee_id,
+          requestedAt: r.requested_at || r.created_at,
+          status: r.status,
+          reviewedBy: r.reviewed_by,
+          reviewedAt: r.reviewed_at,
+          reviewComment: r.review_comment,
+        }));
+        await StorageService.setItem(STORAGE_KEYS.DOCTOR_DELETE_REQUESTS, reqs);
+        return reqs;
+      }
+    } catch (err) {
+      console.warn('[Supabase] getPendingDeletionRequests error:', err);
+    }
+    return cached;
+  }
+
+  public static async approveDeletionRequest(
+    requestId: string,
+    doctorId: string,
+    managerName = 'Bodrud Jaman Sadiol (RSM)'
+  ): Promise<void> {
+    await this.deleteDoctor(doctorId);
+
+    const cached = await StorageService.getItem<DoctorDeletionRequest[]>(STORAGE_KEYS.DOCTOR_DELETE_REQUESTS, []);
+    const updated = cached.map((r) =>
+      r.id === requestId
+        ? { ...r, status: 'APPROVED' as const, reviewedBy: managerName, reviewedAt: new Date().toISOString() }
+        : r
+    );
+    await StorageService.setItem(STORAGE_KEYS.DOCTOR_DELETE_REQUESTS, updated);
+
+    if (!this.isConnected()) return;
+
+    try {
+      await fetch(`${SUPABASE_CONFIG.url}/rest/v1/doctor_deletion_requests?id=eq.${requestId}`, {
+        method: 'PATCH',
+        headers: this.getHeaders(),
+        body: JSON.stringify({
+          status: 'APPROVED',
+          reviewed_by: managerName,
+          reviewed_at: new Date().toISOString(),
+        }),
+      });
+    } catch (err) {
+      console.warn('[Supabase] approveDeletionRequest error:', err);
+    }
+  }
+
   // ==========================================
   // 2. EMPLOYEES & TEAM DIRECTORY
   // ==========================================

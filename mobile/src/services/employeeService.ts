@@ -1,16 +1,13 @@
 import { UserProfile, UserRole } from '../types';
-import { StorageService, STORAGE_KEYS } from './storageService';
+import { StorageService } from './storageService';
 import { ALL_APP_USERS } from '../constants/mockData';
-import { FirestoreDbService } from './firebase/firestoreDbService';
-import { db, isFirebaseConfigured } from '../config/firebase';
-import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { SupabaseDbService } from './supabase/supabaseDbService';
 
 export class EmployeeService {
   private static EMPLOYEES_STORAGE_KEY = '@REPPULSE_ALL_EMPLOYEES_V2';
 
   public static async getEmployees(): Promise<UserProfile[]> {
-    // 1. Check Supabase PostgreSQL first
+    // 1. Check Supabase PostgreSQL
     if (SupabaseDbService.isConnected()) {
       try {
         const emps = await SupabaseDbService.fetchEmployees();
@@ -19,26 +16,7 @@ export class EmployeeService {
           return emps;
         }
       } catch (err) {
-        console.warn('[EmployeeService] Supabase fetch error, trying Firestore fallback:', err);
-      }
-    }
-
-    // 2. Check Cloud Firestore fallback
-    if (isFirebaseConfigured() && db) {
-      try {
-        const colRef = collection(db, 'employees');
-        const snap = await getDocs(colRef);
-        if (!snap.empty) {
-          const list: UserProfile[] = [];
-          snap.forEach((d) => {
-            const data = d.data() as UserProfile;
-            list.push({ ...data, id: d.id });
-          });
-          await StorageService.setItem(this.EMPLOYEES_STORAGE_KEY, list);
-          return list;
-        }
-      } catch (e) {
-        console.warn('[EmployeeService] Firestore fetch error, falling back to cache:', e);
+        console.warn('[EmployeeService] Supabase fetch error, using local cache:', err);
       }
     }
 
@@ -95,21 +73,8 @@ export class EmployeeService {
       await StorageService.setItem(`@REPPULSE_USER_PIN_${cleanDigits}`, '1234');
     }
 
-    // 3. Sync to Supabase PostgreSQL & Cloud Firestore
+    // 3. Sync to Supabase PostgreSQL
     await SupabaseDbService.addEmployee(newEmp);
-
-    if (isFirebaseConfigured() && db) {
-      try {
-        const docRef = doc(db, 'employees', newEmp.id);
-        await setDoc(docRef, {
-          ...newEmp,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        });
-      } catch (err) {
-        console.warn('[EmployeeService] Cloud sync error on addEmployee:', err);
-      }
-    }
 
     return newEmp;
   }
@@ -127,20 +92,8 @@ export class EmployeeService {
 
     await StorageService.setItem(this.EMPLOYEES_STORAGE_KEY, list);
 
-    // Sync to Supabase PostgreSQL & Cloud Firestore
+    // Sync to Supabase PostgreSQL
     await SupabaseDbService.updateEmployee(list[idx].id, updates);
-
-    if (isFirebaseConfigured() && db) {
-      try {
-        const docRef = doc(db, 'employees', list[idx].id);
-        await updateDoc(docRef, {
-          ...updates,
-          updatedAt: serverTimestamp(),
-        });
-      } catch (err) {
-        console.warn('[EmployeeService] Cloud sync error on updateEmployee:', err);
-      }
-    }
 
     return merged;
   }
@@ -150,17 +103,8 @@ export class EmployeeService {
     const filtered = list.filter((e) => e.id !== id && e.employeeCode !== id);
     await StorageService.setItem(this.EMPLOYEES_STORAGE_KEY, filtered);
 
-    // Sync to Supabase PostgreSQL & Cloud Firestore
+    // Sync to Supabase PostgreSQL
     await SupabaseDbService.deleteEmployee(id);
-
-    if (isFirebaseConfigured() && db) {
-      try {
-        const docRef = doc(db, 'employees', id);
-        await deleteDoc(docRef);
-      } catch (err) {
-        console.warn('[EmployeeService] Cloud delete error:', err);
-      }
-    }
 
     return true;
   }

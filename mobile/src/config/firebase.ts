@@ -1,22 +1,22 @@
 /**
  * RepPulse Firebase & Cloud Firestore Live Configuration
  * --------------------------------------------------------
- * Project: reppulse-pharma
- * Cloud Provider: Google Firebase & Cloud Firestore
+ * Status: DISCONNECTED
+ * Primary Backend: Supabase Serverless PostgreSQL
  */
 
-import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getFirestore, Firestore } from 'firebase/firestore';
-import { getAuth, Auth } from 'firebase/auth';
+import { FirebaseApp } from 'firebase/app';
+import { Firestore } from 'firebase/firestore';
+import { Auth } from 'firebase/auth';
 
 export const firebaseConfig = {
-  apiKey: "AIzaSyCn5xwRvSFtpOnCFTrKCbTLSN6gWgmXPEM",
-  authDomain: "reppulse-pharma.firebaseapp.com",
-  projectId: "reppulse-pharma",
-  storageBucket: "reppulse-pharma.firebasestorage.app",
-  messagingSenderId: "181266998449",
-  appId: "1:181266998449:web:2f6d9df48356ff2c04ee90",
-  measurementId: "G-EKG0GYXHD2",
+  apiKey: "",
+  authDomain: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: "",
+  measurementId: "",
 };
 
 let app: FirebaseApp | null = null;
@@ -24,35 +24,7 @@ let db: Firestore | null = null;
 let auth: Auth | null = null;
 
 export const isFirebaseConfigured = (): boolean => {
-  return (
-    Boolean(firebaseConfig.apiKey) &&
-    firebaseConfig.apiKey.startsWith("AIza") &&
-    Boolean(firebaseConfig.projectId) &&
-    firebaseConfig.projectId === "reppulse-pharma"
-  );
+  return false; // Cloud Firestore disconnected
 };
-
-try {
-  if (getApps().length === 0) {
-    app = initializeApp(firebaseConfig);
-  } else {
-    app = getApp();
-  }
-
-  try {
-    db = getFirestore(app);
-  } catch (firestoreErr) {
-    console.warn('[Firebase] Firestore init notice:', firestoreErr);
-    db = getFirestore(app);
-  }
-
-  try {
-    auth = getAuth(app);
-  } catch (authErr) {
-    console.warn('[Firebase] Auth init notice:', authErr);
-  }
-} catch (err) {
-  console.warn('[Firebase] Initialization error:', err);
-}
 
 export { app, db, auth };
