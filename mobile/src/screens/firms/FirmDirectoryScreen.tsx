@@ -18,6 +18,7 @@ import { StorageService, STORAGE_KEYS } from '../../services/storageService';
 import { AuthService } from '../../services/authService';
 import { DivisionService, DivisionType, DIVISIONS } from '../../services/divisionService';
 import { UserProfile } from '../../types';
+import { SupabaseDbService } from '../../services/supabase/supabaseDbService';
 
 interface FirmItem {
   id: string;
@@ -72,6 +73,13 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
 
   const loadFirms = async () => {
     try {
+      if (SupabaseDbService.isConnected()) {
+        const cloudFirms = await SupabaseDbService.fetchFirms();
+        if (cloudFirms && cloudFirms.length > 0) {
+          setFirms(cloudFirms as FirmItem[]);
+          return;
+        }
+      }
       const stored = await StorageService.getItem<FirmItem[]>(STORAGE_KEYS.FIRMS_CACHE, []);
       if (stored && Array.isArray(stored)) {
         setFirms(stored);
@@ -164,6 +172,7 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
     const updatedList = [newEntry, ...firms];
     setFirms(updatedList);
     await StorageService.setItem(STORAGE_KEYS.FIRMS_CACHE, updatedList);
+    await SupabaseDbService.addFirm(newEntry);
 
     setAddModalVisible(false);
     setNewFirmName('');

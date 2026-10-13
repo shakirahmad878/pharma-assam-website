@@ -1,6 +1,7 @@
 import { SyncQueueItem, SyncEntityType, VisitRecord, POBOrder, AttendanceRecord } from '../../types';
 import { StorageService, STORAGE_KEYS } from '../storageService';
 import { FirestoreDbService } from '../firebase/firestoreDbService';
+import { SupabaseDbService } from '../supabase/supabaseDbService';
 
 export interface SyncStats {
   pending: number;
@@ -109,10 +110,12 @@ export class SyncService {
         item.payload.serverId = serverId;
         item.payload.syncStatus = 'SYNCED';
 
-        // Cloud Firestore dispatch
+        // Dual Dispatch: Supabase PostgreSQL (Primary) + Cloud Firestore (Backup)
         if (item.entityType === 'VISIT') {
+          await SupabaseDbService.recordVisit(item.payload);
           await FirestoreDbService.recordVisit(item.payload);
         } else if (item.entityType === 'ATTENDANCE') {
+          await SupabaseDbService.recordAttendance(item.payload);
           await FirestoreDbService.recordAttendance(item.payload);
         }
 

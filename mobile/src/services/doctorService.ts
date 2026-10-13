@@ -1,9 +1,20 @@
 import { Doctor } from '../types';
 import { StorageService, STORAGE_KEYS } from './storageService';
 import { FirestoreDbService, DoctorDeletionRequest } from './firebase/firestoreDbService';
+import { SupabaseDbService } from './supabase/supabaseDbService';
 
 export class DoctorService {
   public static async getDoctors(): Promise<Doctor[]> {
+    if (SupabaseDbService.isConnected()) {
+      try {
+        const docs = await SupabaseDbService.fetchDoctors();
+        if (docs && docs.length > 0) {
+          return docs;
+        }
+      } catch (err) {
+        console.warn('[DoctorService] Supabase fetch error, trying Firestore fallback:', err);
+      }
+    }
     return await FirestoreDbService.fetchDoctors();
   }
 
@@ -32,6 +43,7 @@ export class DoctorService {
         updates.completedVisitsThisMonth = (doc.completedVisitsThisMonth || 0) + 1;
         updates.lastVisitDate = new Date().toISOString().split('T')[0];
       }
+      await SupabaseDbService.updateDoctor(id, updates);
       await FirestoreDbService.updateDoctor(id, updates);
     }
   }
@@ -57,11 +69,13 @@ export class DoctorService {
       todayVisitStatus: 'PENDING',
       isAssignedToMe: true,
     };
+    await SupabaseDbService.addDoctor(doc);
     await FirestoreDbService.addDoctor(doc);
     return doc;
   }
 
   public static async updateDoctorTier(id: string, tier: Doctor['tier']): Promise<void> {
+    await SupabaseDbService.updateDoctor(id, { tier });
     await FirestoreDbService.updateDoctor(id, { tier });
   }
 
@@ -74,11 +88,13 @@ export class DoctorService {
       ...current,
       ...updatedFields,
     };
+    await SupabaseDbService.updateDoctor(id, updatedFields);
     await FirestoreDbService.updateDoctor(id, updatedFields);
     return updated;
   }
 
   public static async deleteDoctor(id: string): Promise<boolean> {
+    await SupabaseDbService.deleteDoctor(id);
     await FirestoreDbService.deleteDoctor(id);
     return true;
   }
@@ -89,7 +105,13 @@ export class DoctorService {
     reason: string,
     mrName = 'Pranjal Malakar (MR)'
   ): Promise<{ success: boolean; requestId: string }> {
-    const requestId = await FirestoreDbService.submitDeletionRequest({
+    const requestId = await SupabaseDbService.submitDeletionRequest({
+      doctorId,
+      doctorName,
+      reason: reason.trim() || 'Duplicate / Wrong entry',
+      requestedBy: mrName,
+    });
+    await FirestoreDbService.submitDeletionRequest({
       doctorId,
       doctorName,
       reason: reason.trim() || 'Duplicate / Wrong entry',

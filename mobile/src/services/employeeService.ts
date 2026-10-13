@@ -4,12 +4,26 @@ import { ALL_APP_USERS } from '../constants/mockData';
 import { FirestoreDbService } from './firebase/firestoreDbService';
 import { db, isFirebaseConfigured } from '../config/firebase';
 import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { SupabaseDbService } from './supabase/supabaseDbService';
 
 export class EmployeeService {
   private static EMPLOYEES_STORAGE_KEY = '@REPPULSE_ALL_EMPLOYEES_V2';
 
   public static async getEmployees(): Promise<UserProfile[]> {
-    // 1. Check Cloud Firestore if connected
+    // 1. Check Supabase PostgreSQL first
+    if (SupabaseDbService.isConnected()) {
+      try {
+        const emps = await SupabaseDbService.fetchEmployees();
+        if (emps && emps.length > 0) {
+          await StorageService.setItem(this.EMPLOYEES_STORAGE_KEY, emps);
+          return emps;
+        }
+      } catch (err) {
+        console.warn('[EmployeeService] Supabase fetch error, trying Firestore fallback:', err);
+      }
+    }
+
+    // 2. Check Cloud Firestore fallback
     if (isFirebaseConfigured() && db) {
       try {
         const colRef = collection(db, 'employees');
@@ -81,7 +95,9 @@ export class EmployeeService {
       await StorageService.setItem(`@REPPULSE_USER_PIN_${cleanDigits}`, '1234');
     }
 
-    // 3. Sync to Cloud Firestore if connected
+    // 3. Sync to Supabase PostgreSQL & Cloud Firestore
+    await SupabaseDbService.addEmployee(newEmp);
+
     if (isFirebaseConfigured() && db) {
       try {
         const docRef = doc(db, 'employees', newEmp.id);
@@ -111,7 +127,9 @@ export class EmployeeService {
 
     await StorageService.setItem(this.EMPLOYEES_STORAGE_KEY, list);
 
-    // Sync to Cloud Firestore if connected
+    // Sync to Supabase PostgreSQL & Cloud Firestore
+    await SupabaseDbService.updateEmployee(list[idx].id, updates);
+
     if (isFirebaseConfigured() && db) {
       try {
         const docRef = doc(db, 'employees', list[idx].id);
@@ -131,6 +149,9 @@ export class EmployeeService {
     const list = await this.getEmployees();
     const filtered = list.filter((e) => e.id !== id && e.employeeCode !== id);
     await StorageService.setItem(this.EMPLOYEES_STORAGE_KEY, filtered);
+
+    // Sync to Supabase PostgreSQL & Cloud Firestore
+    await SupabaseDbService.deleteEmployee(id);
 
     if (isFirebaseConfigured() && db) {
       try {
