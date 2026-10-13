@@ -81,44 +81,12 @@ export const USER_BIKASH_MR: UserProfile = {
   activeRouteId: 'route-karimganj-01',
 };
 
-export const USER_AIZAWL_MR: UserProfile = {
-  id: 'usr-mr-0005',
-  name: 'Lalremruata Chhangte',
-  email: 'lalremruata.mr@reppulse.com',
-  role: 'MEDICAL_REP',
-  employeeCode: '0005',
-  territory: 'Aizawl Division (Mizoram)',
-  headquarter: 'Aizawl HQ',
-  phone: '9435000005',
-  assignedRouteIds: [
-    'route-aizawl-01',
-  ],
-  activeRouteId: 'route-aizawl-01',
-};
-
-export const USER_TRIPURA_MR: UserProfile = {
-  id: 'usr-mr-0006',
-  name: 'Debabrata Debnath',
-  email: 'debabrata.mr@reppulse.com',
-  role: 'MEDICAL_REP',
-  employeeCode: '0006',
-  territory: 'Tripura Division (Agartala)',
-  headquarter: 'Agartala HQ',
-  phone: '9435000006',
-  assignedRouteIds: [
-    'route-tripura-01',
-  ],
-  activeRouteId: 'route-tripura-01',
-};
-
 export const CURRENT_USER: UserProfile = USER_PRANJAL_MR;
 export const ALL_APP_USERS: UserProfile[] = [
   USER_BODRUD_RSM,
   USER_PRANJAL_MR,
   USER_RAHUL_MR,
   USER_BIKASH_MR,
-  USER_AIZAWL_MR,
-  USER_TRIPURA_MR,
 ];
 
 export const BARAK_ROUTES: RoutePlan[] = [

@@ -1,0 +1,1111 @@
+{
+  "exportedAt": "2026-10-13T09:33:05.242Z",
+  "projectId": "reppulse-pharma",
+  "collections": {
+    "employees": [
+      {
+        "id": "usr-mr-0002",
+        "name": "Pranjal Malakar",
+        "activeRouteId": "route-cachar-01",
+        "headquarter": "Silchar HQ",
+        "assignedRouteIds": [
+          "route-cachar-01",
+          "route-cachar-02",
+          "route-cachar-03"
+        ],
+        "email": "pranjal.mr@reppulse.com",
+        "territory": "Silchar Division (Cachar)",
+        "role": "MEDICAL_REP",
+        "phone": "9435000002",
+        "updatedAt": "2026-10-13T09:27:45.114Z",
+        "createdAt": "2026-10-13T09:27:45.114Z",
+        "employeeCode": "0002"
+      },
+      {
+        "id": "usr-mr-0003",
+        "activeRouteId": "route-hailakandi-01",
+        "territory": "Hailakandi Division",
+        "phone": "9435000003",
+        "role": "MEDICAL_REP",
+        "name": "Rahul Das",
+        "assignedRouteIds": [
+          "route-hailakandi-01"
+        ],
+        "headquarter": "Hailakandi HQ",
+        "createdAt": "2026-10-13T09:27:45.114Z",
+        "updatedAt": "2026-10-13T09:27:45.114Z",
+        "employeeCode": "0003",
+        "email": "rahul.mr@reppulse.com"
+      },
+      {
+        "id": "usr-mr-0004",
+        "name": "Bikash Paul",
+        "employeeCode": "0004",
+        "phone": "9435000004",
+        "createdAt": "2026-10-13T09:27:45.114Z",
+        "updatedAt": "2026-10-13T09:27:45.114Z",
+        "role": "MEDICAL_REP",
+        "territory": "Karimganj Division (Shribhumi)",
+        "email": "bikash.mr@reppulse.com",
+        "headquarter": "Karimganj HQ",
+        "assignedRouteIds": [
+          "route-karimganj-01",
+          "route-karimganj-02"
+        ],
+        "activeRouteId": "route-karimganj-01"
+      },
+      {
+        "id": "usr-rsm-0001",
+        "createdAt": "2026-10-13T09:27:45.114Z",
+        "role": "REGIONAL_MANAGER",
+        "phone": "9435000001",
+        "name": "Bodrud Jaman Sadiol",
+        "headquarter": "Silchar Regional HQ",
+        "employeeCode": "0001",
+        "updatedAt": "2026-10-13T09:27:45.114Z",
+        "assignedRouteIds": [
+          "route-cachar-01",
+          "route-cachar-02",
+          "route-cachar-03",
+          "route-karimganj-01",
+          "route-karimganj-02",
+          "route-hailakandi-01",
+          "route-aizawl-01",
+          "route-tripura-01"
+        ],
+        "territory": "Barak Valley & Extended Divisions (Silchar, Hailakandi, Karimganj, Aizawl, Tripura)",
+        "activeRouteId": "route-cachar-01",
+        "email": "bodrud.rsm@reppulse.com"
+      }
+    ],
+    "doctors": [
+      {
+        "id": "doc-barak-1791257021378",
+        "monthlyVisitTarget": 8,
+        "clinicAddress": "Radharaman Medisales, Opposite Oli Villah, Karimganj",
+        "tier": "A",
+        "qualification": "MBBS",
+        "lastVisitDate": "2026-10-06",
+        "isAssignedToMe": true,
+        "name": "Dr. Kamalesh Dey",
+        "todayVisitStatus": "COMPLETED",
+        "routeId": "route-cachar-01",
+        "clinicName": "Radharaman Medisales",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791257021,
+          "nanoseconds": 874000000
+        },
+        "area": "Opposite Oli Villah",
+        "latitude": 24.8651617,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791257091,
+          "nanoseconds": 119000000
+        },
+        "phone": "+91 9435596542",
+        "district": "Karimganj",
+        "geofenceRadiusMeters": 100,
+        "longitude": 92.3729317,
+        "specialty": "General Physician",
+        "completedVisitsThisMonth": 2
+      },
+      {
+        "id": "doc-barak-1791257349198",
+        "routeId": "route-cachar-01",
+        "specialty": "General Physician",
+        "longitude": 92.36934,
+        "monthlyVisitTarget": 8,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791257349,
+          "nanoseconds": 731000000
+        },
+        "clinicName": "Ashirwad Hospital",
+        "clinicAddress": "Ashirwad Hospital, Near Railway Gate, Karimganj",
+        "qualification": "MBBS",
+        "todayVisitStatus": "PENDING",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791257349,
+          "nanoseconds": 731000000
+        },
+        "latitude": 24.8621167,
+        "geofenceRadiusMeters": 100,
+        "phone": "+91 9435596882",
+        "isAssignedToMe": true,
+        "district": "Karimganj",
+        "area": "Near Railway Gate",
+        "completedVisitsThisMonth": 0,
+        "tier": "B",
+        "name": "Dr. AM Tapadar"
+      },
+      {
+        "id": "doc-barak-1791257461313",
+        "routeId": "route-cachar-01",
+        "monthlyVisitTarget": 8,
+        "tier": "B",
+        "name": "Dr. Subhashish Deb",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791257461,
+          "nanoseconds": 834000000
+        },
+        "geofenceRadiusMeters": 100,
+        "clinicName": "Dristi Eye Clinic",
+        "area": "Station Road",
+        "todayVisitStatus": "PENDING",
+        "completedVisitsThisMonth": 0,
+        "phone": "+91 8638339255",
+        "specialty": "General Physician",
+        "clinicAddress": "Dristi Eye Clinic, Station Road, Karimganj",
+        "longitude": 92.3693382,
+        "qualification": "MBBS",
+        "isAssignedToMe": true,
+        "latitude": 24.8627179,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791257461,
+          "nanoseconds": 834000000
+        },
+        "district": "Karimganj"
+      },
+      {
+        "id": "doc-barak-1791257729198",
+        "routeId": "route-cachar-01",
+        "name": "Dr. TK Banik",
+        "phone": "+91 7558214220",
+        "specialty": "General Physician",
+        "tier": "A",
+        "longitude": 92.363375,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791257729,
+          "nanoseconds": 988000000
+        },
+        "area": "Shibbari Road",
+        "geofenceRadiusMeters": 100,
+        "monthlyVisitTarget": 8,
+        "isAssignedToMe": true,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791257729,
+          "nanoseconds": 988000000
+        },
+        "completedVisitsThisMonth": 0,
+        "todayVisitStatus": "PENDING",
+        "clinicName": "Nilima Medical Hall",
+        "latitude": 24.8663117,
+        "clinicAddress": "Nilima Medical Hall, Shibbari Road, Karimganj",
+        "qualification": "MBBS",
+        "district": "Karimganj"
+      },
+      {
+        "id": "doc-barak-1791257859025",
+        "district": "Karimganj",
+        "todayVisitStatus": "PENDING",
+        "latitude": 24.867489,
+        "qualification": "MBBS",
+        "geofenceRadiusMeters": 100,
+        "clinicAddress": "Jivandeep, Hospital ROAD, Karimganj",
+        "name": "Dr. Nabarun Das",
+        "isAssignedToMe": true,
+        "tier": "B",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791257859,
+          "nanoseconds": 602000000
+        },
+        "longitude": 92.3630161,
+        "area": "Hospital ROAD",
+        "monthlyVisitTarget": 8,
+        "specialty": "General Physician",
+        "clinicName": "Jivandeep",
+        "completedVisitsThisMonth": 0,
+        "phone": "+91 8638452210",
+        "routeId": "route-cachar-01",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791257859,
+          "nanoseconds": 602000000
+        }
+      },
+      {
+        "id": "doc-barak-1791257892091",
+        "monthlyVisitTarget": 8,
+        "completedVisitsThisMonth": 0,
+        "name": "Dr. M Deb",
+        "isAssignedToMe": true,
+        "geofenceRadiusMeters": 100,
+        "tier": "B",
+        "longitude": 92.3630216,
+        "specialty": "General Physician",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791257892,
+          "nanoseconds": 363000000
+        },
+        "area": "Hospital Road",
+        "todayVisitStatus": "PENDING",
+        "district": "Karimganj",
+        "clinicAddress": "Jivandeep, Hospital Road, Karimganj",
+        "qualification": "MBBS",
+        "latitude": 24.8674941,
+        "clinicName": "Jivandeep",
+        "phone": "+91 7550714419",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791257892,
+          "nanoseconds": 363000000
+        },
+        "routeId": "route-cachar-01"
+      },
+      {
+        "id": "doc-barak-1791257958429",
+        "isAssignedToMe": true,
+        "area": "Hospital Road",
+        "qualification": "MBBS",
+        "clinicAddress": "36.6, Hospital Road, Karimganj",
+        "tier": "B",
+        "longitude": 92.3631,
+        "specialty": "General Physician",
+        "name": "Dr. Debasish Das",
+        "todayVisitStatus": "PENDING",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791257958,
+          "nanoseconds": 944000000
+        },
+        "phone": "+91 9401159486",
+        "geofenceRadiusMeters": 100,
+        "monthlyVisitTarget": 8,
+        "completedVisitsThisMonth": 0,
+        "clinicName": "36.6",
+        "district": "Karimganj",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791257958,
+          "nanoseconds": 944000000
+        },
+        "latitude": 24.86753,
+        "routeId": "route-cachar-01"
+      },
+      {
+        "id": "doc-barak-1791257998326",
+        "isAssignedToMe": true,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791257998,
+          "nanoseconds": 604000000
+        },
+        "clinicAddress": "Apollo Diagnostic, Hospital Road, Karimganj",
+        "todayVisitStatus": "PENDING",
+        "area": "Hospital Road",
+        "qualification": "MBBS",
+        "tier": "B",
+        "latitude": 24.8675733,
+        "name": "Dr. Subhashish Das",
+        "district": "Karimganj",
+        "specialty": "General Physician",
+        "monthlyVisitTarget": 8,
+        "longitude": 92.3632233,
+        "completedVisitsThisMonth": 0,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791257998,
+          "nanoseconds": 604000000
+        },
+        "clinicName": "Apollo Diagnostic",
+        "routeId": "route-cachar-01",
+        "phone": "+91 6001015364",
+        "geofenceRadiusMeters": 100
+      },
+      {
+        "id": "doc-barak-1791258478309",
+        "area": "Maizdhi",
+        "clinicName": "Ilaaj Polyclinic",
+        "geofenceRadiusMeters": 100,
+        "name": "Dr. Jiaul Karim Bhuyan",
+        "tier": "A",
+        "phone": "+91 7550718354",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791258479,
+          "nanoseconds": 82000000
+        },
+        "completedVisitsThisMonth": 0,
+        "qualification": "MBBS",
+        "clinicAddress": "Ilaaj Polyclinic, Maizdhi, Karimganj",
+        "monthlyVisitTarget": 8,
+        "todayVisitStatus": "PENDING",
+        "isAssignedToMe": true,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791258479,
+          "nanoseconds": 82000000
+        },
+        "latitude": 24.8654059,
+        "district": "Karimganj",
+        "routeId": "route-cachar-01",
+        "specialty": "Pediatrician",
+        "longitude": 92.3426292
+      },
+      {
+        "id": "doc-barak-1791258697171",
+        "clinicAddress": "Home Chamber, Maizdhi, Karimganj",
+        "qualification": "MBBS",
+        "clinicName": "Home Chamber",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791258697,
+          "nanoseconds": 709000000
+        },
+        "isAssignedToMe": true,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791258697,
+          "nanoseconds": 709000000
+        },
+        "district": "Karimganj",
+        "geofenceRadiusMeters": 100,
+        "latitude": 24.8629783,
+        "phone": "+91 9401148523",
+        "longitude": 92.3425883,
+        "name": "Dr. Abul Hussain",
+        "specialty": "Pediatrician",
+        "tier": "A",
+        "todayVisitStatus": "PENDING",
+        "completedVisitsThisMonth": 0,
+        "monthlyVisitTarget": 8,
+        "routeId": "route-cachar-01",
+        "area": "Maizdhi"
+      },
+      {
+        "id": "doc-barak-1791258792670",
+        "specialty": "General Physician",
+        "longitude": 92.3433185,
+        "area": "Maizdhi",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791258793,
+          "nanoseconds": 174000000
+        },
+        "todayVisitStatus": "PENDING",
+        "name": "Dr. Mustafa Ahmed",
+        "latitude": 24.8648561,
+        "isAssignedToMe": true,
+        "completedVisitsThisMonth": 0,
+        "tier": "B",
+        "district": "Karimganj",
+        "monthlyVisitTarget": 8,
+        "phone": "+91 6001015821",
+        "clinicName": "MediTown",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791258793,
+          "nanoseconds": 174000000
+        },
+        "qualification": "MBBS",
+        "clinicAddress": "MediTown, Maizdhi, Karimganj",
+        "routeId": "route-cachar-01",
+        "geofenceRadiusMeters": 100
+      },
+      {
+        "id": "doc-barak-1791258830684",
+        "geofenceRadiusMeters": 100,
+        "clinicAddress": "MediTown, Maizdhi, Karimganj",
+        "qualification": "MBBS",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791258830,
+          "nanoseconds": 964000000
+        },
+        "district": "Karimganj",
+        "latitude": 24.8645433,
+        "phone": "+91 7005585101",
+        "isAssignedToMe": true,
+        "completedVisitsThisMonth": 0,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791258830,
+          "nanoseconds": 964000000
+        },
+        "todayVisitStatus": "PENDING",
+        "tier": "B",
+        "longitude": 92.3431567,
+        "routeId": "route-cachar-01",
+        "specialty": "General Physician",
+        "clinicName": "MediTown",
+        "name": "Dr. Ahmed Abbas",
+        "monthlyVisitTarget": 8,
+        "area": "Maizdhi"
+      },
+      {
+        "id": "doc-barak-1791258860060",
+        "completedVisitsThisMonth": 0,
+        "longitude": 92.3432083,
+        "specialty": "General Physician",
+        "todayVisitStatus": "PENDING",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791258860,
+          "nanoseconds": 304000000
+        },
+        "phone": "+91 7550718469",
+        "monthlyVisitTarget": 8,
+        "area": "Maizdhi",
+        "qualification": "MBBS",
+        "clinicName": "Home",
+        "routeId": "route-cachar-01",
+        "clinicAddress": "Home, Maizdhi, Karimganj",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791258860,
+          "nanoseconds": 304000000
+        },
+        "geofenceRadiusMeters": 100,
+        "isAssignedToMe": true,
+        "tier": "B",
+        "district": "Karimganj",
+        "name": "Dr. Aftar Uddin",
+        "latitude": 24.86475
+      },
+      {
+        "id": "doc-barak-1791258888268",
+        "area": "Maizdhi",
+        "isAssignedToMe": true,
+        "tier": "A",
+        "longitude": 92.343115,
+        "specialty": "General Physician",
+        "name": "Dr. Ehsan Galib",
+        "phone": "+91 9435596541",
+        "monthlyVisitTarget": 8,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791258888,
+          "nanoseconds": 534000000
+        },
+        "district": "Karimganj",
+        "todayVisitStatus": "PENDING",
+        "clinicName": "Home",
+        "latitude": 24.8646283,
+        "routeId": "route-cachar-01",
+        "geofenceRadiusMeters": 100,
+        "completedVisitsThisMonth": 0,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791258888,
+          "nanoseconds": 534000000
+        },
+        "clinicAddress": "Home, Maizdhi, Karimganj",
+        "qualification": "MBBS"
+      },
+      {
+        "id": "doc-barak-1791259019460",
+        "todayVisitStatus": "PENDING",
+        "district": "Karimganj",
+        "latitude": 24.8668637,
+        "phone": "+91 8638339311",
+        "clinicName": "Home",
+        "routeId": "route-cachar-01",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791259019,
+          "nanoseconds": 731000000
+        },
+        "geofenceRadiusMeters": 100,
+        "area": "Maizdhi",
+        "monthlyVisitTarget": 8,
+        "tier": "A_PLUS",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791259019,
+          "nanoseconds": 731000000
+        },
+        "name": "Dr. Guljar Hussain",
+        "completedVisitsThisMonth": 0,
+        "clinicAddress": "Home, Maizdhi, Karimganj",
+        "longitude": 92.3446416,
+        "qualification": "MBBS",
+        "specialty": "Pediatrician",
+        "isAssignedToMe": true
+      },
+      {
+        "id": "doc-barak-1791259148375",
+        "monthlyVisitTarget": 8,
+        "area": "Maizdhi",
+        "isAssignedToMe": true,
+        "todayVisitStatus": "PENDING",
+        "name": "Dr. Nazim Uddin",
+        "tier": "A",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791259148,
+          "nanoseconds": 625000000
+        },
+        "qualification": "MBBS",
+        "clinicAddress": "Home, Maizdhi, Karimganj",
+        "specialty": "General Physician",
+        "longitude": 92.3430566,
+        "geofenceRadiusMeters": 100,
+        "district": "Karimganj",
+        "latitude": 24.8674062,
+        "clinicName": "Home",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791259148,
+          "nanoseconds": 625000000
+        },
+        "phone": "+91 8638334522",
+        "completedVisitsThisMonth": 0,
+        "routeId": "route-cachar-01"
+      },
+      {
+        "id": "doc-barak-1791259267062",
+        "isAssignedToMe": true,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791259267,
+          "nanoseconds": 534000000
+        },
+        "latitude": 24.867545,
+        "district": "Karimganj",
+        "geofenceRadiusMeters": 100,
+        "completedVisitsThisMonth": 0,
+        "routeId": "route-cachar-01",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791259267,
+          "nanoseconds": 534000000
+        },
+        "tier": "B",
+        "clinicAddress": "Truecare Medicos, Maizdhi, Karimganj",
+        "specialty": "General Physician",
+        "qualification": "MBBS",
+        "clinicName": "Truecare Medicos",
+        "name": "Dr. Dilwar Hussain",
+        "longitude": 92.345475,
+        "phone": "+91 7550718342",
+        "todayVisitStatus": "PENDING",
+        "monthlyVisitTarget": 8,
+        "area": "Maizdhi"
+      },
+      {
+        "id": "doc-barak-1791259370731",
+        "latitude": 24.8699744,
+        "area": "Settlement",
+        "clinicAddress": "Home, Settlement, Karimganj",
+        "district": "Karimganj",
+        "todayVisitStatus": "PENDING",
+        "qualification": "MBBS",
+        "clinicName": "Home",
+        "tier": "A",
+        "routeId": "route-cachar-01",
+        "monthlyVisitTarget": 8,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791259371,
+          "nanoseconds": 249000000
+        },
+        "name": "Dr. Manas Das",
+        "geofenceRadiusMeters": 100,
+        "completedVisitsThisMonth": 0,
+        "phone": "+91 8811875445",
+        "specialty": "General Physician",
+        "longitude": 92.3636011,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791259371,
+          "nanoseconds": 249000000
+        },
+        "isAssignedToMe": true
+      },
+      {
+        "id": "doc-barak-1791259615789",
+        "name": "Dr. Priyam Das Purkayastha",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791259616,
+          "nanoseconds": 394000000
+        },
+        "tier": "B",
+        "routeId": "route-cachar-01",
+        "isAssignedToMe": true,
+        "longitude": 92.3498467,
+        "geofenceRadiusMeters": 100,
+        "specialty": "General Physician",
+        "area": "Lakhibazar Road",
+        "todayVisitStatus": "PENDING",
+        "phone": "+91 9864785425",
+        "clinicAddress": "Joy Guru, Lakhibazar Road, Karimganj",
+        "qualification": "MBBS",
+        "clinicName": "Joy Guru",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791259616,
+          "nanoseconds": 394000000
+        },
+        "completedVisitsThisMonth": 0,
+        "monthlyVisitTarget": 8,
+        "district": "Karimganj",
+        "latitude": 24.8731583
+      },
+      {
+        "id": "doc-barak-1791259717040",
+        "district": "Karimganj",
+        "latitude": 24.8735733,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791259717,
+          "nanoseconds": 305000000
+        },
+        "todayVisitStatus": "PENDING",
+        "qualification": "MBBS",
+        "clinicAddress": "Home, Lakhibazar Road, Karimganj",
+        "name": "Dr. Manoj Chakraborty",
+        "phone": "+91 7550718254",
+        "tier": "A",
+        "routeId": "route-cachar-01",
+        "isAssignedToMe": true,
+        "geofenceRadiusMeters": 100,
+        "area": "Lakhibazar Road",
+        "monthlyVisitTarget": 8,
+        "completedVisitsThisMonth": 0,
+        "longitude": 92.3500517,
+        "specialty": "General Physician",
+        "clinicName": "Home",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791259717,
+          "nanoseconds": 305000000
+        }
+      },
+      {
+        "id": "doc-barak-1791260026349",
+        "geofenceRadiusMeters": 100,
+        "routeId": "route-cachar-01",
+        "area": "Main Road",
+        "isAssignedToMe": true,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791260026,
+          "nanoseconds": 914000000
+        },
+        "tier": "B",
+        "name": "Dr. Subhadeep Bhattacharjee",
+        "clinicName": "Medi Land",
+        "monthlyVisitTarget": 8,
+        "todayVisitStatus": "PENDING",
+        "completedVisitsThisMonth": 0,
+        "latitude": 24.8706283,
+        "district": "Karimganj",
+        "qualification": "MBBS",
+        "clinicAddress": "Medi Land, Main Road, Karimganj",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791260026,
+          "nanoseconds": 914000000
+        },
+        "phone": "+91 7550714563",
+        "specialty": "General Physician",
+        "longitude": 92.3581667
+      },
+      {
+        "id": "doc-barak-1791260117160",
+        "todayVisitStatus": "PENDING",
+        "qualification": "MBBS",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791260117,
+          "nanoseconds": 406000000
+        },
+        "routeId": "route-cachar-01",
+        "clinicAddress": "Sanvii, Nilmoni Road, Karimganj",
+        "isAssignedToMe": true,
+        "phone": "+91 8638445622",
+        "completedVisitsThisMonth": 0,
+        "geofenceRadiusMeters": 100,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791260117,
+          "nanoseconds": 406000000
+        },
+        "clinicName": "Sanvii",
+        "district": "Karimganj",
+        "latitude": 24.8717787,
+        "longitude": 92.3591052,
+        "specialty": "Gynecologist",
+        "area": "Nilmoni Road",
+        "monthlyVisitTarget": 8,
+        "tier": "A",
+        "name": "Dr. Moni Deb"
+      },
+      {
+        "id": "doc-barak-1791260151984",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791260152,
+          "nanoseconds": 331000000
+        },
+        "clinicName": "Karimganj Neuro Centre",
+        "completedVisitsThisMonth": 0,
+        "phone": "+91 7550714568",
+        "district": "Karimganj",
+        "latitude": 24.8717333,
+        "routeId": "route-cachar-01",
+        "longitude": 92.3590733,
+        "specialty": "Pediatrician",
+        "tier": "A",
+        "name": "Dr. Puja Das",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791260152,
+          "nanoseconds": 331000000
+        },
+        "clinicAddress": "Karimganj Neuro Centre, Nilmoni Road, Karimganj",
+        "qualification": "MBBS",
+        "geofenceRadiusMeters": 100,
+        "area": "Nilmoni Road",
+        "isAssignedToMe": true,
+        "monthlyVisitTarget": 8,
+        "todayVisitStatus": "PENDING"
+      },
+      {
+        "id": "doc-barak-1791260230100",
+        "monthlyVisitTarget": 8,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791260230,
+          "nanoseconds": 751000000
+        },
+        "clinicName": "Home",
+        "routeId": "route-cachar-01",
+        "latitude": 24.873375,
+        "completedVisitsThisMonth": 0,
+        "district": "Karimganj",
+        "geofenceRadiusMeters": 100,
+        "isAssignedToMe": true,
+        "phone": "+91 8638225699",
+        "clinicAddress": "Home, Nilmoni Road, Karimganj",
+        "qualification": "MBBS",
+        "area": "Nilmoni Road",
+        "specialty": "Gynecologist",
+        "longitude": 92.3589883,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791260230,
+          "nanoseconds": 751000000
+        },
+        "name": "Dr. AK BISWAS",
+        "tier": "A",
+        "todayVisitStatus": "PENDING"
+      },
+      {
+        "id": "doc-barak-1791260276762",
+        "tier": "A",
+        "name": "Dr. Shewali Kalita",
+        "isAssignedToMe": true,
+        "routeId": "route-cachar-01",
+        "clinicName": "Home",
+        "phone": "+91 9401185632",
+        "monthlyVisitTarget": 8,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791260277,
+          "nanoseconds": 40000000
+        },
+        "area": "Nilmoni Road",
+        "qualification": "MBBS",
+        "clinicAddress": "Home, Nilmoni Road, Cachar",
+        "todayVisitStatus": "PENDING",
+        "longitude": 92.358995,
+        "specialty": "Pediatrician",
+        "completedVisitsThisMonth": 0,
+        "district": "Cachar",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791260277,
+          "nanoseconds": 40000000
+        },
+        "geofenceRadiusMeters": 100,
+        "latitude": 24.87338
+      },
+      {
+        "id": "doc-barak-1791260413806",
+        "completedVisitsThisMonth": 0,
+        "phone": "+91 6001018965",
+        "geofenceRadiusMeters": 100,
+        "tier": "A",
+        "name": "Dr. Subhashree Dutta",
+        "clinicAddress": "Sri Krishna Medical Hall, Main Road, Karimganj",
+        "specialty": "General Physician",
+        "qualification": "MBBS",
+        "longitude": 92.3612555,
+        "todayVisitStatus": "PENDING",
+        "monthlyVisitTarget": 8,
+        "isAssignedToMe": true,
+        "area": "Main Road",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791260414,
+          "nanoseconds": 112000000
+        },
+        "district": "Karimganj",
+        "routeId": "route-cachar-01",
+        "latitude": 24.8712096,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791260414,
+          "nanoseconds": 112000000
+        },
+        "clinicName": "Sri Krishna Medical Hall"
+      },
+      {
+        "id": "doc-barak-1791261988946",
+        "monthlyVisitTarget": 8,
+        "name": "Dr. Suparna Das Lala",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791261989,
+          "nanoseconds": 741000000
+        },
+        "tier": "A",
+        "district": "Karimganj",
+        "geofenceRadiusMeters": 100,
+        "latitude": 24.8686716,
+        "clinicName": "Red Cross",
+        "area": "Read Cross Road",
+        "qualification": "MBBS",
+        "clinicAddress": "Red Cross, Read Cross Road, Karimganj",
+        "completedVisitsThisMonth": 0,
+        "longitude": 92.3577562,
+        "specialty": "Gynecologist",
+        "isAssignedToMe": true,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791261989,
+          "nanoseconds": 741000000
+        },
+        "routeId": "route-cachar-01",
+        "todayVisitStatus": "PENDING",
+        "phone": "+91 7550714521"
+      },
+      {
+        "id": "doc-barak-1791262152283",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791262153,
+          "nanoseconds": 200000000
+        },
+        "monthlyVisitTarget": 8,
+        "specialty": "Pediatrician",
+        "longitude": 92.342738,
+        "routeId": "route-cachar-01",
+        "clinicAddress": "Home, Mission Road, Karimganj",
+        "qualification": "MBBS",
+        "isAssignedToMe": true,
+        "phone": "+91 9435585621",
+        "geofenceRadiusMeters": 100,
+        "tier": "A_PLUS",
+        "todayVisitStatus": "PENDING",
+        "name": "Dr. Debotush Paul",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791262153,
+          "nanoseconds": 200000000
+        },
+        "latitude": 24.8653672,
+        "clinicName": "Home",
+        "district": "Karimganj",
+        "completedVisitsThisMonth": 0,
+        "area": "Mission Road"
+      },
+      {
+        "id": "doc-barak-1791262370796",
+        "name": "Dr. Ritam Das",
+        "tier": "A",
+        "completedVisitsThisMonth": 0,
+        "phone": "+91 8811754223",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791262371,
+          "nanoseconds": 462000000
+        },
+        "area": "RS college",
+        "monthlyVisitTarget": 8,
+        "clinicName": "IMS HOSPITAL",
+        "geofenceRadiusMeters": 100,
+        "routeId": "route-cachar-01",
+        "latitude": 24.8712987,
+        "district": "Karimganj",
+        "clinicAddress": "IMS HOSPITAL, RS college, Karimganj",
+        "qualification": "MBBS",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791262371,
+          "nanoseconds": 462000000
+        },
+        "specialty": "Pediatrician",
+        "todayVisitStatus": "PENDING",
+        "longitude": 92.3599953,
+        "isAssignedToMe": true
+      },
+      {
+        "id": "doc-barak-1791262592544",
+        "qualification": "MBBS",
+        "todayVisitStatus": "PENDING",
+        "clinicAddress": "Medizone, Main Road, Karimganj",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791262593,
+          "nanoseconds": 37000000
+        },
+        "tier": "A",
+        "specialty": "General Physician",
+        "longitude": 92.3638818,
+        "name": "Dr. Lipi Deb Sinha",
+        "completedVisitsThisMonth": 0,
+        "monthlyVisitTarget": 8,
+        "area": "Main Road",
+        "latitude": 24.8689024,
+        "phone": "+91 7550714582",
+        "district": "Karimganj",
+        "geofenceRadiusMeters": 100,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791262593,
+          "nanoseconds": 37000000
+        },
+        "routeId": "route-cachar-01",
+        "isAssignedToMe": true,
+        "clinicName": "Medizone"
+      },
+      {
+        "id": "doc-barak-1791881419307",
+        "routeId": "route-cachar-01",
+        "specialty": "Pediatrician",
+        "todayVisitStatus": "PENDING",
+        "longitude": 92.7233402,
+        "phone": "+91 9706520796",
+        "qualification": "MBBS",
+        "clinicAddress": "LRM Hospital, Hospital, Cachar",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791881419,
+          "nanoseconds": 572000000
+        },
+        "monthlyVisitTarget": 8,
+        "geofenceRadiusMeters": 100,
+        "isAssignedToMe": true,
+        "completedVisitsThisMonth": 0,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791881419,
+          "nanoseconds": 572000000
+        },
+        "name": "Dr. Surendra Babu",
+        "clinicName": "LRM Hospital",
+        "tier": "A_PLUS",
+        "latitude": 23.744433,
+        "area": "Hospital",
+        "district": "Cachar"
+      }
+    ],
+    "chemists": [],
+    "firms": [
+      {
+        "id": "firm-hkd-001",
+        "type": "Distributor",
+        "area": "S.K. Roy Road, Main Market",
+        "district": "Hailakandi",
+        "dlNumber": "AS-HKD-2026-DL-2011",
+        "phone": "+91 9435033445",
+        "address": "S.K. Roy Hospital Road, Hailakandi, Assam 788151",
+        "contactPerson": "M. H. Barbhuiya",
+        "name": "HAILAKANDI MEDICO AGENCY",
+        "createdAt": "2026-10-13T09:27:45.114Z"
+      },
+      {
+        "id": "firm-kxj-001",
+        "dlNumber": "AS-KXJ-2026-DL-3011",
+        "district": "Karimganj",
+        "contactPerson": "Prabir Roy",
+        "phone": "+91 9435044556",
+        "name": "SHRIBHUMI WHOLESALE PHARMACEUTICALS",
+        "createdAt": "2026-10-13T09:27:45.114Z",
+        "type": "Stockist",
+        "area": "Station Road, Karimganj Town",
+        "address": "Station Road, Karimganj, Assam 788710"
+      },
+      {
+        "id": "firm-sil-001",
+        "type": "Stockist",
+        "contactPerson": "S. K. Choudhury",
+        "area": "Hospital Road, Ambicapatty",
+        "dlNumber": "AS-SIL-2026-DL-1011",
+        "district": "Cachar",
+        "address": "Hospital Road, Silchar, Cachar, Assam 788005",
+        "phone": "+91 9435011223",
+        "createdAt": "2026-10-13T09:27:45.114Z",
+        "name": "BARAK PHARMA DISTRIBUTORS"
+      },
+      {
+        "id": "firm-sil-002",
+        "area": "SMCH Gate, Ghungoor",
+        "type": "Retailer",
+        "address": "Ghungoor, Silchar, Cachar, Assam 788014",
+        "contactPerson": "Debasish Paul",
+        "createdAt": "2026-10-13T09:27:45.114Z",
+        "name": "SANJIVANI MEDICAL STORE",
+        "phone": "+91 9435022334",
+        "district": "Cachar",
+        "dlNumber": "AS-SIL-2026-DL-1022"
+      }
+    ],
+    "products": [],
+    "users": [],
+    "territories": [],
+    "visits": [],
+    "doctor_deletion_requests": [
+      {
+        "id": "del-req-1791174837700",
+        "status": "PENDING",
+        "requestedAt": "2026-10-05T04:33:57.700Z",
+        "reason": "Doctor relocated / chamber closed",
+        "requestedBy": "Pranjal Malakar",
+        "doctorId": "doc-barak-1791174546676",
+        "doctorName": "Dr. Shakir Ahmad Barbhuiya",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791174838,
+          "nanoseconds": 389000000
+        }
+      }
+    ],
+    "monthly_tour_programmes": [],
+    "location_telemetry": [],
+    "attendance": [
+      {
+        "id": "att_1790738421647",
+        "date": "2026-09-30",
+        "punchInTimestamp": "2026-09-30T03:20:21.647Z",
+        "status": "PUNCHED_IN",
+        "isMockLocation": false,
+        "employeeName": "Bodrud Jaman Sadiol",
+        "longitude": 92.8039779,
+        "employeeId": "usr-rsm-0001",
+        "latitude": 24.8163752,
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1791139650,
+          "nanoseconds": 383000000
+        },
+        "batteryPercentage": 94,
+        "accuracyMeters": 20,
+        "syncStatus": "SYNCED",
+        "serverId": "srv_1791139649441_3gfc4s",
+        "selfieBase64OrUri": "file:///data/user/0/com.reppulse.sfa/cache/ImagePicker/0310a79a-5697-4515-b66e-775f45a8a91c.jpeg"
+      }
+    ]
+  }
+}
