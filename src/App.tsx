@@ -591,7 +591,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#090907] text-[#F2ECE1] flex flex-col font-sans selection:bg-[#6C5636] selection:text-[#F2ECE1]">
       
       {/* Top Navigation Bar */}
       <Navbar
@@ -608,7 +608,7 @@ export default function App() {
       />
 
       {/* Main Workspace Layout */}
-      <div className="flex-1 flex max-w-7xl w-full mx-auto relative min-w-0 pb-16 lg:pb-0">
+      <div className="flex-1 flex max-w-7xl w-full mx-auto relative min-w-0 pb-20 lg:pb-6">
         
         {/* Left Navigation Sidebar (Desktop sticky + Mobile slide-over drawer) */}
         <Sidebar
@@ -620,7 +620,7 @@ export default function App() {
         />
 
         {/* Dynamic Main Content Area */}
-        <main className="flex-1 p-3 sm:p-5 md:p-6 overflow-y-auto max-w-full lg:max-w-5xl w-full min-w-0">
+        <main className="flex-1 p-3.5 sm:p-5 md:p-6 overflow-y-auto max-w-full lg:max-w-5xl w-full min-w-0">
           {/* Admin Control Center Portal */}
           {activeTab === 'admin_portal' && (
             <AdminPortal
@@ -793,14 +793,14 @@ export default function App() {
       </div>
 
       {/* Modern App-Like Mobile Bottom Navigation Bar (Visible on < lg screens) */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 flex items-center justify-around py-2 px-1 shadow-2xl safe-area-inset-bottom">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#11110e]/95 backdrop-blur-md border-t border-[#282319] flex items-center justify-around py-2 px-1 shadow-[0_-5px_15px_rgba(4,4,3,0.8)] safe-area-inset-bottom">
         {/* Admin / Staff Tab */}
         <button
           onClick={() => handleTabChange(AuthService.canAccessAdminPortal(currentUser) ? 'admin_portal' : 'staff')}
-          className={`flex flex-col items-center justify-center py-1 px-2 rounded-lg transition-all ${
+          className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
             activeTab === 'admin_portal' || activeTab === 'staff'
-              ? 'text-teal-400'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'text-[#B99D73] bg-[#0c0c09] shadow-[inset_2px_2px_5px_#040403,inset_-2px_-2px_5px_#1c1a14] border border-[#6C5636]/40'
+              : 'text-[#857866] hover:text-[#B99D73]'
           }`}
         >
           <ShieldCheck className="w-5 h-5" />
@@ -810,10 +810,10 @@ export default function App() {
         {/* Doctors Tab */}
         <button
           onClick={() => handleTabChange('doctors')}
-          className={`flex flex-col items-center justify-center py-1 px-2 rounded-lg transition-all ${
+          className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
             activeTab === 'doctors'
-              ? 'text-teal-400'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'text-[#B99D73] bg-[#0c0c09] shadow-[inset_2px_2px_5px_#040403,inset_-2px_-2px_5px_#1c1a14] border border-[#6C5636]/40'
+              : 'text-[#857866] hover:text-[#B99D73]'
           }`}
         >
           <Stethoscope className="w-5 h-5" />
@@ -823,10 +823,10 @@ export default function App() {
         {/* DCR Visits Tab */}
         <button
           onClick={() => handleTabChange('dcr')}
-          className={`flex flex-col items-center justify-center py-1 px-2 rounded-lg transition-all ${
+          className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
             activeTab === 'dcr'
-              ? 'text-teal-400'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'text-[#B99D73] bg-[#0c0c09] shadow-[inset_2px_2px_5px_#040403,inset_-2px_-2px_5px_#1c1a14] border border-[#6C5636]/40'
+              : 'text-[#857866] hover:text-[#B99D73]'
           }`}
         >
           <FileText className="w-5 h-5" />
@@ -836,10 +836,10 @@ export default function App() {
         {/* Overview Tab */}
         <button
           onClick={() => handleTabChange('dashboard')}
-          className={`flex flex-col items-center justify-center py-1 px-2 rounded-lg transition-all ${
+          className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
             activeTab === 'dashboard'
-              ? 'text-teal-400'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'text-[#B99D73] bg-[#0c0c09] shadow-[inset_2px_2px_5px_#040403,inset_-2px_-2px_5px_#1c1a14] border border-[#6C5636]/40'
+              : 'text-[#857866] hover:text-[#B99D73]'
           }`}
         >
           <LayoutDashboard className="w-5 h-5" />
@@ -849,7 +849,7 @@ export default function App() {
         {/* All Menus Drawer Button */}
         <button
           onClick={() => setIsMobileMenuOpen(true)}
-          className="flex flex-col items-center justify-center py-1 px-2 rounded-lg text-slate-400 hover:text-teal-300 transition-all"
+          className="flex flex-col items-center justify-center py-1 px-2.5 rounded-xl text-[#857866] hover:text-[#B99D73] transition-all"
         >
           <Menu className="w-5 h-5" />
           <span className="text-[10px] font-medium mt-0.5">All Menus</span>

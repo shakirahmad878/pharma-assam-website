@@ -79,18 +79,18 @@ export const DCREntryModal: React.FC<DCREntryModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+    <div className="fixed inset-0 z-50 bg-[#090907]/80 backdrop-blur-md flex items-center justify-center p-4">
+      <div className="neu-card max-w-xl w-full p-6 animate-in fade-in zoom-in-95 border border-[#282319] shadow-neu-raised">
+        <div className="flex items-center justify-between pb-3.5 border-b border-[#282319]">
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-teal-600">Field SFA Reporting</span>
-            <h3 className="text-base font-bold text-slate-900 flex items-center gap-1.5">
-              <Stethoscope className="w-4 h-4 text-teal-600" />
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#B99D73]">Field SFA Reporting</span>
+            <h3 className="text-base font-bold text-[#F2ECE1] flex items-center gap-1.5 mt-0.5">
+              <Stethoscope className="w-4 h-4 text-[#B99D73]" />
               Log Doctor Daily Call Report (DCR)
             </h3>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
-            <X className="w-5 h-5" />
+          <button onClick={onClose} className="neu-btn p-1.5 rounded-xl text-[#857866] hover:text-[#F2ECE1]">
+            <X className="w-4 h-4" />
           </button>
         </div>
 
@@ -98,11 +98,11 @@ export const DCREntryModal: React.FC<DCREntryModalProps> = ({
           
           {/* Doctor Selection */}
           <div>
-            <label className="font-semibold text-slate-700 block mb-1">Select Doctor</label>
+            <label className="font-semibold text-[#B99D73] block mb-1">Select Doctor</label>
             <select
               value={selectedDoctorId}
               onChange={(e) => setSelectedDoctorId(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 font-medium focus:ring-1 focus:ring-teal-500 focus:outline-none"
+              className="neu-input w-full px-3 py-2 text-xs appearance-none bg-[#0c0c09] cursor-pointer"
             >
               {doctors.map(d => (
                 <option key={d.id} value={d.id}>
@@ -113,27 +113,27 @@ export const DCREntryModal: React.FC<DCREntryModalProps> = ({
           </div>
 
           {/* Live Geofence Distance Verification Bar */}
-          <div className={`p-3 rounded-xl border flex items-center justify-between ${
+          <div className={`p-3.5 rounded-xl border flex items-center justify-between shadow-neu-sunken ${
             geofenceCheck.isWithin 
-              ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
-              : 'bg-amber-50 border-amber-200 text-amber-800'
+              ? 'bg-[#101912] border-emerald-900/60 text-emerald-300' 
+              : 'bg-[#1a140b] border-amber-900/60 text-amber-300'
           }`}>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               {geofenceCheck.isWithin ? (
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
               ) : (
-                <AlertTriangle className="w-4 h-4 text-amber-600" />
+                <AlertTriangle className="w-4 h-4 text-amber-400" />
               )}
               <div>
                 <span className="font-bold">
                   {geofenceCheck.isWithin ? 'Geofence Validated' : 'Distance Alert'}
                 </span>
-                <p className="text-[11px] opacity-80">
+                <p className="text-[11px] opacity-80 mt-0.5">
                   Current GPS fix is <strong>{geofenceCheck.distanceMeters}m</strong> from clinic (Max Geofence: 100m)
                 </p>
               </div>
             </div>
-            <span className="font-mono font-bold text-[11px] bg-white/80 px-2 py-0.5 rounded border border-current">
+            <span className="font-mono font-bold text-[10px] bg-[#0c0c09] px-2 py-0.5 rounded border border-[#282319]">
               {geofenceCheck.isWithin ? 'VERIFIED' : 'OUTSIDE'}
             </span>
           </div>
@@ -141,21 +141,21 @@ export const DCREntryModal: React.FC<DCREntryModalProps> = ({
           {/* Timings */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="font-semibold text-slate-700 block mb-1">Check-in Time</label>
+              <label className="font-semibold text-[#B99D73] block mb-1">Check-in Time</label>
               <input
                 type="text"
                 value={checkInTime}
                 onChange={(e) => setCheckInTime(e.target.value)}
-                className="w-full px-3 py-1.5 rounded-lg border border-slate-200 focus:ring-1 focus:ring-teal-500"
+                className="neu-input w-full px-3 py-2 text-xs font-mono"
               />
             </div>
             <div>
-              <label className="font-semibold text-slate-700 block mb-1">Check-out Time</label>
+              <label className="font-semibold text-[#B99D73] block mb-1">Check-out Time</label>
               <input
                 type="text"
                 value={checkOutTime}
                 onChange={(e) => setCheckOutTime(e.target.value)}
-                className="w-full px-3 py-1.5 rounded-lg border border-slate-200 focus:ring-1 focus:ring-teal-500"
+                className="neu-input w-full px-3 py-2 text-xs font-mono"
               />
             </div>
           </div>
@@ -163,11 +163,11 @@ export const DCREntryModal: React.FC<DCREntryModalProps> = ({
           {/* Product Discussed & Samples */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="font-semibold text-slate-700 block mb-1">Product Detailed</label>
+              <label className="font-semibold text-[#B99D73] block mb-1">Product Detailed</label>
               <select
                 value={selectedProductIds[0]}
                 onChange={(e) => setSelectedProductIds([e.target.value])}
-                className="w-full px-3 py-1.5 rounded-lg border border-slate-200"
+                className="neu-input w-full px-3 py-2 text-xs appearance-none bg-[#0c0c09] cursor-pointer"
               >
                 {products.map(p => (
                   <option key={p.id} value={p.id}>{p.brandName || p.name}</option>
@@ -175,42 +175,42 @@ export const DCREntryModal: React.FC<DCREntryModalProps> = ({
               </select>
             </div>
             <div>
-              <label className="font-semibold text-slate-700 block mb-1">Sample Drop (Units)</label>
+              <label className="font-semibold text-[#B99D73] block mb-1">Sample Drop (Units)</label>
               <input
                 type="number"
                 min="0"
                 value={sampleQuantity}
                 onChange={(e) => setSampleQuantity(parseInt(e.target.value) || 0)}
-                className="w-full px-3 py-1.5 rounded-lg border border-slate-200 font-mono"
+                className="neu-input w-full px-3 py-2 text-xs font-mono"
               />
             </div>
           </div>
 
           {/* Doctor Feedback */}
           <div>
-            <label className="font-semibold text-slate-700 block mb-1">Doctor Remarks & Conversion Potential</label>
+            <label className="font-semibold text-[#B99D73] block mb-1">Doctor Remarks & Conversion Potential</label>
             <textarea
               rows={2}
               value={doctorFeedback}
               onChange={(e) => setDoctorFeedback(e.target.value)}
-              className="w-full px-3 py-1.5 rounded-lg border border-slate-200 focus:ring-1 focus:ring-teal-500 focus:outline-none"
+              className="neu-input w-full px-3 py-2 text-xs"
               placeholder="e.g. Dr. Verma committed to prescribing 15 strips this month..."
             />
           </div>
 
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+          <div className="pt-3.5 border-t border-[#282319] flex items-center justify-end gap-2.5">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-lg border border-slate-200 text-slate-700 font-semibold"
+              className="neu-btn px-4 py-2 rounded-xl text-xs text-[#857866] hover:text-[#F2ECE1] cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold flex items-center gap-1.5 shadow-sm"
+              className="neu-btn-gold px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer"
             >
-              <Send className="w-3.5 h-3.5" />
+              <Send className="w-3.5 h-3.5 stroke-[2.5]" />
               Submit DCR Call Report
             </button>
           </div>

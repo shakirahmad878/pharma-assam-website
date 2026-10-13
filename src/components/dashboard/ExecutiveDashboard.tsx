@@ -44,22 +44,25 @@ export const ExecutiveDashboard: React.FC<ExecutiveDashboardProps> = ({
     <div className="space-y-6">
       
       {/* Top Welcome Banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-2xl p-6 text-white border border-slate-800 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
-          <span className="text-xs uppercase tracking-wider font-bold text-teal-400">Field Performance Cockpit</span>
-          <h2 className="text-2xl font-bold mt-1 text-white">Pharma Sales Force Command Center</h2>
-          <p className="text-xs text-slate-300 mt-1 max-w-xl">
+      <div className="neu-card p-6 border border-[#282319] relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        {/* Subtle warm golden accent glow */}
+        <div className="absolute top-0 right-0 w-80 h-80 bg-[#6C5636]/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
+
+        <div className="relative z-10">
+          <span className="text-[11px] uppercase tracking-wider font-bold text-[#B99D73]">Field Performance Cockpit</span>
+          <h2 className="text-2xl font-black mt-1 text-[#F2ECE1] tracking-tight">Pharma Sales Force Command Center</h2>
+          <p className="text-xs text-[#857866] mt-1 max-w-xl">
             Live territory synchronization, automated 15-minute GPS tracking, and doctor geofence visit verification.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="relative z-10 flex items-center gap-2">
           {isAdmin && (
             <button
               onClick={() => onNavigateToTab('fleet_tracking')}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs shadow-lg shadow-teal-500/20 transition-all"
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl neu-btn-gold text-xs shadow-lg cursor-pointer"
             >
-              <Radio className="w-4 h-4 text-slate-950" />
+              <Radio className="w-4 h-4 text-[#090907]" />
               Open Admin Fleet Map
             </button>
           )}
@@ -103,71 +106,77 @@ export const ExecutiveDashboard: React.FC<ExecutiveDashboardProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Recent Daily Call Reports */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div className="lg:col-span-2 neu-card p-5">
+          <div className="flex items-center justify-between pb-3.5 border-b border-[#282319]">
             <div>
-              <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
-                <FileCheck className="w-4 h-4 text-teal-600" />
+              <h3 className="font-bold text-base text-[#F2ECE1] flex items-center gap-2">
+                <FileCheck className="w-4 h-4 text-[#B99D73]" />
                 Recent Daily Call Reports (DCR)
               </h3>
-              <p className="text-xs text-slate-500">Live doctor visits logged by field medical representatives.</p>
+              <p className="text-xs text-[#857866]">Live doctor visits logged by field medical representatives.</p>
             </div>
             <button
               onClick={() => onNavigateToTab('dcr')}
-              className="text-xs font-semibold text-teal-600 hover:text-teal-700 flex items-center gap-1"
+              className="text-xs font-semibold text-[#B99D73] hover:text-[#D4BD95] flex items-center gap-1 transition-colors"
             >
               View All <ArrowUpRight className="w-3.5 h-3.5" />
             </button>
           </div>
 
           <div className="mt-4 space-y-3">
-            {dcrLogs.map((dcr) => (
-              <div
-                key={dcr.id}
-                className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
-              >
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-sm text-slate-900">{dcr.clientName}</span>
-                    {dcr.isGeofenceVerified && (
-                      <Badge variant="success" size="sm">
-                        <CheckCircle2 className="w-3 h-3" /> Geofence Verified ({dcr.distanceFromClinicMeters}m)
-                      </Badge>
+            {dcrLogs.length === 0 ? (
+              <div className="py-8 text-center text-[#857866] text-xs">
+                No call reports logged yet for this period.
+              </div>
+            ) : (
+              dcrLogs.map((dcr) => (
+                <div
+                  key={dcr.id}
+                  className="p-4 rounded-xl bg-[#0d0d0a] border border-[#221e16] shadow-[inset_2px_2px_5px_#040403,inset_-2px_-2px_5px_#181711] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+                >
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-sm text-[#F2ECE1]">{dcr.clientName}</span>
+                      {dcr.isGeofenceVerified && (
+                        <Badge variant="success" size="sm">
+                          <CheckCircle2 className="w-3 h-3" /> Geofence Verified ({dcr.distanceFromClinicMeters}m)
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-[#857866] mt-0.5">
+                      Visited by <strong className="text-[#D4BD95]">{dcr.userName}</strong> • {dcr.checkInTime} to {dcr.checkOutTime}
+                    </p>
+                    {dcr.doctorFeedback && (
+                      <p className="text-[11px] text-[#B99D73]/90 mt-1 italic">
+                        "{dcr.doctorFeedback}"
+                      </p>
                     )}
                   </div>
-                  <p className="text-slate-500 mt-0.5">
-                    Visited by <strong>{dcr.userName}</strong> • {dcr.checkInTime} to {dcr.checkOutTime}
-                  </p>
-                  {dcr.doctorFeedback && (
-                    <p className="text-[11px] text-slate-600 mt-1 italic">
-                      "{dcr.doctorFeedback}"
-                    </p>
-                  )}
-                </div>
 
-                <div className="text-right shrink-0">
-                  {dcr.pobAmount ? (
-                    <span className="font-bold text-teal-700 bg-teal-50 px-2 py-1 rounded text-xs">
-                      POB: ₹{dcr.pobAmount.toLocaleString()}
-                    </span>
-                  ) : (
-                    <span className="text-slate-400 text-[11px]">No POB</span>
-                  )}
+                  <div className="text-right shrink-0">
+                    {dcr.pobAmount ? (
+                      <span className="font-bold text-[#B99D73] bg-[#1a1711] px-2.5 py-1 rounded-lg border border-[#6C5636]/50 shadow-[inset_1px_1px_3px_#040403] text-xs">
+                        POB: ₹{dcr.pobAmount.toLocaleString()}
+                      </span>
+                    ) : (
+                      <span className="text-[#857866] text-[11px]">No POB</span>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
         {/* Doctor Coverage by Specialty */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between">
+        <div className="neu-card p-5 flex flex-col justify-between">
           <div>
-            <h3 className="font-bold text-base text-slate-900 mb-1">Coverage by Specialty</h3>
-            <p className="text-xs text-slate-500 mb-4">Doctor relationship density in active territories.</p>
+            <h3 className="font-bold text-base text-[#F2ECE1] mb-1">Coverage by Specialty</h3>
+            <p className="text-xs text-[#857866] mb-4">Doctor relationship density in active territories.</p>
 
-            <div className="space-y-3">
+            <div className="space-y-3.5">
               {doctors.length === 0 ? (
-                <div className="py-6 text-center text-slate-400 text-xs">
+                <div className="py-6 text-center text-[#857866] text-xs">
                   No doctors registered yet. Add doctors in Doctor Master to see specialty breakdown.
                 </div>
               ) : (
@@ -177,17 +186,18 @@ export const ExecutiveDashboard: React.FC<ExecutiveDashboardProps> = ({
                     return acc;
                   }, {})
                 ).map(([specialty, count], idx) => {
-                  const colors = ['bg-teal-500', 'bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-amber-500'];
-                  const color = colors[idx % colors.length];
                   const percent = Math.min(100, Math.round((count / (doctors.length || 1)) * 100));
                   return (
                     <div key={specialty} className="text-xs">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-medium text-slate-700">{specialty}</span>
-                        <span className="font-bold text-slate-900">{count} Clinics ({percent}%)</span>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="font-medium text-[#D4BD95]">{specialty}</span>
+                        <span className="font-bold text-[#F2ECE1]">{count} Clinics ({percent}%)</span>
                       </div>
-                      <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                        <div className={`${color} h-full rounded-full`} style={{ width: `${percent}%` }}></div>
+                      <div className="w-full bg-[#0c0c09] rounded-full h-2 overflow-hidden shadow-[inset_1px_1px_3px_#040403]">
+                        <div 
+                          className="bg-gradient-to-r from-[#6C5636] to-[#B99D73] h-full rounded-full shadow-[0_0_8px_rgba(185,157,115,0.4)]" 
+                          style={{ width: `${percent}%` }}
+                        ></div>
                       </div>
                     </div>
                   );
@@ -196,9 +206,9 @@ export const ExecutiveDashboard: React.FC<ExecutiveDashboardProps> = ({
             </div>
           </div>
 
-          <div className="mt-6 p-3 rounded-xl bg-teal-50/60 border border-teal-100 text-xs text-teal-800">
-            <p className="font-semibold">🚀 Ready for Field Deployment</p>
-            <p className="text-[11px] text-teal-700 mt-0.5">
+          <div className="mt-6 p-3.5 rounded-xl bg-[#0c0c09] border border-[#6C5636]/40 shadow-[inset_2px_2px_5px_#040403] text-xs text-[#B99D73]">
+            <p className="font-bold text-[#F2ECE1]">🚀 Ready for Field Deployment</p>
+            <p className="text-[11px] text-[#B99D73]/80 mt-0.5">
               100% of doctor records are linked with GPS geofences.
             </p>
           </div>

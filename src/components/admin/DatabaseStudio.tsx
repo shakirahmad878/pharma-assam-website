@@ -429,37 +429,39 @@ export const DatabaseStudio: React.FC<DatabaseStudioProps> = ({
   return (
     <div className="space-y-6">
       {/* Studio Header */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 text-white">
+      <div className="neu-card p-6 border border-[#282319]">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2">
-              <Database className="w-6 h-6 text-teal-400" />
-              <h2 className="text-xl font-bold text-white">Master Database & Entity CRUD Studio</h2>
-              <span className="text-[10px] uppercase font-bold tracking-wider bg-teal-500/20 text-teal-300 border border-teal-500/30 px-2 py-0.5 rounded">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-[#6C5636]/20 border border-[#6C5636]/40 text-[#B99D73] flex items-center justify-center font-bold shadow-neu-sunken">
+                <Database className="w-5 h-5 text-[#B99D73]" />
+              </div>
+              <h2 className="text-xl font-bold text-[#F2ECE1] tracking-tight">Master Database & Entity CRUD Studio</h2>
+              <span className="text-[10px] uppercase font-bold tracking-wider bg-[#181712] text-[#B99D73] border border-[#282319] px-2.5 py-0.5 rounded-full shadow-neu-sunken">
                 {isSuperAdmin ? 'Platform Root DB' : isAdmin ? `Company DB (${currentUser.companyName || 'Pharma Assam'})` : 'Delegated DB Access'}
               </span>
             </div>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs text-[#857866] mt-1.5">
               Direct live database operations: Add, Edit, Remove, and Export Doctors, Chemists, Products, and Territory Alignments.
             </p>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2.5 shrink-0">
             <button
               onClick={handleExportJSON}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors"
+              className="neu-btn flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs text-[#857866] hover:text-[#F2ECE1] cursor-pointer"
               title="Export Current Table as JSON"
             >
-              <Download className="w-3.5 h-3.5 text-teal-400" />
+              <Download className="w-3.5 h-3.5 text-[#B99D73]" />
               <span>Export JSON</span>
             </button>
 
             {canModifyDB && (
               <button
                 onClick={handleOpenAdd}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white shadow-md shadow-teal-600/30 transition-all"
+                className="neu-btn-gold flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold cursor-pointer"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-4 h-4 stroke-[2.5]" />
                 <span>
                   Add {activeTable === 'doctors' ? 'Doctor' : activeTable === 'chemists' ? 'Chemist' : activeTable === 'products' ? 'Product' : 'Territory'}
                 </span>
@@ -469,13 +471,13 @@ export const DatabaseStudio: React.FC<DatabaseStudioProps> = ({
         </div>
 
         {/* DB Navigation Tabs */}
-        <div className="flex flex-wrap gap-2 mt-6 pt-4 border-t border-slate-800">
+        <div className="flex flex-wrap gap-2.5 mt-6 pt-4 border-t border-[#282319]">
           <button
             onClick={() => setActiveTable('doctors')}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTable === 'doctors'
-                ? 'bg-teal-500 text-slate-950 shadow-md shadow-teal-500/30'
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                ? 'neu-btn-gold text-[#F2ECE1] shadow-neu-gold'
+                : 'neu-btn text-[#857866] hover:text-[#F2ECE1]'
             }`}
           >
             <Stethoscope className="w-4 h-4" />
@@ -484,10 +486,10 @@ export const DatabaseStudio: React.FC<DatabaseStudioProps> = ({
 
           <button
             onClick={() => setActiveTable('chemists')}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTable === 'chemists'
-                ? 'bg-teal-500 text-slate-950 shadow-md shadow-teal-500/30'
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                ? 'neu-btn-gold text-[#F2ECE1] shadow-neu-gold'
+                : 'neu-btn text-[#857866] hover:text-[#F2ECE1]'
             }`}
           >
             <Store className="w-4 h-4" />
@@ -496,10 +498,10 @@ export const DatabaseStudio: React.FC<DatabaseStudioProps> = ({
 
           <button
             onClick={() => setActiveTable('products')}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTable === 'products'
-                ? 'bg-teal-500 text-slate-950 shadow-md shadow-teal-500/30'
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                ? 'neu-btn-gold text-[#F2ECE1] shadow-neu-gold'
+                : 'neu-btn text-[#857866] hover:text-[#F2ECE1]'
             }`}
           >
             <Pill className="w-4 h-4" />
@@ -508,10 +510,10 @@ export const DatabaseStudio: React.FC<DatabaseStudioProps> = ({
 
           <button
             onClick={() => setActiveTable('territories')}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTable === 'territories'
-                ? 'bg-teal-500 text-slate-950 shadow-md shadow-teal-500/30'
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                ? 'neu-btn-gold text-[#F2ECE1] shadow-neu-gold'
+                : 'neu-btn text-[#857866] hover:text-[#F2ECE1]'
             }`}
           >
             <Map className="w-4 h-4" />

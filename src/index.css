@@ -4,48 +4,135 @@
 
 @layer base {
   body {
+    background-color: #090907;
+    color: #F2ECE1;
     font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+    color: #F2ECE1;
   }
 }
 
-/* Custom modern scrollbar */
+/* Custom dark neomorphic scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #090907;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #282319;
   border-radius: 4px;
+  border: 1px solid #141410;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #6C5636;
+}
+
+/* Neomorphic utility classes */
+.neu-card {
+  background: #11110e;
+  border: 1px solid #282319;
+  box-shadow: 6px 6px 14px #040403, -4px -4px 10px #1a1913;
+  border-radius: 1rem;
+}
+
+.neu-card-sm {
+  background: #11110e;
+  border: 1px solid #282319;
+  box-shadow: 4px 4px 9px #040403, -3px -3px 7px #1a1913;
+  border-radius: 0.75rem;
+}
+
+.neu-sunken {
+  background: #0c0c0a;
+  border: 1px solid #221e16;
+  box-shadow: inset 4px 4px 8px #030302, inset -4px -4px 8px #181712;
+}
+
+.neu-btn {
+  background: linear-gradient(145deg, #161510, #0d0d0b);
+  border: 1px solid #2d261b;
+  box-shadow: 4px 4px 10px #040403, -3px -3px 8px #1c1a14;
+  color: #F2ECE1;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.neu-btn:hover {
+  border-color: #6C5636;
+  color: #B99D73;
+  box-shadow: 5px 5px 12px #030302, -4px -4px 10px #24221a;
+}
+
+.neu-btn:active, .neu-btn-active {
+  background: #0a0a08;
+  border-color: #6C5636;
+  box-shadow: inset 3px 3px 6px #030302, inset -3px -3px 6px #1a1813;
+  color: #B99D73;
+}
+
+.neu-btn-gold {
+  background: linear-gradient(135deg, #7A623E 0%, #6C5636 50%, #524026 100%);
+  border: 1px solid #947a50;
+  box-shadow: 4px 4px 12px #040403, -2px -2px 8px #1e1c15, 0 0 16px rgba(185, 157, 115, 0.25);
+  color: #090907;
+  font-weight: 700;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.neu-btn-gold:hover {
+  background: linear-gradient(135deg, #8E734A 0%, #7A623E 50%, #5C492B 100%);
+  border-color: #B99D73;
+  box-shadow: 5px 5px 14px #030302, -3px -3px 10px #242118, 0 0 20px rgba(185, 157, 115, 0.35);
+  color: #040403;
+}
+
+.neu-btn-gold:active {
+  background: #524026;
+  box-shadow: inset 3px 3px 7px #030302, inset -2px -2px 5px #7A623E;
+}
+
+.neu-badge {
+  background: #14130f;
+  border: 1px solid #3d3424;
+  box-shadow: 2px 2px 5px #040403, -2px -2px 5px #181711;
+  color: #B99D73;
+}
+
+.neu-input {
+  background: #0c0c09;
+  border: 1px solid #282319;
+  box-shadow: inset 3px 3px 6px #040403, inset -3px -3px 6px #161510;
+  color: #F2ECE1;
+  transition: all 0.2s ease;
+}
+
+.neu-input:focus {
+  border-color: #B99D73;
+  box-shadow: inset 3px 3px 6px #040403, inset -3px -3px 6px #161510, 0 0 0 1px #B99D73;
+  outline: none;
 }
 
 .glass-panel {
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(17, 17, 14, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(108, 86, 54, 0.2);
 }
 
 .gradient-brand {
-  background: linear-gradient(135deg, #163e61 0%, #1e5585 50%, #0d9488 100%);
-}
-
-.gradient-card {
-  background: linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(248,250,252,1) 100%);
+  background: linear-gradient(135deg, #14130e 0%, #2b2316 50%, #6C5636 100%);
 }
 
 @keyframes pulse-slow {
   0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.85; transform: scale(1.03); }
+  50% { opacity: 0.85; transform: scale(1.02); }
 }
 
 .animate-pulse-slow {
   animation: pulse-slow 3s infinite ease-in-out;
 }
+

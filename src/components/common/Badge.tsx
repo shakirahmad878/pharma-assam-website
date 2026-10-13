@@ -8,12 +8,12 @@ interface BadgeProps {
 
 export const Badge: React.FC<BadgeProps> = ({ children, variant = 'neutral', size = 'sm' }) => {
   const variantStyles = {
-    primary: 'bg-teal-50 text-teal-700 border-teal-200',
-    success: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    warning: 'bg-amber-50 text-amber-700 border-amber-200',
-    danger: 'bg-rose-50 text-rose-700 border-rose-200',
-    neutral: 'bg-slate-100 text-slate-700 border-slate-200',
-    purple: 'bg-purple-50 text-purple-700 border-purple-200',
+    primary: 'bg-[#181711] text-[#B99D73] border-[#6C5636]/60 shadow-[inset_1px_1px_3px_#040403,1px_1px_3px_#181711]',
+    success: 'bg-[#121811] text-[#A6C48A] border-[#384D2B]/60 shadow-[inset_1px_1px_3px_#040403,1px_1px_3px_#141913]',
+    warning: 'bg-[#1a160d] text-[#D4BD95] border-[#8A7049]/60 shadow-[inset_1px_1px_3px_#040403,1px_1px_3px_#1c1811]',
+    danger: 'bg-[#1c0f0f] text-[#E08A8A] border-[#662B2B]/60 shadow-[inset_1px_1px_3px_#040403,1px_1px_3px_#1e1212]',
+    neutral: 'bg-[#11110e] text-[#857866] border-[#282319] shadow-[inset_1px_1px_3px_#040403,1px_1px_3px_#181711]',
+    purple: 'bg-[#18121a] text-[#C4A6D4] border-[#5E3B6E]/60 shadow-[inset_1px_1px_3px_#040403,1px_1px_3px_#1c141e]',
   };
 
   const sizeStyles = {
@@ -23,7 +23,7 @@ export const Badge: React.FC<BadgeProps> = ({ children, variant = 'neutral', siz
 
   return (
     <span
-      className={`inline-flex items-center gap-1 font-medium rounded-full border ${variantStyles[variant]} ${sizeStyles[size]}`}
+      className={`inline-flex items-center gap-1 font-medium rounded-lg border ${variantStyles[variant]} ${sizeStyles[size]}`}
     >
       {children}
     </span>

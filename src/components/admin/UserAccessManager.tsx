@@ -267,17 +267,19 @@ export const UserAccessManager: React.FC<UserAccessManagerProps> = ({
   return (
     <div className="space-y-6">
       {/* Control Banner */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 text-white">
+      <div className="neu-card p-6 border border-[#282319]">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-6 h-6 text-teal-400" />
-              <h2 className="text-xl font-bold text-white">User & Access Management</h2>
-              <span className="text-[10px] uppercase font-bold tracking-wider bg-teal-500/20 text-teal-300 border border-teal-500/30 px-2 py-0.5 rounded">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-[#6C5636]/20 border border-[#6C5636]/40 text-[#B99D73] flex items-center justify-center font-bold shadow-neu-sunken">
+                <ShieldCheck className="w-5 h-5 text-[#B99D73]" />
+              </div>
+              <h2 className="text-xl font-bold text-[#F2ECE1] tracking-tight">User & Access Management</h2>
+              <span className="text-[10px] uppercase font-bold tracking-wider bg-[#181712] text-[#B99D73] border border-[#282319] px-2.5 py-0.5 rounded-full shadow-neu-sunken">
                 {isSuperAdmin ? 'Global Root Scope' : isAdmin ? `Company Admin (${currentUser.companyName || 'Pharma Assam'})` : 'Manager Scope'}
               </span>
             </div>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs text-[#857866] mt-1.5">
               {isSuperAdmin 
                 ? 'Provision Super Admins, Company Admins, Managers, and Medical Reps across all tenant organizations.' 
                 : isAdmin 
@@ -289,35 +291,35 @@ export const UserAccessManager: React.FC<UserAccessManagerProps> = ({
           {(isSuperAdmin || isAdmin) && (
             <button
               onClick={handleOpenAddModal}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white shadow-md shadow-teal-600/30 transition-all shrink-0"
+              className="neu-btn-gold flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer shrink-0"
             >
-              <UserPlus className="w-4 h-4" />
+              <UserPlus className="w-4 h-4 stroke-[2.5]" />
               <span>Add New User / Staff</span>
             </button>
           )}
         </div>
 
         {/* Quick User Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-4 border-t border-slate-800 text-xs">
-          <div className="bg-slate-800/60 p-3 rounded-lg border border-slate-700/50">
-            <span className="text-slate-400">Total Scoped Users</span>
-            <p className="text-lg font-bold text-white mt-0.5">{scopedUsers.length}</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-4 border-t border-[#282319] text-xs">
+          <div className="bg-[#0c0c09] p-3.5 rounded-xl border border-[#282319] shadow-neu-sunken">
+            <span className="text-[#857866]">Total Scoped Users</span>
+            <p className="text-lg font-bold text-[#F2ECE1] mt-0.5">{scopedUsers.length}</p>
           </div>
-          <div className="bg-slate-800/60 p-3 rounded-lg border border-slate-700/50">
-            <span className="text-slate-400">Company Admins</span>
-            <p className="text-lg font-bold text-teal-400 mt-0.5">
+          <div className="bg-[#0c0c09] p-3.5 rounded-xl border border-[#282319] shadow-neu-sunken">
+            <span className="text-[#857866]">Company Admins</span>
+            <p className="text-lg font-bold text-[#B99D73] mt-0.5">
               {scopedUsers.filter(u => u.role === 'ADMIN').length}
             </p>
           </div>
-          <div className="bg-slate-800/60 p-3 rounded-lg border border-slate-700/50">
-            <span className="text-slate-400">Managers</span>
-            <p className="text-lg font-bold text-indigo-400 mt-0.5">
+          <div className="bg-[#0c0c09] p-3.5 rounded-xl border border-[#282319] shadow-neu-sunken">
+            <span className="text-[#857866]">Managers</span>
+            <p className="text-lg font-bold text-[#F2ECE1] mt-0.5">
               {scopedUsers.filter(u => AuthService.isManager(u)).length}
             </p>
           </div>
-          <div className="bg-slate-800/60 p-3 rounded-lg border border-slate-700/50">
-            <span className="text-slate-400">Active Field MRs</span>
-            <p className="text-lg font-bold text-amber-400 mt-0.5">
+          <div className="bg-[#0c0c09] p-3.5 rounded-xl border border-[#282319] shadow-neu-sunken">
+            <span className="text-[#857866]">Active Field MRs</span>
+            <p className="text-lg font-bold text-[#B99D73] mt-0.5">
               {scopedUsers.filter(u => u.role === 'MEDICAL_REP').length}
             </p>
           </div>
@@ -325,23 +327,23 @@ export const UserAccessManager: React.FC<UserAccessManagerProps> = ({
       </div>
 
       {/* Filters Bar */}
-      <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
-        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+      <div className="neu-card p-4 flex flex-col sm:flex-row gap-3 items-center justify-between">
+        <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
           <div className="relative flex-1 sm:w-64">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#857866]" />
             <input
               type="text"
               placeholder="Search user, username, emp ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900"
+              className="neu-input w-full pl-9 pr-3 py-2 text-xs"
             />
           </div>
 
           <select
             value={selectedRoleFilter}
             onChange={(e) => setSelectedRoleFilter(e.target.value)}
-            className="px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium text-slate-700"
+            className="neu-input px-3 py-2 text-xs appearance-none bg-[#0c0c09] cursor-pointer"
           >
             <option value="ALL">All Roles</option>
             {isSuperAdmin && <option value="SUPER_ADMIN">👑 Super Admin</option>}
@@ -354,7 +356,7 @@ export const UserAccessManager: React.FC<UserAccessManagerProps> = ({
             <select
               value={selectedCompanyFilter}
               onChange={(e) => setSelectedCompanyFilter(e.target.value)}
-              className="px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium text-slate-700"
+              className="neu-input px-3 py-2 text-xs appearance-none bg-[#0c0c09] cursor-pointer"
             >
               <option value="ALL">All Companies</option>
               {companies.map(c => (
@@ -364,26 +366,26 @@ export const UserAccessManager: React.FC<UserAccessManagerProps> = ({
           )}
         </div>
 
-        <div className="text-xs text-slate-500 font-medium">
-          Showing {filteredUsers.length} of {scopedUsers.length} authorized users
+        <div className="text-xs text-[#857866] font-medium">
+          Showing <span className="text-[#B99D73] font-bold">{filteredUsers.length}</span> of {scopedUsers.length} authorized users
         </div>
       </div>
 
       {/* Users Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="neu-card overflow-hidden border border-[#282319]">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-                <th className="py-3 px-4">User & Credentials</th>
-                <th className="py-3 px-4">Role & Privilege</th>
-                <th className="py-3 px-4">Company & Territory</th>
-                <th className="py-3 px-4">Permissions</th>
-                <th className="py-3 px-4 text-center">Status</th>
-                <th className="py-3 px-4 text-right">Actions</th>
+              <tr className="bg-[#0c0c09] border-b border-[#282319] text-[#857866] font-semibold uppercase tracking-wider text-[11px]">
+                <th className="py-3.5 px-4">User & Credentials</th>
+                <th className="py-3.5 px-4">Role & Privilege</th>
+                <th className="py-3.5 px-4">Company & Territory</th>
+                <th className="py-3.5 px-4">Permissions</th>
+                <th className="py-3.5 px-4 text-center">Status</th>
+                <th className="py-3.5 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
+            <tbody className="divide-y divide-[#282319]/70 font-medium text-[#F2ECE1]">
               {filteredUsers.map((user) => {
                 const isSuper = user.role === 'SUPER_ADMIN';
                 const isCompAdmin = user.role === 'ADMIN';
@@ -391,100 +393,100 @@ export const UserAccessManager: React.FC<UserAccessManagerProps> = ({
                 const isCurrent = user.id === currentUser.id;
 
                 return (
-                  <tr key={user.id} className="hover:bg-slate-50 transition-colors">
+                  <tr key={user.id} className="hover:bg-[#181712]/60 transition-colors">
                     {/* User info & Username */}
-                    <td className="py-3 px-4">
+                    <td className="py-3.5 px-4">
                       <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs shadow-neu-sunken border ${
                           isSuper 
-                            ? 'bg-amber-100 text-amber-800 border border-amber-300' 
+                            ? 'bg-[#181712] text-[#B99D73] border-[#B99D73]/40' 
                             : isCompAdmin 
-                            ? 'bg-teal-100 text-teal-800 border border-teal-300' 
+                            ? 'bg-[#181712] text-[#B99D73] border-[#6C5636]/60' 
                             : isMgr 
-                            ? 'bg-indigo-100 text-indigo-800 border border-indigo-300' 
-                            : 'bg-slate-100 text-slate-700 border border-slate-300'
+                            ? 'bg-[#181712] text-[#F2ECE1] border-[#282319]' 
+                            : 'bg-[#181712] text-[#857866] border-[#282319]'
                         }`}>
                           {user.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                         </div>
                         <div>
-                          <div className="flex items-center gap-1.5 font-bold text-slate-900">
+                          <div className="flex items-center gap-1.5 font-bold text-[#F2ECE1]">
                             <span>{user.name}</span>
                             {isCurrent && (
-                              <span className="text-[10px] bg-teal-100 text-teal-800 px-1.5 py-0.2 rounded font-bold">
+                              <span className="text-[10px] bg-[#6C5636]/30 text-[#B99D73] border border-[#6C5636]/50 px-1.5 py-0.2 rounded font-bold">
                                 (You)
                               </span>
                             )}
                           </div>
-                          <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-0.5">
-                            <span className="font-mono bg-slate-100 text-slate-700 px-1.5 py-0.2 rounded font-bold">
+                          <div className="flex items-center gap-2 text-[11px] text-[#857866] mt-0.5">
+                            <span className="font-mono bg-[#0c0c09] border border-[#282319] text-[#B99D73] px-1.5 py-0.2 rounded font-bold">
                               user: {user.username || user.employeeCode}
                             </span>
                             <span>•</span>
-                            <span className="font-mono text-slate-400">pass: ••••</span>
+                            <span className="font-mono text-[#857866]/60">pass: ••••</span>
                           </div>
                         </div>
                       </div>
                     </td>
 
                     {/* Role */}
-                    <td className="py-3 px-4">
+                    <td className="py-3.5 px-4">
                       {isSuper && (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
-                          <Shield className="w-3 h-3 text-amber-600" />
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#181712] text-[#B99D73] border border-[#B99D73]/30 shadow-neu-sunken">
+                          <Shield className="w-3 h-3 text-[#B99D73]" />
                           Super Admin
                         </span>
                       )}
                       {isCompAdmin && (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-teal-50 text-teal-800 border border-teal-200">
-                          <Building2 className="w-3 h-3 text-teal-600" />
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#181712] text-[#B99D73] border border-[#6C5636]/40 shadow-neu-sunken">
+                          <Building2 className="w-3 h-3 text-[#B99D73]" />
                           Company Admin
                         </span>
                       )}
                       {isMgr && (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-800 border border-indigo-200">
-                          <Users className="w-3 h-3 text-indigo-600" />
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#181712] text-[#F2ECE1] border border-[#282319] shadow-neu-sunken">
+                          <Users className="w-3 h-3 text-[#857866]" />
                           Manager
                         </span>
                       )}
                       {!isSuper && !isCompAdmin && !isMgr && (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#0c0c09] text-[#857866] border border-[#282319]">
                           Field Rep (MR)
                         </span>
                       )}
                     </td>
 
                     {/* Company & Territory */}
-                    <td className="py-3 px-4">
-                      <div className="font-semibold text-slate-900 truncate max-w-[180px]">
+                    <td className="py-3.5 px-4">
+                      <div className="font-semibold text-[#F2ECE1] truncate max-w-[180px]">
                         {user.companyName || 'Global Platform'}
                       </div>
-                      <div className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
-                        <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                      <div className="text-[11px] text-[#857866] flex items-center gap-1 mt-0.5">
+                        <MapPin className="w-3 h-3 text-[#B99D73] shrink-0" />
                         <span className="truncate">{user.territoryName}</span>
                       </div>
                     </td>
 
                     {/* Permissions summary */}
-                    <td className="py-3 px-4">
-                      <div className="flex flex-wrap gap-1 max-w-[200px]">
+                    <td className="py-3.5 px-4">
+                      <div className="flex flex-wrap gap-1.5 max-w-[200px]">
                         {isSuper || isCompAdmin ? (
-                          <span className="text-[10px] px-2 py-0.5 rounded font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            Full DB & Management Access
+                          <span className="text-[10px] px-2 py-0.5 rounded-md font-bold bg-[#181712] text-[#B99D73] border border-[#6C5636]/40 shadow-neu-sunken">
+                            Full DB & Management
                           </span>
                         ) : (
                           <>
                             {user.permissions?.canApproveDCR && (
-                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-medium">
+                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#0c0c09] text-[#857866] border border-[#282319] font-medium">
                                 DCR Approver
                               </span>
                             )}
                             {user.permissions?.canManageDoctors && (
-                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-medium">
+                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#0c0c09] text-[#857866] border border-[#282319] font-medium">
                                 Doctor Master
                               </span>
                             )}
                             {user.permissions?.canModifyDatabase && (
-                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 font-bold">
+                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#181712] text-[#B99D73] border border-[#6C5636]/40 font-bold">
                                 DB Studio
                               </span>
                             )}
@@ -494,14 +496,14 @@ export const UserAccessManager: React.FC<UserAccessManagerProps> = ({
                     </td>
 
                     {/* Status */}
-                    <td className="py-3 px-4 text-center">
+                    <td className="py-3.5 px-4 text-center">
                       <button
                         onClick={() => handleToggleActiveStatus(user)}
                         disabled={isSuper && !isSuperAdmin}
-                        className={`text-[10px] px-2 py-0.5 rounded-full font-bold transition-all ${
+                        className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold transition-all cursor-pointer ${
                           user.isActive
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
-                            : 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
+                            ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-800/40 hover:bg-emerald-900/40'
+                            : 'bg-rose-950/40 text-rose-400 border border-rose-800/40 hover:bg-rose-900/40'
                         }`}
                       >
                         {user.isActive ? 'Active' : 'Suspended'}
@@ -509,13 +511,13 @@ export const UserAccessManager: React.FC<UserAccessManagerProps> = ({
                     </td>
 
                     {/* Actions */}
-                    <td className="py-3 px-4 text-right">
+                    <td className="py-3.5 px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
                         {/* Reset Password Button */}
                         {(isSuperAdmin || (isAdmin && !isSuper)) && (
                           <button
                             onClick={() => handleOpenResetPasswordModal(user)}
-                            className="p-1.5 text-slate-600 hover:text-amber-600 hover:bg-amber-50 rounded-lg border border-slate-200"
+                            className="neu-btn p-1.5 text-[#B99D73] hover:text-[#F2ECE1] cursor-pointer"
                             title="Reset Staff Password"
                           >
                             <Key className="w-3.5 h-3.5" />
@@ -526,7 +528,7 @@ export const UserAccessManager: React.FC<UserAccessManagerProps> = ({
                         {onSwitchUser && (
                           <button
                             onClick={() => onSwitchUser(user)}
-                            className="p-1.5 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg border border-slate-200"
+                            className="neu-btn p-1.5 text-[#F2ECE1] hover:text-[#B99D73] cursor-pointer"
                             title="Sign in as this User"
                           >
                             <UserCheck className="w-3.5 h-3.5" />
@@ -537,7 +539,7 @@ export const UserAccessManager: React.FC<UserAccessManagerProps> = ({
                         {(isSuperAdmin || (isAdmin && !isSuper)) && (
                           <button
                             onClick={() => handleOpenEditModal(user)}
-                            className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg border border-slate-200"
+                            className="neu-btn p-1.5 text-[#F2ECE1] hover:text-[#B99D73] cursor-pointer"
                             title="Edit User Information"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
@@ -552,7 +554,7 @@ export const UserAccessManager: React.FC<UserAccessManagerProps> = ({
                                 onDeleteUser(user.id);
                               }
                             }}
-                            className="p-1.5 text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-lg border border-rose-200"
+                            className="neu-btn p-1.5 text-rose-400 hover:text-rose-300 border-rose-950/40 cursor-pointer"
                             title="Remove User"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -570,23 +572,23 @@ export const UserAccessManager: React.FC<UserAccessManagerProps> = ({
 
       {/* Add / Edit User Modal */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 animate-in fade-in zoom-in duration-200">
-            <div className="p-5 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
+        <div className="fixed inset-0 bg-[#090907]/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="neu-card max-w-lg w-full max-h-[90vh] overflow-y-auto border border-[#282319] shadow-neu-raised animate-in fade-in zoom-in-95">
+            <div className="p-5 border-b border-[#282319] flex items-center justify-between sticky top-0 bg-[#11110e] z-10">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-teal-50 border border-teal-100 flex items-center justify-center text-teal-600">
-                  <UserPlus className="w-4 h-4" />
+                <div className="w-8 h-8 rounded-xl bg-[#6C5636]/20 border border-[#6C5636]/40 flex items-center justify-center text-[#B99D73] shadow-neu-sunken">
+                  <UserPlus className="w-4 h-4 text-[#B99D73]" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900 text-sm">
+                  <h3 className="font-bold text-[#F2ECE1] text-sm">
                     {editingUser ? 'Edit User / Staff Member' : 'Add New User / Staff Member'}
                   </h3>
-                  <p className="text-[11px] text-slate-500">Configure role assignment, username and password</p>
+                  <p className="text-[11px] text-[#857866]">Configure role assignment, username and password</p>
                 </div>
               </div>
               <button
                 onClick={() => setIsAddModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100"
+                className="neu-btn p-1.5 rounded-xl text-[#857866] hover:text-[#F2ECE1]"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -595,18 +597,18 @@ export const UserAccessManager: React.FC<UserAccessManagerProps> = ({
             <form onSubmit={handleSaveUser} className="p-5 space-y-4 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Full Name *</label>
+                  <label className="block font-semibold text-[#B99D73] mb-1">Full Name *</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. Shakir Ahmad"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                    className="neu-input w-full px-3 py-2 text-xs"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Employee Code / ID *</label>
+                  <label className="block font-semibold text-[#B99D73] mb-1">Employee Code / ID *</label>
                   <input
                     type="text"
                     required
@@ -616,68 +618,68 @@ export const UserAccessManager: React.FC<UserAccessManagerProps> = ({
                       setEmployeeCode(e.target.value);
                       if (!editingUser) setUsername(e.target.value);
                     }}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none font-mono"
+                    className="neu-input w-full px-3 py-2 text-xs font-mono"
                   />
                 </div>
               </div>
 
               {/* Login Username & Initial Password */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[#0c0c09] p-3.5 rounded-xl border border-[#282319] shadow-neu-sunken">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Login Username *</label>
+                  <label className="block font-semibold text-[#B99D73] mb-1">Login Username *</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. shakir878 or EMP ID"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none font-mono text-slate-900 bg-white"
+                    className="neu-input w-full px-3 py-2 text-xs font-mono"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Password (Default: 1234) *</label>
+                  <label className="block font-semibold text-[#B99D73] mb-1">Password (Default: 1234) *</label>
                   <input
                     type="text"
                     required
                     placeholder="1234"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none font-mono text-slate-900 bg-white"
+                    className="neu-input w-full px-3 py-2 text-xs font-mono"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Email Address *</label>
+                  <label className="block font-semibold text-[#B99D73] mb-1">Email Address *</label>
                   <input
                     type="email"
                     required
                     placeholder="e.g. user@pharmaassam.in"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                    className="neu-input w-full px-3 py-2 text-xs"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Phone Number</label>
+                  <label className="block font-semibold text-[#B99D73] mb-1">Phone Number</label>
                   <input
                     type="text"
                     placeholder="e.g. +91 8448440654"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                    className="neu-input w-full px-3 py-2 text-xs"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Role & Privilege Level *</label>
+                  <label className="block font-semibold text-[#B99D73] mb-1">Role & Privilege Level *</label>
                   <select
                     value={role}
                     onChange={(e) => setRole(e.target.value as UserRole)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none bg-white font-semibold"
+                    className="neu-input w-full px-3 py-2 text-xs appearance-none bg-[#0c0c09] font-semibold cursor-pointer"
                   >
                     {isSuperAdmin && <option value="SUPER_ADMIN">👑 Super Admin (Global Platform)</option>}
                     <option value="ADMIN">🏢 Company Admin (Full Company DB Access)</option>
@@ -687,12 +689,12 @@ export const UserAccessManager: React.FC<UserAccessManagerProps> = ({
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Company / Organization *</label>
+                  <label className="block font-semibold text-[#B99D73] mb-1">Company / Organization *</label>
                   <select
                     value={companyId}
                     disabled={!isSuperAdmin}
                     onChange={(e) => setCompanyId(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none bg-white font-medium disabled:bg-slate-100"
+                    className="neu-input w-full px-3 py-2 text-xs appearance-none bg-[#0c0c09] cursor-pointer disabled:opacity-60"
                   >
                     {companies.map(c => (
                       <option key={c.id} value={c.id}>{c.name}</option>
@@ -702,11 +704,11 @@ export const UserAccessManager: React.FC<UserAccessManagerProps> = ({
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Territory / Headquarters *</label>
+                <label className="block font-semibold text-[#B99D73] mb-1">Territory / Headquarters *</label>
                 <select
                   value={territoryId}
                   onChange={(e) => setTerritoryId(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none bg-white font-medium"
+                  className="neu-input w-full px-3 py-2 text-xs appearance-none bg-[#0c0c09] cursor-pointer"
                 >
                   {territories.map(t => (
                     <option key={t.id} value={t.id}>{t.name} ({t.code})</option>
@@ -714,17 +716,17 @@ export const UserAccessManager: React.FC<UserAccessManagerProps> = ({
                 </select>
               </div>
 
-              <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
+              <div className="pt-4 border-t border-[#282319] flex items-center justify-end gap-2.5">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 font-semibold hover:bg-slate-50 transition-colors"
+                  className="neu-btn px-4 py-2 text-xs text-[#857866] hover:text-[#F2ECE1] cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-bold shadow-md shadow-teal-600/20 transition-all flex items-center gap-1.5"
+                  className="neu-btn-gold px-4 py-2 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
                 >
                   <CheckCircle2 className="w-4 h-4" />
                   <span>{editingUser ? 'Save Changes' : 'Create User'}</span>
@@ -737,53 +739,53 @@ export const UserAccessManager: React.FC<UserAccessManagerProps> = ({
 
       {/* Admin Reset Password Modal */}
       {isResetPasswordModalOpen && userToResetPassword && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl border border-slate-200 animate-in fade-in zoom-in duration-200 overflow-hidden">
-            <div className="p-5 bg-slate-900 text-white flex items-center justify-between">
+        <div className="fixed inset-0 bg-[#090907]/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="neu-card max-w-sm w-full border border-[#282319] shadow-neu-raised animate-in fade-in zoom-in-95 overflow-hidden">
+            <div className="p-5 bg-[#0c0c09] border-b border-[#282319] text-[#F2ECE1] flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Key className="w-4 h-4 text-amber-400" />
+                <Key className="w-4 h-4 text-[#B99D73]" />
                 <h3 className="font-bold text-sm">Reset Staff Password</h3>
               </div>
               <button
                 onClick={() => setIsResetPasswordModalOpen(false)}
-                className="text-slate-400 hover:text-white"
+                className="neu-btn p-1.5 rounded-xl text-[#857866] hover:text-[#F2ECE1]"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <div className="p-5 space-y-4 text-xs">
-              <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                <span className="text-slate-500 block">Resetting password for:</span>
-                <span className="font-bold text-slate-900 text-sm">{userToResetPassword.name}</span>
-                <span className="block font-mono text-[11px] text-slate-600 mt-0.5">
+              <div className="p-3.5 bg-[#0c0c09] rounded-xl border border-[#282319] shadow-neu-sunken">
+                <span className="text-[#857866] block">Resetting password for:</span>
+                <span className="font-bold text-[#F2ECE1] text-sm">{userToResetPassword.name}</span>
+                <span className="block font-mono text-[11px] text-[#B99D73] mt-0.5">
                   Username: {userToResetPassword.username || userToResetPassword.employeeCode}
                 </span>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Set New Password *</label>
+                <label className="block font-semibold text-[#B99D73] mb-1">Set New Password *</label>
                 <input
                   type="text"
                   required
                   value={adminNewPassword}
                   onChange={(e) => setAdminNewPassword(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 font-mono text-sm font-bold text-slate-900"
+                  className="neu-input w-full px-3 py-2 font-mono text-sm font-bold text-[#F2ECE1]"
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+              <div className="pt-3.5 border-t border-[#282319] flex items-center justify-end gap-2.5">
                 <button
                   type="button"
                   onClick={() => setIsResetPasswordModalOpen(false)}
-                  className="px-3 py-1.5 border border-slate-300 rounded-lg text-slate-700 font-semibold"
+                  className="neu-btn px-3 py-1.5 text-xs text-[#857866] hover:text-[#F2ECE1] cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={handleExecutePasswordReset}
-                  className="px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold shadow-sm"
+                  className="neu-btn-gold px-4 py-1.5 text-xs font-bold cursor-pointer"
                 >
                   Confirm Reset
                 </button>
@@ -795,140 +797,140 @@ export const UserAccessManager: React.FC<UserAccessManagerProps> = ({
 
       {/* Manage & Provide Granular Permissions Modal */}
       {isPermissionsModalOpen && selectedUserForPermissions && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 animate-in fade-in zoom-in duration-200">
-            <div className="p-5 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
+        <div className="fixed inset-0 bg-[#090907]/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="neu-card max-w-lg w-full max-h-[90vh] overflow-y-auto border border-[#282319] shadow-neu-raised animate-in fade-in zoom-in-95">
+            <div className="p-5 border-b border-[#282319] flex items-center justify-between sticky top-0 bg-[#11110e] z-10">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-teal-50 border border-teal-100 flex items-center justify-center text-teal-600">
-                  <Key className="w-4 h-4" />
+                <div className="w-8 h-8 rounded-xl bg-[#6C5636]/20 border border-[#6C5636]/40 flex items-center justify-center text-[#B99D73] shadow-neu-sunken">
+                  <Key className="w-4 h-4 text-[#B99D73]" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900 text-sm">
+                  <h3 className="font-bold text-[#F2ECE1] text-sm">
                     Granular Access Control: {selectedUserForPermissions.name}
                   </h3>
-                  <p className="text-[11px] text-slate-500">
-                    Role: <span className="font-semibold">{selectedUserForPermissions.role}</span> • {selectedUserForPermissions.companyName || 'Company'}
+                  <p className="text-[11px] text-[#857866]">
+                    Role: <span className="font-semibold text-[#B99D73]">{selectedUserForPermissions.role}</span> • {selectedUserForPermissions.companyName || 'Company'}
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setIsPermissionsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100"
+                className="neu-btn p-1.5 rounded-xl text-[#857866] hover:text-[#F2ECE1]"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <div className="p-5 space-y-4 text-xs">
-              <p className="text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-200">
+              <p className="text-[#857866] leading-relaxed bg-[#0c0c09] p-3.5 rounded-xl border border-[#282319] shadow-neu-sunken">
                 Grant or revoke module-level edit, add, remove, and approval permissions for this user.
               </p>
 
               <div className="space-y-3">
-                <label className="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                <label className="flex items-center justify-between p-3 rounded-xl border border-[#282319] bg-[#0c0c09] hover:border-[#6C5636]/60 cursor-pointer shadow-neu-sunken">
                   <div>
-                    <span className="font-bold text-slate-900 block">Manage Master Database (CRUD)</span>
-                    <span className="text-[11px] text-slate-500">Add, edit, remove doctors, chemists, products, and territories in DB</span>
+                    <span className="font-bold text-[#F2ECE1] block">Manage Master Database (CRUD)</span>
+                    <span className="text-[11px] text-[#857866]">Add, edit, remove doctors, chemists, products, and territories in DB</span>
                   </div>
                   <input
                     type="checkbox"
                     checked={permissions.canModifyDatabase}
                     onChange={(e) => setPermissions({ ...permissions, canModifyDatabase: e.target.checked })}
-                    className="w-4 h-4 text-teal-600 rounded focus:ring-teal-500"
+                    className="w-4 h-4 text-[#B99D73] rounded bg-[#181712] border-[#282319] focus:ring-[#B99D73] accent-[#6C5636]"
                   />
                 </label>
 
-                <label className="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                <label className="flex items-center justify-between p-3 rounded-xl border border-[#282319] bg-[#0c0c09] hover:border-[#6C5636]/60 cursor-pointer shadow-neu-sunken">
                   <div>
-                    <span className="font-bold text-slate-900 block">Manage Doctors Master</span>
-                    <span className="text-[11px] text-slate-500">Add and update doctor profiles, tiers, and GPS geofences</span>
+                    <span className="font-bold text-[#F2ECE1] block">Manage Doctors Master</span>
+                    <span className="text-[11px] text-[#857866]">Add and update doctor profiles, tiers, and GPS geofences</span>
                   </div>
                   <input
                     type="checkbox"
                     checked={permissions.canManageDoctors}
                     onChange={(e) => setPermissions({ ...permissions, canManageDoctors: e.target.checked })}
-                    className="w-4 h-4 text-teal-600 rounded focus:ring-teal-500"
+                    className="w-4 h-4 text-[#B99D73] rounded bg-[#181712] border-[#282319] focus:ring-[#B99D73] accent-[#6C5636]"
                   />
                 </label>
 
-                <label className="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                <label className="flex items-center justify-between p-3 rounded-xl border border-[#282319] bg-[#0c0c09] hover:border-[#6C5636]/60 cursor-pointer shadow-neu-sunken">
                   <div>
-                    <span className="font-bold text-slate-900 block">Manage Chemists & Stockists</span>
-                    <span className="text-[11px] text-slate-500">Add and update pharmacy licenses, GSTIN, and retail touchpoints</span>
+                    <span className="font-bold text-[#F2ECE1] block">Manage Chemists & Stockists</span>
+                    <span className="text-[11px] text-[#857866]">Add and update pharmacy licenses, GSTIN, and retail touchpoints</span>
                   </div>
                   <input
                     type="checkbox"
                     checked={permissions.canManageChemists}
                     onChange={(e) => setPermissions({ ...permissions, canManageChemists: e.target.checked })}
-                    className="w-4 h-4 text-teal-600 rounded focus:ring-teal-500"
+                    className="w-4 h-4 text-[#B99D73] rounded bg-[#181712] border-[#282319] focus:ring-[#B99D73] accent-[#6C5636]"
                   />
                 </label>
 
-                <label className="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                <label className="flex items-center justify-between p-3 rounded-xl border border-[#282319] bg-[#0c0c09] hover:border-[#6C5636]/60 cursor-pointer shadow-neu-sunken">
                   <div>
-                    <span className="font-bold text-slate-900 block">Manage Product Catalog & Pricing</span>
-                    <span className="text-[11px] text-slate-500">Add new SKUs, update MRP, PTR, PTS, and compositions</span>
+                    <span className="font-bold text-[#F2ECE1] block">Manage Product Catalog & Pricing</span>
+                    <span className="text-[11px] text-[#857866]">Add new SKUs, update MRP, PTR, PTS, and compositions</span>
                   </div>
                   <input
                     type="checkbox"
                     checked={permissions.canManageProducts}
                     onChange={(e) => setPermissions({ ...permissions, canManageProducts: e.target.checked })}
-                    className="w-4 h-4 text-teal-600 rounded focus:ring-teal-500"
+                    className="w-4 h-4 text-[#B99D73] rounded bg-[#181712] border-[#282319] focus:ring-[#B99D73] accent-[#6C5636]"
                   />
                 </label>
 
-                <label className="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                <label className="flex items-center justify-between p-3 rounded-xl border border-[#282319] bg-[#0c0c09] hover:border-[#6C5636]/60 cursor-pointer shadow-neu-sunken">
                   <div>
-                    <span className="font-bold text-slate-900 block">Approve DCRs & Tour Plans</span>
-                    <span className="text-[11px] text-slate-500">Verify geofenced field call submissions and monthly tour itineraries</span>
+                    <span className="font-bold text-[#F2ECE1] block">Approve DCRs & Tour Plans</span>
+                    <span className="text-[11px] text-[#857866]">Verify geofenced field call submissions and monthly tour itineraries</span>
                   </div>
                   <input
                     type="checkbox"
                     checked={permissions.canApproveDCR}
                     onChange={(e) => setPermissions({ ...permissions, canApproveDCR: e.target.checked, canApproveTourPlans: e.target.checked })}
-                    className="w-4 h-4 text-teal-600 rounded focus:ring-teal-500"
+                    className="w-4 h-4 text-[#B99D73] rounded bg-[#181712] border-[#282319] focus:ring-[#B99D73] accent-[#6C5636]"
                   />
                 </label>
 
-                <label className="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                <label className="flex items-center justify-between p-3 rounded-xl border border-[#282319] bg-[#0c0c09] hover:border-[#6C5636]/60 cursor-pointer shadow-neu-sunken">
                   <div>
-                    <span className="font-bold text-slate-900 block">Approve Travel Expenses & Mileage</span>
-                    <span className="text-[11px] text-slate-500">Audit ₹7.50/km verified GPS claims and daily allowances</span>
+                    <span className="font-bold text-[#F2ECE1] block">Approve Travel Expenses & Mileage</span>
+                    <span className="text-[11px] text-[#857866]">Audit ₹7.50/km verified GPS claims and daily allowances</span>
                   </div>
                   <input
                     type="checkbox"
                     checked={permissions.canApproveExpenses}
                     onChange={(e) => setPermissions({ ...permissions, canApproveExpenses: e.target.checked })}
-                    className="w-4 h-4 text-teal-600 rounded focus:ring-teal-500"
+                    className="w-4 h-4 text-[#B99D73] rounded bg-[#181712] border-[#282319] focus:ring-[#B99D73] accent-[#6C5636]"
                   />
                 </label>
 
-                <label className="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                <label className="flex items-center justify-between p-3 rounded-xl border border-[#282319] bg-[#0c0c09] hover:border-[#6C5636]/60 cursor-pointer shadow-neu-sunken">
                   <div>
-                    <span className="font-bold text-slate-900 block">Export MIS Reports & Data</span>
-                    <span className="text-[11px] text-slate-500">Download Excel/CSV field audit summaries and POB orders</span>
+                    <span className="font-bold text-[#F2ECE1] block">Export MIS Reports & Data</span>
+                    <span className="text-[11px] text-[#857866]">Download Excel/CSV field audit summaries and POB orders</span>
                   </div>
                   <input
                     type="checkbox"
                     checked={permissions.canExportData}
                     onChange={(e) => setPermissions({ ...permissions, canExportData: e.target.checked })}
-                    className="w-4 h-4 text-teal-600 rounded focus:ring-teal-500"
+                    className="w-4 h-4 text-[#B99D73] rounded bg-[#181712] border-[#282319] focus:ring-[#B99D73] accent-[#6C5636]"
                   />
                 </label>
               </div>
 
-              <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
+              <div className="pt-4 border-t border-[#282319] flex items-center justify-end gap-2.5">
                 <button
                   type="button"
                   onClick={() => setIsPermissionsModalOpen(false)}
-                  className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 font-semibold hover:bg-slate-50 transition-colors"
+                  className="neu-btn px-4 py-2 text-xs text-[#857866] hover:text-[#F2ECE1] cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={handleSavePermissions}
-                  className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-bold shadow-md shadow-teal-600/20 transition-all flex items-center gap-1.5"
+                  className="neu-btn-gold px-4 py-2 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
                 >
                   <CheckCircle2 className="w-4 h-4" />
                   <span>Update Access Rights</span>

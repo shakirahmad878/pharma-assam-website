@@ -44,37 +44,37 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, users }) =
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Background Decorative Elements */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+    <div className="min-h-screen bg-[#090907] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden text-[#F2ECE1]">
+      {/* Background Subtle Ambient Glows */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#6C5636]/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#B99D73]/10 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
         {/* Brand Header */}
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-teal-500 to-emerald-400 shadow-xl shadow-teal-500/20 mb-4">
-            <Activity className="w-8 h-8 text-slate-950 stroke-[2.5]" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#8A7049] via-[#6C5636] to-[#4A3B24] border border-[#B99D73]/40 shadow-neu-raised mb-4">
+            <Activity className="w-8 h-8 text-[#090907] stroke-[2.8]" />
           </div>
-          <h2 className="text-2xl font-bold tracking-tight text-white">
-            RepPulse <span className="text-teal-400">Admin & Enterprise Portal</span>
+          <h2 className="text-2xl font-bold tracking-tight text-[#F2ECE1]">
+            RepPulse <span className="text-[#B99D73]">Enterprise Portal</span>
           </h2>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-xs text-[#857866] mt-1.5">
             Official Administration & Management Portal • Pharma Assam
           </p>
         </div>
 
         {/* Login Card */}
-        <div className="mt-8 bg-slate-900 border border-slate-800 rounded-2xl p-7 shadow-2xl backdrop-blur-sm sm:px-8">
+        <div className="mt-7 neu-card p-7 sm:p-8 border border-[#282319]">
           
           <div className="mb-6">
-            <h3 className="text-lg font-semibold text-white">Sign In to Your Account</h3>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <h3 className="text-lg font-bold text-[#F2ECE1]">Sign In to Your Account</h3>
+            <p className="text-xs text-[#857866] mt-0.5">
               Enter your authorized username or Employee ID to continue
             </p>
           </div>
 
           {error && (
-            <div className="mb-5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-start gap-2.5 text-rose-300 text-xs">
+            <div className="mb-5 p-3 rounded-xl bg-rose-950/40 border border-rose-800/40 flex items-start gap-2.5 text-rose-300 text-xs shadow-neu-sunken">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
               <span>{error}</span>
             </div>
@@ -83,12 +83,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, users }) =
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Username / Employee ID */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label className="block text-xs font-semibold text-[#B99D73] mb-1.5">
                 Username or Employee ID
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <UserIcon className="h-4 w-4 text-slate-500" />
+                  <UserIcon className="h-4 w-4 text-[#857866]" />
                 </div>
                 <input
                   type="text"
@@ -100,7 +100,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, users }) =
                     setIdentifier(e.target.value);
                     if (error) setError(null);
                   }}
-                  className="w-full pl-10 pr-3.5 py-2.5 bg-slate-950/70 border border-slate-700 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors"
+                  className="neu-input w-full pl-10 pr-3.5 py-2.5 text-sm"
                 />
               </div>
             </div>
@@ -108,13 +108,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, users }) =
             {/* Password */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-semibold text-slate-300">
+                <label className="block text-xs font-semibold text-[#B99D73]">
                   Password
                 </label>
               </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <Lock className="h-4 w-4 text-slate-500" />
+                  <Lock className="h-4 w-4 text-[#857866]" />
                 </div>
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -125,12 +125,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, users }) =
                     setPassword(e.target.value);
                     if (error) setError(null);
                   }}
-                  className="w-full pl-10 pr-10 py-2.5 bg-slate-950/70 border border-slate-700 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors font-mono"
+                  className="neu-input w-full pl-10 pr-10 py-2.5 text-sm font-mono"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-500 hover:text-slate-300 focus:outline-none"
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[#857866] hover:text-[#B99D73] focus:outline-none"
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -145,31 +145,31 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, users }) =
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full mt-2 flex items-center justify-center gap-2 py-2.5 px-4 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-sm rounded-xl shadow-lg shadow-teal-500/25 transition-all focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:opacity-50 cursor-pointer"
+              className="neu-btn-gold w-full mt-3 flex items-center justify-center gap-2 py-3 px-4 font-bold text-sm rounded-xl cursor-pointer disabled:opacity-50"
             >
               {isLoading ? (
                 <span>Signing in...</span>
               ) : (
                 <>
                   <span>Sign In</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-4 h-4 stroke-[2.5]" />
                 </>
               )}
             </button>
           </form>
 
           {/* Security Assurance Footer */}
-          <div className="mt-6 pt-5 border-t border-slate-800 flex items-center justify-center gap-2 text-[11px] text-slate-500">
-            <ShieldCheck className="w-3.5 h-3.5 text-teal-400" />
+          <div className="mt-6 pt-5 border-t border-[#282319] flex items-center justify-center gap-2 text-[11px] text-[#857866]">
+            <ShieldCheck className="w-3.5 h-3.5 text-[#B99D73]" />
             <span>Role-Based Access Control • Encrypted Session</span>
           </div>
 
         </div>
 
         {/* Quick Credentials Card */}
-        <div className="mt-6 bg-slate-900/90 border border-slate-800/90 rounded-2xl p-5 shadow-xl">
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-300 mb-3">
-            <Lock className="w-3.5 h-3.5 text-teal-400" />
+        <div className="mt-6 neu-card p-5 border border-[#282319]">
+          <div className="flex items-center gap-2 text-xs font-bold text-[#B99D73] mb-3">
+            <Lock className="w-3.5 h-3.5 text-[#B99D73]" />
             <span>Authorized Login Credentials (1-Click Fill)</span>
           </div>
 
@@ -181,20 +181,20 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, users }) =
                 setPassword('Shakir@2026');
                 if (error) setError(null);
               }}
-              className="p-2.5 bg-slate-950/60 hover:bg-slate-800 border border-slate-800 hover:border-teal-500/40 rounded-xl cursor-pointer transition-all flex items-center justify-between group"
+              className="p-3 bg-[#0c0c09] hover:bg-[#14130f] border border-[#282319] hover:border-[#6C5636] rounded-xl cursor-pointer transition-all flex items-center justify-between group shadow-neu-sunken"
             >
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-white group-hover:text-teal-400 transition-colors">Super Admin</span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal-500/10 text-teal-300 border border-teal-500/20 font-mono">Full Access</span>
+                  <span className="text-xs font-bold text-[#F2ECE1] group-hover:text-[#B99D73] transition-colors">Super Admin</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#181712] text-[#B99D73] border border-[#282319] font-mono">Full Access</span>
                 </div>
-                <div className="text-[11px] text-slate-400 mt-0.5">
-                  User: <span className="font-mono text-slate-200">shakir878</span> • Pass: <span className="font-mono text-slate-200">Shakir@2026</span>
+                <div className="text-[11px] text-[#857866] mt-0.5">
+                  User: <span className="font-mono text-[#F2ECE1]">shakir878</span> • Pass: <span className="font-mono text-[#F2ECE1]">Shakir@2026</span>
                 </div>
               </div>
               <button
                 type="button"
-                className="text-[11px] font-bold text-teal-400 group-hover:text-teal-300 bg-teal-500/10 hover:bg-teal-500/20 px-2.5 py-1 rounded-lg transition-colors"
+                className="neu-btn text-[11px] font-bold text-[#B99D73] px-2.5 py-1 rounded-lg cursor-pointer"
               >
                 Auto Fill
               </button>
@@ -207,20 +207,20 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, users }) =
                 setPassword('Bodrud@2026');
                 if (error) setError(null);
               }}
-              className="p-2.5 bg-slate-950/60 hover:bg-slate-800 border border-slate-800 hover:border-teal-500/40 rounded-xl cursor-pointer transition-all flex items-center justify-between group"
+              className="p-3 bg-[#0c0c09] hover:bg-[#14130f] border border-[#282319] hover:border-[#6C5636] rounded-xl cursor-pointer transition-all flex items-center justify-between group shadow-neu-sunken"
             >
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-white group-hover:text-teal-400 transition-colors">Regional Manager (RSM)</span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-300 border border-sky-500/20 font-mono">Barak Valley</span>
+                  <span className="text-xs font-bold text-[#F2ECE1] group-hover:text-[#B99D73] transition-colors">Regional Manager (RSM)</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#181712] text-[#B99D73] border border-[#282319] font-mono">Barak Valley</span>
                 </div>
-                <div className="text-[11px] text-slate-400 mt-0.5">
-                  User: <span className="font-mono text-slate-200">bodrudsadiol</span> • Pass: <span className="font-mono text-slate-200">Bodrud@2026</span>
+                <div className="text-[11px] text-[#857866] mt-0.5">
+                  User: <span className="font-mono text-[#F2ECE1]">bodrudsadiol</span> • Pass: <span className="font-mono text-[#F2ECE1]">Bodrud@2026</span>
                 </div>
               </div>
               <button
                 type="button"
-                className="text-[11px] font-bold text-sky-400 group-hover:text-sky-300 bg-sky-500/10 hover:bg-sky-500/20 px-2.5 py-1 rounded-lg transition-colors"
+                className="neu-btn text-[11px] font-bold text-[#B99D73] px-2.5 py-1 rounded-lg cursor-pointer"
               >
                 Auto Fill
               </button>
@@ -233,20 +233,20 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, users }) =
                 setPassword('1234');
                 if (error) setError(null);
               }}
-              className="p-2.5 bg-slate-950/60 hover:bg-slate-800 border border-slate-800 hover:border-teal-500/40 rounded-xl cursor-pointer transition-all flex items-center justify-between group"
+              className="p-3 bg-[#0c0c09] hover:bg-[#14130f] border border-[#282319] hover:border-[#6C5636] rounded-xl cursor-pointer transition-all flex items-center justify-between group shadow-neu-sunken"
             >
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-white group-hover:text-teal-400 transition-colors">Medical Representative</span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20 font-mono">Field Rep</span>
+                  <span className="text-xs font-bold text-[#F2ECE1] group-hover:text-[#B99D73] transition-colors">Medical Representative</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#181712] text-[#B99D73] border border-[#282319] font-mono">Field Rep</span>
                 </div>
-                <div className="text-[11px] text-slate-400 mt-0.5">
-                  User: <span className="font-mono text-slate-200">0002</span> • Pass: <span className="font-mono text-slate-200">1234</span>
+                <div className="text-[11px] text-[#857866] mt-0.5">
+                  User: <span className="font-mono text-[#F2ECE1]">0002</span> • Pass: <span className="font-mono text-[#F2ECE1]">1234</span>
                 </div>
               </div>
               <button
                 type="button"
-                className="text-[11px] font-bold text-amber-400 group-hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 px-2.5 py-1 rounded-lg transition-colors"
+                className="neu-btn text-[11px] font-bold text-[#B99D73] px-2.5 py-1 rounded-lg cursor-pointer"
               >
                 Auto Fill
               </button>
@@ -255,7 +255,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, users }) =
         </div>
 
         {/* Support note */}
-        <p className="mt-6 text-center text-xs text-slate-500">
+        <p className="mt-6 text-center text-xs text-[#857866]">
           Need access or password reset? Contact your System Administrator.
         </p>
 
