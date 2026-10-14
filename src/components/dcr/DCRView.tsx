@@ -16,9 +16,9 @@ interface DCRViewProps {
 }
 
 export const DCRView: React.FC<DCRViewProps> = ({
-  dcrLogs,
-  doctors,
-  products,
+  dcrLogs = [],
+  doctors = [],
+  products = [],
   currentUser,
   plannedDoctorIds = [],
   onRemovePlannedDoctor,
@@ -28,7 +28,12 @@ export const DCRView: React.FC<DCRViewProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedInitialDocId, setSelectedInitialDocId] = useState<string | undefined>(undefined);
 
-  const plannedDoctors = doctors.filter(doc => plannedDoctorIds.includes(doc.id));
+  const safeDcrLogs = Array.isArray(dcrLogs) ? dcrLogs : [];
+  const safeDoctors = Array.isArray(doctors) ? doctors : [];
+  const safeProducts = Array.isArray(products) ? products : [];
+  const safePlannedIds = Array.isArray(plannedDoctorIds) ? plannedDoctorIds : [];
+
+  const plannedDoctors = safeDoctors.filter(doc => doc && safePlannedIds.includes(doc.id));
 
   const handleStartPlannedVisit = (doctorId: string) => {
     setSelectedInitialDocId(doctorId);
@@ -36,7 +41,7 @@ export const DCRView: React.FC<DCRViewProps> = ({
   };
 
   const handleGenericLogVisit = () => {
-    setSelectedInitialDocId(doctors[0]?.id);
+    setSelectedInitialDocId(safeDoctors[0]?.id);
     setIsModalOpen(true);
   };
 
@@ -163,69 +168,90 @@ export const DCRView: React.FC<DCRViewProps> = ({
         <h3 className="font-bold text-sm text-[#B99D73] flex items-center gap-2">
           <span>Logged DCR Calls History</span>
           <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#181712] border border-[#282319] text-[#B99D73] font-semibold shadow-neu-sunken">
-            {dcrLogs.length} Records
+            {safeDcrLogs.length} Records
           </span>
         </h3>
 
-        {dcrLogs.map((dcr) => (
-          <div key={dcr.id} className="neu-card p-5 space-y-3 hover:border-[#6C5636]/60 transition-all duration-200">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="font-bold text-base text-[#F2ECE1]">{dcr.clientName}</h3>
-                  <Badge variant={dcr.clientType === 'DOCTOR' ? 'primary' : 'neutral'}>
-                    {dcr.clientType}
-                  </Badge>
-                  {dcr.isGeofenceVerified && (
-                    <Badge variant="success">
-                      <CheckCircle2 className="w-3 h-3" /> Geofence Verified ({dcr.distanceFromClinicMeters}m)
-                    </Badge>
-                  )}
-                </div>
-                <p className="text-xs text-[#857866] mt-1">
-                  Logged by: <strong className="text-[#F2ECE1]">{dcr.userName}</strong> • Date: <span className="font-mono">{dcr.date}</span>
-                </p>
-              </div>
-
-              <div className="text-right">
-                <span className="text-xs font-semibold px-2.5 py-1 rounded-xl bg-[#181712] border border-[#282319] text-[#B99D73] shadow-neu-sunken">
-                  Status: {dcr.status}
-                </span>
-              </div>
+        {safeDcrLogs.length === 0 ? (
+          <div className="neu-card p-8 text-center border border-[#282319] space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-[#181712] border border-[#282319] text-[#B99D73] flex items-center justify-center mx-auto shadow-neu-sunken">
+              <FileText className="w-6 h-6 text-[#B99D73]" />
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3.5 rounded-xl bg-[#0c0c09] border border-[#282319] shadow-neu-sunken text-xs">
-              <div>
-                <span className="text-[#857866] block">Check-in / Check-out:</span>
-                <span className="font-semibold text-[#F2ECE1]">{dcr.checkInTime} – {dcr.checkOutTime || 'Active'}</span>
-              </div>
-              <div>
-                <span className="text-[#857866] block">Samples Distributed:</span>
-                <span className="font-semibold text-[#B99D73]">
-                  {dcr.samplesGiven.map((s: { productId: string; quantity: number }) => `${s.quantity} units`).join(', ') || 'None'}
-                </span>
-              </div>
-              <div>
-                <span className="text-[#857866] block">Product Order Booking (POB):</span>
-                <span className="font-semibold text-[#B99D73]">
-                  {dcr.pobAmount ? `₹${dcr.pobAmount.toLocaleString()}` : 'None'}
-                </span>
-              </div>
-            </div>
-
-            {dcr.doctorFeedback && (
-              <p className="text-xs text-[#857866] bg-[#181712] p-3 rounded-xl border border-[#282319] shadow-neu-sunken">
-                <strong className="text-[#B99D73]">Doctor Feedback:</strong> {dcr.doctorFeedback}
-              </p>
-            )}
+            <h4 className="font-bold text-base text-[#F2ECE1]">No DCR Visits Logged Yet</h4>
+            <p className="text-xs text-[#857866] max-w-md mx-auto">
+              Your Daily Call Report log is currently empty. Click "Log Doctor DCR Visit" above or select a doctor from the Doctor Master directory to start recording field activities.
+            </p>
+            <button
+              onClick={handleGenericLogVisit}
+              className="neu-btn-gold px-4 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-2 mt-2 cursor-pointer"
+            >
+              <Plus className="w-4 h-4 stroke-[2.5]" />
+              Log First DCR Visit
+            </button>
           </div>
-        ))}
+        ) : (
+          safeDcrLogs.map((dcr) => (
+            <div key={dcr.id || Math.random().toString()} className="neu-card p-5 space-y-3 hover:border-[#6C5636]/60 transition-all duration-200">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-base text-[#F2ECE1]">{dcr.clientName || 'Doctor Visit'}</h3>
+                    <Badge variant={dcr.clientType === 'DOCTOR' ? 'primary' : 'neutral'}>
+                      {dcr.clientType || 'DOCTOR'}
+                    </Badge>
+                    {dcr.isGeofenceVerified && (
+                      <Badge variant="success">
+                        <CheckCircle2 className="w-3 h-3" /> Geofence Verified ({dcr.distanceFromClinicMeters ?? 0}m)
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-xs text-[#857866] mt-1">
+                    Logged by: <strong className="text-[#F2ECE1]">{dcr.userName || currentUser?.name || 'Field MR'}</strong> • Date: <span className="font-mono">{dcr.date || 'Today'}</span>
+                  </p>
+                </div>
+
+                <div className="text-right">
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-xl bg-[#181712] border border-[#282319] text-[#B99D73] shadow-neu-sunken">
+                    Status: {dcr.status || 'SUBMITTED'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3.5 rounded-xl bg-[#0c0c09] border border-[#282319] shadow-neu-sunken text-xs">
+                <div>
+                  <span className="text-[#857866] block">Check-in / Check-out:</span>
+                  <span className="font-semibold text-[#F2ECE1]">{dcr.checkInTime || '--'} – {dcr.checkOutTime || 'Active'}</span>
+                </div>
+                <div>
+                  <span className="text-[#857866] block">Samples Distributed:</span>
+                  <span className="font-semibold text-[#B99D73]">
+                    {Array.isArray(dcr.samplesGiven) && dcr.samplesGiven.length > 0
+                      ? dcr.samplesGiven.map((s: { productId: string; quantity: number }) => `${s?.quantity ?? 0} units`).join(', ')
+                      : 'None'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[#857866] block">Product Order Booking (POB):</span>
+                  <span className="font-semibold text-[#B99D73]">
+                    {dcr.pobAmount != null ? `₹${Number(dcr.pobAmount).toLocaleString()}` : 'None'}
+                  </span>
+                </div>
+              </div>
+
+              {dcr.doctorFeedback && (
+                <p className="text-xs text-[#857866] bg-[#181712] p-3 rounded-xl border border-[#282319] shadow-neu-sunken">
+                  <strong className="text-[#B99D73]">Doctor Feedback:</strong> {dcr.doctorFeedback}
+                </p>
+              )}
+            </div>
+          ))
+        )}
       </div>
 
       {isModalOpen && (
         <DCREntryModal
-          doctors={doctors}
-          products={products}
+          doctors={safeDoctors}
+          products={safeProducts}
           currentUser={currentUser}
           initialDoctorId={selectedInitialDocId}
           onClose={() => setIsModalOpen(false)}

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { StorageService } from '../../services/storageService';
 import { FirestoreService } from '../../services/firestoreService';
-import { Database, Download, Upload, CheckCircle2, AlertTriangle, RefreshCw, X, Copy, Check, Cloud, CloudLightning, ShieldCheck } from 'lucide-react';
+import { Database, Download, Upload, CheckCircle2, AlertTriangle, RefreshCw, X, Copy, Check, Cloud } from 'lucide-react';
 
 interface DatabaseSyncModalProps {
   isOpen: boolean;
@@ -102,21 +102,17 @@ export const DatabaseSyncModal: React.FC<DatabaseSyncModalProps> = ({
     reader.onload = (event) => {
       const content = event.target?.result as string;
       if (content) {
-        setJsonInput(content);
         handleRestoreFromText(content);
       }
     };
     reader.readAsText(file);
   };
 
-  const handleRestoreFromText = (rawText?: string) => {
-    const textToImport = rawText || jsonInput;
-    if (!textToImport.trim()) {
-      setStatusMessage({ type: 'error', text: 'Please paste JSON data or select a backup file.' });
-      return;
-    }
+  const handleRestoreFromText = (raw?: string) => {
+    const target = raw || jsonInput;
+    if (!target.trim()) return;
 
-    const result = StorageService.importFullDatabaseJSON(textToImport);
+    const result = StorageService.importFullDatabaseJSON(target);
     if (result.success) {
       setStatusMessage({ type: 'success', text: result.message });
       onDatabaseUpdated();
@@ -137,47 +133,47 @@ export const DatabaseSyncModal: React.FC<DatabaseSyncModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-50 bg-[#090907]/80 backdrop-blur-md flex items-center justify-center p-4">
+      <div className="neu-card rounded-2xl max-w-xl w-full p-6 shadow-neu-raised border border-[#282319] animate-in fade-in zoom-in-95 max-h-[90vh] flex flex-col">
         
         {/* Modal Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div className="flex items-center justify-between pb-3.5 border-b border-[#282319]">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-teal-50 text-teal-600 rounded-xl">
+            <div className="p-2 bg-[#6C5636]/20 border border-[#6C5636]/40 text-[#B99D73] rounded-xl shadow-neu-sunken">
               <Database className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+              <h3 className="text-base font-bold text-[#F2ECE1] flex items-center gap-2">
                 <span>Database Sync & Cloud Center</span>
                 {isCloudConnected ? (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[#101912] text-[#A6C48A] border border-[#384D2B]/60 shadow-neu-sunken">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                     Cloud Firestore Online
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[#1a140b] text-[#D4BD95] border border-[#8A7049]/60">
                     Local Mode
                   </span>
                 )}
               </h3>
-              <p className="text-xs text-slate-500">
-                Connected to Google Cloud Firestore (<code>reppulse-pharma</code>)
+              <p className="text-xs text-[#857866] mt-0.5">
+                Connected to Google Cloud Firestore (<code className="text-[#B99D73]">reppulse-pharma</code>)
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100">
+          <button onClick={onClose} className="neu-btn p-1.5 rounded-xl text-[#857866] hover:text-[#F2ECE1]">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Status Message */}
         {statusMessage && (
-          <div className={`mt-3 p-3 rounded-xl border flex items-center gap-2 text-xs font-semibold ${
+          <div className={`mt-3 p-3 rounded-xl border flex items-center gap-2 text-xs font-semibold shadow-neu-sunken ${
             statusMessage.type === 'success' 
-              ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
-              : 'bg-rose-50 border-rose-200 text-rose-800'
+              ? 'bg-[#101912] border-[#384D2B]/60 text-[#A6C48A]' 
+              : 'bg-[#1c0f0f] border-[#662B2B]/60 text-rose-400'
           }`}>
-            {statusMessage.type === 'success' ? <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" /> : <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />}
+            {statusMessage.type === 'success' ? <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" /> : <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />}
             <span>{statusMessage.text}</span>
           </div>
         )}
@@ -185,41 +181,41 @@ export const DatabaseSyncModal: React.FC<DatabaseSyncModalProps> = ({
         <div className="mt-4 space-y-4 overflow-y-auto flex-1 pr-1 text-xs">
           
           {/* Section 1: Live Cloud Firestore Synchronization */}
-          <div className="bg-gradient-to-br from-teal-900 to-slate-900 text-white p-4 rounded-xl border border-teal-800/50 shadow-md">
+          <div className="bg-[#0c0c09] p-4 rounded-xl border border-[#282319] shadow-neu-sunken">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="p-1.5 bg-teal-500/20 text-teal-300 rounded-lg">
+                <div className="p-1.5 bg-[#6C5636]/20 text-[#B99D73] rounded-lg border border-[#6C5636]/40">
                   <Cloud className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-white text-xs">Google Cloud Firestore Database</h4>
-                  <p className="text-[11px] text-teal-200/70">Real-time sync between Web Portal, Field Mobile App, and Admin DB</p>
+                  <h4 className="font-bold text-[#F2ECE1] text-xs">Google Cloud Firestore Database</h4>
+                  <p className="text-[11px] text-[#857866]">Real-time sync between Web Portal, Field Mobile App, and Admin DB</p>
                 </div>
               </div>
-              <span className="text-[10px] font-mono bg-teal-500/20 text-teal-300 px-2 py-0.5 rounded border border-teal-500/30">
+              <span className="text-[10px] font-mono bg-[#181712] text-[#B99D73] px-2 py-0.5 rounded border border-[#282319]">
                 reppulse-pharma
               </span>
             </div>
 
             <div className="grid grid-cols-3 gap-2 my-3 text-center">
-              <div className="bg-slate-800/70 p-2 rounded-lg border border-slate-700">
-                <div className="text-base font-bold text-white">{doctors.length}</div>
-                <div className="text-[10px] text-slate-400">Doctors</div>
+              <div className="bg-[#181712] p-2 rounded-xl border border-[#282319]">
+                <div className="text-base font-bold text-[#F2ECE1]">{doctors.length}</div>
+                <div className="text-[10px] text-[#857866]">Doctors</div>
               </div>
-              <div className="bg-slate-800/70 p-2 rounded-lg border border-slate-700">
-                <div className="text-base font-bold text-white">{chemists.length}</div>
-                <div className="text-[10px] text-slate-400">Chemists</div>
+              <div className="bg-[#181712] p-2 rounded-xl border border-[#282319]">
+                <div className="text-base font-bold text-[#F2ECE1]">{chemists.length}</div>
+                <div className="text-[10px] text-[#857866]">Chemists</div>
               </div>
-              <div className="bg-slate-800/70 p-2 rounded-lg border border-slate-700">
-                <div className="text-base font-bold text-white">{products.length}</div>
-                <div className="text-[10px] text-slate-400">Products</div>
+              <div className="bg-[#181712] p-2 rounded-xl border border-[#282319]">
+                <div className="text-base font-bold text-[#B99D73]">{products.length}</div>
+                <div className="text-[10px] text-[#857866]">Products</div>
               </div>
             </div>
 
             <button
               onClick={handleCloudSyncNow}
               disabled={isSyncingCloud}
-              className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold transition-all shadow-md shadow-teal-500/20 cursor-pointer disabled:opacity-50"
+              className="neu-btn-gold w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl font-bold cursor-pointer disabled:opacity-50"
             >
               <RefreshCw className={`w-4 h-4 ${isSyncingCloud ? 'animate-spin' : ''}`} />
               <span>{isSyncingCloud ? 'Synchronizing with Firestore...' : 'Sync Database with Cloud Firestore Now'}</span>
@@ -227,44 +223,44 @@ export const DatabaseSyncModal: React.FC<DatabaseSyncModalProps> = ({
           </div>
 
           {/* Section 2: Export Backup */}
-          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
-            <h4 className="font-bold text-slate-800 flex items-center gap-1.5 text-xs">
-              <Download className="w-4 h-4 text-teal-600" />
+          <div className="bg-[#0c0c09] p-4 rounded-xl border border-[#282319] space-y-2 shadow-neu-sunken">
+            <h4 className="font-bold text-[#F2ECE1] flex items-center gap-1.5 text-xs">
+              <Download className="w-4 h-4 text-[#B99D73]" />
               1. Export / Backup Database
             </h4>
-            <p className="text-slate-500 text-[11px]">
+            <p className="text-[#857866] text-[11px]">
               Download your complete database file to transfer to another device or retain an offline backup.
             </p>
             <div className="flex flex-wrap gap-2 pt-1">
               <button
                 onClick={handleDownloadFile}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold shadow-sm transition-colors cursor-pointer"
+                className="neu-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[#F2ECE1] hover:text-[#B99D73] font-semibold cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5" />
                 Download JSON Backup
               </button>
               <button
                 onClick={handleCopyJSON}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 font-semibold transition-colors cursor-pointer"
+                className="neu-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[#857866] hover:text-[#F2ECE1] font-semibold cursor-pointer"
               >
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
+                {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-[#857866]" />}
                 <span>{copied ? 'Copied!' : 'Copy to Clipboard'}</span>
               </button>
             </div>
           </div>
 
           {/* Section 3: Import / Restore */}
-          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
-            <h4 className="font-bold text-slate-800 flex items-center gap-1.5 text-xs">
-              <Upload className="w-4 h-4 text-blue-600" />
+          <div className="bg-[#0c0c09] p-4 rounded-xl border border-[#282319] space-y-2 shadow-neu-sunken">
+            <h4 className="font-bold text-[#F2ECE1] flex items-center gap-1.5 text-xs">
+              <Upload className="w-4 h-4 text-[#B99D73]" />
               2. Import / Restore Database File
             </h4>
-            <p className="text-slate-500 text-[11px]">
+            <p className="text-[#857866] text-[11px]">
               Restore or load doctor and chemist database from a JSON file.
             </p>
             
             <div className="flex items-center gap-2">
-              <label className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold cursor-pointer shadow-sm transition-colors">
+              <label className="neu-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[#B99D73] hover:text-[#F2ECE1] font-semibold cursor-pointer">
                 <Upload className="w-3.5 h-3.5" />
                 Choose Backup File (.json)
                 <input
@@ -277,18 +273,18 @@ export const DatabaseSyncModal: React.FC<DatabaseSyncModalProps> = ({
             </div>
 
             <div className="pt-2">
-              <label className="block text-[11px] font-semibold text-slate-600 mb-1">Or paste JSON content directly:</label>
+              <label className="block text-[11px] font-semibold text-[#857866] mb-1">Or paste JSON content directly:</label>
               <textarea
                 rows={2}
                 value={jsonInput}
                 onChange={(e) => setJsonInput(e.target.value)}
                 placeholder='{"version": "1.0", "doctors": [...]}'
-                className="w-full font-mono text-[11px] p-2.5 rounded-lg border border-slate-200 focus:ring-1 focus:ring-teal-500 focus:outline-none"
+                className="neu-input w-full font-mono text-[11px] p-2.5"
               />
               {jsonInput && (
                 <button
                   onClick={() => handleRestoreFromText()}
-                  className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold cursor-pointer"
+                  className="neu-btn-gold mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold cursor-pointer"
                 >
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   Apply & Restore Pasted Data
@@ -298,11 +294,11 @@ export const DatabaseSyncModal: React.FC<DatabaseSyncModalProps> = ({
           </div>
 
           {/* Section 4: Reset */}
-          <div className="pt-2 flex items-center justify-between text-slate-500 border-t border-slate-100">
+          <div className="pt-2 flex items-center justify-between text-[#857866] border-t border-[#282319]">
             <span className="text-[11px]">Need to clear local cache?</span>
             <button
               onClick={handleResetToDefault}
-              className="text-xs text-rose-600 hover:text-rose-700 font-semibold flex items-center gap-1 hover:underline cursor-pointer"
+              className="text-xs text-rose-400 hover:text-rose-300 font-semibold flex items-center gap-1 cursor-pointer"
             >
               <RefreshCw className="w-3 h-3" />
               Reset Local Storage
@@ -311,10 +307,10 @@ export const DatabaseSyncModal: React.FC<DatabaseSyncModalProps> = ({
 
         </div>
 
-        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-end">
+        <div className="mt-4 pt-3.5 border-t border-[#282319] flex items-center justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs cursor-pointer"
+            className="neu-btn px-4 py-2 rounded-xl text-[#857866] hover:text-[#F2ECE1] font-semibold text-xs cursor-pointer"
           >
             Close
           </button>

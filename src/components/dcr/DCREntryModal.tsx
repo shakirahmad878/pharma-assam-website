@@ -21,16 +21,19 @@ export const DCREntryModal: React.FC<DCREntryModalProps> = ({
   onClose,
   onSubmitDCR,
 }) => {
-  const [selectedDoctorId, setSelectedDoctorId] = useState<string>(initialDoctorId || doctors[0]?.id || '');
+  const safeDoctors = Array.isArray(doctors) ? doctors : [];
+  const safeProducts = Array.isArray(products) ? products : [];
+
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string>(initialDoctorId || safeDoctors[0]?.id || '');
   const [checkInTime, setCheckInTime] = useState('09:30 AM');
   const [checkOutTime, setCheckOutTime] = useState('09:55 AM');
-  const [selectedProductIds, setSelectedProductIds] = useState<string[]>([products[0]?.id || '']);
+  const [selectedProductIds, setSelectedProductIds] = useState<string[]>([safeProducts[0]?.id || 'prod-01']);
   const [sampleQuantity, setSampleQuantity] = useState(3);
   const [pobAmount, setPobAmount] = useState<string>('0');
   const [doctorFeedback, setDoctorFeedback] = useState('Dr. expressed keen interest in the micro-pelletized formulation.');
   const [nextFollowUpDate, setNextFollowUpDate] = useState('2026-09-22');
 
-  const selectedDoctor = doctors.find(d => d.id === selectedDoctorId) || doctors[0];
+  const selectedDoctor = safeDoctors.find(d => d.id === selectedDoctorId) || safeDoctors[0];
 
   // Live Location Check (Simulate Rep at clinic vs away)
   const repLat = 19.0595;
@@ -99,17 +102,23 @@ export const DCREntryModal: React.FC<DCREntryModalProps> = ({
           {/* Doctor Selection */}
           <div>
             <label className="font-semibold text-[#B99D73] block mb-1">Select Doctor</label>
-            <select
-              value={selectedDoctorId}
-              onChange={(e) => setSelectedDoctorId(e.target.value)}
-              className="neu-input w-full px-3 py-2 text-xs appearance-none bg-[#0c0c09] cursor-pointer"
-            >
-              {doctors.map(d => (
-                <option key={d.id} value={d.id}>
-                  {d.name} ({d.specialty} - {d.clinicName})
-                </option>
-              ))}
-            </select>
+            {safeDoctors.length === 0 ? (
+              <p className="text-[#D4BD95] bg-[#1a160d] p-2.5 rounded-lg border border-[#8A7049]/40">
+                No doctors registered in the database. Please add a doctor in Doctor Master before logging visits.
+              </p>
+            ) : (
+              <select
+                value={selectedDoctorId}
+                onChange={(e) => setSelectedDoctorId(e.target.value)}
+                className="neu-input w-full px-3 py-2 text-xs appearance-none bg-[#0c0c09] cursor-pointer"
+              >
+                {safeDoctors.map(d => (
+                  <option key={d.id} value={d.id}>
+                    {d.name} ({d.specialty} - {d.clinicName || 'Clinic'})
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           {/* Live Geofence Distance Verification Bar */}
@@ -169,7 +178,7 @@ export const DCREntryModal: React.FC<DCREntryModalProps> = ({
                 onChange={(e) => setSelectedProductIds([e.target.value])}
                 className="neu-input w-full px-3 py-2 text-xs appearance-none bg-[#0c0c09] cursor-pointer"
               >
-                {products.map(p => (
+                {safeProducts.map(p => (
                   <option key={p.id} value={p.id}>{p.brandName || p.name}</option>
                 ))}
               </select>

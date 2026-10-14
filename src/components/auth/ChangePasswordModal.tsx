@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { User } from '../../types';
 import { AuthService } from '../../services/authService';
-import { KeyRound, Lock, CheckCircle2, AlertCircle, X, ShieldCheck, Eye, EyeOff } from 'lucide-react';
+import { KeyRound, CheckCircle2, AlertCircle, X, Eye, EyeOff } from 'lucide-react';
 
 interface ChangePasswordModalProps {
   isOpen: boolean;
@@ -61,24 +61,24 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 animate-in fade-in zoom-in duration-200 overflow-hidden">
+    <div className="fixed inset-0 bg-[#090907]/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+      <div className="neu-card border border-[#282319] rounded-2xl max-w-md w-full shadow-neu-raised animate-in fade-in zoom-in duration-200 overflow-hidden">
         {/* Modal Header */}
-        <div className="p-5 bg-gradient-to-r from-slate-900 to-slate-800 text-white flex items-center justify-between">
+        <div className="p-5 border-b border-[#282319] flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-teal-500/20 border border-teal-500/40 flex items-center justify-center text-teal-300">
+            <div className="w-8 h-8 rounded-xl bg-[#6C5636]/20 border border-[#6C5636]/40 flex items-center justify-center text-[#B99D73] shadow-neu-sunken">
               <KeyRound className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-white">Change Account Password</h3>
-              <p className="text-[11px] text-slate-400">
-                User: <span className="text-teal-300 font-semibold">{currentUser.name}</span> ({currentUser.role})
+              <h3 className="font-bold text-sm text-[#F2ECE1]">Change Account Password</h3>
+              <p className="text-[11px] text-[#857866]">
+                User: <span className="text-[#B99D73] font-semibold">{currentUser.name}</span> ({currentUser.role})
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-700/50"
+            className="neu-btn p-1.5 rounded-xl text-[#857866] hover:text-[#F2ECE1]"
           >
             <X className="w-4 h-4" />
           </button>
@@ -87,21 +87,21 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
         {/* Modal Form */}
         <form onSubmit={handleSubmit} className="p-5 space-y-4 text-xs">
           {errorMessage && (
-            <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 flex items-center gap-2 text-xs">
-              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+            <div className="p-3 bg-[#1c0f0f] border border-[#662B2B]/60 rounded-xl text-rose-400 flex items-center gap-2 text-xs shadow-neu-sunken">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
               <span>{errorMessage}</span>
             </div>
           )}
 
           {successMessage && (
-            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-700 flex items-center gap-2 text-xs font-semibold">
-              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+            <div className="p-3 bg-[#101912] border border-[#384D2B]/60 rounded-xl text-emerald-400 flex items-center gap-2 text-xs font-semibold shadow-neu-sunken">
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
               <span>{successMessage}</span>
             </div>
           )}
 
           <div>
-            <label className="block font-semibold text-slate-700 mb-1">Current Password *</label>
+            <label className="block font-semibold text-[#B99D73] mb-1">Current Password *</label>
             <div className="relative">
               <input
                 type={showPasswords ? 'text' : 'password'}
@@ -109,12 +109,12 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                 placeholder="Enter current password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full pl-3 pr-10 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                className="neu-input w-full pl-3 pr-10 py-2"
               />
               <button
                 type="button"
                 onClick={() => setShowPasswords(!showPasswords)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#857866] hover:text-[#F2ECE1]"
               >
                 {showPasswords ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -122,42 +122,42 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
           </div>
 
           <div>
-            <label className="block font-semibold text-slate-700 mb-1">New Password *</label>
+            <label className="block font-semibold text-[#B99D73] mb-1">New Password *</label>
             <input
               type={showPasswords ? 'text' : 'password'}
               required
               placeholder="Enter new password (min. 4 characters)"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none"
+              className="neu-input w-full px-3 py-2"
             />
           </div>
 
           <div>
-            <label className="block font-semibold text-slate-700 mb-1">Confirm New Password *</label>
+            <label className="block font-semibold text-[#B99D73] mb-1">Confirm New Password *</label>
             <input
               type={showPasswords ? 'text' : 'password'}
               required
               placeholder="Re-enter new password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none"
+              className="neu-input w-full px-3 py-2"
             />
           </div>
 
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+          <div className="pt-3.5 border-t border-[#282319] flex items-center justify-end gap-2.5">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 font-semibold hover:bg-slate-50 transition-colors"
+              className="neu-btn px-4 py-2 rounded-xl text-[#857866] hover:text-[#F2ECE1] cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-bold shadow-md shadow-teal-600/20 transition-all flex items-center gap-1.5"
+              className="neu-btn-gold px-4 py-2 rounded-xl font-bold flex items-center gap-1.5 cursor-pointer"
             >
-              <CheckCircle2 className="w-4 h-4" />
+              <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
               <span>Update Password</span>
             </button>
           </div>

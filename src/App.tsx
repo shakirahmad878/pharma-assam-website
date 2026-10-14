@@ -41,6 +41,7 @@ import { LoginPage } from './components/auth/LoginPage';
 import { LoginModal } from './components/auth/LoginModal';
 import { ChangePasswordModal } from './components/auth/ChangePasswordModal';
 import { DatabaseSyncModal } from './components/common/DatabaseSyncModal';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { ShieldCheck, Users, Stethoscope, FileText, LayoutDashboard, Menu } from 'lucide-react';
 
 export default function App() {
@@ -621,8 +622,9 @@ export default function App() {
 
         {/* Dynamic Main Content Area */}
         <main className="flex-1 p-3.5 sm:p-5 md:p-6 overflow-y-auto max-w-full lg:max-w-5xl w-full min-w-0">
-          {/* Admin Control Center Portal */}
-          {activeTab === 'admin_portal' && (
+          <ErrorBoundary key={activeTab}>
+            {/* Admin Control Center Portal */}
+            {activeTab === 'admin_portal' && (
             <AdminPortal
               currentUser={currentUser}
               companies={companies}
@@ -788,6 +790,7 @@ export default function App() {
               onSwitchUser={handleSwitchUser}
             />
           )}
+          </ErrorBoundary>
         </main>
 
       </div>

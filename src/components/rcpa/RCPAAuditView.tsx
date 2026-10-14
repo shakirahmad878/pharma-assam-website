@@ -1,20 +1,23 @@
 import React, { useState } from 'react';
 import { RCPAAuditRecord, Doctor, Chemist } from '../../types';
 import { Badge } from '../common/Badge';
-import { FileSpreadsheet, Plus, TrendingUp, Stethoscope, Store, X, CheckCircle2 } from 'lucide-react';
+import { FileSpreadsheet, Plus, Store, X } from 'lucide-react';
 
 interface RCPAAuditViewProps {
   doctors: Doctor[];
   chemists: Chemist[];
 }
 
-export const RCPAAuditView: React.FC<RCPAAuditViewProps> = ({ doctors, chemists }) => {
+export const RCPAAuditView: React.FC<RCPAAuditViewProps> = ({ doctors = [], chemists = [] }) => {
+  const safeDoctors = Array.isArray(doctors) ? doctors : [];
+  const safeChemists = Array.isArray(chemists) ? chemists : [];
+
   const [rcpaRecords, setRcpaRecords] = useState<RCPAAuditRecord[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Form State
-  const [selectedDocId, setSelectedDocId] = useState(doctors[0]?.id || '');
-  const [selectedChemId, setSelectedChemId] = useState(chemists[0]?.id || '');
+  const [selectedDocId, setSelectedDocId] = useState(safeDoctors[0]?.id || '');
+  const [selectedChemId, setSelectedChemId] = useState(safeChemists[0]?.id || '');
   const [productBrand, setProductBrand] = useState('');
   const [ourRxCount, setOurRxCount] = useState<number>(30);
   const [competitorBrand, setCompetitorBrand] = useState('');
@@ -24,8 +27,8 @@ export const RCPAAuditView: React.FC<RCPAAuditViewProps> = ({ doctors, chemists 
 
   const handleAddAudit = (e: React.FormEvent) => {
     e.preventDefault();
-    const doc = doctors.find(d => d.id === selectedDocId) || { name: 'Doctor', specialty: 'General' };
-    const chem = chemists.find(c => c.id === selectedChemId) || { shopName: 'Chemist' };
+    const doc = safeDoctors.find(d => d.id === selectedDocId) || { name: 'Doctor', specialty: 'General' as any };
+    const chem = safeChemists.find(c => c.id === selectedChemId) || { shopName: 'Chemist' };
     const totalRx = ourRxCount + competitorRxCount;
     const share = totalRx > 0 ? (ourRxCount / totalRx) * 100 : 0;
 
@@ -62,13 +65,15 @@ export const RCPAAuditView: React.FC<RCPAAuditViewProps> = ({ doctors, chemists 
     <div className="space-y-6">
       
       {/* Header */}
-      <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="neu-card p-5 border border-[#282319] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <FileSpreadsheet className="w-5 h-5 text-teal-600" />
+          <h2 className="text-xl font-bold text-[#F2ECE1] flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-[#6C5636]/20 border border-[#6C5636]/40 text-[#B99D73] flex items-center justify-center font-bold shadow-neu-sunken">
+              <FileSpreadsheet className="w-4 h-4 text-[#B99D73]" />
+            </div>
             Retail Chemist Prescription Audit (RCPA)
           </h2>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-[#857866] mt-1">
             Analyze doctor prescribing market share at chemist counters against competitor pharmaceutical brands.
           </p>
         </div>
@@ -76,9 +81,9 @@ export const RCPAAuditView: React.FC<RCPAAuditViewProps> = ({ doctors, chemists 
           <Badge variant="primary" size="md">{rcpaRecords.length} Audits Completed</Badge>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs transition-colors cursor-pointer shadow-sm"
+            className="neu-btn-gold flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold cursor-pointer"
           >
-            <Plus className="w-3.5 h-3.5" />
+            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
             Log RCPA Audit
           </button>
         </div>
@@ -86,49 +91,49 @@ export const RCPAAuditView: React.FC<RCPAAuditViewProps> = ({ doctors, chemists 
 
       {/* RCPA Records */}
       {rcpaRecords.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center space-y-3">
-          <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 mx-auto flex items-center justify-center">
-            <FileSpreadsheet className="w-6 h-6" />
+        <div className="neu-card border border-[#282319] p-12 text-center space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-[#181712] border border-[#282319] text-[#B99D73] mx-auto flex items-center justify-center shadow-neu-sunken">
+            <FileSpreadsheet className="w-6 h-6 text-[#B99D73]" />
           </div>
-          <h3 className="font-bold text-slate-800 text-sm">No Chemist Prescription Audits Yet</h3>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto">
+          <h3 className="font-bold text-[#F2ECE1] text-sm">No Chemist Prescription Audits Yet</h3>
+          <p className="text-xs text-[#857866] max-w-sm mx-auto">
             Click "Log RCPA Audit" to analyze brand prescription share vs competitor molecules at chemist counters.
           </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {rcpaRecords.map((rcpa) => (
-            <div key={rcpa.id} className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4 flex flex-col justify-between">
+            <div key={rcpa.id} className="neu-card border border-[#282319] p-5 space-y-4 flex flex-col justify-between hover:border-[#6C5636]/60 transition-all duration-200">
               <div>
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="font-bold text-base text-slate-900">{rcpa.doctorName}</h3>
-                    <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
-                      <Store className="w-3.5 h-3.5 text-slate-400" />
-                      Audited at: <strong>{rcpa.chemistName}</strong>
+                    <h3 className="font-bold text-base text-[#F2ECE1]">{rcpa.doctorName}</h3>
+                    <p className="text-xs text-[#857866] flex items-center gap-1 mt-0.5">
+                      <Store className="w-3.5 h-3.5 text-[#B99D73]" />
+                      Audited at: <strong className="text-[#F2ECE1]">{rcpa.chemistName}</strong>
                     </p>
                   </div>
                   <div className="text-right">
-                    <span className="text-sm font-bold text-teal-700 bg-teal-50 px-2 py-1 rounded">
+                    <span className="text-xs font-bold text-[#B99D73] bg-[#181712] border border-[#282319] px-2.5 py-1 rounded-xl shadow-neu-sunken">
                       {rcpa.ourMarketSharePercent.toFixed(1)}% Rx Share
                     </span>
                   </div>
                 </div>
 
                 {/* Progress Bar of Market Share */}
-                <div className="mt-3 space-y-1 text-xs">
-                  <div className="flex justify-between text-[11px] text-slate-500">
-                    <span>Our Brand: <strong>{rcpa.ourProductBrand}</strong> ({rcpa.ourRxCountPerMonth} Rx)</span>
-                    <span>Total Rx: {rcpa.totalMarketRx}</span>
+                <div className="mt-3.5 space-y-1.5 text-xs">
+                  <div className="flex justify-between text-[11px] text-[#857866]">
+                    <span>Our Brand: <strong className="text-[#B99D73]">{rcpa.ourProductBrand}</strong> ({rcpa.ourRxCountPerMonth} Rx)</span>
+                    <span>Total Rx: <strong className="text-[#F2ECE1]">{rcpa.totalMarketRx}</strong></span>
                   </div>
-                  <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden flex">
+                  <div className="w-full bg-[#0c0c09] border border-[#282319] rounded-full h-2.5 overflow-hidden flex shadow-neu-sunken">
                     <div
-                      className="bg-teal-600 h-full"
+                      className="bg-gradient-to-r from-[#6C5636] to-[#B99D73] h-full"
                       style={{ width: `${rcpa.ourMarketSharePercent}%` }}
                       title={`Our Brand: ${rcpa.ourMarketSharePercent}%`}
                     />
                     <div
-                      className="bg-slate-400 h-full"
+                      className="bg-[#282319] h-full"
                       style={{ width: `${100 - rcpa.ourMarketSharePercent}%` }}
                       title="Competitor Share"
                     />
@@ -137,15 +142,15 @@ export const RCPAAuditView: React.FC<RCPAAuditViewProps> = ({ doctors, chemists 
 
                 {/* Competitor Breakdown */}
                 {rcpa.competitorDrugs.length > 0 && (
-                  <div className="mt-4 pt-3 border-t border-slate-100 space-y-2 text-xs">
-                    <span className="font-semibold text-slate-700 block">Competitor Prescriptions:</span>
+                  <div className="mt-4 pt-3.5 border-t border-[#282319] space-y-2 text-xs">
+                    <span className="font-semibold text-[#857866] block">Competitor Prescriptions:</span>
                     {rcpa.competitorDrugs.map((comp, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100">
+                      <div key={idx} className="flex items-center justify-between p-2.5 rounded-xl bg-[#0c0c09] border border-[#282319] shadow-neu-sunken">
                         <div>
-                          <span className="font-semibold text-slate-800">{comp.competitorBrandName}</span>
-                          <span className="text-[10px] text-slate-400 block">{comp.competitorCompany}</span>
+                          <span className="font-semibold text-[#F2ECE1]">{comp.competitorBrandName}</span>
+                          <span className="text-[10px] text-[#857866] block">{comp.competitorCompany}</span>
                         </div>
-                        <span className="font-mono font-bold text-slate-700">{comp.prescriptionCountPerMonth} Rx / mo</span>
+                        <span className="font-mono font-bold text-[#D4BD95]">{comp.prescriptionCountPerMonth} Rx / mo</span>
                       </div>
                     ))}
                   </div>
@@ -153,7 +158,7 @@ export const RCPAAuditView: React.FC<RCPAAuditViewProps> = ({ doctors, chemists 
               </div>
 
               {rcpa.chemistRemarks && (
-                <div className="pt-2 border-t border-slate-100 text-xs text-slate-600 italic">
+                <div className="pt-3 border-t border-[#282319] text-xs text-[#857866] italic bg-[#0c0c09] p-2.5 rounded-xl border border-[#282319] shadow-neu-sunken">
                   "{rcpa.chemistRemarks}"
                 </div>
               )}
@@ -164,37 +169,37 @@ export const RCPAAuditView: React.FC<RCPAAuditViewProps> = ({ doctors, chemists 
 
       {/* Add RCPA Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="text-base font-bold text-slate-900">New Chemist Prescription Audit (RCPA)</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600">
-                <X className="w-5 h-5" />
+        <div className="fixed inset-0 z-50 bg-[#090907]/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="neu-card border border-[#282319] max-w-lg w-full p-6 shadow-neu-raised animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between pb-3.5 border-b border-[#282319]">
+              <h3 className="text-base font-bold text-[#F2ECE1]">New Chemist Prescription Audit (RCPA)</h3>
+              <button onClick={() => setIsModalOpen(false)} className="neu-btn p-1.5 rounded-xl text-[#857866] hover:text-[#F2ECE1]">
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleAddAudit} className="mt-4 space-y-3 text-xs">
+            <form onSubmit={handleAddAudit} className="mt-4 space-y-3.5 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="font-semibold text-slate-700 block mb-1">Doctor</label>
+                  <label className="font-semibold text-[#B99D73] block mb-1">Doctor</label>
                   <select
                     value={selectedDocId}
                     onChange={(e) => setSelectedDocId(e.target.value)}
-                    className="w-full px-3 py-1.5 rounded-lg border border-slate-200"
+                    className="neu-input w-full px-3 py-2 bg-[#0c0c09] cursor-pointer"
                   >
-                    {doctors.length === 0 ? <option value="">No doctors registered</option> : doctors.map(d => (
+                    {safeDoctors.length === 0 ? <option value="">No doctors registered</option> : safeDoctors.map(d => (
                       <option key={d.id} value={d.id}>{d.name}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="font-semibold text-slate-700 block mb-1">Chemist Counter</label>
+                  <label className="font-semibold text-[#B99D73] block mb-1">Chemist Counter</label>
                   <select
                     value={selectedChemId}
                     onChange={(e) => setSelectedChemId(e.target.value)}
-                    className="w-full px-3 py-1.5 rounded-lg border border-slate-200"
+                    className="neu-input w-full px-3 py-2 bg-[#0c0c09] cursor-pointer"
                   >
-                    {chemists.length === 0 ? <option value="">No chemists registered</option> : chemists.map(c => (
+                    {safeChemists.length === 0 ? <option value="">No chemists registered</option> : safeChemists.map(c => (
                       <option key={c.id} value={c.id}>{c.shopName}</option>
                     ))}
                   </select>
@@ -202,85 +207,85 @@ export const RCPAAuditView: React.FC<RCPAAuditViewProps> = ({ doctors, chemists 
               </div>
 
               <div>
-                <label className="font-semibold text-slate-700 block mb-1">Our Product / Brand Name</label>
+                <label className="font-semibold text-[#B99D73] block mb-1">Our Product / Brand Name</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. CardioPulse-AM"
                   value={productBrand}
                   onChange={(e) => setProductBrand(e.target.value)}
-                  className="w-full px-3 py-1.5 rounded-lg border border-slate-200"
+                  className="neu-input w-full px-3 py-2"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="font-semibold text-slate-700 block mb-1">Our Monthly Rx Count</label>
+                  <label className="font-semibold text-[#B99D73] block mb-1">Our Monthly Rx Count</label>
                   <input
                     type="number"
                     min="0"
                     value={ourRxCount}
                     onChange={(e) => setOurRxCount(parseInt(e.target.value) || 0)}
-                    className="w-full px-3 py-1.5 rounded-lg border border-slate-200 font-mono"
+                    className="neu-input w-full px-3 py-2 font-mono"
                   />
                 </div>
                 <div>
-                  <label className="font-semibold text-slate-700 block mb-1">Competitor Rx Count</label>
+                  <label className="font-semibold text-[#B99D73] block mb-1">Competitor Rx Count</label>
                   <input
                     type="number"
                     min="0"
                     value={competitorRxCount}
                     onChange={(e) => setCompetitorRxCount(parseInt(e.target.value) || 0)}
-                    className="w-full px-3 py-1.5 rounded-lg border border-slate-200 font-mono"
+                    className="neu-input w-full px-3 py-2 font-mono"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="font-semibold text-slate-700 block mb-1">Competitor Brand Name</label>
+                  <label className="font-semibold text-[#B99D73] block mb-1">Competitor Brand Name</label>
                   <input
                     type="text"
                     placeholder="e.g. Atorva 20"
                     value={competitorBrand}
                     onChange={(e) => setCompetitorBrand(e.target.value)}
-                    className="w-full px-3 py-1.5 rounded-lg border border-slate-200"
+                    className="neu-input w-full px-3 py-2"
                   />
                 </div>
                 <div>
-                  <label className="font-semibold text-slate-700 block mb-1">Competitor Company</label>
+                  <label className="font-semibold text-[#B99D73] block mb-1">Competitor Company</label>
                   <input
                     type="text"
                     placeholder="e.g. Zydus"
                     value={competitorCompany}
                     onChange={(e) => setCompetitorCompany(e.target.value)}
-                    className="w-full px-3 py-1.5 rounded-lg border border-slate-200"
+                    className="neu-input w-full px-3 py-2"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="font-semibold text-slate-700 block mb-1">Chemist Remarks</label>
+                <label className="font-semibold text-[#B99D73] block mb-1">Chemist Remarks</label>
                 <textarea
                   rows={2}
                   value={remarks}
                   onChange={(e) => setRemarks(e.target.value)}
                   placeholder="e.g. Chemist reported high patient adherence..."
-                  className="w-full px-3 py-1.5 rounded-lg border border-slate-200"
+                  className="neu-input w-full px-3 py-2"
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+              <div className="pt-3.5 border-t border-[#282319] flex items-center justify-end gap-2.5">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-lg border border-slate-200 text-slate-700 font-semibold"
+                  className="neu-btn px-4 py-2 rounded-xl text-[#857866] hover:text-[#F2ECE1] cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold"
+                  className="neu-btn-gold px-4 py-2 rounded-xl font-bold cursor-pointer"
                 >
                   Save RCPA Record
                 </button>

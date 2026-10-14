@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Check, X, AlertCircle, Lock } from 'lucide-react';
+import { Shield, Check, X, Lock } from 'lucide-react';
 
 export const RolePermissionsMatrix: React.FC = () => {
   const permissionsList = [
@@ -87,66 +87,69 @@ export const RolePermissionsMatrix: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 text-white">
+      <div className="neu-card p-6 border border-[#282319] shadow-neu-raised">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2">
-              <Shield className="w-6 h-6 text-teal-400" />
-              <h2 className="text-xl font-bold text-white">Role-Based Access Control (RBAC) Matrix</h2>
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-[#6C5636]/20 border border-[#6C5636]/40 text-[#B99D73] flex items-center justify-center font-bold shadow-neu-sunken">
+                <Shield className="w-5 h-5 text-[#B99D73]" />
+              </div>
+              <h2 className="text-xl font-bold text-[#F2ECE1]">Role-Based Access Control (RBAC) Matrix</h2>
             </div>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs text-[#857866] mt-1.5">
               Deterministic multi-tenant authorization rules governing data ownership and database operations in RepPulse.
             </p>
           </div>
+
           <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-teal-500/10 text-teal-400 border border-teal-500/20 font-medium">
-              <Check className="w-3.5 h-3.5" /> Enforced by Backend & Client Gate
+            <span className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl bg-[#181712] text-[#B99D73] border border-[#282319] font-medium shadow-neu-sunken">
+              <Check className="w-3.5 h-3.5 text-[#B99D73]" /> Enforced by Backend & Client Gate
             </span>
           </div>
         </div>
 
         {/* Roles Breakdown Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-          <div className="p-4 rounded-lg bg-slate-800/80 border border-amber-500/30">
+          <div className="p-4 rounded-xl bg-[#0c0c09] border border-[#282319] shadow-neu-sunken">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">Super Admin</span>
-              <span className="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-bold">Global Root</span>
+              <span className="text-xs font-bold text-[#B99D73] uppercase tracking-wider">Super Admin</span>
+              <span className="text-[10px] bg-[#181712] text-[#B99D73] px-2 py-0.5 rounded-full border border-[#282319] font-bold">Global Root</span>
             </div>
-            <h3 className="text-sm font-bold text-white mt-1">Platform Administrator</h3>
-            <p className="text-[11px] text-slate-300 mt-1">
+            <h3 className="text-sm font-bold text-[#F2ECE1] mt-1.5">Platform Administrator</h3>
+            <p className="text-[11px] text-[#857866] mt-1 leading-relaxed">
               Unrestricted access to all companies, master databases, system licenses, telemetry, and platform configurations.
             </p>
           </div>
 
-          <div className="p-4 rounded-lg bg-slate-800/80 border border-teal-500/30">
+          <div className="p-4 rounded-xl bg-[#0c0c09] border border-[#282319] shadow-neu-sunken">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-teal-400 uppercase tracking-wider">Admin</span>
-              <span className="text-[10px] bg-teal-500/20 text-teal-300 px-2 py-0.5 rounded font-bold">Company Scope</span>
+              <span className="text-xs font-bold text-[#B99D73] uppercase tracking-wider">Admin</span>
+              <span className="text-[10px] bg-[#181712] text-[#B99D73] px-2 py-0.5 rounded-full border border-[#282319] font-bold">Company Scope</span>
             </div>
-            <h3 className="text-sm font-bold text-white mt-1">Pharma Company Admin</h3>
-            <p className="text-[11px] text-slate-300 mt-1">
-              Full control over their company's database: add, edit, remove doctors, chemists, products, territories, and manage Managers/MRs.
+            <h3 className="text-sm font-bold text-[#F2ECE1] mt-1.5">Pharma Company Admin</h3>
+            <p className="text-[11px] text-[#857866] mt-1 leading-relaxed">
+              Full control over company database: add, edit, remove doctors, chemists, products, territories, and manage Managers/MRs.
             </p>
           </div>
 
-          <div className="p-4 rounded-lg bg-slate-800/80 border border-indigo-500/30">
+          <div className="p-4 rounded-xl bg-[#0c0c09] border border-[#282319] shadow-neu-sunken">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider">Manager</span>
-              <span className="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded font-bold">Territory Scope</span>
+              <span className="text-xs font-bold text-[#B99D73] uppercase tracking-wider">Manager</span>
+              <span className="text-[10px] bg-[#181712] text-[#B99D73] px-2 py-0.5 rounded-full border border-[#282319] font-bold">Territory Scope</span>
             </div>
-            <h3 className="text-sm font-bold text-white mt-1">Area / Regional Manager</h3>
-            <p className="text-[11px] text-slate-300 mt-1">
+            <h3 className="text-sm font-bold text-[#F2ECE1] mt-1.5">Area / Regional Manager</h3>
+            <p className="text-[11px] text-[#857866] mt-1 leading-relaxed">
               Operates within company data permitted by Admin. Approves DCRs, Tour Plans, Expenses, and manages team operations.
             </p>
           </div>
 
-          <div className="p-4 rounded-lg bg-slate-800/80 border border-slate-700">
+          <div className="p-4 rounded-xl bg-[#0c0c09] border border-[#282319] shadow-neu-sunken">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Medical Rep</span>
-              <span className="text-[10px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded font-bold">Beat Scope</span>
+              <span className="text-xs font-bold text-[#857866] uppercase tracking-wider">Medical Rep</span>
+              <span className="text-[10px] bg-[#181712] text-[#857866] px-2 py-0.5 rounded-full border border-[#282319] font-bold">Beat Scope</span>
             </div>
-            <h3 className="text-sm font-bold text-white mt-1">Field Representative</h3>
-            <p className="text-[11px] text-slate-300 mt-1">
+            <h3 className="text-sm font-bold text-[#F2ECE1] mt-1.5">Field Representative</h3>
+            <p className="text-[11px] text-[#857866] mt-1 leading-relaxed">
               Executes field calls, books POB orders, conducts RCPA, punches attendance, and submits daily reports.
             </p>
           </div>
@@ -154,13 +157,13 @@ export const RolePermissionsMatrix: React.FC = () => {
       </div>
 
       {/* Permissions Matrix Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="p-5 border-b border-slate-200 flex items-center justify-between">
+      <div className="neu-card border border-[#282319] overflow-hidden">
+        <div className="p-5 border-b border-[#282319] flex items-center justify-between">
           <div>
-            <h3 className="text-base font-bold text-slate-900">Enterprise Access Control Matrix</h3>
-            <p className="text-xs text-slate-500 mt-0.5">Detailed mapping of permissions across all RepPulse modules</p>
+            <h3 className="text-base font-bold text-[#F2ECE1]">Enterprise Access Control Matrix</h3>
+            <p className="text-xs text-[#857866] mt-0.5">Detailed mapping of permissions across all RepPulse modules</p>
           </div>
-          <span className="text-xs font-semibold px-2.5 py-1 rounded bg-slate-100 text-slate-700 border border-slate-200">
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-xl bg-[#181712] text-[#B99D73] border border-[#282319] shadow-neu-sunken">
             10 Active Core Modules
           </span>
         </div>
@@ -168,54 +171,54 @@ export const RolePermissionsMatrix: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+              <tr className="bg-[#0c0c09] border-b border-[#282319] text-[#857866] font-semibold uppercase tracking-wider text-[11px]">
                 <th className="py-3.5 px-4">Module & Scope</th>
                 <th className="py-3.5 px-4">Feature / Action</th>
-                <th className="py-3.5 px-4 text-amber-700 bg-amber-50/50">Super Admin</th>
-                <th className="py-3.5 px-4 text-teal-700 bg-teal-50/50">Company Admin</th>
-                <th className="py-3.5 px-4 text-indigo-700 bg-indigo-50/50">Manager</th>
-                <th className="py-3.5 px-4 text-slate-700">Medical Rep (Field)</th>
+                <th className="py-3.5 px-4 text-[#B99D73]">Super Admin</th>
+                <th className="py-3.5 px-4 text-[#D4BD95]">Company Admin</th>
+                <th className="py-3.5 px-4 text-[#B99D73]">Manager</th>
+                <th className="py-3.5 px-4 text-[#857866]">Medical Rep (Field)</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 font-medium text-slate-800">
+            <tbody className="divide-y divide-[#282319] font-medium text-[#F2ECE1]">
               {permissionsList.map((row, idx) => (
-                <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
-                  <td className="py-3 px-4 font-bold text-slate-900">{row.module}</td>
-                  <td className="py-3 px-4 text-slate-700">{row.feature}</td>
-                  <td className="py-3 px-4 bg-amber-50/30">
-                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-amber-800 font-semibold bg-amber-100 border border-amber-200">
-                      <Check className="w-3.5 h-3.5 text-amber-700" />
+                <tr key={idx} className="hover:bg-[#181712]/50 transition-colors">
+                  <td className="py-3 px-4 font-bold text-[#F2ECE1]">{row.module}</td>
+                  <td className="py-3 px-4 text-[#857866]">{row.feature}</td>
+                  <td className="py-3 px-4">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[#B99D73] font-semibold bg-[#181712] border border-[#282319] shadow-neu-sunken">
+                      <Check className="w-3.5 h-3.5 text-[#B99D73]" />
                       {row.superAdmin}
                     </span>
                   </td>
-                  <td className="py-3 px-4 bg-teal-50/30">
-                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-teal-800 font-semibold bg-teal-100 border border-teal-200">
-                      <Check className="w-3.5 h-3.5 text-teal-700" />
+                  <td className="py-3 px-4">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[#D4BD95] font-semibold bg-[#181712] border border-[#282319] shadow-neu-sunken">
+                      <Check className="w-3.5 h-3.5 text-[#D4BD95]" />
                       {row.admin}
                     </span>
                   </td>
-                  <td className="py-3 px-4 bg-indigo-50/30">
+                  <td className="py-3 px-4">
                     {row.manager.includes('No Access') ? (
-                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-slate-500 font-normal bg-slate-100 border border-slate-200">
-                        <Lock className="w-3 h-3 text-slate-400" />
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[#857866] font-normal bg-[#0c0c09] border border-[#282319]">
+                        <Lock className="w-3 h-3 text-[#857866]" />
                         {row.manager}
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-indigo-800 font-semibold bg-indigo-100 border border-indigo-200">
-                        <Check className="w-3.5 h-3.5 text-indigo-700" />
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[#B99D73] font-semibold bg-[#181712] border border-[#282319] shadow-neu-sunken">
+                        <Check className="w-3.5 h-3.5 text-[#B99D73]" />
                         {row.manager}
                       </span>
                     )}
                   </td>
                   <td className="py-3 px-4">
                     {row.rep.includes('No Access') ? (
-                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-slate-400 bg-slate-100">
-                        <X className="w-3 h-3 text-slate-400" />
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[#857866] bg-[#0c0c09] border border-[#282319]">
+                        <X className="w-3 h-3 text-[#857866]" />
                         {row.rep}
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-slate-700 bg-slate-100 font-semibold">
-                        <Check className="w-3.5 h-3.5 text-slate-600" />
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[#F2ECE1] bg-[#181712] border border-[#282319] font-semibold shadow-neu-sunken">
+                        <Check className="w-3.5 h-3.5 text-[#B99D73]" />
                         {row.rep}
                       </span>
                     )}
