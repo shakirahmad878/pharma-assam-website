@@ -13,14 +13,16 @@ import {
 } from 'react-native';
 import { colors, typography, spacing, radius, shadows } from '../../constants/theme';
 import { RouteService } from '../../services/routeService';
-import { RoutePlan, MonthlyTourProgramme, MTPDayPlan } from '../../types';
+import { RoutePlan, MonthlyTourProgramme, MTPDayPlan, TourPlanRescheduleRequest } from '../../types';
+import { SupabaseDbService } from '../../services/supabase/supabaseDbService';
+import { AuthService } from '../../services/authService';
 
 interface RoutePlanScreenProps {
   onBack: () => void;
   onOpenDrawer?: () => void;
 }
 
-const MONTHS = ['September', 'October', 'November'];
+const MONTHS = ['September', 'October', 'November', 'December', 'January'];
 
 const BARAK_CITIES_LIST = [
   'Silchar Central & Hospital Road',
@@ -38,10 +40,18 @@ const BARAK_CITIES_LIST = [
 
 export const RoutePlanScreen: React.FC<RoutePlanScreenProps> = ({ onBack, onOpenDrawer }) => {
   const [viewMode, setViewMode] = useState<'CALENDAR' | 'LIST'>('CALENDAR');
-  const [monthIndex, setMonthIndex] = useState(0); // 0 = Sep, 1 = Oct
-  const [currentYear, setCurrentYear] = useState(2026);
+  const currentRealMonth = new Date().toLocaleString('default', { month: 'long' });
+  const initialMonthIdx = MONTHS.indexOf(currentRealMonth) !== -1 ? MONTHS.indexOf(currentRealMonth) : 1;
+  const [monthIndex, setMonthIndex] = useState(initialMonthIdx); // Defaults to current month (October)
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [mtp, setMtp] = useState<MonthlyTourProgramme | null>(null);
   const [selectedDayNumber, setSelectedDayNumber] = useState<number | null>(null);
+
+  // Reschedule Request Modal State
+  const [rescheduleModalVisible, setRescheduleModalVisible] = useState(false);
+  const [rescheduleTargetDay, setRescheduleTargetDay] = useState('');
+  const [rescheduleReason, setRescheduleReason] = useState('');
+  const [submittingReschedule, setSubmittingReschedule] = useState(false);
 
   // Modal 1: Tour Not Created Alert
   const [tourNotCreatedVisible, setTourNotCreatedVisible] = useState(false);
@@ -120,11 +130,7 @@ export const RoutePlanScreen: React.FC<RoutePlanScreenProps> = ({ onBack, onOpen
 
   const handleNextMonth = () => {
     if (monthIndex < MONTHS.length - 1) {
-      const nextIdx = monthIndex + 1;
-      setMonthIndex(nextIdx);
-      if (MONTHS[nextIdx] === 'October') {
-        setTourNotCreatedVisible(true);
-      }
+      setMonthIndex(monthIndex + 1);
     }
   };
 
@@ -187,7 +193,10 @@ export const RoutePlanScreen: React.FC<RoutePlanScreenProps> = ({ onBack, onOpen
     if (!selectedDayNumber) return;
 
     if (existingAction === 'RESCHEDULE') {
-      setSelectCityVisible(true);
+      const nextDay = Math.min((selectedDayNumber || 1) + 2, 30);
+      setRescheduleTargetDay(String(nextDay));
+      setRescheduleReason('');
+      setRescheduleModalVisible(true);
     } else if (existingAction === 'DEVIATION') {
       Alert.prompt
         ? Alert.prompt(
@@ -214,6 +223,58 @@ export const RoutePlanScreen: React.FC<RoutePlanScreenProps> = ({ onBack, onOpen
       Alert.alert('Add Visit Firm', `Added wholesale firm call in ${existingCityName} to your itinerary.`);
     } else {
       Alert.alert('Add New Visit', `Doctor visit added to ${existingCityName}.`);
+    }
+  };
+
+  const handleSubmitReschedule = async () => {
+    if (!rescheduleReason.trim()) {
+      Alert.alert('Reason Mandatory', 'Please provide a mandatory justification for rescheduling this visit for RSM approval.');
+      return;
+    }
+    const targetDayInt = parseInt(rescheduleTargetDay, 10);
+    if (isNaN(targetDayInt) || targetDayInt < 1 || targetDayInt > 31) {
+      Alert.alert('Invalid Target Day', `Please enter a valid day number.`);
+      return;
+    }
+    if (targetDayInt === selectedDayNumber) {
+      Alert.alert('Same Day Selected', 'Please choose a different day for rescheduling.');
+      return;
+    }
+
+    setSubmittingReschedule(true);
+    try {
+      const currentUser = AuthService.getCurrentUser();
+      const empCode = currentUser?.employeeCode || '0002';
+      const empName = currentUser?.name || 'Pranjal Malakar';
+      
+      const origDateStr = `${currentYear}-${String(monthIndex + 1).padStart(2, '0')}-${String(selectedDayNumber).padStart(2, '0')}`;
+      const newDateStr = `${currentYear}-${String(monthIndex + 1).padStart(2, '0')}-${String(targetDayInt).padStart(2, '0')}`;
+
+      const req: TourPlanRescheduleRequest = {
+        id: `resched_${empCode}_${Date.now()}`,
+        employeeId: empCode,
+        employeeName: empName,
+        employeeCode: empCode,
+        originalDate: origDateStr,
+        newDate: newDateStr,
+        routeOrCity: existingCityName,
+        reason: rescheduleReason.trim(),
+        status: 'PENDING',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      await SupabaseDbService.submitRescheduleRequest(req);
+      setRescheduleModalVisible(false);
+
+      Alert.alert(
+        'Reschedule Request Forwarded 📨',
+        `Your request to move visit from day ${selectedDayNumber} to day ${targetDayInt} has been sent to RSM Bodrud Jaman Sadiol.\n\nNOTE: The visit will NOT move until approved by the RSM.`
+      );
+    } catch (err) {
+      Alert.alert('Error', 'Failed to submit reschedule request.');
+    } finally {
+      setSubmittingReschedule(false);
     }
   };
 
@@ -667,6 +728,91 @@ export const RoutePlanScreen: React.FC<RoutePlanScreenProps> = ({ onBack, onOpen
                 onPress={handleConfirmExistingAction}
               >
                 <Text style={styles.dialogOkText}>OK</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* MODAL 6: Reschedule Visit with Mandatory Reason (RSM Approval) */}
+      <Modal visible={rescheduleModalVisible} transparent animationType="slide">
+        <View style={styles.dialogOverlay}>
+          <View style={styles.dialogCard}>
+            <View style={styles.dialogHeader}>
+              <Text style={styles.dialogHeaderText}>
+                Reschedule Visit: {existingCityName}
+              </Text>
+            </View>
+
+            <View style={{ padding: spacing.md }}>
+              <View style={{ backgroundColor: '#F1F5F9', padding: 8, borderRadius: radius.xs, marginBottom: 10 }}>
+                <Text style={{ fontSize: 11, color: '#64748B', fontWeight: 'bold' }}>CURRENT SCHEDULED DAY:</Text>
+                <Text style={{ fontSize: 13, fontWeight: 'bold', color: '#0F172A' }}>
+                  Day {selectedDayNumber} ({currentMonthName} {currentYear})
+                </Text>
+              </View>
+
+              <Text style={{ fontSize: 12, fontWeight: '600', color: '#475569', marginBottom: 4 }}>
+                Proposed Target Day in {currentMonthName}:
+              </Text>
+              <TextInput
+                style={[styles.citySearchInput, { borderWidth: 1, borderColor: '#CBD5E1', borderRadius: 4, paddingHorizontal: 8 }]}
+                value={rescheduleTargetDay}
+                keyboardType="numeric"
+                placeholder="Enter day number (1 - 31)"
+                onChangeText={setRescheduleTargetDay}
+              />
+
+              <Text style={{ fontSize: 12, fontWeight: '600', color: '#475569', marginTop: 10, marginBottom: 4 }}>
+                Mandatory Reason for Rescheduling:
+              </Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginBottom: 6 }}>
+                {['Doctor OPD Shifted', 'Barak Route Landslide', 'Emergency Duty Swap', 'Chemist Strike'].map((r) => (
+                  <TouchableOpacity
+                    key={r}
+                    style={[
+                      { paddingHorizontal: 6, paddingVertical: 3, borderRadius: 10, backgroundColor: '#F1F5F9' },
+                      rescheduleReason === r && { backgroundColor: '#34C759' },
+                    ]}
+                    onPress={() => setRescheduleReason(r)}
+                  >
+                    <Text style={{ fontSize: 10, color: rescheduleReason === r ? '#ffffff' : '#334155' }}>
+                      {r}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              <TextInput
+                style={[styles.citySearchInput, { borderWidth: 1, borderColor: '#CBD5E1', borderRadius: 4, paddingHorizontal: 8, minHeight: 50 }]}
+                value={rescheduleReason}
+                multiline
+                placeholder="Detail reasons for manager authorization..."
+                onChangeText={setRescheduleReason}
+              />
+
+              <View style={{ backgroundColor: '#FEF3C7', padding: 8, borderRadius: 4, marginTop: 10 }}>
+                <Text style={{ fontSize: 10, color: '#B45309', fontWeight: 'bold' }}>
+                  ⚠️ Approval Policy: Visit will NOT move until approved by RSM Bodrud Jaman Sadiol.
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.dialogFooterRow}>
+              <TouchableOpacity
+                style={styles.dialogCancelBtn}
+                onPress={() => setRescheduleModalVisible(false)}
+                disabled={submittingReschedule}
+              >
+                <Text style={styles.dialogCancelText}>CANCEL</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.dialogOkBtn}
+                onPress={handleSubmitReschedule}
+                disabled={submittingReschedule}
+              >
+                <Text style={styles.dialogOkText}>
+                  {submittingReschedule ? 'SENDING...' : 'SEND TO RSM'}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>

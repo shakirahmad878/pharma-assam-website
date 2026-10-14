@@ -10,7 +10,7 @@
  */
 
 import { SUPABASE_CONFIG, isSupabaseConfigured } from '../../config/supabase';
-import { Doctor, UserProfile, AttendanceRecord, VisitRecord } from '../../types';
+import { Doctor, UserProfile, AttendanceRecord, VisitRecord, LateLoginRequest, TourPlanRescheduleRequest } from '../../types';
 import { StorageService, STORAGE_KEYS } from '../storageService';
 
 export interface FirmRecord {
@@ -288,6 +288,35 @@ export class SupabaseDbService {
     }
   }
 
+  public static async rejectDeletionRequest(
+    requestId: string,
+    managerName = 'Bodrud Jaman Sadiol (RSM)'
+  ): Promise<void> {
+    const cached = await StorageService.getItem<DoctorDeletionRequest[]>(STORAGE_KEYS.DOCTOR_DELETE_REQUESTS, []);
+    const updated = cached.map((r) =>
+      r.id === requestId
+        ? { ...r, status: 'REJECTED' as const, reviewedBy: managerName, reviewedAt: new Date().toISOString() }
+        : r
+    );
+    await StorageService.setItem(STORAGE_KEYS.DOCTOR_DELETE_REQUESTS, updated);
+
+    if (!this.isConnected()) return;
+
+    try {
+      await fetch(`${SUPABASE_CONFIG.url}/rest/v1/doctor_deletion_requests?id=eq.${requestId}`, {
+        method: 'PATCH',
+        headers: this.getHeaders(),
+        body: JSON.stringify({
+          status: 'REJECTED',
+          reviewed_by: managerName,
+          reviewed_at: new Date().toISOString(),
+        }),
+      });
+    } catch (err) {
+      console.warn('[Supabase] rejectDeletionRequest error:', err);
+    }
+  }
+
   // ==========================================
   // 2. EMPLOYEES & TEAM DIRECTORY
   // ==========================================
@@ -534,4 +563,467 @@ export class SupabaseDbService {
       console.warn('[Supabase] recordVisit error:', err);
     }
   }
+
+  // ==========================================
+  // 6. LATE LOGIN REQUESTS (10:30 AM Cutoff)
+  // ==========================================
+
+  public static async submitLateLoginRequest(req: LateLoginRequest): Promise<LateLoginRequest> {
+    // 1. Save locally first for instant offline resilience
+    const localList = await StorageService.getItem<LateLoginRequest[]>(STORAGE_KEYS.LATE_LOGIN_REQUESTS, []);
+    const updated = [req, ...localList.filter(r => r.id !== req.id)];
+    await StorageService.setItem(STORAGE_KEYS.LATE_LOGIN_REQUESTS, updated);
+
+    // 2. Sync to Supabase
+    if (this.isConnected()) {
+      try {
+        await fetch(`${SUPABASE_CONFIG.url}/rest/v1/late_login_requests`, {
+          method: 'POST',
+          headers: { ...this.getHeaders(), Prefer: 'resolution=merge-duplicates' },
+          body: JSON.stringify({
+            id: req.id,
+            employee_id: req.employeeId,
+            employee_name: req.employeeName,
+            employee_code: req.employeeCode,
+            date: req.date,
+            attempted_time: req.attemptedTime,
+            reason: req.reason,
+            status: req.status,
+            reviewed_by: req.reviewedBy || null,
+            reviewed_at: req.reviewedAt || null,
+            created_at: req.createdAt,
+            updated_at: req.updatedAt,
+          }),
+        });
+      } catch (err) {
+        console.warn('[Supabase] submitLateLoginRequest error:', err);
+      }
+    }
+    return req;
+  }
+
+  public static async getPendingLateLoginRequests(): Promise<LateLoginRequest[]> {
+    let requests: LateLoginRequest[] = [];
+    if (this.isConnected()) {
+      try {
+        const res = await fetch(
+          `${SUPABASE_CONFIG.url}/rest/v1/late_login_requests?status=eq.PENDING&order=created_at.desc`,
+          {
+            method: 'GET',
+            headers: this.getHeaders(),
+          }
+        );
+        if (res.ok) {
+          const raw = await res.json();
+          requests = raw.map((r: any) => ({
+            id: r.id,
+            employeeId: r.employee_id,
+            employeeName: r.employee_name,
+            employeeCode: r.employee_code,
+            date: r.date,
+            attemptedTime: r.attempted_time,
+            reason: r.reason,
+            status: r.status,
+            reviewedBy: r.reviewed_by,
+            reviewedAt: r.reviewed_at,
+            createdAt: r.created_at,
+            updatedAt: r.updated_at,
+          }));
+        }
+      } catch (err) {
+        console.warn('[Supabase] getPendingLateLoginRequests error:', err);
+      }
+    }
+
+    const localList = await StorageService.getItem<LateLoginRequest[]>(STORAGE_KEYS.LATE_LOGIN_REQUESTS, []);
+    const mergedMap = new Map<string, LateLoginRequest>();
+    localList.forEach(r => mergedMap.set(r.id, r));
+    requests.forEach(r => mergedMap.set(r.id, r));
+    const all = Array.from(mergedMap.values());
+    await StorageService.setItem(STORAGE_KEYS.LATE_LOGIN_REQUESTS, all);
+    return all.filter(r => r.status === 'PENDING');
+  }
+
+  public static async getAllLateLoginRequests(): Promise<LateLoginRequest[]> {
+    let requests: LateLoginRequest[] = [];
+    if (this.isConnected()) {
+      try {
+        const res = await fetch(
+          `${SUPABASE_CONFIG.url}/rest/v1/late_login_requests?order=created_at.desc`,
+          {
+            method: 'GET',
+            headers: this.getHeaders(),
+          }
+        );
+        if (res.ok) {
+          const raw = await res.json();
+          requests = raw.map((r: any) => ({
+            id: r.id,
+            employeeId: r.employee_id,
+            employeeName: r.employee_name,
+            employeeCode: r.employee_code,
+            date: r.date,
+            attemptedTime: r.attempted_time,
+            reason: r.reason,
+            status: r.status,
+            reviewedBy: r.reviewed_by,
+            reviewedAt: r.reviewed_at,
+            createdAt: r.created_at,
+            updatedAt: r.updated_at,
+          }));
+        }
+      } catch (err) {
+        console.warn('[Supabase] getAllLateLoginRequests error:', err);
+      }
+    }
+
+    const localList = await StorageService.getItem<LateLoginRequest[]>(STORAGE_KEYS.LATE_LOGIN_REQUESTS, []);
+    const mergedMap = new Map<string, LateLoginRequest>();
+    localList.forEach(r => mergedMap.set(r.id, r));
+    requests.forEach(r => mergedMap.set(r.id, r));
+    const all = Array.from(mergedMap.values());
+    await StorageService.setItem(STORAGE_KEYS.LATE_LOGIN_REQUESTS, all);
+    return all;
+  }
+
+  public static async updateLateLoginStatus(
+    requestId: string,
+    status: 'APPROVED' | 'REJECTED',
+    reviewerName = 'Bodrud Jaman Sadiol (RSM)'
+  ): Promise<boolean> {
+    const reviewedAt = new Date().toISOString();
+    // 1. Update local cache
+    const localList = await StorageService.getItem<LateLoginRequest[]>(STORAGE_KEYS.LATE_LOGIN_REQUESTS, []);
+    let updatedReq: LateLoginRequest | undefined;
+    const updated = localList.map(r => {
+      if (r.id === requestId) {
+        updatedReq = { ...r, status, reviewedBy: reviewerName, reviewedAt, updatedAt: reviewedAt };
+        return updatedReq;
+      }
+      return r;
+    });
+    await StorageService.setItem(STORAGE_KEYS.LATE_LOGIN_REQUESTS, updated);
+
+    // If approved, also store in active late login approval key
+    if (status === 'APPROVED' && updatedReq) {
+      await StorageService.setItem(STORAGE_KEYS.LATE_LOGIN_APPROVAL, {
+        date: updatedReq.date,
+        isApproved: true,
+        approvedBy: reviewerName,
+        reason: updatedReq.reason,
+        timestamp: reviewedAt,
+      });
+    }
+
+    // 2. Supabase
+    if (this.isConnected()) {
+      try {
+        await fetch(`${SUPABASE_CONFIG.url}/rest/v1/late_login_requests?id=eq.${requestId}`, {
+          method: 'PATCH',
+          headers: this.getHeaders(),
+          body: JSON.stringify({
+            status,
+            reviewed_by: reviewerName,
+            reviewed_at: reviewedAt,
+            updated_at: reviewedAt,
+          }),
+        });
+      } catch (err) {
+        console.warn('[Supabase] updateLateLoginStatus error:', err);
+      }
+    }
+    return true;
+  }
+
+  public static async checkTodayLateLoginApproval(
+    employeeCode: string,
+    dateStr: string
+  ): Promise<LateLoginRequest | null> {
+    const cleanCode = (employeeCode || '').trim().toLowerCase();
+
+    // Check Supabase first if online
+    if (this.isConnected()) {
+      try {
+        const res = await fetch(
+          `${SUPABASE_CONFIG.url}/rest/v1/late_login_requests?employee_code=eq.${cleanCode}&date=eq.${dateStr}&status=eq.APPROVED&limit=1`,
+          {
+            method: 'GET',
+            headers: this.getHeaders(),
+          }
+        );
+        if (res.ok) {
+          const raw = await res.json();
+          if (raw && raw.length > 0) {
+            const r = raw[0];
+            const found: LateLoginRequest = {
+              id: r.id,
+              employeeId: r.employee_id,
+              employeeName: r.employee_name,
+              employeeCode: r.employee_code,
+              date: r.date,
+              attemptedTime: r.attempted_time,
+              reason: r.reason,
+              status: r.status,
+              reviewedBy: r.reviewed_by,
+              reviewedAt: r.reviewed_at,
+              createdAt: r.created_at,
+              updatedAt: r.updated_at,
+            };
+            return found;
+          }
+        }
+      } catch (err) {
+        console.warn('[Supabase] checkTodayLateLoginApproval error:', err);
+      }
+    }
+
+    // Fallback to local storage
+    const localList = await StorageService.getItem<LateLoginRequest[]>(STORAGE_KEYS.LATE_LOGIN_REQUESTS, []);
+    const match = localList.find(
+      r => r.employeeCode.toLowerCase() === cleanCode && r.date === dateStr && r.status === 'APPROVED'
+    );
+    return match || null;
+  }
+
+  // ==========================================
+  // 7. TOUR PLAN RESCHEDULE REQUESTS
+  // ==========================================
+
+  public static async submitRescheduleRequest(
+    req: TourPlanRescheduleRequest
+  ): Promise<TourPlanRescheduleRequest> {
+    // 1. Save locally
+    const localList = await StorageService.getItem<TourPlanRescheduleRequest[]>(
+      STORAGE_KEYS.TOUR_PLAN_RESCHEDULES,
+      []
+    );
+    const updated = [req, ...localList.filter(r => r.id !== req.id)];
+    await StorageService.setItem(STORAGE_KEYS.TOUR_PLAN_RESCHEDULES, updated);
+
+    // 2. Supabase
+    if (this.isConnected()) {
+      try {
+        await fetch(`${SUPABASE_CONFIG.url}/rest/v1/tour_plan_reschedule_requests`, {
+          method: 'POST',
+          headers: { ...this.getHeaders(), Prefer: 'resolution=merge-duplicates' },
+          body: JSON.stringify({
+            id: req.id,
+            employee_id: req.employeeId,
+            employee_name: req.employeeName,
+            employee_code: req.employeeCode,
+            original_date: req.originalDate,
+            new_date: req.newDate,
+            route_or_city: req.routeOrCity,
+            reason: req.reason,
+            status: req.status,
+            reviewed_by: req.reviewedBy || null,
+            reviewed_at: req.reviewedAt || null,
+            created_at: req.createdAt,
+            updated_at: req.updatedAt,
+          }),
+        });
+      } catch (err) {
+        console.warn('[Supabase] submitRescheduleRequest error:', err);
+      }
+    }
+    return req;
+  }
+
+  public static async getPendingRescheduleRequests(): Promise<TourPlanRescheduleRequest[]> {
+    let requests: TourPlanRescheduleRequest[] = [];
+    if (this.isConnected()) {
+      try {
+        const res = await fetch(
+          `${SUPABASE_CONFIG.url}/rest/v1/tour_plan_reschedule_requests?status=eq.PENDING&order=created_at.desc`,
+          {
+            method: 'GET',
+            headers: this.getHeaders(),
+          }
+        );
+        if (res.ok) {
+          const raw = await res.json();
+          requests = raw.map((r: any) => ({
+            id: r.id,
+            employeeId: r.employee_id,
+            employeeName: r.employee_name,
+            employeeCode: r.employee_code,
+            originalDate: r.original_date,
+            newDate: r.new_date,
+            routeOrCity: r.route_or_city,
+            reason: r.reason,
+            status: r.status,
+            reviewedBy: r.reviewed_by,
+            reviewedAt: r.reviewed_at,
+            createdAt: r.created_at,
+            updatedAt: r.updated_at,
+          }));
+        }
+      } catch (err) {
+        console.warn('[Supabase] getPendingRescheduleRequests error:', err);
+      }
+    }
+
+    const localList = await StorageService.getItem<TourPlanRescheduleRequest[]>(
+      STORAGE_KEYS.TOUR_PLAN_RESCHEDULES,
+      []
+    );
+    const mergedMap = new Map<string, TourPlanRescheduleRequest>();
+    localList.forEach(r => mergedMap.set(r.id, r));
+    requests.forEach(r => mergedMap.set(r.id, r));
+    const all = Array.from(mergedMap.values());
+    await StorageService.setItem(STORAGE_KEYS.TOUR_PLAN_RESCHEDULES, all);
+    return all.filter(r => r.status === 'PENDING');
+  }
+
+  public static async getAllRescheduleRequests(): Promise<TourPlanRescheduleRequest[]> {
+    let requests: TourPlanRescheduleRequest[] = [];
+    if (this.isConnected()) {
+      try {
+        const res = await fetch(
+          `${SUPABASE_CONFIG.url}/rest/v1/tour_plan_reschedule_requests?order=created_at.desc`,
+          {
+            method: 'GET',
+            headers: this.getHeaders(),
+          }
+        );
+        if (res.ok) {
+          const raw = await res.json();
+          requests = raw.map((r: any) => ({
+            id: r.id,
+            employeeId: r.employee_id,
+            employeeName: r.employee_name,
+            employeeCode: r.employee_code,
+            originalDate: r.original_date,
+            newDate: r.new_date,
+            routeOrCity: r.route_or_city,
+            reason: r.reason,
+            status: r.status,
+            reviewedBy: r.reviewed_by,
+            reviewedAt: r.reviewed_at,
+            createdAt: r.created_at,
+            updatedAt: r.updated_at,
+          }));
+        }
+      } catch (err) {
+        console.warn('[Supabase] getAllRescheduleRequests error:', err);
+      }
+    }
+
+    const localList = await StorageService.getItem<TourPlanRescheduleRequest[]>(
+      STORAGE_KEYS.TOUR_PLAN_RESCHEDULES,
+      []
+    );
+    const mergedMap = new Map<string, TourPlanRescheduleRequest>();
+    localList.forEach(r => mergedMap.set(r.id, r));
+    requests.forEach(r => mergedMap.set(r.id, r));
+    const all = Array.from(mergedMap.values());
+    await StorageService.setItem(STORAGE_KEYS.TOUR_PLAN_RESCHEDULES, all);
+    return all;
+  }
+
+  public static async updateRescheduleStatus(
+    requestId: string,
+    status: 'APPROVED' | 'REJECTED',
+    reviewerName = 'Bodrud Jaman Sadiol (RSM)'
+  ): Promise<boolean> {
+    const reviewedAt = new Date().toISOString();
+    // 1. Update local cache
+    const localList = await StorageService.getItem<TourPlanRescheduleRequest[]>(
+      STORAGE_KEYS.TOUR_PLAN_RESCHEDULES,
+      []
+    );
+    let targetReq: TourPlanRescheduleRequest | undefined;
+    const updated = localList.map(r => {
+      if (r.id === requestId) {
+        targetReq = { ...r, status, reviewedBy: reviewerName, reviewedAt, updatedAt: reviewedAt };
+        return targetReq;
+      }
+      return r;
+    });
+    await StorageService.setItem(STORAGE_KEYS.TOUR_PLAN_RESCHEDULES, updated);
+
+    // 2. If approved, apply the reschedule to the tour plan!
+    if (status === 'APPROVED' && targetReq) {
+      await this.applyApprovedRescheduleToTourPlan(targetReq);
+    }
+
+    // 3. Supabase
+    if (this.isConnected()) {
+      try {
+        await fetch(`${SUPABASE_CONFIG.url}/rest/v1/tour_plan_reschedule_requests?id=eq.${requestId}`, {
+          method: 'PATCH',
+          headers: this.getHeaders(),
+          body: JSON.stringify({
+            status,
+            reviewed_by: reviewerName,
+            reviewed_at: reviewedAt,
+            updated_at: reviewedAt,
+          }),
+        });
+      } catch (err) {
+        console.warn('[Supabase] updateRescheduleStatus error:', err);
+      }
+    }
+    return true;
+  }
+
+  public static async getEmployeeRescheduleRequests(
+    employeeCode: string
+  ): Promise<TourPlanRescheduleRequest[]> {
+    const all = await this.getAllRescheduleRequests();
+    const clean = (employeeCode || '').trim().toLowerCase();
+    return all.filter(r => r.employeeCode.toLowerCase() === clean);
+  }
+
+  /**
+   * When RSM approves a reschedule, actually move the beat from original_date to new_date!
+   */
+  private static async applyApprovedRescheduleToTourPlan(req: TourPlanRescheduleRequest): Promise<void> {
+    try {
+      const tourPlansKey = `${STORAGE_KEYS.TOUR_PLANS_CACHE}_${req.employeeCode}`;
+      const savedPlans = await StorageService.getItem<Record<string, any>>(tourPlansKey, {});
+      
+      // Move beat:
+      // Keep record of original beat before moving
+      const originalBeat = savedPlans[req.originalDate] || { city: req.routeOrCity, type: 'TOUR' };
+      
+      // Update original date to show rescheduled/free or note
+      savedPlans[req.originalDate] = {
+        ...originalBeat,
+        city: `${originalBeat.city || req.routeOrCity} (Rescheduled to ${req.newDate})`,
+        type: 'RESCHEDULED',
+        rescheduledTo: req.newDate,
+      };
+
+      // Set new date with the rescheduled beat
+      savedPlans[req.newDate] = {
+        city: req.routeOrCity,
+        type: 'TOUR',
+        rescheduledFrom: req.originalDate,
+      };
+
+      await StorageService.setItem(tourPlansKey, savedPlans);
+    } catch (err) {
+      console.warn('[Supabase] applyApprovedRescheduleToTourPlan error:', err);
+    }
+  }
+
+  public static async getCustomTourPlans(employeeCode: string): Promise<Record<string, any>> {
+    const clean = (employeeCode || '0002').trim().toLowerCase();
+    const tourPlansKey = `${STORAGE_KEYS.TOUR_PLANS_CACHE}_${clean}`;
+    return await StorageService.getItem<Record<string, any>>(tourPlansKey, {});
+  }
+
+  public static async saveCustomTourDayPlan(
+    employeeCode: string,
+    dateKey: string,
+    plan: { city: string; type: string; notes?: string }
+  ): Promise<void> {
+    const clean = (employeeCode || '0002').trim().toLowerCase();
+    const tourPlansKey = `${STORAGE_KEYS.TOUR_PLANS_CACHE}_${clean}`;
+    const current = await StorageService.getItem<Record<string, any>>(tourPlansKey, {});
+    current[dateKey] = plan;
+    await StorageService.setItem(tourPlansKey, current);
+  }
 }
+

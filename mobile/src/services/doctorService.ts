@@ -121,4 +121,24 @@ export class DoctorService {
   ): Promise<void> {
     await SupabaseDbService.approveDeletionRequest(requestId, doctorId, managerName);
   }
+
+  public static async rejectDoctorDeletion(
+    requestId: string,
+    managerName = 'Bodrud Jaman Sadiol (RSM)'
+  ): Promise<void> {
+    await SupabaseDbService.rejectDeletionRequest(requestId, managerName);
+  }
+
+  public static async updateDeletionRequestStatus(
+    requestId: string,
+    status: 'APPROVED' | 'REJECTED',
+    managerName = 'Bodrud Jaman Sadiol (RSM)',
+    doctorId?: string
+  ): Promise<void> {
+    if (status === 'APPROVED' && doctorId) {
+      await this.approveDoctorDeletion(requestId, doctorId, managerName);
+    } else {
+      await this.rejectDoctorDeletion(requestId, managerName);
+    }
+  }
 }

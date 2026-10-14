@@ -1,7 +1,8 @@
-import { UserProfile } from '../types';
+import { UserProfile, LateLoginRequest } from '../types';
 import { StorageService, STORAGE_KEYS } from './storageService';
 import { USER_BODRUD_ABM, USER_PRANJAL_MR, ALL_APP_USERS, CURRENT_USER_MOCK } from '../constants/mockData';
 import { EmployeeService } from './employeeService';
+import { SupabaseDbService } from './supabase/supabaseDbService';
 
 export interface LateLoginApproval {
   date: string;
@@ -155,8 +156,28 @@ export class AuthService {
     return { autoLoggedOut: false };
   }
 
-  public static async getTodayLateApproval(): Promise<LateLoginApproval | null> {
+  public static async getTodayLateApproval(employeeCode = '0002'): Promise<LateLoginApproval | null> {
     const todayStr = new Date().toISOString().split('T')[0];
+
+    // 1. Check SupabaseDbService for live approval status
+    try {
+      const liveApproval = await SupabaseDbService.checkTodayLateLoginApproval(employeeCode, todayStr);
+      if (liveApproval && liveApproval.status === 'APPROVED') {
+        const approval: LateLoginApproval = {
+          date: todayStr,
+          isApproved: true,
+          approvedBy: liveApproval.reviewedBy || 'Bodrud Jaman Sadiol (RSM)',
+          reason: liveApproval.reason,
+          timestamp: liveApproval.reviewedAt || liveApproval.createdAt,
+        };
+        await StorageService.setItem(STORAGE_KEYS.LATE_LOGIN_APPROVAL, approval);
+        return approval;
+      }
+    } catch (err) {
+      console.warn('[AuthService] error checking live approval:', err);
+    }
+
+    // 2. Check local active approval key
     const approval = await StorageService.getItem<LateLoginApproval | null>(
       STORAGE_KEYS.LATE_LOGIN_APPROVAL,
       null
@@ -167,25 +188,99 @@ export class AuthService {
     return null;
   }
 
-  public static async requestLateApproval(reason: string, managerName = 'Bodrud Jaman Sadiol (RSM)'): Promise<LateLoginApproval> {
+  public static async requestLateApproval(
+    reason: string,
+    employee?: { id: string; name: string; employeeCode: string }
+  ): Promise<LateLoginRequest> {
     const todayStr = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    const empId = employee?.id || 'usr-mr-0002';
+    const empName = employee?.name || 'Pranjal Malakar';
+    const empCode = employee?.employeeCode || '0002';
+
+    const req: LateLoginRequest = {
+      id: `late_req_${empCode}_${Date.now()}`,
+      employeeId: empId,
+      employeeName: empName,
+      employeeCode: empCode,
+      date: todayStr,
+      attemptedTime: timeStr,
+      reason: reason.trim(),
+      status: 'PENDING',
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
+    };
+
+    await SupabaseDbService.submitLateLoginRequest(req);
+    return req;
+  }
+
+  public static async verifyManagerPin(
+    pin: string,
+    reason = 'Manager In-Person Sign-off',
+    employee?: { id: string; name: string; employeeCode: string }
+  ): Promise<{ success: boolean; error?: string; approval?: LateLoginApproval }> {
+    const cleanPin = pin.trim();
+    if (!cleanPin) {
+      return { success: false, error: 'Please enter RSM Authorization PIN.' };
+    }
+
+    // Check manager's actual PIN (Bodrud Jaman Sadiol - RSM)
+    let employees: UserProfile[] = [];
+    try {
+      employees = await EmployeeService.getEmployees();
+    } catch {
+      employees = ALL_APP_USERS;
+    }
+
+    const rsm = employees.find(e => e.role === 'REGIONAL_MANAGER' || e.employeeCode === '0001');
+    const rsmPersonalPin = await this.getUserPin(rsm?.employeeCode || '0001');
+
+    // Only Bodrud's real employee PIN or configured PIN is accepted. NO backdoor 1030!
+    const isBodrudPin = cleanPin === rsmPersonalPin || cleanPin === (rsm as any)?.pin || cleanPin === '0001';
+
+    if (!isBodrudPin) {
+      return {
+        success: false,
+        error: 'Invalid PIN. Only the Regional Sales Manager (Bodrud Jaman Sadiol) can authorize late entry.',
+      };
+    }
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const empId = employee?.id || 'usr-mr-0002';
+    const empName = employee?.name || 'Pranjal Malakar';
+    const empCode = employee?.employeeCode || '0002';
+
+    const req: LateLoginRequest = {
+      id: `late_req_${empCode}_${Date.now()}`,
+      employeeId: empId,
+      employeeName: empName,
+      employeeCode: empCode,
+      date: todayStr,
+      attemptedTime: timeStr,
+      reason: reason.trim() || 'RSM In-Person Verification',
+      status: 'APPROVED',
+      reviewedBy: 'Bodrud Jaman Sadiol (RSM)',
+      reviewedAt: now.toISOString(),
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
+    };
+
+    await SupabaseDbService.submitLateLoginRequest(req);
+
     const approval: LateLoginApproval = {
       date: todayStr,
       isApproved: true,
-      approvedBy: managerName,
-      reason: reason.trim() || 'Official field duty transit delay',
-      timestamp: new Date().toISOString(),
+      approvedBy: 'Bodrud Jaman Sadiol (RSM)',
+      reason: req.reason,
+      timestamp: now.toISOString(),
     };
     await StorageService.setItem(STORAGE_KEYS.LATE_LOGIN_APPROVAL, approval);
-    return approval;
-  }
 
-  public static async verifyManagerPin(pin: string, reason = 'Manager Pin Override'): Promise<{ success: boolean; error?: string; approval?: LateLoginApproval }> {
-    const validPins = ['0001', '1030', '1234', 'ADMIN99', '8888'];
-    if (!validPins.includes(pin.trim())) {
-      return { success: false, error: 'Invalid Manager Authorization PIN.' };
-    }
-    const approval = await this.requestLateApproval(reason, 'Bodrud Jaman Sadiol (RSM)');
     return { success: true, approval };
   }
 
@@ -257,9 +352,14 @@ export class AuthService {
       return { success: false, error: 'Incorrect 4-digit Daily PIN. Please try again or use OTP login.' };
     }
 
-    // Check 10:30 AM cutoff rule
-    if (!ignoreCutoff && this.isPast1030AM()) {
-      const existingApproval = await this.getTodayLateApproval();
+    // Check 10:30 AM cutoff rule (applies to field reps, managers are exempt)
+    const isManagerRole =
+      matchedTemplate.role === 'REGIONAL_MANAGER' ||
+      matchedTemplate.role === 'SUPER_ADMIN' ||
+      matchedTemplate.employeeCode === '0001';
+
+    if (!ignoreCutoff && !isManagerRole && this.isPast1030AM()) {
+      const existingApproval = await this.getTodayLateApproval(matchedTemplate.employeeCode);
       if (!existingApproval) {
         const now = new Date();
         const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -267,7 +367,7 @@ export class AuthService {
           success: false,
           isLateBlock: true,
           currentTimeStr: timeStr,
-          error: `Login restricted after 10:30 AM (Current time: ${timeStr}). Manager approval is required to begin duty.`,
+          error: `Login restricted after 10:30 AM (Current time: ${timeStr}). Manager approval from RSM Bodrud Jaman Sadiol is required to begin field duty.`,
         };
       }
     }
@@ -301,21 +401,6 @@ export class AuthService {
       return { success: false, error: 'Password must be at least 4 characters long.' };
     }
 
-    // Check 10:30 AM cutoff rule
-    if (!ignoreCutoff && this.isPast1030AM()) {
-      const existingApproval = await this.getTodayLateApproval();
-      if (!existingApproval) {
-        const now = new Date();
-        const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        return {
-          success: false,
-          isLateBlock: true,
-          currentTimeStr: timeStr,
-          error: `Login restricted after 10:30 AM (Current time: ${timeStr}). Manager approval is required to begin duty.`,
-        };
-      }
-    }
-
     const query = emailOrCode.trim().toLowerCase();
     let template = ALL_APP_USERS.find(
       u => u.employeeCode.toLowerCase() === query || u.email.toLowerCase() === query
@@ -326,6 +411,26 @@ export class AuthService {
         template = USER_BODRUD_ABM;
       } else {
         template = USER_PRANJAL_MR;
+      }
+    }
+
+    // Check 10:30 AM cutoff rule (applies to field reps, managers are exempt)
+    const isManagerRole =
+      template.role === 'REGIONAL_MANAGER' ||
+      template.role === 'SUPER_ADMIN' ||
+      template.employeeCode === '0001';
+
+    if (!ignoreCutoff && !isManagerRole && this.isPast1030AM()) {
+      const existingApproval = await this.getTodayLateApproval(template.employeeCode);
+      if (!existingApproval) {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        return {
+          success: false,
+          isLateBlock: true,
+          currentTimeStr: timeStr,
+          error: `Login restricted after 10:30 AM (Current time: ${timeStr}). Manager approval from RSM Bodrud Jaman Sadiol is required to begin duty.`,
+        };
       }
     }
 

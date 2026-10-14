@@ -60,6 +60,37 @@ export interface RouteChangeRequest {
   reviewComment?: string;
 }
 
+export interface LateLoginRequest {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  employeeCode: string;
+  date: string; // YYYY-MM-DD
+  attemptedTime: string; // e.g. "10:45 AM"
+  reason: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  reviewedBy?: string;
+  reviewedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TourPlanRescheduleRequest {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  employeeCode: string;
+  originalDate: string; // YYYY-MM-DD
+  newDate: string; // YYYY-MM-DD
+  routeOrCity: string;
+  reason: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  reviewedBy?: string;
+  reviewedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type AccompaniedPerson =
   | 'SELF_SOLO'
   | 'ABM'

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   Modal,
   Alert,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, typography, spacing, radius, shadows } from '../../constants/theme';
@@ -31,6 +32,8 @@ import {
 } from '../../constants/mockData';
 import { PdfReportService } from '../../services/pdfReportService';
 import { AuthService } from '../../services/authService';
+import { SupabaseDbService } from '../../services/supabase/supabaseDbService';
+import { TourPlanRescheduleRequest } from '../../types';
 
 const { width } = Dimensions.get('window');
 
@@ -55,62 +58,234 @@ export const AuxScreen: React.FC<AuxScreenProps> = ({ onBack, type = 'EXPENSES',
 };
 
 /* =========================================================================================
-   1. TOUR PLAN CALENDAR & DAY ACTIONS (Images 32 & 34)
+   1. TOUR PLAN CALENDAR & DAY ACTIONS (Dynamic Month & RSM Approval Reschedule)
    ========================================================================================= */
 export const TourPlanScreen: React.FC<{ onBack: () => void; onNavigate?: (s: string, p?: any) => void }> = ({
   onBack,
   onNavigate,
 }) => {
-  const [selectedMonth, setSelectedMonth] = useState('September 2026');
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [viewMode, setViewMode] = useState<'CALENDAR' | 'LIST'>('CALENDAR');
-  const [selectedDay, setSelectedDay] = useState<number>(26);
+  const [selectedDay, setSelectedDay] = useState<number>(new Date().getDate());
+  
+  // Modals
   const [actionModalVisible, setActionModalVisible] = useState(false);
   const [selectedAction, setSelectedAction] = useState<string>('VIEW_RESCHEDULE');
+  const [rescheduleModalVisible, setRescheduleModalVisible] = useState(false);
   const [createModalVisible, setCreateModalVisible] = useState(false);
-  const [newCity, setNewCity] = useState('Karimganj Town');
+
+  // Reschedule Form State
+  const [rescheduleNewDay, setRescheduleNewDay] = useState<string>('');
+  const [rescheduleReason, setRescheduleReason] = useState<string>('');
+  const [submittingReschedule, setSubmittingReschedule] = useState<boolean>(false);
+
+  // Create Plan Form State
+  const [newCity, setNewCity] = useState('Karimganj Main & Station Area');
   const [newDoctorTarget, setNewDoctorTarget] = useState('10');
   const [newChemistTarget, setNewChemistTarget] = useState('4');
 
-  // Days in month: 30 days for September
-  const days = Array.from({ length: 30 }, (_, i) => i + 1);
+  // Live & Cached Data
+  const currentUser = AuthService.getCurrentUser();
+  const [customPlans, setCustomPlans] = useState<Record<string, any>>({});
+  const [rescheduleRequests, setRescheduleRequests] = useState<TourPlanRescheduleRequest[]>([]);
 
-  const getDayStatusColor = (day: number) => {
-    if (day === 27) return '#2563EB'; // Sunday / Holiday
-    if (day === 15 || day === 16) return '#2563EB'; // Holiday
-    if (day === 10) return '#CA8A04'; // Pending Leave
-    if (day === 18) return '#DC2626'; // Rejected Leave
-    if (day === 5) return '#9333EA'; // Approved Leave
-    if (day < 26) return '#06B6D4'; // Date Back Date Visit
+  // Calendar Math
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth(); // 0-indexed
+  const monthName = currentDate.toLocaleString('default', { month: 'long' });
+  const monthTitle = `${monthName} ${year}`;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDayOfWeek = new Date(year, month, 1).getDay(); // 0 = Sun
+  const blankCells = Array.from({ length: firstDayOfWeek }, (_, i) => i);
+  const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+
+  // Real today
+  const realToday = new Date();
+  const isCurrentMonth = realToday.getFullYear() === year && realToday.getMonth() === month;
+  const todayDayNum = isCurrentMonth ? realToday.getDate() : -1;
+
+  // Load custom plans and pending reschedules
+  const loadTourData = async () => {
+    try {
+      const empCode = currentUser?.employeeCode || '0002';
+      const plans = await SupabaseDbService.getCustomTourPlans(empCode);
+      const reqs = await SupabaseDbService.getEmployeeRescheduleRequests(empCode);
+      setCustomPlans(plans || {});
+      setRescheduleRequests(reqs || []);
+    } catch (err) {
+      console.warn('[TourPlan] error loading tour data:', err);
+    }
+  };
+
+  useEffect(() => {
+    loadTourData();
+  }, [currentDate]);
+
+  const handlePrevMonth = () => {
+    setCurrentDate(new Date(year, month - 1, 1));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentDate(new Date(year, month + 1, 1));
+  };
+
+  const getDateKey = (dayNum: number) => {
+    const mm = String(month + 1).padStart(2, '0');
+    const dd = String(dayNum).padStart(2, '0');
+    return `${year}-${mm}-${dd}`;
+  };
+
+  const getBeatForDay = (dayNum: number): string => {
+    const dateKey = getDateKey(dayNum);
+    if (customPlans[dateKey] && customPlans[dateKey].city) {
+      return customPlans[dateKey].city;
+    }
+    const d = new Date(year, month, dayNum);
+    const dayOfWeek = d.getDay();
+    if (dayOfWeek === 0) return 'Weekly Rest / Sunday';
+    if (dayOfWeek === 1 || dayOfWeek === 4) return 'Karimganj Main & Station Area';
+    if (dayOfWeek === 2) return 'Badarpur Beat';
+    if (dayOfWeek === 3) return 'Patherkandi & Ramkrishna Nagar';
+    if (dayOfWeek === 5) return 'Silchar SMCH & Hospital Road';
+    return 'Hailakandi Civil Hospital Road';
+  };
+
+  const getPendingRescheduleForDay = (dayNum: number): TourPlanRescheduleRequest | undefined => {
+    const dateKey = getDateKey(dayNum);
+    return rescheduleRequests.find(r => r.originalDate === dateKey && r.status === 'PENDING');
+  };
+
+  const getDayStatusColor = (dayNum: number) => {
+    const dateKey = getDateKey(dayNum);
+    const d = new Date(year, month, dayNum);
+    if (d.getDay() === 0) return '#2563EB'; // Sunday / Holiday
+
+    // Check if pending reschedule
+    const pending = rescheduleRequests.find(r => r.originalDate === dateKey && r.status === 'PENDING');
+    if (pending) return '#F59E0B'; // Amber - Reschedule Pending
+
+    // Check if approved reschedule target
+    const approvedNew = rescheduleRequests.find(r => r.newDate === dateKey && r.status === 'APPROVED');
+    if (approvedNew) return '#10B981'; // Green
+
+    if (customPlans[dateKey]?.type === 'LEAVE') return '#9333EA';
+    if (isCurrentMonth && dayNum < todayDayNum) return '#06B6D4'; // Past visit
     return '#16A34A'; // TourPlan green
   };
 
-  const handleDayPress = (day: number) => {
-    setSelectedDay(day);
+  const handleDayPress = (dayNum: number) => {
+    setSelectedDay(dayNum);
     setActionModalVisible(true);
+  };
+
+  const handleOpenRescheduleModal = () => {
+    setActionModalVisible(false);
+    // Suggest a default new date (next day or 2 days later)
+    const nextDayNum = Math.min(selectedDay + 2, daysInMonth);
+    setRescheduleNewDay(String(nextDayNum));
+    setRescheduleReason('');
+    setRescheduleModalVisible(true);
+  };
+
+  const handleSubmitReschedule = async () => {
+    if (!rescheduleReason.trim()) {
+      Alert.alert('Reason Mandatory', 'Please provide a mandatory explanation for rescheduling this visit for RSM approval.');
+      return;
+    }
+
+    const targetDayInt = parseInt(rescheduleNewDay, 10);
+    if (isNaN(targetDayInt) || targetDayInt < 1 || targetDayInt > daysInMonth) {
+      Alert.alert('Invalid Target Day', `Please enter a valid day between 1 and ${daysInMonth} for ${monthTitle}.`);
+      return;
+    }
+
+    if (targetDayInt === selectedDay) {
+      Alert.alert('Same Day Selected', 'Please choose a different day for rescheduling.');
+      return;
+    }
+
+    const origDateStr = getDateKey(selectedDay);
+    const newDateStr = getDateKey(targetDayInt);
+    const beatName = getBeatForDay(selectedDay);
+
+    setSubmittingReschedule(true);
+    try {
+      const empCode = currentUser?.employeeCode || '0002';
+      const empName = currentUser?.name || 'Pranjal Malakar';
+      const req: TourPlanRescheduleRequest = {
+        id: `resched_${empCode}_${Date.now()}`,
+        employeeId: empCode,
+        employeeName: empName,
+        employeeCode: empCode,
+        originalDate: origDateStr,
+        newDate: newDateStr,
+        routeOrCity: beatName,
+        reason: rescheduleReason.trim(),
+        status: 'PENDING',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      await SupabaseDbService.submitRescheduleRequest(req);
+      await loadTourData();
+      setRescheduleModalVisible(false);
+
+      Alert.alert(
+        'Reschedule Request Submitted 📨',
+        `Your request to move visit from ${selectedDay} ${monthName} to ${targetDayInt} ${monthName} has been sent to Regional Sales Manager (Bodrud Jaman Sadiol).\n\nNOTE: The visit will remain on ${selectedDay} ${monthName} until approved by the RSM.`
+      );
+    } catch (err) {
+      Alert.alert('Error', 'Failed to submit reschedule request. Please try again.');
+    } finally {
+      setSubmittingReschedule(false);
+    }
+  };
+
+  const handleSaveMonthTourPlan = async () => {
+    const empCode = currentUser?.employeeCode || '0002';
+    // Save daily template across month
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateKey = getDateKey(d);
+      const isSun = new Date(year, month, d).getDay() === 0;
+      await SupabaseDbService.saveCustomTourDayPlan(empCode, dateKey, {
+        city: isSun ? 'Weekly Rest / Sunday' : newCity,
+        type: isSun ? 'HOLIDAY' : 'TOUR',
+        notes: `Target Docs: ${newDoctorTarget}, Target Chemists: ${newChemistTarget}`,
+      });
+    }
+    await loadTourData();
+    setCreateModalVisible(false);
+    Alert.alert(
+      'Tour Plan Created ✅',
+      `Monthly Tour Programme for ${monthTitle} saved successfully! Assigned Base Beat: ${newCity}.`
+    );
   };
 
   const handleExecuteAction = () => {
     setActionModalVisible(false);
-    if (selectedAction === 'VIEW_RESCHEDULE' || selectedAction === 'VIEW_SELECTED_DOC') {
-      if (onNavigate) onNavigate('DOCTORS');
-    } else if (selectedAction === 'ADD_NEW_DOC_VISIT') {
+    if (selectedAction === 'VIEW_RESCHEDULE') {
+      handleOpenRescheduleModal();
+    } else if (selectedAction === 'VIEW_SELECTED_DOC' || selectedAction === 'ADD_NEW_DOC_VISIT') {
       if (onNavigate) onNavigate('DOCTORS');
     } else if (selectedAction === 'ADD_NEW_FIRM_VISIT') {
       if (onNavigate) onNavigate('FIRMS');
     } else if (selectedAction === 'ADD_DEVIATION') {
       Alert.alert(
         'Tour Plan Deviation Logged',
-        `Tour Plan deviation requested for ${selectedDay} Sep in Karimganj. Sent to ABM for auto-approval.`
+        `Tour Plan deviation requested for ${selectedDay} ${monthName} in ${getBeatForDay(selectedDay)}. Sent to RSM Bodrud Jaman Sadiol.`
       );
     }
   };
 
+  const selectedDayBeat = getBeatForDay(selectedDay);
+  const selectedDayPendingReschedule = getPendingRescheduleForDay(selectedDay);
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* Top Header matching Image 32 */}
+      {/* Top Header */}
       <View style={styles.customHeader}>
         <TouchableOpacity onPress={onBack} style={styles.headerLeftBtn}>
-          <Ionicons name="menu-outline" size={24} color="#ffffff" />
+          <Ionicons name="arrow-back" size={24} color="#ffffff" />
         </TouchableOpacity>
         <Text style={styles.headerTitleText}>Tour Plan Calendar</Text>
         <TouchableOpacity onPress={() => setViewMode(viewMode === 'CALENDAR' ? 'LIST' : 'CALENDAR')}>
@@ -119,98 +294,181 @@ export const TourPlanScreen: React.FC<{ onBack: () => void; onNavigate?: (s: str
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Month Navigator Header Card */}
+        {/* Dynamic Month Navigator Card */}
         <View style={styles.monthNavCard}>
-          <TouchableOpacity onPress={() => {}}>
-            <Ionicons name="chevron-back" size={20} color="#2563EB" />
+          <TouchableOpacity onPress={handlePrevMonth} style={{ padding: 6 }}>
+            <Ionicons name="chevron-back" size={24} color="#2563EB" />
           </TouchableOpacity>
-          <Text style={styles.monthNavTitle}>{selectedMonth}</Text>
-          <TouchableOpacity onPress={() => {}}>
-            <Ionicons name="chevron-forward" size={20} color="#2563EB" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Days of Week Header */}
-        <View style={styles.calendarWeekRow}>
-          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-            <Text key={d} style={styles.weekHeaderText}>
-              {d}
+          <View style={{ alignItems: 'center' }}>
+            <Text style={styles.monthNavTitle}>{monthTitle}</Text>
+            <Text style={{ fontSize: 11, color: '#64748B', fontWeight: '500' }}>
+              Headquarter: Karimganj HQ (Assam)
             </Text>
-          ))}
+          </View>
+          <TouchableOpacity onPress={handleNextMonth} style={{ padding: 6 }}>
+            <Ionicons name="chevron-forward" size={24} color="#2563EB" />
+          </TouchableOpacity>
         </View>
 
-        {/* Calendar Grid 1-30 */}
-        <View style={styles.calendarGrid}>
-          {/* September 2026 starts on Tuesday (2 blank spaces) */}
-          <View style={styles.calCellEmpty} />
-          <View style={styles.calCellEmpty} />
-          {days.map(day => {
-            const isToday = day === 26;
-            const dotColor = getDayStatusColor(day);
-            return (
-              <TouchableOpacity
-                key={day}
-                style={[styles.calCell, isToday && styles.calCellToday]}
-                onPress={() => handleDayPress(day)}
-              >
-                <Text style={[styles.calDayNum, isToday && styles.calDayNumToday]}>{day}</Text>
-                <View style={[styles.statusDot, { backgroundColor: dotColor }]} />
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+        {viewMode === 'CALENDAR' ? (
+          <>
+            {/* Days of Week Header */}
+            <View style={styles.calendarWeekRow}>
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
+                <Text key={d} style={styles.weekHeaderText}>
+                  {d}
+                </Text>
+              ))}
+            </View>
 
-        {/* Legend / Status Key matching Image 32 */}
-        <View style={styles.legendCard}>
-          <View style={styles.legendRow}>
-            <View style={[styles.legendDot, { backgroundColor: '#16A34A' }]} />
-            <Text style={styles.legendText}>• TourPlan</Text>
+            {/* Dynamic Calendar Grid */}
+            <View style={styles.calendarGrid}>
+              {blankCells.map(b => (
+                <View key={`blank_${b}`} style={styles.calCellEmpty} />
+              ))}
+              {days.map(day => {
+                const isToday = isCurrentMonth && day === todayDayNum;
+                const dotColor = getDayStatusColor(day);
+                const hasPendingReschedule = Boolean(getPendingRescheduleForDay(day));
+
+                return (
+                  <TouchableOpacity
+                    key={day}
+                    style={[
+                      styles.calCell,
+                      isToday && styles.calCellToday,
+                      hasPendingReschedule && { borderColor: '#F59E0B', borderWidth: 1.5 },
+                    ]}
+                    onPress={() => handleDayPress(day)}
+                  >
+                    <Text style={[styles.calDayNum, isToday && styles.calDayNumToday]}>{day}</Text>
+                    <View style={[styles.statusDot, { backgroundColor: dotColor }]} />
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {/* Today's Selected Beat Banner */}
+            <View style={{ backgroundColor: '#F8FAFC', padding: 12, borderRadius: radius.md, marginVertical: 8, borderWidth: 1, borderColor: '#E2E8F0' }}>
+              <Text style={{ fontSize: 11, color: '#64748B', fontWeight: 'bold' }}>
+                SELECTED: {selectedDay} {monthName} {year}
+              </Text>
+              <Text style={{ fontSize: 14, fontWeight: '700', color: '#0F172A', marginTop: 2 }}>
+                📍 Beat: {selectedDayBeat}
+              </Text>
+              {selectedDayPendingReschedule && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                  <Text style={{ color: '#D97706', fontSize: 12, fontWeight: 'bold' }}>
+                    ⏳ Reschedule Requested to {selectedDayPendingReschedule.newDate} (Awaiting RSM Approval)
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            {/* Legend / Status Key */}
+            <View style={styles.legendCard}>
+              <View style={styles.legendRow}>
+                <View style={[styles.legendDot, { backgroundColor: '#16A34A' }]} />
+                <Text style={styles.legendText}>• TourPlan Scheduled</Text>
+              </View>
+              <View style={styles.legendRow}>
+                <View style={[styles.legendDot, { backgroundColor: '#F59E0B' }]} />
+                <Text style={styles.legendText}>• Reschedule Pending RSM Approval</Text>
+              </View>
+              <View style={styles.legendRow}>
+                <View style={[styles.legendDot, { backgroundColor: '#2563EB' }]} />
+                <Text style={styles.legendText}>• Sunday / Holiday</Text>
+              </View>
+              <View style={styles.legendRow}>
+                <View style={[styles.legendDot, { backgroundColor: '#06B6D4' }]} />
+                <Text style={styles.legendText}>• Completed Field Visits</Text>
+              </View>
+              <View style={styles.legendRow}>
+                <View style={[styles.legendDot, { backgroundColor: '#9333EA' }]} />
+                <Text style={styles.legendText}>• Approved Leave</Text>
+              </View>
+            </View>
+          </>
+        ) : (
+          /* List View */
+          <View style={{ marginTop: 8 }}>
+            {days.map(day => {
+              const beat = getBeatForDay(day);
+              const isSun = new Date(year, month, day).getDay() === 0;
+              const pendingResched = getPendingRescheduleForDay(day);
+              const isToday = isCurrentMonth && day === todayDayNum;
+
+              return (
+                <TouchableOpacity
+                  key={`list_${day}`}
+                  style={{
+                    backgroundColor: '#ffffff',
+                    padding: 12,
+                    borderRadius: radius.md,
+                    marginBottom: 8,
+                    borderLeftWidth: 4,
+                    borderLeftColor: isSun ? '#2563EB' : pendingResched ? '#F59E0B' : '#16A34A',
+                    ...shadows.sm,
+                  }}
+                  onPress={() => handleDayPress(day)}
+                >
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Text style={{ fontSize: 13, fontWeight: 'bold', color: isToday ? '#2563EB' : '#0F172A' }}>
+                      {day} {monthName} {year} ({new Date(year, month, day).toLocaleDateString('en-US', { weekday: 'short' })})
+                      {isToday ? ' • TODAY' : ''}
+                    </Text>
+                    {pendingResched ? (
+                      <View style={{ backgroundColor: '#FEF3C7', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 }}>
+                        <Text style={{ color: '#B45309', fontSize: 10, fontWeight: 'bold' }}>RESCHEDULE PENDING</Text>
+                      </View>
+                    ) : (
+                      <Text style={{ fontSize: 11, color: '#64748B' }}>10 Docs • 4 Chemists</Text>
+                    )}
+                  </View>
+                  <Text style={{ fontSize: 13, color: '#334155', marginTop: 4 }}>
+                    📍 {beat}
+                  </Text>
+                  {pendingResched && (
+                    <Text style={{ fontSize: 11, color: '#B45309', marginTop: 2 }}>
+                      Proposed Date: {pendingResched.newDate} (Reason: {pendingResched.reason})
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
           </View>
-          <View style={styles.legendRow}>
-            <View style={[styles.legendDot, { backgroundColor: '#CA8A04' }]} />
-            <Text style={styles.legendText}>• Pending Leave</Text>
-          </View>
-          <View style={styles.legendRow}>
-            <View style={[styles.legendDot, { backgroundColor: '#DC2626' }]} />
-            <Text style={styles.legendText}>• Cancelled/Rejected Leave</Text>
-          </View>
-          <View style={styles.legendRow}>
-            <View style={[styles.legendDot, { backgroundColor: '#9333EA' }]} />
-            <Text style={styles.legendText}>• Approved Leave</Text>
-          </View>
-          <View style={styles.legendRow}>
-            <View style={[styles.legendDot, { backgroundColor: '#2563EB' }]} />
-            <Text style={styles.legendText}>• Holiday</Text>
-          </View>
-          <View style={styles.legendRow}>
-            <View style={[styles.legendDot, { backgroundColor: '#06B6D4' }]} />
-            <Text style={styles.legendText}>• Date Back Date Visit</Text>
-          </View>
-        </View>
+        )}
       </ScrollView>
 
-      {/* Bottom Action Button matching Image 32 */}
+      {/* Bottom Action Button */}
       <View style={styles.bottomBarFixed}>
         <TouchableOpacity style={styles.fullWidthBtn} onPress={() => setCreateModalVisible(true)}>
-          <Text style={styles.fullWidthBtnText}>CREATE TOUR PLAN</Text>
+          <Text style={styles.fullWidthBtnText}>CREATE / EDIT TOUR PLAN</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Day Action Modal matching Image 34 */}
+      {/* Day Action Modal */}
       <Modal visible={actionModalVisible} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.actionModalBox}>
             <View style={styles.actionModalHeader}>
-              <Text style={styles.actionModalHeaderTitle}>Select action</Text>
+              <Text style={styles.actionModalHeaderTitle}>
+                Action for {selectedDay} {monthName}
+              </Text>
             </View>
             <View style={styles.actionModalBody}>
-              <Text style={styles.actionModalCityNote}>Your work city for the day is Karimganj</Text>
+              <Text style={styles.actionModalCityNote}>Work Beat: {selectedDayBeat}</Text>
+              {selectedDayPendingReschedule && (
+                <Text style={{ color: '#B45309', fontSize: 12, fontWeight: 'bold', marginVertical: 4 }}>
+                  ⚠️ Reschedule request pending approval from RSM Bodrud Jaman Sadiol.
+                </Text>
+              )}
 
               {[
-                { id: 'VIEW_RESCHEDULE', label: 'View/Reschedule visit' },
-                { id: 'VIEW_SELECTED_DOC', label: 'View selected doctor' },
-                { id: 'ADD_NEW_DOC_VISIT', label: 'Add new visits to Doctors' },
-                { id: 'ADD_NEW_FIRM_VISIT', label: 'Add new visit to firm' },
+                { id: 'VIEW_RESCHEDULE', label: 'View / Reschedule visit (Request RSM)' },
+                { id: 'VIEW_SELECTED_DOC', label: 'View doctors in this beat' },
+                { id: 'ADD_NEW_DOC_VISIT', label: 'Add new visit to Doctors' },
+                { id: 'ADD_NEW_FIRM_VISIT', label: 'Add new visit to Chemists / Stockists' },
                 { id: 'ADD_DEVIATION', label: 'Add Tour Plan Deviation' },
               ].map(opt => (
                 <TouchableOpacity
@@ -238,12 +496,91 @@ export const TourPlanScreen: React.FC<{ onBack: () => void; onNavigate?: (s: str
         </View>
       </Modal>
 
-      {/* Create Tour Plan Modal */}
+      {/* Reschedule Visit Modal (RSM Approval Enforcement) */}
+      <Modal visible={rescheduleModalVisible} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.createModalBox}>
+            <Text style={styles.modalHeaderTitle}>Reschedule Tour Plan Visit</Text>
+            
+            <View style={{ backgroundColor: '#F1F5F9', padding: 10, borderRadius: radius.sm, marginBottom: 12 }}>
+              <Text style={{ fontSize: 11, color: '#64748B', fontWeight: 'bold' }}>CURRENT SCHEDULED VISIT:</Text>
+              <Text style={{ fontSize: 13, fontWeight: 'bold', color: '#0F172A' }}>
+                📅 {selectedDay} {monthName} {year}
+              </Text>
+              <Text style={{ fontSize: 12, color: '#334155' }}>
+                📍 Beat: {selectedDayBeat}
+              </Text>
+            </View>
+
+            <Text style={styles.modalFieldLabel}>Proposed Target Day in {monthName}:</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={rescheduleNewDay}
+              keyboardType="numeric"
+              placeholder={`Enter day number (1 - ${daysInMonth})`}
+              onChangeText={setRescheduleNewDay}
+            />
+
+            <Text style={[styles.modalFieldLabel, { marginTop: 10 }]}>Mandatory Reason for Rescheduling:</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginVertical: 6 }}>
+              {['Doctor OPD Rescheduled', 'Route Landslide / Waterlogging', 'Emergency Duty Swap', 'Chemist Strike'].map((r) => (
+                <TouchableOpacity
+                  key={r}
+                  style={[
+                    { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, backgroundColor: '#F1F5F9' },
+                    rescheduleReason === r && { backgroundColor: '#2563EB' }
+                  ]}
+                  onPress={() => setRescheduleReason(r)}
+                >
+                  <Text style={{ fontSize: 11, color: rescheduleReason === r ? '#ffffff' : '#334155', fontWeight: '500' }}>
+                    {r}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <TextInput
+              style={[styles.modalInput, { minHeight: 60, textAlignVertical: 'top' }]}
+              value={rescheduleReason}
+              multiline
+              placeholder="Detail reasons for manager authorization..."
+              onChangeText={setRescheduleReason}
+            />
+
+            <View style={{ backgroundColor: '#FEF3C7', padding: 8, borderRadius: radius.sm, marginVertical: 10 }}>
+              <Text style={{ fontSize: 11, color: '#B45309', fontWeight: '600' }}>
+                ⚠️ Approval Policy: This visit will NOT move until approved by Regional Sales Manager (Bodrud Jaman Sadiol).
+              </Text>
+            </View>
+
+            <View style={styles.modalBtnRow}>
+              <TouchableOpacity
+                style={[styles.modalBtn, { backgroundColor: '#94A3B8' }]}
+                onPress={() => setRescheduleModalVisible(false)}
+                disabled={submittingReschedule}
+              >
+                <Text style={styles.modalBtnText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalBtn, { backgroundColor: '#2563EB' }]}
+                onPress={handleSubmitReschedule}
+                disabled={submittingReschedule}
+              >
+                <Text style={styles.modalBtnText}>
+                  {submittingReschedule ? 'Sending...' : '📨 Send to RSM'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Create / Edit Tour Plan Modal */}
       <Modal visible={createModalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.createModalBox}>
-            <Text style={styles.modalHeaderTitle}>Create Tour Plan (October 2026)</Text>
-            <Text style={styles.modalFieldLabel}>Assigned Work Beat / City</Text>
+            <Text style={styles.modalHeaderTitle}>Create Tour Plan ({monthTitle})</Text>
+            <Text style={styles.modalFieldLabel}>Assigned Work Beat / Territory</Text>
             <TextInput style={styles.modalInput} value={newCity} onChangeText={setNewCity} />
             <Text style={styles.modalFieldLabel}>Target Doctor Calls / Day</Text>
             <TextInput style={styles.modalInput} value={newDoctorTarget} keyboardType="numeric" onChangeText={setNewDoctorTarget} />
@@ -256,12 +593,9 @@ export const TourPlanScreen: React.FC<{ onBack: () => void; onNavigate?: (s: str
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalBtn, { backgroundColor: '#2563EB' }]}
-                onPress={() => {
-                  setCreateModalVisible(false);
-                  Alert.alert('Tour Plan Submitted ✅', 'Monthly Tour Programme submitted to Area Business Manager for approval.');
-                }}
+                onPress={handleSaveMonthTourPlan}
               >
-                <Text style={styles.modalBtnText}>Submit Plan</Text>
+                <Text style={styles.modalBtnText}>Save Plan</Text>
               </TouchableOpacity>
             </View>
           </View>

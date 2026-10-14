@@ -9,6 +9,7 @@ import {
   TextInput,
   Modal,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, typography, spacing, radius, shadows } from '../../constants/theme';
@@ -55,6 +56,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
   const [lateReason, setLateReason] = useState('Traffic & road maintenance on Hospital Road');
   const [managerPin, setManagerPin] = useState('');
   const [requestingApproval, setRequestingApproval] = useState(false);
+  const [isWaitingForApproval, setIsWaitingForApproval] = useState(false);
+  const [showInPersonPin, setShowInPersonPin] = useState(false);
+
 
 
 
@@ -210,37 +214,101 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
     }
   };
 
+  // Auto-polling when waiting for RSM approval
+  useEffect(() => {
+    let interval: any = null;
+    if (lateModalVisible && isWaitingForApproval) {
+      interval = setInterval(async () => {
+        const empCode = employeeId.trim() || '0002';
+        const approval = await AuthService.getTodayLateApproval(empCode);
+        if (approval && approval.isApproved) {
+          setIsWaitingForApproval(false);
+          setLateModalVisible(false);
+          Alert.alert(
+            'Late Login Approved ✅',
+            `Authorized by ${approval.approvedBy} for reason: "${approval.reason}". Starting shift now!`
+          );
+          if (authMode === 'PIN') {
+            handlePinLogin(true);
+          } else {
+            handlePasswordLogin(true);
+          }
+        }
+      }, 4000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [lateModalVisible, isWaitingForApproval, employeeId, authMode]);
+
   const handleRequestApproval = async () => {
     if (!lateReason.trim()) {
-      Alert.alert('Reason Required', 'Please enter a brief explanation for late login.');
+      Alert.alert('Reason Required', 'Please provide a clear reason for late duty entry.');
       return;
     }
     setRequestingApproval(true);
-    const approval = await AuthService.requestLateApproval(lateReason);
+    try {
+      const code = employeeId.trim() || '0002';
+      await AuthService.requestLateApproval(lateReason, {
+        id: code,
+        name: code === '0002' ? 'Pranjal Malakar' : `Employee ${code}`,
+        employeeCode: code,
+      });
+      setIsWaitingForApproval(true);
+      Alert.alert(
+        'Request Sent to RSM 📨',
+        `Your late login request has been submitted to Regional Sales Manager Bodrud Jaman Sadiol with reason: "${lateReason}".\n\nPlease wait for RSM approval.`
+      );
+    } catch (err) {
+      Alert.alert('Submission Error', 'Failed to submit late request. Please try again.');
+    } finally {
+      setRequestingApproval(false);
+    }
+  };
+
+  const handleCheckApprovalStatus = async () => {
+    setRequestingApproval(true);
+    const empCode = employeeId.trim() || '0002';
+    const approval = await AuthService.getTodayLateApproval(empCode);
     setRequestingApproval(false);
 
-    Alert.alert(
-      'Approval Granted ✅',
-      `Late login authorized by ${approval.approvedBy} for reason: "${approval.reason}". You may now begin field duty.`,
-      [
-        {
-          text: 'Proceed to Field Duty',
-          onPress: () => (authMode === 'PIN' ? handlePinLogin(true) : handlePasswordLogin(true)),
-        },
-      ]
-    );
+    if (approval && approval.isApproved) {
+      setIsWaitingForApproval(false);
+      setLateModalVisible(false);
+      Alert.alert(
+        'Late Login Approved ✅',
+        `Authorized by ${approval.approvedBy}. Starting field duty!`
+      );
+      if (authMode === 'PIN') {
+        handlePinLogin(true);
+      } else {
+        handlePasswordLogin(true);
+      }
+    } else {
+      Alert.alert(
+        'Still Pending ⏳',
+        'RSM Bodrud Jaman Sadiol has not approved the request yet. This screen will auto-refresh when approved.'
+      );
+    }
   };
 
   const handleVerifyManagerPin = async () => {
     if (!managerPin.trim()) {
-      Alert.alert('PIN Required', 'Please enter 4-digit Manager Override PIN (e.g. 1030, 0001, or 1234).');
+      Alert.alert('PIN Required', 'Please enter Regional Sales Manager PIN.');
       return;
     }
     setRequestingApproval(true);
-    const res = await AuthService.verifyManagerPin(managerPin, 'Manager PIN Override');
+    const code = employeeId.trim() || '0002';
+    const res = await AuthService.verifyManagerPin(managerPin, 'Manager In-Person Sign-off', {
+      id: code,
+      name: code === '0002' ? 'Pranjal Malakar' : `Employee ${code}`,
+      employeeCode: code,
+    });
     setRequestingApproval(false);
 
     if (res.success) {
+      setLateModalVisible(false);
+      setIsWaitingForApproval(false);
       Alert.alert(
         'Manager Override Verified ✅',
         'Authorized by Regional Sales Manager (Bodrud Jaman Sadiol). Starting shift now.',
@@ -584,76 +652,157 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
               </View>
             </View>
 
-            <Text style={styles.lateNoticeBody}>
-              Standard morning attendance cut-off is <Text style={{ fontWeight: 'bold' }}>10:30 AM</Text>. Company policy requires explicit permission from your Regional Sales Manager (Bodrud Jaman Sadiol) to commence field operations.
-            </Text>
-
-            {/* Quick Reason Pills */}
-            <Text style={styles.inputSectionLabel}>Select or Enter Reason for Late Duty:</Text>
-            <View style={styles.reasonPillRow}>
-              {['Traffic / Route Block', 'Doctor Morning OPD', 'Stockist Urgent Order'].map((r) => (
-                <TouchableOpacity
-                  key={r}
-                  style={[styles.reasonPill, lateReason === r && styles.reasonPillActive]}
-                  onPress={() => setLateReason(r)}
+            {isWaitingForApproval ? (
+              <View style={{ alignItems: 'center', paddingVertical: spacing.md }}>
+                <View
+                  style={{
+                    backgroundColor: '#FEF3C7',
+                    paddingHorizontal: 14,
+                    paddingVertical: 8,
+                    borderRadius: 20,
+                    borderWidth: 1,
+                    borderColor: '#F59E0B',
+                    marginBottom: spacing.md,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 6,
+                  }}
                 >
-                  <Text style={[styles.reasonPillText, lateReason === r && styles.reasonPillTextActive]}>
-                    {r}
+                  <ActivityIndicator size="small" color="#D97706" />
+                  <Text style={{ color: '#B45309', fontWeight: 'bold', fontSize: 13 }}>
+                    Awaiting RSM Approval (Bodrud Sadiol)
+                  </Text>
+                </View>
+
+                <View
+                  style={{
+                    width: '100%',
+                    backgroundColor: '#F8FAFC',
+                    borderRadius: radius.md,
+                    padding: spacing.md,
+                    marginBottom: spacing.md,
+                    borderWidth: 1,
+                    borderColor: '#E2E8F0',
+                  }}
+                >
+                  <Text style={{ fontSize: 12, color: '#64748B', fontWeight: '600', marginBottom: 2 }}>
+                    SUBMITTED REASON:
+                  </Text>
+                  <Text style={{ fontSize: 13, color: '#0F172A', fontWeight: '500' }}>
+                    "{lateReason}"
+                  </Text>
+                  <Text style={{ fontSize: 11, color: '#94A3B8', marginTop: 6 }}>
+                    Time Logged: {lateCurrentTime} • Auto-refreshing status...
+                  </Text>
+                </View>
+
+                <TouchableOpacity
+                  style={[styles.requestApprovalBtn, { width: '100%', backgroundColor: '#0284C7' }]}
+                  onPress={handleCheckApprovalStatus}
+                  disabled={requestingApproval}
+                >
+                  <Text style={styles.requestApprovalBtnText}>
+                    {requestingApproval ? 'Checking...' : '🔄 Check Approval Status'}
                   </Text>
                 </TouchableOpacity>
-              ))}
-            </View>
 
-            <TextInput
-              style={styles.reasonInput}
-              placeholder="Explain delay reason for manager record..."
-              placeholderTextColor="#94A3B8"
-              value={lateReason}
-              onChangeText={setLateReason}
-              multiline
-            />
+                <TouchableOpacity
+                  style={{ marginTop: spacing.sm, paddingVertical: 6 }}
+                  onPress={() => setIsWaitingForApproval(false)}
+                >
+                  <Text style={{ color: '#64748B', fontSize: 12, textDecorationLine: 'underline' }}>
+                    Edit Reason & Resubmit
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <>
+                <Text style={styles.lateNoticeBody}>
+                  Standard morning attendance cut-off is <Text style={{ fontWeight: 'bold' }}>10:30 AM</Text>. Company policy requires explicit permission with a valid reason from Regional Sales Manager (Bodrud Jaman Sadiol) to commence field operations.
+                </Text>
 
-            <TouchableOpacity
-              style={styles.requestApprovalBtn}
-              onPress={handleRequestApproval}
-              disabled={requestingApproval}
-            >
-              <Text style={styles.requestApprovalBtnText}>
-                {requestingApproval ? 'Sending Request...' : '📨 Request RSM Approval (Bodrud Sadiol)'}
-              </Text>
-            </TouchableOpacity>
+                {/* Quick Reason Pills */}
+                <Text style={styles.inputSectionLabel}>Select or Enter Reason for Late Duty:</Text>
+                <View style={styles.reasonPillRow}>
+                  {['Traffic / Route Block', 'Doctor Morning OPD', 'Stockist Urgent Order', 'Barak Bridge Delay'].map((r) => (
+                    <TouchableOpacity
+                      key={r}
+                      style={[styles.reasonPill, lateReason === r && styles.reasonPillActive]}
+                      onPress={() => setLateReason(r)}
+                    >
+                      <Text style={[styles.reasonPillText, lateReason === r && styles.reasonPillTextActive]}>
+                        {r}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
 
-            <View style={styles.dividerRow}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>OR ENTER MANAGER PIN</Text>
-              <View style={styles.dividerLine} />
-            </View>
+                <TextInput
+                  style={styles.reasonInput}
+                  placeholder="Explain delay reason for RSM record..."
+                  placeholderTextColor="#94A3B8"
+                  value={lateReason}
+                  onChangeText={setLateReason}
+                  multiline
+                />
 
-            <View style={styles.pinRow}>
-              <TextInput
-                style={styles.pinInput}
-                placeholder="RSM PIN (0001 or 1030)"
-                placeholderTextColor="#94A3B8"
-                value={managerPin}
-                onChangeText={setManagerPin}
-                keyboardType="numeric"
-                secureTextEntry
-                maxLength={8}
-              />
-              <TouchableOpacity
-                style={styles.pinSubmitBtn}
-                onPress={handleVerifyManagerPin}
-                disabled={requestingApproval}
-              >
-                <Text style={styles.pinSubmitBtnText}>Authorize</Text>
-              </TouchableOpacity>
-            </View>
+                <TouchableOpacity
+                  style={styles.requestApprovalBtn}
+                  onPress={handleRequestApproval}
+                  disabled={requestingApproval}
+                >
+                  <Text style={styles.requestApprovalBtnText}>
+                    {requestingApproval ? 'Submitting...' : '📨 Request RSM Approval (Bodrud Sadiol)'}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* In-Person RSM Override Toggle */}
+                <TouchableOpacity
+                  style={{ alignItems: 'center', marginTop: spacing.md, paddingVertical: 4 }}
+                  onPress={() => setShowInPersonPin(!showInPersonPin)}
+                >
+                  <Text style={{ color: '#64748B', fontSize: 12, fontWeight: '600' }}>
+                    {showInPersonPin ? '▲ Hide RSM In-Person Sign-off' : '▼ RSM Physically Present? In-Person Sign-off'}
+                  </Text>
+                </TouchableOpacity>
+
+                {showInPersonPin && (
+                  <View style={{ marginTop: spacing.xs }}>
+                    <Text style={{ fontSize: 11, color: '#64748B', marginBottom: 4 }}>
+                      Regional Manager (Bodrud Jaman Sadiol) Personal Authorization PIN:
+                    </Text>
+                    <View style={styles.pinRow}>
+                      <TextInput
+                        style={styles.pinInput}
+                        placeholder="RSM Personal PIN"
+                        placeholderTextColor="#94A3B8"
+                        value={managerPin}
+                        onChangeText={setManagerPin}
+                        keyboardType="numeric"
+                        secureTextEntry
+                        maxLength={8}
+                      />
+                      <TouchableOpacity
+                        style={styles.pinSubmitBtn}
+                        onPress={handleVerifyManagerPin}
+                        disabled={requestingApproval}
+                      >
+                        <Text style={styles.pinSubmitBtnText}>Authorize</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
+              </>
+            )}
 
             <TouchableOpacity
               style={styles.modalCloseBtn}
-              onPress={() => setLateModalVisible(false)}
+              onPress={() => {
+                setLateModalVisible(false);
+                setIsWaitingForApproval(false);
+              }}
             >
-              <Text style={styles.modalCloseBtnText}>Cancel</Text>
+              <Text style={styles.modalCloseBtnText}>Close</Text>
             </TouchableOpacity>
           </View>
         </View>

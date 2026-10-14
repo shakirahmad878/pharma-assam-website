@@ -17,7 +17,9 @@ import { colors, typography, spacing, radius, shadows } from '../../constants/th
 import { EmployeeService } from '../../services/employeeService';
 import { AuthService } from '../../services/authService';
 import { DivisionService, DivisionType, DIVISIONS } from '../../services/divisionService';
-import { UserProfile, UserRole } from '../../types';
+import { UserProfile, UserRole, LateLoginRequest, TourPlanRescheduleRequest } from '../../types';
+import { SupabaseDbService } from '../../services/supabase/supabaseDbService';
+import { DoctorService } from '../../services/doctorService';
 
 interface TeamManagementScreenProps {
   onBack: () => void;
@@ -45,14 +47,93 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onBa
 
   const isManager = currentUser?.role === 'REGIONAL_MANAGER' || currentUser?.role === 'AREA_MANAGER' || currentUser?.role === 'SUPER_ADMIN';
 
+  // Screen Tab & Requests State
+  const [screenTab, setScreenTab] = useState<'EMPLOYEES' | 'APPROVALS'>('EMPLOYEES');
+  const [approvalCategory, setApprovalCategory] = useState<'ALL' | 'LATE' | 'RESCHEDULE' | 'DOCTOR'>('ALL');
+  const [lateRequests, setLateRequests] = useState<LateLoginRequest[]>([]);
+  const [rescheduleRequests, setRescheduleRequests] = useState<TourPlanRescheduleRequest[]>([]);
+  const [deletionRequests, setDeletionRequests] = useState<any[]>([]);
+  const [loadingApprovals, setLoadingApprovals] = useState(false);
+
   useEffect(() => {
     setCurrentUser(AuthService.getCurrentUser());
     loadEmployees();
+    loadApprovals();
   }, []);
 
   const loadEmployees = async () => {
     const list = await EmployeeService.getEmployees();
     setEmployees(list);
+  };
+
+  const loadApprovals = async () => {
+    setLoadingApprovals(true);
+    try {
+      const late = await SupabaseDbService.getPendingLateLoginRequests();
+      const resched = await SupabaseDbService.getPendingRescheduleRequests();
+      const deletes = await DoctorService.getPendingDeletionRequests();
+      setLateRequests(late || []);
+      setRescheduleRequests(resched || []);
+      setDeletionRequests(deletes || []);
+    } catch (err) {
+      console.warn('[TeamManagement] error loading approvals:', err);
+    } finally {
+      setLoadingApprovals(false);
+    }
+  };
+
+  const handleApproveLateLogin = async (req: LateLoginRequest) => {
+    const managerName = currentUser?.name || 'Bodrud Jaman Sadiol (RSM)';
+    await SupabaseDbService.updateLateLoginStatus(req.id, 'APPROVED', managerName);
+    await loadApprovals();
+    Alert.alert(
+      'Late Login Approved ✅',
+      `Authorized ${req.employeeName} (Code: ${req.employeeCode}) to start field duty shift.`
+    );
+  };
+
+  const handleRejectLateLogin = async (req: LateLoginRequest) => {
+    const managerName = currentUser?.name || 'Bodrud Jaman Sadiol (RSM)';
+    await SupabaseDbService.updateLateLoginStatus(req.id, 'REJECTED', managerName);
+    await loadApprovals();
+    Alert.alert(
+      'Late Login Rejected ❌',
+      `Late duty entry rejected for ${req.employeeName}.`
+    );
+  };
+
+  const handleApproveReschedule = async (req: TourPlanRescheduleRequest) => {
+    const managerName = currentUser?.name || 'Bodrud Jaman Sadiol (RSM)';
+    await SupabaseDbService.updateRescheduleStatus(req.id, 'APPROVED', managerName);
+    await loadApprovals();
+    Alert.alert(
+      'Reschedule Approved ✅',
+      `Visit to ${req.routeOrCity} moved from ${req.originalDate} to ${req.newDate} for ${req.employeeName}.`
+    );
+  };
+
+  const handleRejectReschedule = async (req: TourPlanRescheduleRequest) => {
+    const managerName = currentUser?.name || 'Bodrud Jaman Sadiol (RSM)';
+    await SupabaseDbService.updateRescheduleStatus(req.id, 'REJECTED', managerName);
+    await loadApprovals();
+    Alert.alert(
+      'Reschedule Rejected ❌',
+      `Reschedule request from ${req.employeeName} has been declined.`
+    );
+  };
+
+  const handleApproveDoctorDeletion = async (req: any) => {
+    const managerName = currentUser?.name || 'Bodrud Jaman Sadiol (RSM)';
+    await DoctorService.updateDeletionRequestStatus(req.id, 'APPROVED', managerName, req.doctorId);
+    await loadApprovals();
+    Alert.alert('Doctor Removed ✅', `Doctor deletion request approved.`);
+  };
+
+  const handleRejectDoctorDeletion = async (req: any) => {
+    const managerName = currentUser?.name || 'Bodrud Jaman Sadiol (RSM)';
+    await DoctorService.updateDeletionRequestStatus(req.id, 'REJECTED', managerName);
+    await loadApprovals();
+    Alert.alert('Deletion Declined', 'Doctor deletion request rejected.');
   };
 
   const openAddModal = () => {
@@ -225,8 +306,51 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onBa
         </View>
       </View>
 
-      {/* Division Selector Filter */}
-      <View style={styles.divisionSelectorRow}>
+      {/* Tab Switcher: Directory vs Approvals */}
+      {isManager && (
+        <View style={{ flexDirection: 'row', backgroundColor: '#E2E8F0', padding: 4, marginHorizontal: spacing.md, marginTop: spacing.xs, borderRadius: radius.md }}>
+          <TouchableOpacity
+            style={[
+              { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: radius.sm },
+              screenTab === 'EMPLOYEES' && { backgroundColor: '#2563EB' },
+            ]}
+            onPress={() => setScreenTab('EMPLOYEES')}
+          >
+            <Text style={{ fontSize: 13, fontWeight: 'bold', color: screenTab === 'EMPLOYEES' ? '#ffffff' : '#475569' }}>
+              👥 Team Directory ({employees.length})
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: radius.sm },
+              screenTab === 'APPROVALS' && { backgroundColor: '#2563EB' },
+            ]}
+            onPress={() => {
+              setScreenTab('APPROVALS');
+              loadApprovals();
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={{ fontSize: 13, fontWeight: 'bold', color: screenTab === 'APPROVALS' ? '#ffffff' : '#475569' }}>
+                📨 Approvals & Requests
+              </Text>
+              {lateRequests.length + rescheduleRequests.length + deletionRequests.length > 0 && (
+                <View style={{ backgroundColor: '#DC2626', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10 }}>
+                  <Text style={{ color: '#ffffff', fontSize: 11, fontWeight: 'bold' }}>
+                    {lateRequests.length + rescheduleRequests.length + deletionRequests.length}
+                  </Text>
+                </View>
+              )}
+            </View>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {screenTab === 'EMPLOYEES' ? (
+        <>
+          {/* Division Selector Filter */}
+          <View style={styles.divisionSelectorRow}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
           {DIVISIONS.map((div) => {
             const isActive = selectedDivision === div.id;
@@ -368,6 +492,230 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onBa
         <TouchableOpacity style={styles.fab} onPress={openAddModal}>
           <Ionicons name="person-add" size={24} color="#ffffff" />
         </TouchableOpacity>
+      )}
+      </>
+      ) : (
+        /* APPROVALS & REQUESTS PORTAL */
+        <ScrollView contentContainerStyle={{ padding: spacing.md, paddingBottom: 100 }}>
+          {/* Sub Header */}
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <View>
+              <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#0F172A' }}>
+                RSM Approval Portal
+              </Text>
+              <Text style={{ fontSize: 12, color: '#64748B' }}>
+                Review rep attendance & schedule modifications
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#EFF6FF', paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.sm, borderWidth: 1, borderColor: '#BFDBFE' }}
+              onPress={loadApprovals}
+            >
+              <Ionicons name="refresh" size={14} color="#2563EB" />
+              <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#2563EB' }}>
+                {loadingApprovals ? 'Loading...' : 'Refresh'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Category Filter Pills */}
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
+            {[
+              { id: 'ALL', label: `All (${lateRequests.length + rescheduleRequests.length + deletionRequests.length})` },
+              { id: 'LATE', label: `Late Logins (${lateRequests.length})` },
+              { id: 'RESCHEDULE', label: `Reschedules (${rescheduleRequests.length})` },
+              { id: 'DOCTOR', label: `Deletions (${deletionRequests.length})` },
+            ].map(cat => (
+              <TouchableOpacity
+                key={cat.id}
+                style={[
+                  { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14, backgroundColor: '#F1F5F9' },
+                  approvalCategory === cat.id && { backgroundColor: '#2563EB' }
+                ]}
+                onPress={() => setApprovalCategory(cat.id as any)}
+              >
+                <Text style={{ fontSize: 11, fontWeight: '600', color: approvalCategory === cat.id ? '#ffffff' : '#475569' }}>
+                  {cat.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* 1. Late Login Requests */}
+          {(approvalCategory === 'ALL' || approvalCategory === 'LATE') &&
+            lateRequests.map(req => (
+              <View
+                key={req.id}
+                style={{
+                  backgroundColor: '#ffffff',
+                  borderRadius: radius.md,
+                  padding: 14,
+                  marginBottom: 12,
+                  borderLeftWidth: 4,
+                  borderLeftColor: '#F59E0B',
+                  ...shadows.sm,
+                }}
+              >
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#D97706', textTransform: 'uppercase' }}>
+                      ⏰ LATE LOGIN AUTHORIZATION REQUEST
+                    </Text>
+                    <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#0F172A', marginTop: 2 }}>
+                      {req.employeeName} (Code: {req.employeeCode})
+                    </Text>
+                    <Text style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
+                      📅 Date: {req.date} • Attempted At: {req.attemptedTime}
+                    </Text>
+                  </View>
+                  <View style={{ backgroundColor: '#FEF3C7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 }}>
+                    <Text style={{ fontSize: 10, fontWeight: 'bold', color: '#B45309' }}>PENDING</Text>
+                  </View>
+                </View>
+
+                <View style={{ backgroundColor: '#F8FAFC', padding: 10, borderRadius: radius.xs, marginVertical: 10, borderWidth: 1, borderColor: '#E2E8F0' }}>
+                  <Text style={{ fontSize: 11, fontWeight: '600', color: '#64748B' }}>REASON FOR DELAY:</Text>
+                  <Text style={{ fontSize: 13, color: '#0F172A', fontWeight: '500', marginTop: 2 }}>
+                    "{req.reason}"
+                  </Text>
+                </View>
+
+                <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
+                  <TouchableOpacity
+                    style={{ flex: 1, backgroundColor: '#16A34A', paddingVertical: 10, borderRadius: radius.xs, alignItems: 'center' }}
+                    onPress={() => handleApproveLateLogin(req)}
+                  >
+                    <Text style={{ color: '#ffffff', fontWeight: 'bold', fontSize: 12 }}>✅ APPROVE LOGIN</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{ flex: 1, borderWidth: 1, borderColor: '#DC2626', paddingVertical: 10, borderRadius: radius.xs, alignItems: 'center' }}
+                    onPress={() => handleRejectLateLogin(req)}
+                  >
+                    <Text style={{ color: '#DC2626', fontWeight: 'bold', fontSize: 12 }}>❌ REJECT</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+
+          {/* 2. Tour Plan Reschedule Requests */}
+          {(approvalCategory === 'ALL' || approvalCategory === 'RESCHEDULE') &&
+            rescheduleRequests.map(req => (
+              <View
+                key={req.id}
+                style={{
+                  backgroundColor: '#ffffff',
+                  borderRadius: radius.md,
+                  padding: 14,
+                  marginBottom: 12,
+                  borderLeftWidth: 4,
+                  borderLeftColor: '#2563EB',
+                  ...shadows.sm,
+                }}
+              >
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#2563EB', textTransform: 'uppercase' }}>
+                      📅 TOUR PLAN RESCHEDULE REQUEST
+                    </Text>
+                    <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#0F172A', marginTop: 2 }}>
+                      {req.employeeName} (Code: {req.employeeCode})
+                    </Text>
+                    <Text style={{ fontSize: 13, fontWeight: '700', color: '#334155', marginTop: 4 }}>
+                      Move from: <Text style={{ color: '#DC2626' }}>{req.originalDate}</Text> ➔ <Text style={{ color: '#16A34A' }}>{req.newDate}</Text>
+                    </Text>
+                    <Text style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
+                      📍 Beat: {req.routeOrCity}
+                    </Text>
+                  </View>
+                  <View style={{ backgroundColor: '#EFF6FF', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 }}>
+                    <Text style={{ fontSize: 10, fontWeight: 'bold', color: '#1D4ED8' }}>PENDING</Text>
+                  </View>
+                </View>
+
+                <View style={{ backgroundColor: '#F8FAFC', padding: 10, borderRadius: radius.xs, marginVertical: 10, borderWidth: 1, borderColor: '#E2E8F0' }}>
+                  <Text style={{ fontSize: 11, fontWeight: '600', color: '#64748B' }}>MANDATORY REASON:</Text>
+                  <Text style={{ fontSize: 13, color: '#0F172A', fontWeight: '500', marginTop: 2 }}>
+                    "{req.reason}"
+                  </Text>
+                </View>
+
+                <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
+                  <TouchableOpacity
+                    style={{ flex: 1, backgroundColor: '#2563EB', paddingVertical: 10, borderRadius: radius.xs, alignItems: 'center' }}
+                    onPress={() => handleApproveReschedule(req)}
+                  >
+                    <Text style={{ color: '#ffffff', fontWeight: 'bold', fontSize: 12 }}>✅ APPROVE & MOVE VISIT</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{ flex: 1, borderWidth: 1, borderColor: '#DC2626', paddingVertical: 10, borderRadius: radius.xs, alignItems: 'center' }}
+                    onPress={() => handleRejectReschedule(req)}
+                  >
+                    <Text style={{ color: '#DC2626', fontWeight: 'bold', fontSize: 12 }}>❌ REJECT</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+
+          {/* 3. Doctor Deletion Requests */}
+          {(approvalCategory === 'ALL' || approvalCategory === 'DOCTOR') &&
+            deletionRequests.map(req => (
+              <View
+                key={req.id}
+                style={{
+                  backgroundColor: '#ffffff',
+                  borderRadius: radius.md,
+                  padding: 14,
+                  marginBottom: 12,
+                  borderLeftWidth: 4,
+                  borderLeftColor: '#DC2626',
+                  ...shadows.sm,
+                }}
+              >
+                <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#DC2626', textTransform: 'uppercase' }}>
+                  👨‍⚕️ DOCTOR DELETION REQUEST
+                </Text>
+                <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#0F172A', marginTop: 2 }}>
+                  Dr. {req.doctorName}
+                </Text>
+                <Text style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
+                  Requested by: {req.requestedByName} ({req.district})
+                </Text>
+                <View style={{ backgroundColor: '#F8FAFC', padding: 8, borderRadius: radius.xs, marginVertical: 8 }}>
+                  <Text style={{ fontSize: 12, color: '#334155' }}>"{req.reason}"</Text>
+                </View>
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <TouchableOpacity
+                    style={{ flex: 1, backgroundColor: '#DC2626', paddingVertical: 10, borderRadius: radius.xs, alignItems: 'center' }}
+                    onPress={() => handleApproveDoctorDeletion(req)}
+                  >
+                    <Text style={{ color: '#ffffff', fontWeight: 'bold', fontSize: 12 }}>✅ APPROVE REMOVAL</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{ flex: 1, borderWidth: 1, borderColor: '#64748B', paddingVertical: 10, borderRadius: radius.xs, alignItems: 'center' }}
+                    onPress={() => handleRejectDoctorDeletion(req)}
+                  >
+                    <Text style={{ color: '#64748B', fontWeight: 'bold', fontSize: 12 }}>DECLINE</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+
+          {/* Empty State */}
+          {((approvalCategory === 'ALL' && lateRequests.length === 0 && rescheduleRequests.length === 0 && deletionRequests.length === 0) ||
+            (approvalCategory === 'LATE' && lateRequests.length === 0) ||
+            (approvalCategory === 'RESCHEDULE' && rescheduleRequests.length === 0) ||
+            (approvalCategory === 'DOCTOR' && deletionRequests.length === 0)) && (
+            <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 60 }}>
+              <Ionicons name="checkmark-done-circle-outline" size={60} color="#16A34A" />
+              <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#0F172A', marginTop: 12 }}>
+                All Clear! No Pending Requests
+              </Text>
+              <Text style={{ fontSize: 12, color: '#64748B', textAlign: 'center', marginTop: 4, paddingHorizontal: 30 }}>
+                All rep late entries and tour plan reschedules have been reviewed.
+              </Text>
+            </View>
+          )}
+        </ScrollView>
       )}
 
       {/* Add / Edit Employee Modal */}
