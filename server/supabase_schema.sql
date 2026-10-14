@@ -198,6 +198,12 @@ ALTER TABLE territories ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow public login verification" ON employees
     FOR SELECT USING (is_active = true);
 
+CREATE POLICY "Allow update employees" ON employees
+    FOR UPDATE USING (true) WITH CHECK (true);
+
+CREATE POLICY "Allow insert employees" ON employees
+    FOR INSERT WITH CHECK (true);
+
 -- General Access Policies for App Users
 CREATE POLICY "Allow read territories" ON territories
     FOR SELECT USING (true);
