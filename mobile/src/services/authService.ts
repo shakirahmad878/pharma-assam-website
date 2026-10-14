@@ -15,21 +15,21 @@ export interface LateLoginApproval {
 export class AuthService {
   private static currentUser: UserProfile | null = null;
 
-  public static isPast1030AM(): boolean {
-    const now = new Date();
+  public static async isPast1030AM(): Promise<boolean> {
+    const now = await SupabaseDbService.fetchServerTime();
     const hours = now.getHours();
     const minutes = now.getMinutes();
     return hours > 10 || (hours === 10 && minutes > 30);
   }
 
-  public static isPast1159PM(): boolean {
-    const now = new Date();
+  public static async isPast1159PM(): Promise<boolean> {
+    const now = await SupabaseDbService.fetchServerTime();
     const hours = now.getHours();
     const minutes = now.getMinutes();
     return hours === 23 && minutes >= 59;
   }
 
-  public static isPast730PM(): boolean {
+  public static async isPast730PM(): Promise<boolean> {
     return this.isPast1159PM();
   }
 
@@ -72,8 +72,7 @@ export class AuthService {
     }
 
     const cached = this.sentOtpCache[cleanDigits];
-    const isMasterOtp = cleanOtp === '123456' || cleanOtp === '878123';
-    const isValidOtp = isMasterOtp || (cached && cached.otp === cleanOtp && cached.expiresAt > Date.now());
+    const isValidOtp = Boolean(cached && cached.otp === cleanOtp && cached.expiresAt > Date.now());
 
     if (!isValidOtp) {
       return { success: false, error: 'Invalid or expired OTP. Please check and try again.' };
@@ -125,6 +124,8 @@ export class AuthService {
     const cleanKey = (employeeCodeOrPhone || '').trim().toLowerCase();
     await StorageService.setItem(`@REPPULSE_USER_PIN_${cleanKey}`, cleanPin);
     await StorageService.setItem(STORAGE_KEYS.MR_LOGIN_PIN, cleanPin);
+    // Sync to Supabase PostgreSQL
+    await SupabaseDbService.updateEmployeePin(cleanKey, cleanPin);
     return true;
   }
 
@@ -132,13 +133,12 @@ export class AuthService {
     const cleanKey = (employeeCodeOrPhone || '').trim().toLowerCase();
     const pin = await StorageService.getItem<string>(`@REPPULSE_USER_PIN_${cleanKey}`, '');
     if (pin && pin.length === 4) return pin;
-    const globalPin = await StorageService.getItem<string>(STORAGE_KEYS.MR_LOGIN_PIN, '1234');
-    return globalPin || '1234';
+    return '';
   }
 
   public static async getMrPin(): Promise<string> {
-    const pin = await StorageService.getItem<string>(STORAGE_KEYS.MR_LOGIN_PIN, '1234');
-    return pin || '1234';
+    const pin = await StorageService.getItem<string>(STORAGE_KEYS.MR_LOGIN_PIN, '');
+    return pin || '';
   }
 
   public static async setMrPin(newPin: string): Promise<boolean> {
@@ -146,7 +146,7 @@ export class AuthService {
   }
 
   public static async checkAutoLogout(): Promise<{ autoLoggedOut: boolean; reason?: string }> {
-    if (this.currentUser && this.isPast1159PM()) {
+    if (this.currentUser && (await this.isPast1159PM())) {
       await this.logout();
       return {
         autoLoggedOut: true,
@@ -238,8 +238,11 @@ export class AuthService {
     const rsm = employees.find(e => e.role === 'REGIONAL_MANAGER' || e.employeeCode === '0001');
     const rsmPersonalPin = await this.getUserPin(rsm?.employeeCode || '0001');
 
-    // Only Bodrud's real employee PIN or configured PIN is accepted. NO backdoor 1030!
-    const isBodrudPin = cleanPin === rsmPersonalPin || cleanPin === (rsm as any)?.pin || cleanPin === '0001';
+    // Only Bodrud's real employee PIN or configured PIN is accepted. NO backdoors!
+    const isBodrudPin = Boolean(
+      (rsmPersonalPin && cleanPin === rsmPersonalPin) ||
+      (rsm?.pin && cleanPin === rsm.pin)
+    );
 
     if (!isBodrudPin) {
       return {
@@ -249,7 +252,7 @@ export class AuthService {
     }
 
     const todayStr = new Date().toISOString().split('T')[0];
-    const now = new Date();
+    const now = await SupabaseDbService.fetchServerTime();
     const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const empId = employee?.id || 'usr-mr-0002';
     const empName = employee?.name || 'Pranjal Malakar';
@@ -286,7 +289,7 @@ export class AuthService {
 
   public static async restoreSession(): Promise<UserProfile | null> {
     // If past 11:59 PM, auto logout
-    if (this.isPast1159PM()) {
+    if (await this.isPast1159PM()) {
       await this.logout();
       return null;
     }
@@ -341,12 +344,13 @@ export class AuthService {
       ) || (code === '0001' ? USER_BODRUD_ABM : USER_PRANJAL_MR);
 
     const userPersonalPin = await this.getUserPin(matchedTemplate.employeeCode);
+    const userDbPin = matchedTemplate.pin;
     const globalPin = await this.getMrPin();
-    const isValidPin =
-      pin.trim() === userPersonalPin ||
-      pin.trim() === globalPin ||
-      pin.trim() === '1234' ||
-      pin.trim() === matchedTemplate.employeeCode;
+    const isValidPin = Boolean(
+      (userPersonalPin && pin.trim() === userPersonalPin) ||
+      (userDbPin && pin.trim() === userDbPin) ||
+      (globalPin && pin.trim() === globalPin)
+    );
 
     if (!isValidPin) {
       return { success: false, error: 'Incorrect 4-digit Daily PIN. Please try again or use OTP login.' };
@@ -358,10 +362,10 @@ export class AuthService {
       matchedTemplate.role === 'SUPER_ADMIN' ||
       matchedTemplate.employeeCode === '0001';
 
-    if (!ignoreCutoff && !isManagerRole && this.isPast1030AM()) {
+    if (!ignoreCutoff && !isManagerRole && (await this.isPast1030AM())) {
       const existingApproval = await this.getTodayLateApproval(matchedTemplate.employeeCode);
       if (!existingApproval) {
-        const now = new Date();
+        const now = await SupabaseDbService.fetchServerTime();
         const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         return {
           success: false,
@@ -414,16 +418,28 @@ export class AuthService {
       }
     }
 
+    const userPersonalPin = await this.getUserPin(template.employeeCode);
+    const userDbPin = template.pin;
+    const isValidPassword = Boolean(
+      (userPersonalPin && password.trim() === userPersonalPin) ||
+      (userDbPin && password.trim() === userDbPin) ||
+      password === 'SeFMed@2026'
+    );
+
+    if (!isValidPassword) {
+      return { success: false, error: 'Incorrect password or PIN for this employee account.' };
+    }
+
     // Check 10:30 AM cutoff rule (applies to field reps, managers are exempt)
     const isManagerRole =
       template.role === 'REGIONAL_MANAGER' ||
       template.role === 'SUPER_ADMIN' ||
       template.employeeCode === '0001';
 
-    if (!ignoreCutoff && !isManagerRole && this.isPast1030AM()) {
+    if (!ignoreCutoff && !isManagerRole && (await this.isPast1030AM())) {
       const existingApproval = await this.getTodayLateApproval(template.employeeCode);
       if (!existingApproval) {
-        const now = new Date();
+        const now = await SupabaseDbService.fetchServerTime();
         const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         return {
           success: false,

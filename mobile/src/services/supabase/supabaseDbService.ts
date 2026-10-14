@@ -345,6 +345,7 @@ export class SupabaseDbService {
         email: e.email,
         role: e.role,
         phone: e.phone,
+        pin: e.pin || '',
         territory: e.territory,
         headquarter: e.headquarter,
         assignedRouteIds: e.assigned_route_ids || [],
@@ -357,6 +358,26 @@ export class SupabaseDbService {
       console.warn('[Supabase] fetchEmployees error, using cache:', err);
       return await StorageService.getItem<UserProfile[]>(EMP_STORAGE_KEY, []);
     }
+  }
+
+  public static async fetchServerTime(): Promise<Date> {
+    if (!this.isConnected()) return new Date();
+    try {
+      const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/`, {
+        method: 'HEAD',
+        headers: { apikey: SUPABASE_CONFIG.apiKey },
+      });
+      const serverDateHeader = res.headers.get('date');
+      if (serverDateHeader) {
+        const parsed = new Date(serverDateHeader);
+        if (!isNaN(parsed.getTime())) {
+          return parsed;
+        }
+      }
+    } catch (err) {
+      console.warn('[Supabase] fetchServerTime error, using local fallback:', err);
+    }
+    return new Date();
   }
 
   public static async addEmployee(emp: UserProfile): Promise<void> {
@@ -373,7 +394,7 @@ export class SupabaseDbService {
           email: emp.email,
           role: emp.role,
           phone: emp.phone,
-          pin: '1234',
+          pin: emp.pin || '1234',
           territory: emp.territory,
           headquarter: emp.headquarter,
           assigned_route_ids: emp.assignedRouteIds || [],
@@ -387,6 +408,28 @@ export class SupabaseDbService {
     }
   }
 
+  public static async updateEmployeePin(employeeCodeOrId: string, newPin: string): Promise<boolean> {
+    const cleanKey = (employeeCodeOrId || '').trim();
+    if (!this.isConnected()) return false;
+    try {
+      await fetch(
+        `${SUPABASE_CONFIG.url}/rest/v1/employees?employee_code=eq.${encodeURIComponent(cleanKey)}`,
+        {
+          method: 'PATCH',
+          headers: this.getHeaders(),
+          body: JSON.stringify({
+            pin: newPin,
+            updated_at: new Date().toISOString(),
+          }),
+        }
+      );
+      return true;
+    } catch (err) {
+      console.warn('[Supabase] updateEmployeePin error:', err);
+      return false;
+    }
+  }
+
   public static async updateEmployee(id: string, updates: Partial<UserProfile>): Promise<void> {
     if (!this.isConnected()) return;
 
@@ -395,6 +438,7 @@ export class SupabaseDbService {
     if (updates.email !== undefined) payload.email = updates.email;
     if (updates.role !== undefined) payload.role = updates.role;
     if (updates.phone !== undefined) payload.phone = updates.phone;
+    if (updates.pin !== undefined) payload.pin = updates.pin;
     if (updates.territory !== undefined) payload.territory = updates.territory;
     if (updates.headquarter !== undefined) payload.headquarter = updates.headquarter;
     if (updates.employeeCode !== undefined) payload.employee_code = updates.employeeCode;

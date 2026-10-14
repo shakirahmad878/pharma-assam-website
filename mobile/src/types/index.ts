@@ -13,6 +13,7 @@ export interface UserProfile {
   territory: string;
   headquarter: string;
   phone?: string;
+  pin?: string;
   token?: string;
   assignedRouteIds: string[];
   activeRouteId?: string;

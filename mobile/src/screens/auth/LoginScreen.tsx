@@ -102,10 +102,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
 
     if (res.success && res.otp) {
       setOtpSent(true);
-      setGeneratedOtpHint(res.otp);
+      setGeneratedOtpHint('');
       Alert.alert(
         'OTP Sent 📲',
-        `A 6-digit verification code has been sent to +91 ${cleanDigits}.\n\nYour Verification OTP is: ${res.otp}\n(Master OTP: 123456)`,
+        `A 6-digit verification code has been sent to +91 ${cleanDigits}. Please check your SMS messages and enter the code below.`,
         [{ text: 'OK' }]
       );
     } else {
@@ -504,11 +504,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
                       <Text style={styles.otpSentBannerText}>
                         OTP sent to +91 {mobileNumber}
                       </Text>
-                      {generatedOtpHint ? (
-                        <Text style={styles.otpCodeHint}>
-                          Active Code: <Text style={{ fontWeight: 'bold' }}>{generatedOtpHint}</Text> (or test code 123456)
-                        </Text>
-                      ) : null}
                     </View>
                   </View>
 
