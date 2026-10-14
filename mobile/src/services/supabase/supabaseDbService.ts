@@ -167,7 +167,7 @@ export class SupabaseDbService {
     if (updates.geofenceRadiusMeters !== undefined) payload.geofence_radius_meters = updates.geofenceRadiusMeters;
 
     try {
-      await fetch(`${SUPABASE_CONFIG.url}/rest/v1/doctors?id=eq.${id}`, {
+      await fetch(`${SUPABASE_CONFIG.url}/rest/v1/doctors?id=eq.${encodeURIComponent(id)}`, {
         method: 'PATCH',
         headers: this.getHeaders(),
         body: JSON.stringify(payload),
@@ -184,7 +184,7 @@ export class SupabaseDbService {
     if (!this.isConnected()) return;
 
     try {
-      await fetch(`${SUPABASE_CONFIG.url}/rest/v1/doctors?id=eq.${id}`, {
+      await fetch(`${SUPABASE_CONFIG.url}/rest/v1/doctors?id=eq.${encodeURIComponent(id)}`, {
         method: 'DELETE',
         headers: this.getHeaders(),
       });
@@ -274,7 +274,7 @@ export class SupabaseDbService {
     if (!this.isConnected()) return;
 
     try {
-      await fetch(`${SUPABASE_CONFIG.url}/rest/v1/doctor_deletion_requests?id=eq.${requestId}`, {
+      await fetch(`${SUPABASE_CONFIG.url}/rest/v1/doctor_deletion_requests?id=eq.${encodeURIComponent(requestId)}`, {
         method: 'PATCH',
         headers: this.getHeaders(),
         body: JSON.stringify({
@@ -303,7 +303,7 @@ export class SupabaseDbService {
     if (!this.isConnected()) return;
 
     try {
-      await fetch(`${SUPABASE_CONFIG.url}/rest/v1/doctor_deletion_requests?id=eq.${requestId}`, {
+      await fetch(`${SUPABASE_CONFIG.url}/rest/v1/doctor_deletion_requests?id=eq.${encodeURIComponent(requestId)}`, {
         method: 'PATCH',
         headers: this.getHeaders(),
         body: JSON.stringify({
@@ -400,7 +400,7 @@ export class SupabaseDbService {
     if (updates.employeeCode !== undefined) payload.employee_code = updates.employeeCode;
 
     try {
-      await fetch(`${SUPABASE_CONFIG.url}/rest/v1/employees?id=eq.${id}`, {
+      await fetch(`${SUPABASE_CONFIG.url}/rest/v1/employees?id=eq.${encodeURIComponent(id)}`, {
         method: 'PATCH',
         headers: this.getHeaders(),
         body: JSON.stringify(payload),
@@ -414,7 +414,7 @@ export class SupabaseDbService {
     if (!this.isConnected()) return;
 
     try {
-      await fetch(`${SUPABASE_CONFIG.url}/rest/v1/employees?id=eq.${id}`, {
+      await fetch(`${SUPABASE_CONFIG.url}/rest/v1/employees?id=eq.${encodeURIComponent(id)}`, {
         method: 'DELETE',
         headers: this.getHeaders(),
       });
@@ -718,7 +718,7 @@ export class SupabaseDbService {
     // 2. Supabase
     if (this.isConnected()) {
       try {
-        await fetch(`${SUPABASE_CONFIG.url}/rest/v1/late_login_requests?id=eq.${requestId}`, {
+        await fetch(`${SUPABASE_CONFIG.url}/rest/v1/late_login_requests?id=eq.${encodeURIComponent(requestId)}`, {
           method: 'PATCH',
           headers: this.getHeaders(),
           body: JSON.stringify({
@@ -745,7 +745,7 @@ export class SupabaseDbService {
     if (this.isConnected()) {
       try {
         const res = await fetch(
-          `${SUPABASE_CONFIG.url}/rest/v1/late_login_requests?employee_code=eq.${cleanCode}&date=eq.${dateStr}&status=eq.APPROVED&limit=1`,
+          `${SUPABASE_CONFIG.url}/rest/v1/late_login_requests?employee_code=eq.${encodeURIComponent(cleanCode)}&date=eq.${encodeURIComponent(dateStr)}&status=eq.APPROVED&limit=1`,
           {
             method: 'GET',
             headers: this.getHeaders(),
@@ -950,7 +950,7 @@ export class SupabaseDbService {
     // 3. Supabase
     if (this.isConnected()) {
       try {
-        await fetch(`${SUPABASE_CONFIG.url}/rest/v1/tour_plan_reschedule_requests?id=eq.${requestId}`, {
+        await fetch(`${SUPABASE_CONFIG.url}/rest/v1/tour_plan_reschedule_requests?id=eq.${encodeURIComponent(requestId)}`, {
           method: 'PATCH',
           headers: this.getHeaders(),
           body: JSON.stringify({
