@@ -994,14 +994,14 @@ export default function App() {
       </div>
 
       {/* Modern App-Like Mobile Bottom Navigation Bar (Visible on < lg screens) */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#11110e]/95 backdrop-blur-md border-t border-[#282319] flex items-center justify-around py-2 px-1 shadow-[0_-5px_15px_rgba(4,4,3,0.8)] safe-area-inset-bottom">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-[#DCE4EB] flex items-center justify-around py-2 px-1 shadow-lg safe-area-inset-bottom">
         {/* Admin / Staff Tab */}
         <button
           onClick={() => handleTabChange(AuthService.canAccessAdminPortal(currentUser) ? 'admin_portal' : 'staff')}
           className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
             activeTab === 'admin_portal' || activeTab === 'staff'
-              ? 'text-[#B99D73] bg-[#0c0c09] shadow-[inset_2px_2px_5px_#040403,inset_-2px_-2px_5px_#1c1a14] border border-[#6C5636]/40'
-              : 'text-[#857866] hover:text-[#B99D73]'
+              ? 'text-[#137F83] bg-teal-50 border border-teal-200 shadow-xs font-semibold'
+              : 'text-[#64748B] hover:text-[#10243A]'
           }`}
         >
           <ShieldCheck className="w-5 h-5" />
@@ -1013,8 +1013,8 @@ export default function App() {
           onClick={() => handleTabChange('doctors')}
           className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
             activeTab === 'doctors'
-              ? 'text-[#B99D73] bg-[#0c0c09] shadow-[inset_2px_2px_5px_#040403,inset_-2px_-2px_5px_#1c1a14] border border-[#6C5636]/40'
-              : 'text-[#857866] hover:text-[#B99D73]'
+              ? 'text-[#137F83] bg-teal-50 border border-teal-200 shadow-xs font-semibold'
+              : 'text-[#64748B] hover:text-[#10243A]'
           }`}
         >
           <Stethoscope className="w-5 h-5" />
@@ -1026,8 +1026,8 @@ export default function App() {
           onClick={() => handleTabChange('dcr')}
           className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
             activeTab === 'dcr'
-              ? 'text-[#B99D73] bg-[#0c0c09] shadow-[inset_2px_2px_5px_#040403,inset_-2px_-2px_5px_#1c1a14] border border-[#6C5636]/40'
-              : 'text-[#857866] hover:text-[#B99D73]'
+              ? 'text-[#137F83] bg-teal-50 border border-teal-200 shadow-xs font-semibold'
+              : 'text-[#64748B] hover:text-[#10243A]'
           }`}
         >
           <FileText className="w-5 h-5" />
@@ -1039,8 +1039,8 @@ export default function App() {
           onClick={() => handleTabChange('dashboard')}
           className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
             activeTab === 'dashboard'
-              ? 'text-[#B99D73] bg-[#0c0c09] shadow-[inset_2px_2px_5px_#040403,inset_-2px_-2px_5px_#1c1a14] border border-[#6C5636]/40'
-              : 'text-[#857866] hover:text-[#B99D73]'
+              ? 'text-[#137F83] bg-teal-50 border border-teal-200 shadow-xs font-semibold'
+              : 'text-[#64748B] hover:text-[#10243A]'
           }`}
         >
           <LayoutDashboard className="w-5 h-5" />
@@ -1050,7 +1050,7 @@ export default function App() {
         {/* All Menus Drawer Button */}
         <button
           onClick={() => setIsMobileMenuOpen(true)}
-          className="flex flex-col items-center justify-center py-1 px-2.5 rounded-xl text-[#857866] hover:text-[#B99D73] transition-all"
+          className="flex flex-col items-center justify-center py-1 px-2.5 rounded-xl text-[#64748B] hover:text-[#10243A] transition-all"
         >
           <Menu className="w-5 h-5" />
           <span className="text-[10px] font-medium mt-0.5">All Menus</span>

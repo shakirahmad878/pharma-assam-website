@@ -252,19 +252,19 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
       <div className="neu-card p-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-xl bg-[#6C5636]/20 text-[#B99D73] border border-[#6C5636]/40 flex items-center justify-center font-bold shadow-neu-sunken">
-                <Stethoscope className="w-5 h-5 text-[#B99D73]" />
+            <div className="flex items-center gap-2.5">
+              <div className="w-10 h-10 rounded-xl bg-teal-50 border border-teal-200 text-[#137F83] flex items-center justify-center font-bold shadow-xs">
+                <Stethoscope className="w-5 h-5 text-[#137F83]" />
               </div>
-              <h2 className="text-xl font-bold text-[#F2ECE1] tracking-tight">
+              <h2 className="text-xl font-bold text-[#10243A] tracking-tight">
                 Doctor Master Directory
               </h2>
-              <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-[#181712] text-[#B99D73] border border-[#282319] shadow-neu-sunken">
+              <span className="text-xs font-bold px-3 py-1 rounded-full bg-teal-50 text-[#137F83] border border-teal-200">
                 {doctors.length} Doctors
               </span>
             </div>
-            <p className="text-xs text-[#857866] mt-1.5">
-              Maintain doctors, update clinics & geofences, and select doctors to queue into your <strong className="text-[#B99D73]">Daily Call Visits (DCR)</strong>.
+            <p className="text-xs text-[#64748B] mt-1.5">
+              Maintain doctors, update clinics & geofences, and select doctors to queue into your <strong className="text-[#137F83]">Daily Call Visits (DCR)</strong>.
             </p>
           </div>
 
@@ -284,19 +284,19 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
 
       {/* Daily Visit Planning Banner (When doctors are queued or selected) */}
       {(plannedVisitDoctorIds.length > 0 || selectedDoctorIds.length > 0) && (
-        <div className="neu-card bg-gradient-to-r from-[#18150f] via-[#14120d] to-[#0c0c09] p-4.5 border border-[#6C5636]/40 shadow-neu-raised flex flex-col md:flex-row items-center justify-between gap-4 animate-in fade-in">
+        <div className="neu-card bg-gradient-to-r from-teal-50 via-[#F1F6F8] to-blue-50/40 p-4.5 border border-teal-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 animate-in fade-in">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#6C5636]/30 text-[#B99D73] flex items-center justify-center border border-[#B99D73]/30 shadow-neu-sunken">
-              <CalendarCheck className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-xl bg-[#10243A] text-white flex items-center justify-center shadow-xs">
+              <CalendarCheck className="w-5 h-5 text-[#18A6A6]" />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-[#F2ECE1] flex items-center gap-2">
+              <h3 className="font-bold text-sm text-[#10243A] flex items-center gap-2">
                 <span>Today's Planned Visits Queue</span>
-                <span className="bg-[#6C5636] text-[#F2ECE1] border border-[#B99D73]/50 font-bold px-2.5 py-0.5 rounded-full text-xs shadow-sm">
+                <span className="bg-[#10243A] text-white border border-[#182F49] font-bold px-2.5 py-0.5 rounded-full text-xs shadow-xs">
                   {plannedVisitDoctorIds.length} Queued
                 </span>
               </h3>
-              <p className="text-xs text-[#857866] mt-0.5">
+              <p className="text-xs text-[#64748B] mt-0.5">
                 {selectedDoctorIds.length > 0 
                   ? `${selectedDoctorIds.length} doctor(s) selected to add into your today's call plan.`
                   : 'Doctors queued here are ready for check-in & call logging in the Visits tab.'}
@@ -308,9 +308,9 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
             {selectedDoctorIds.length > 0 && (
               <button
                 onClick={handleBatchAddToVisit}
-                className="neu-btn flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[#B99D73] text-xs font-bold cursor-pointer"
+                className="neu-btn flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[#10243A] text-xs font-bold cursor-pointer hover:border-[#18A6A6]"
               >
-                <Plus className="w-4 h-4 stroke-[3]" />
+                <Plus className="w-4 h-4 text-[#18A6A6] stroke-[3]" />
                 <span>Add {selectedDoctorIds.length} to Today's Visit</span>
               </button>
             )}
@@ -332,7 +332,7 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
       <div className="neu-card p-4 flex flex-col md:flex-row items-center justify-between gap-3">
         {/* Search */}
         <div className="relative flex-1 w-full">
-          <Search className="w-4 h-4 text-[#857866] absolute left-3.5 top-3" />
+          <Search className="w-4 h-4 text-[#64748B] absolute left-3.5 top-3" />
           <input
             type="text"
             placeholder="Search doctor name, clinic, address, or specialty..."
@@ -347,7 +347,7 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
           <button
             type="button"
             onClick={handleSelectAllFiltered}
-            className="neu-btn text-xs px-3 py-2 rounded-xl text-[#F2ECE1] cursor-pointer"
+            className="neu-btn text-xs px-3.5 py-2 rounded-xl text-[#10243A] font-medium cursor-pointer"
           >
             {selectedDoctorIds.length === filteredDoctors.length && filteredDoctors.length > 0
               ? 'Deselect All'
@@ -357,7 +357,7 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
           <select
             value={selectedSpecialty}
             onChange={(e) => setSelectedSpecialty(e.target.value)}
-            className="neu-input text-xs px-3 py-2 cursor-pointer appearance-none bg-[#0c0c09]"
+            className="neu-input text-xs px-3 py-2 cursor-pointer appearance-none bg-white font-medium text-[#10243A]"
           >
             <option value="ALL">All Specialties</option>
             <option value="Cardiology">Cardiology</option>
@@ -371,7 +371,7 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
           <select
             value={selectedTier}
             onChange={(e) => setSelectedTier(e.target.value)}
-            className="neu-input text-xs px-3 py-2 cursor-pointer appearance-none bg-[#0c0c09]"
+            className="neu-input text-xs px-3 py-2 cursor-pointer appearance-none bg-white font-medium text-[#10243A]"
           >
             <option value="ALL">All Tiers</option>
             <option value="A_PLUS">Tier A+ (Key Opinion Leader)</option>
@@ -394,10 +394,10 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
               key={doc.id}
               className={`neu-card p-5 flex flex-col justify-between relative group transition-all duration-200 ${
                 isPlanned 
-                  ? 'border-[#B99D73] ring-1 ring-[#B99D73]/40 shadow-neu-gold' 
+                  ? 'border-[#18A6A6] ring-1 ring-[#18A6A6]/40 shadow-sm bg-gradient-to-b from-teal-50/20 to-white' 
                   : isSelected
-                  ? 'border-[#6C5636] ring-1 ring-[#6C5636]/50'
-                  : 'hover:border-[#6C5636]/60'
+                  ? 'border-[#10243A] ring-1 ring-[#10243A]/30'
+                  : 'hover:border-[#18A6A6]/60'
               }`}
             >
               <div>
@@ -409,15 +409,15 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
                       type="checkbox"
                       checked={isSelected}
                       onChange={() => handleToggleSelectDoctor(doc.id)}
-                      className="mt-1 w-4 h-4 rounded bg-[#0c0c09] border-[#282319] text-[#B99D73] focus:ring-[#B99D73] cursor-pointer accent-[#6C5636]"
+                      className="mt-1 w-4 h-4 rounded border-[#DCE4EB] text-[#18A6A6] focus:ring-[#18A6A6] cursor-pointer accent-[#18A6A6]"
                       title="Select doctor to add to today's visit queue"
                     />
 
                     <div className="cursor-pointer" onClick={() => setViewingDoctor(doc)}>
-                      <h3 className="font-bold text-base text-[#F2ECE1] hover:text-[#B99D73] transition-colors">
+                      <h3 className="font-bold text-base text-[#10243A] hover:text-[#18A6A6] transition-colors">
                         {doc.name}
                       </h3>
-                      <p className="text-xs text-[#857866] font-medium">{doc.qualification}</p>
+                      <p className="text-xs text-[#64748B] font-medium">{doc.qualification}</p>
                     </div>
                   </div>
 
@@ -430,31 +430,31 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
 
                 {/* Doctor Details */}
                 <div className="mt-3.5 space-y-2.5 text-xs">
-                  <div className="flex items-center gap-2 text-[#B99D73] font-semibold bg-[#181712] px-2.5 py-1.5 rounded-xl border border-[#282319] shadow-neu-sunken">
-                    <Stethoscope className="w-3.5 h-3.5 text-[#B99D73]" />
+                  <div className="flex items-center gap-2 text-[#137F83] font-semibold bg-teal-50/70 px-2.5 py-1.5 rounded-xl border border-teal-100">
+                    <Stethoscope className="w-3.5 h-3.5 text-[#137F83]" />
                     <span>{doc.specialty}</span>
                   </div>
 
-                  <div className="text-[#857866]">
-                    <p className="font-semibold text-[#F2ECE1]">{doc.clinicName || 'Clinic'}</p>
+                  <div>
+                    <p className="font-semibold text-[#10243A]">{doc.clinicName || 'Clinic'}</p>
                     {doc.clinicLocation?.address ? (
-                      <p className="text-[11px] text-[#857866] flex items-start gap-1.5 mt-0.5">
-                        <MapPin className="w-3 h-3 text-[#B99D73] shrink-0 mt-0.5" />
+                      <p className="text-[11px] text-[#64748B] flex items-start gap-1.5 mt-0.5">
+                        <MapPin className="w-3 h-3 text-[#18A6A6] shrink-0 mt-0.5" />
                         <span>{doc.clinicLocation.address}</span>
                       </p>
                     ) : (
-                      <p className="text-[11px] text-[#857866]/60 italic mt-0.5">No specific clinic address recorded</p>
+                      <p className="text-[11px] text-[#94A3B8] italic mt-0.5">No specific clinic address recorded</p>
                     )}
                   </div>
 
-                  <div className="pt-2 border-t border-[#282319]/80 text-[11px] text-[#857866] space-y-1">
+                  <div className="pt-2 border-t border-[#DCE4EB] text-[11px] text-[#64748B] space-y-1">
                     <div className="flex items-center justify-between">
-                      <span className="flex items-center gap-1.5"><Clock className="w-3 h-3 text-[#B99D73]" /> {doc.visitingHours || 'Flexible Call Time'}</span>
+                      <span className="flex items-center gap-1.5"><Clock className="w-3 h-3 text-[#18A6A6]" /> {doc.visitingHours || 'Flexible Call Time'}</span>
                     </div>
                     {doc.phone && (
                       <div className="flex items-center justify-between">
-                        <span className="flex items-center gap-1.5"><Phone className="w-3 h-3 text-[#B99D73]" /> {doc.phone}</span>
-                        <span className="font-mono text-[#B99D73] bg-[#181712] border border-[#282319] px-2 py-0.5 rounded text-[10px] shadow-neu-sunken">
+                        <span className="flex items-center gap-1.5"><Phone className="w-3 h-3 text-[#18A6A6]" /> {doc.phone}</span>
+                        <span className="font-mono text-[#10243A] bg-[#F1F6F8] border border-[#DCE4EB] px-2 py-0.5 rounded text-[10px]">
                           Geofence: {doc.geofenceRadiusMeters || 100}m
                         </span>
                       </div>
@@ -464,7 +464,7 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
               </div>
 
               {/* Action Buttons: Add to Visit, Edit, Delete */}
-              <div className="mt-4 pt-3.5 border-t border-[#282319] space-y-2.5">
+              <div className="mt-4 pt-3.5 border-t border-[#DCE4EB] space-y-2.5">
                 
                 {/* "Add to Visit" Button */}
                 <button
@@ -472,8 +472,8 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
                   onClick={() => onTogglePlanVisit && onTogglePlanVisit(doc.id)}
                   className={`w-full flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                     isPlanned
-                      ? 'neu-btn-gold text-[#F2ECE1] shadow-neu-gold'
-                      : 'neu-btn text-[#B99D73] hover:text-[#F2ECE1]'
+                      ? 'bg-[#18A6A6] text-white shadow-xs hover:bg-[#137F83]'
+                      : 'bg-[#F1F6F8] hover:bg-[#E8EEF4] text-[#10243A] border border-[#DCE4EB]'
                   }`}
                   title={isPlanned ? 'Doctor is in today visit plan. Click to remove.' : 'Queue this doctor for today visit call.'}
                 >
@@ -484,7 +484,7 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
                     </>
                   ) : (
                     <>
-                      <CalendarCheck className="w-4 h-4 text-[#B99D73]" />
+                      <CalendarCheck className="w-4 h-4 text-[#18A6A6]" />
                       <span>+ Add to Visit</span>
                     </>
                   )}
@@ -496,7 +496,7 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
                     <button
                       type="button"
                       onClick={() => setViewingDoctor(doc)}
-                      className="text-[11px] font-semibold text-[#857866] hover:text-[#B99D73] transition-colors cursor-pointer"
+                      className="text-[11px] font-semibold text-[#64748B] hover:text-[#10243A] transition-colors cursor-pointer"
                     >
                       View Profile
                     </button>
@@ -505,16 +505,16 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
                       <button
                         type="button"
                         onClick={() => handleStartEdit(doc)}
-                        className="neu-btn flex items-center gap-1 px-2.5 py-1 text-xs text-[#F2ECE1] cursor-pointer"
+                        className="neu-btn flex items-center gap-1 px-2.5 py-1 text-xs text-[#10243A] cursor-pointer"
                         title="Edit Doctor Details"
                       >
-                        <Edit2 className="w-3.5 h-3.5 text-[#B99D73]" />
+                        <Edit2 className="w-3.5 h-3.5 text-[#18A6A6]" />
                         <span>Edit</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => setDeletingDoctorId(doc)}
-                        className="neu-btn flex items-center gap-1 px-2.5 py-1 text-xs text-rose-400 hover:text-rose-300 border-rose-950/40 cursor-pointer"
+                        className="neu-btn flex items-center gap-1 px-2.5 py-1 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200 cursor-pointer"
                         title="Delete Doctor"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -532,23 +532,23 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
 
       {/* Add Doctor Modal */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 bg-[#090907]/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="neu-card max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 border border-[#282319] shadow-neu-raised">
-            <div className="flex items-center justify-between pb-3 border-b border-[#282319]">
-              <h3 className="font-bold text-base text-[#F2ECE1] flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-[#6C5636]/20 border border-[#6C5636]/40 flex items-center justify-center">
-                  <Plus className="w-4 h-4 text-[#B99D73]" />
+        <div className="fixed inset-0 z-50 bg-[#10243A]/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="neu-card max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 border border-[#DCE4EB] shadow-xl">
+            <div className="flex items-center justify-between pb-3 border-b border-[#DCE4EB]">
+              <h3 className="font-bold text-base text-[#10243A] flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-teal-50 border border-teal-200 text-[#137F83] flex items-center justify-center">
+                  <Plus className="w-4 h-4 text-[#137F83]" />
                 </div>
                 Add New Doctor to Directory
               </h3>
-              <button onClick={() => setIsAddModalOpen(false)} className="neu-btn p-1.5 rounded-xl text-[#857866] hover:text-[#F2ECE1]">
+              <button onClick={() => setIsAddModalOpen(false)} className="neu-btn p-1.5 rounded-xl text-[#64748B] hover:text-[#10243A]">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleSaveNewDoctor} className="mt-4 space-y-3.5 text-xs">
               <div>
-                <label className="font-semibold text-[#B99D73] block mb-1">Doctor Full Name *</label>
+                <label className="font-semibold text-[#10243A] block mb-1">Doctor Full Name *</label>
                 <input
                   type="text"
                   required
@@ -560,7 +560,7 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
               </div>
 
               <div>
-                <label className="font-semibold text-[#B99D73] block mb-1">Qualifications</label>
+                <label className="font-semibold text-[#10243A] block mb-1">Qualifications</label>
                 <input
                   type="text"
                   placeholder="e.g. MBBS, MD (Medicine), DM (Cardio)"
@@ -572,11 +572,11 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="font-semibold text-[#B99D73] block mb-1">Specialty</label>
+                  <label className="font-semibold text-[#10243A] block mb-1">Specialty</label>
                   <select
                     value={newDocSpecialty}
                     onChange={(e) => setNewDocSpecialty(e.target.value as MedicalSpecialty)}
-                    className="neu-input w-full px-3 py-2 text-xs cursor-pointer appearance-none bg-[#0c0c09]"
+                    className="neu-input w-full px-3 py-2 text-xs cursor-pointer appearance-none bg-white text-[#10243A]"
                   >
                     <option value="Cardiology">Cardiology</option>
                     <option value="Diabetology & Endocrinology">Diabetology & Endocrinology</option>
@@ -587,11 +587,11 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
                   </select>
                 </div>
                 <div>
-                  <label className="font-semibold text-[#B99D73] block mb-1">Tier Rating</label>
+                  <label className="font-semibold text-[#10243A] block mb-1">Tier Rating</label>
                   <select
                     value={newDocTier}
                     onChange={(e) => setNewDocTier(e.target.value as DoctorTier)}
-                    className="neu-input w-full px-3 py-2 text-xs cursor-pointer appearance-none bg-[#0c0c09]"
+                    className="neu-input w-full px-3 py-2 text-xs cursor-pointer appearance-none bg-white text-[#10243A]"
                   >
                     <option value="A_PLUS">Tier A+ (Key Opinion Leader)</option>
                     <option value="A">Tier A (High Potential)</option>
@@ -602,7 +602,7 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
               </div>
 
               <div>
-                <label className="font-semibold text-[#B99D73] block mb-1">Clinic / Hospital Name *</label>
+                <label className="font-semibold text-[#10243A] block mb-1">Clinic / Hospital Name *</label>
                 <input
                   type="text"
                   required
@@ -614,7 +614,7 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
               </div>
 
               <div>
-                <label className="font-semibold text-[#B99D73] block mb-1">Clinic Address</label>
+                <label className="font-semibold text-[#10243A] block mb-1">Clinic Address</label>
                 <input
                   type="text"
                   placeholder="Enter full clinic address, road name, landmark..."
@@ -626,7 +626,7 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="font-semibold text-[#B99D73] block mb-1">GPS Latitude (PostGIS)</label>
+                  <label className="font-semibold text-[#10243A] block mb-1">GPS Latitude (PostGIS)</label>
                   <input
                     type="text"
                     value={newDocLat}
@@ -635,7 +635,7 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="font-semibold text-[#B99D73] block mb-1">GPS Longitude (PostGIS)</label>
+                  <label className="font-semibold text-[#10243A] block mb-1">GPS Longitude (PostGIS)</label>
                   <input
                     type="text"
                     value={newDocLng}
@@ -647,7 +647,7 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="font-semibold text-[#B99D73] block mb-1">Phone Number</label>
+                  <label className="font-semibold text-[#10243A] block mb-1">Phone Number</label>
                   <input
                     type="text"
                     placeholder="e.g. +91 94350 12345"
@@ -657,7 +657,7 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="font-semibold text-[#B99D73] block mb-1">Monthly Target Visits</label>
+                  <label className="font-semibold text-[#10243A] block mb-1">Monthly Target Visits</label>
                   <input
                     type="number"
                     min="1"
@@ -670,7 +670,7 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
               </div>
 
               <div>
-                <label className="font-semibold text-[#B99D73] block mb-1">Visiting Hours</label>
+                <label className="font-semibold text-[#10243A] block mb-1">Visiting Hours</label>
                 <input
                   type="text"
                   placeholder="e.g. 10:00 AM - 01:00 PM, 05:00 PM - 08:00 PM"
@@ -680,11 +680,11 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
                 />
               </div>
 
-              <div className="pt-4 flex items-center justify-end gap-2.5 border-t border-[#282319]">
+              <div className="pt-4 flex items-center justify-end gap-2.5 border-t border-[#DCE4EB]">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="neu-btn px-4 py-2 rounded-xl text-xs text-[#857866] hover:text-[#F2ECE1] cursor-pointer"
+                  className="neu-btn px-4 py-2 rounded-xl text-xs text-[#64748B] hover:text-[#10243A] cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -702,23 +702,23 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
 
       {/* Edit Doctor Modal */}
       {editingDoctor && (
-        <div className="fixed inset-0 z-50 bg-[#090907]/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="neu-card max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 border border-[#282319] shadow-neu-raised">
-            <div className="flex items-center justify-between pb-3 border-b border-[#282319]">
-              <h3 className="font-bold text-base text-[#F2ECE1] flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-[#6C5636]/20 border border-[#6C5636]/40 flex items-center justify-center">
-                  <Edit2 className="w-4 h-4 text-[#B99D73]" />
+        <div className="fixed inset-0 z-50 bg-[#10243A]/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="neu-card max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 border border-[#DCE4EB] shadow-xl">
+            <div className="flex items-center justify-between pb-3 border-b border-[#DCE4EB]">
+              <h3 className="font-bold text-base text-[#10243A] flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-teal-50 border border-teal-200 text-[#137F83] flex items-center justify-center">
+                  <Edit2 className="w-4 h-4 text-[#137F83]" />
                 </div>
                 Edit Doctor: {editingDoctor.name}
               </h3>
-              <button onClick={() => setEditingDoctor(null)} className="neu-btn p-1.5 rounded-xl text-[#857866] hover:text-[#F2ECE1]">
+              <button onClick={() => setEditingDoctor(null)} className="neu-btn p-1.5 rounded-xl text-[#64748B] hover:text-[#10243A]">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleSaveEdit} className="mt-4 space-y-3.5 text-xs">
               <div>
-                <label className="font-semibold text-[#B99D73] block mb-1">Doctor Name *</label>
+                <label className="font-semibold text-[#10243A] block mb-1">Doctor Name *</label>
                 <input
                   type="text"
                   required
@@ -729,7 +729,7 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
               </div>
 
               <div>
-                <label className="font-semibold text-[#B99D73] block mb-1">Qualifications</label>
+                <label className="font-semibold text-[#10243A] block mb-1">Qualifications</label>
                 <input
                   type="text"
                   value={editForm.qualification}
@@ -740,11 +740,11 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="font-semibold text-[#B99D73] block mb-1">Specialty</label>
+                  <label className="font-semibold text-[#10243A] block mb-1">Specialty</label>
                   <select
                     value={editForm.specialty}
                     onChange={(e) => setEditForm({ ...editForm, specialty: e.target.value as MedicalSpecialty })}
-                    className="neu-input w-full px-3 py-2 text-xs cursor-pointer appearance-none bg-[#0c0c09]"
+                    className="neu-input w-full px-3 py-2 text-xs cursor-pointer appearance-none bg-white text-[#10243A]"
                   >
                     <option value="Cardiology">Cardiology</option>
                     <option value="Diabetology & Endocrinology">Diabetology & Endocrinology</option>
@@ -755,11 +755,11 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
                   </select>
                 </div>
                 <div>
-                  <label className="font-semibold text-[#B99D73] block mb-1">Tier Rating</label>
+                  <label className="font-semibold text-[#10243A] block mb-1">Tier Rating</label>
                   <select
                     value={editForm.tier}
                     onChange={(e) => setEditForm({ ...editForm, tier: e.target.value as DoctorTier })}
-                    className="neu-input w-full px-3 py-2 text-xs cursor-pointer appearance-none bg-[#0c0c09]"
+                    className="neu-input w-full px-3 py-2 text-xs cursor-pointer appearance-none bg-white text-[#10243A]"
                   >
                     <option value="A_PLUS">Tier A+ (Key Opinion Leader)</option>
                     <option value="A">Tier A (High Potential)</option>
@@ -770,7 +770,7 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
               </div>
 
               <div>
-                <label className="font-semibold text-[#B99D73] block mb-1">Clinic / Hospital Name *</label>
+                <label className="font-semibold text-[#10243A] block mb-1">Clinic / Hospital Name *</label>
                 <input
                   type="text"
                   required
@@ -781,7 +781,7 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
               </div>
 
               <div>
-                <label className="font-semibold text-[#B99D73] block mb-1">Clinic Address</label>
+                <label className="font-semibold text-[#10243A] block mb-1">Clinic Address</label>
                 <input
                   type="text"
                   placeholder="Enter clinic address..."
@@ -793,7 +793,7 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="font-semibold text-[#B99D73] block mb-1">GPS Latitude</label>
+                  <label className="font-semibold text-[#10243A] block mb-1">GPS Latitude</label>
                   <input
                     type="text"
                     value={editForm.latitude}
@@ -802,7 +802,7 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="font-semibold text-[#B99D73] block mb-1">GPS Longitude</label>
+                  <label className="font-semibold text-[#10243A] block mb-1">GPS Longitude</label>
                   <input
                     type="text"
                     value={editForm.longitude}
@@ -814,7 +814,7 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="font-semibold text-[#B99D73] block mb-1">Phone Number</label>
+                  <label className="font-semibold text-[#10243A] block mb-1">Phone Number</label>
                   <input
                     type="text"
                     value={editForm.phone}
@@ -823,7 +823,7 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="font-semibold text-[#B99D73] block mb-1">Monthly Target Visits</label>
+                  <label className="font-semibold text-[#10243A] block mb-1">Monthly Target Visits</label>
                   <input
                     type="number"
                     min="1"
@@ -836,7 +836,7 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
               </div>
 
               <div>
-                <label className="font-semibold text-[#B99D73] block mb-1">Visiting Hours</label>
+                <label className="font-semibold text-[#10243A] block mb-1">Visiting Hours</label>
                 <input
                   type="text"
                   value={editForm.visitingHours}
@@ -845,11 +845,11 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
                 />
               </div>
 
-              <div className="pt-4 flex items-center justify-end gap-2.5 border-t border-[#282319]">
+              <div className="pt-4 flex items-center justify-end gap-2.5 border-t border-[#DCE4EB]">
                 <button
                   type="button"
                   onClick={() => setEditingDoctor(null)}
-                  className="neu-btn px-4 py-2 rounded-xl text-xs text-[#857866] hover:text-[#F2ECE1] cursor-pointer"
+                  className="neu-btn px-4 py-2 rounded-xl text-xs text-[#64748B] hover:text-[#10243A] cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -867,53 +867,53 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
 
       {/* View Doctor Profile Modal */}
       {viewingDoctor && (
-        <div className="fixed inset-0 z-50 bg-[#090907]/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="neu-card max-w-md w-full p-6 animate-in fade-in zoom-in-95 border border-[#282319] shadow-neu-raised">
-            <div className="flex items-center justify-between pb-3 border-b border-[#282319]">
+        <div className="fixed inset-0 z-50 bg-[#10243A]/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="neu-card max-w-md w-full p-6 animate-in fade-in zoom-in-95 border border-[#DCE4EB] shadow-xl">
+            <div className="flex items-center justify-between pb-3 border-b border-[#DCE4EB]">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-[#6C5636]/20 border border-[#6C5636]/40 text-[#B99D73] flex items-center justify-center font-bold shadow-neu-sunken">
-                  <Stethoscope className="w-4 h-4" />
+                <div className="w-9 h-9 rounded-xl bg-teal-50 border border-teal-200 text-[#137F83] flex items-center justify-center font-bold">
+                  <Stethoscope className="w-5 h-5 text-[#137F83]" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-base text-[#F2ECE1]">{viewingDoctor.name}</h3>
-                  <p className="text-xs text-[#857866]">{viewingDoctor.qualification}</p>
+                  <h3 className="font-bold text-base text-[#10243A]">{viewingDoctor.name}</h3>
+                  <p className="text-xs text-[#64748B]">{viewingDoctor.qualification}</p>
                 </div>
               </div>
-              <button onClick={() => setViewingDoctor(null)} className="neu-btn p-1.5 rounded-xl text-[#857866] hover:text-[#F2ECE1]">
+              <button onClick={() => setViewingDoctor(null)} className="neu-btn p-1.5 rounded-xl text-[#64748B] hover:text-[#10243A]">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <div className="mt-4 space-y-3 text-xs">
-              <div className="p-3.5 bg-[#0c0c09] rounded-xl border border-[#282319] shadow-neu-sunken space-y-2.5">
+              <div className="p-3.5 bg-[#F8FAFC] rounded-xl border border-[#DCE4EB] space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-[#857866]">Specialty:</span>
-                  <span className="font-bold text-[#B99D73]">{viewingDoctor.specialty}</span>
+                  <span className="text-[#64748B]">Specialty:</span>
+                  <span className="font-bold text-[#137F83]">{viewingDoctor.specialty}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[#857866]">Tier Category:</span>
+                  <span className="text-[#64748B]">Tier Category:</span>
                   <Badge variant={viewingDoctor.tier === 'A_PLUS' ? 'purple' : 'primary'} size="sm">
                     Tier {viewingDoctor.tier.replace('_', '+')}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[#857866]">Clinic / Hospital:</span>
-                  <span className="font-semibold text-[#F2ECE1]">{viewingDoctor.clinicName}</span>
+                  <span className="text-[#64748B]">Clinic / Hospital:</span>
+                  <span className="font-semibold text-[#10243A]">{viewingDoctor.clinicName}</span>
                 </div>
                 {viewingDoctor.clinicLocation?.address && (
                   <div>
-                    <span className="text-[#857866] block mb-0.5">Address:</span>
-                    <span className="text-[#F2ECE1]">{viewingDoctor.clinicLocation.address}</span>
+                    <span className="text-[#64748B] block mb-0.5">Address:</span>
+                    <span className="text-[#10243A]">{viewingDoctor.clinicLocation.address}</span>
                   </div>
                 )}
-                <div className="flex items-center justify-between pt-1 border-t border-[#282319]">
-                  <span className="text-[#857866]">Visiting Hours:</span>
-                  <span className="font-semibold text-[#F2ECE1]">{viewingDoctor.visitingHours}</span>
+                <div className="flex items-center justify-between pt-1 border-t border-[#DCE4EB]">
+                  <span className="text-[#64748B]">Visiting Hours:</span>
+                  <span className="font-semibold text-[#10243A]">{viewingDoctor.visitingHours}</span>
                 </div>
                 {viewingDoctor.phone && (
                   <div className="flex items-center justify-between">
-                    <span className="text-[#857866]">Contact Phone:</span>
-                    <span className="font-semibold text-[#F2ECE1]">{viewingDoctor.phone}</span>
+                    <span className="text-[#64748B]">Contact Phone:</span>
+                    <span className="font-semibold text-[#10243A]">{viewingDoctor.phone}</span>
                   </div>
                 )}
               </div>
@@ -928,8 +928,8 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
                   }}
                   className={`flex-1 py-2.5 rounded-xl font-bold text-xs cursor-pointer ${
                     plannedVisitDoctorIds.includes(viewingDoctor.id)
-                      ? 'neu-btn text-[#857866] hover:text-[#F2ECE1]'
-                      : 'neu-btn-gold text-[#F2ECE1]'
+                      ? 'bg-[#F1F6F8] hover:bg-[#E8EEF4] text-[#10243A] border border-[#DCE4EB]'
+                      : 'bg-[#18A6A6] hover:bg-[#137F83] text-white shadow-sm'
                   }`}
                 >
                   {plannedVisitDoctorIds.includes(viewingDoctor.id) ? 'Remove from Visit Plan' : '+ Add to Today\'s Visit Plan'}
@@ -942,31 +942,31 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
 
       {/* Delete Confirmation Modal */}
       {deletingDoctorId && (
-        <div className="fixed inset-0 z-50 bg-[#090907]/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="neu-card max-w-sm w-full p-6 animate-in fade-in zoom-in-95 border border-[#282319] shadow-neu-raised">
-            <div className="w-12 h-12 rounded-2xl bg-rose-950/40 border border-rose-800/40 text-rose-400 flex items-center justify-center mx-auto mb-4 shadow-neu-sunken">
+        <div className="fixed inset-0 z-50 bg-[#10243A]/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="neu-card max-w-sm w-full p-6 animate-in fade-in zoom-in-95 border border-[#DCE4EB] shadow-xl">
+            <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center mx-auto mb-4">
               <AlertTriangle className="w-6 h-6" />
             </div>
             
-            <h3 className="text-base font-bold text-center text-[#F2ECE1]">
+            <h3 className="text-base font-bold text-center text-[#10243A]">
               Delete Doctor Record?
             </h3>
-            <p className="text-xs text-[#857866] text-center mt-2 leading-relaxed">
-              Are you sure you want to remove <strong className="text-[#F2ECE1]">{deletingDoctorId.name}</strong> from the database?
+            <p className="text-xs text-[#64748B] text-center mt-2 leading-relaxed">
+              Are you sure you want to remove <strong className="text-[#10243A]">{deletingDoctorId.name}</strong> from the database?
             </p>
 
             <div className="mt-6 flex items-center justify-center gap-3">
               <button
                 type="button"
                 onClick={() => setDeletingDoctorId(null)}
-                className="neu-btn flex-1 py-2.5 rounded-xl text-xs text-[#857866] hover:text-[#F2ECE1] cursor-pointer"
+                className="neu-btn flex-1 py-2.5 rounded-xl text-xs text-[#64748B] hover:text-[#10243A] cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleDeleteConfirm}
-                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-rose-800 to-rose-700 hover:from-rose-700 hover:to-rose-600 border border-rose-500/30 text-white text-xs font-bold shadow-md cursor-pointer"
+                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-sm cursor-pointer"
               >
                 Yes, Delete
               </button>

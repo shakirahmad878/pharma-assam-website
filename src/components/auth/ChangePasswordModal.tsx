@@ -61,24 +61,24 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-[#090907]/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-      <div className="neu-card border border-[#282319] rounded-2xl max-w-md w-full shadow-neu-raised animate-in fade-in zoom-in duration-200 overflow-hidden">
+    <div className="fixed inset-0 bg-[#10243A]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white border border-[#DCE4EB] rounded-2xl max-w-md w-full shadow-xl animate-in fade-in zoom-in duration-200 overflow-hidden">
         {/* Modal Header */}
-        <div className="p-5 border-b border-[#282319] flex items-center justify-between">
+        <div className="p-5 border-b border-[#DCE4EB] flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#6C5636]/20 border border-[#6C5636]/40 flex items-center justify-center text-[#B99D73] shadow-neu-sunken">
+            <div className="w-8 h-8 rounded-xl bg-teal-50 border border-teal-200 flex items-center justify-center text-[#137F83]">
               <KeyRound className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-[#F2ECE1]">Change Account Password</h3>
-              <p className="text-[11px] text-[#857866]">
-                User: <span className="text-[#B99D73] font-semibold">{currentUser.name}</span> ({currentUser.role})
+              <h3 className="font-bold text-sm text-[#10243A]">Change Account Password</h3>
+              <p className="text-[11px] text-[#64748B]">
+                User: <span className="text-[#137F83] font-semibold">{currentUser.name}</span> ({currentUser.role})
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="neu-btn p-1.5 rounded-xl text-[#857866] hover:text-[#F2ECE1]"
+            className="p-1.5 rounded-xl text-[#64748B] hover:text-[#10243A]"
           >
             <X className="w-4 h-4" />
           </button>
@@ -87,21 +87,21 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
         {/* Modal Form */}
         <form onSubmit={handleSubmit} className="p-5 space-y-4 text-xs">
           {errorMessage && (
-            <div className="p-3 bg-[#1c0f0f] border border-[#662B2B]/60 rounded-xl text-rose-400 flex items-center gap-2 text-xs shadow-neu-sunken">
-              <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 flex items-center gap-2 text-xs">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
               <span>{errorMessage}</span>
             </div>
           )}
 
           {successMessage && (
-            <div className="p-3 bg-[#101912] border border-[#384D2B]/60 rounded-xl text-emerald-400 flex items-center gap-2 text-xs font-semibold shadow-neu-sunken">
-              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 flex items-center gap-2 text-xs font-semibold">
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
               <span>{successMessage}</span>
             </div>
           )}
 
           <div>
-            <label className="block font-semibold text-[#B99D73] mb-1">Current Password *</label>
+            <label className="block font-semibold text-[#10243A] mb-1">Current Password *</label>
             <div className="relative">
               <input
                 type={showPasswords ? 'text' : 'password'}
@@ -109,12 +109,12 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                 placeholder="Enter current password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
-                className="neu-input w-full pl-3 pr-10 py-2"
+                className="w-full pl-3 pr-10 py-2 bg-white border border-[#DCE4EB] rounded-xl text-[#10243A] focus:outline-none focus:border-[#18A6A6]"
               />
               <button
                 type="button"
                 onClick={() => setShowPasswords(!showPasswords)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#857866] hover:text-[#F2ECE1]"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#10243A]"
               >
                 {showPasswords ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -122,40 +122,40 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
           </div>
 
           <div>
-            <label className="block font-semibold text-[#B99D73] mb-1">New Password *</label>
+            <label className="block font-semibold text-[#10243A] mb-1">New Password *</label>
             <input
               type={showPasswords ? 'text' : 'password'}
               required
               placeholder="Enter new password (min. 4 characters)"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="neu-input w-full px-3 py-2"
+              className="w-full px-3 py-2 bg-white border border-[#DCE4EB] rounded-xl text-[#10243A] focus:outline-none focus:border-[#18A6A6]"
             />
           </div>
 
           <div>
-            <label className="block font-semibold text-[#B99D73] mb-1">Confirm New Password *</label>
+            <label className="block font-semibold text-[#10243A] mb-1">Confirm New Password *</label>
             <input
               type={showPasswords ? 'text' : 'password'}
               required
               placeholder="Re-enter new password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="neu-input w-full px-3 py-2"
+              className="w-full px-3 py-2 bg-white border border-[#DCE4EB] rounded-xl text-[#10243A] focus:outline-none focus:border-[#18A6A6]"
             />
           </div>
 
-          <div className="pt-3.5 border-t border-[#282319] flex items-center justify-end gap-2.5">
+          <div className="pt-3.5 border-t border-[#DCE4EB] flex items-center justify-end gap-2.5">
             <button
               type="button"
               onClick={onClose}
-              className="neu-btn px-4 py-2 rounded-xl text-[#857866] hover:text-[#F2ECE1] cursor-pointer"
+              className="px-4 py-2 rounded-xl text-xs font-semibold text-[#64748B] hover:text-[#10243A] bg-[#F1F6F8] hover:bg-[#E8EEF4] border border-[#DCE4EB] cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="neu-btn-gold px-4 py-2 rounded-xl font-bold flex items-center gap-1.5 cursor-pointer"
+              className="px-4 py-2 rounded-xl font-bold flex items-center gap-1.5 cursor-pointer bg-[#10243A] hover:bg-[#182F49] text-white shadow-xs"
             >
               <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
               <span>Update Password</span>

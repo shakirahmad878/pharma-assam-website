@@ -143,21 +143,21 @@ export const ChemistDirectory: React.FC<ChemistDirectoryProps> = ({
       <div className="neu-card p-5">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-xl font-bold text-[#F2ECE1] flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-[#6C5636]/20 border border-[#6C5636]/40 text-[#B99D73] flex items-center justify-center font-bold shadow-neu-sunken">
-                <Store className="w-4 h-4 text-[#B99D73]" />
+            <h2 className="text-xl font-bold text-[#10243A] flex items-center gap-2.5">
+              <div className="w-10 h-10 rounded-xl bg-teal-50 border border-teal-200 text-[#137F83] flex items-center justify-center font-bold shadow-xs">
+                <Store className="w-5 h-5 text-[#137F83]" />
               </div>
               Chemist & Retail Pharmacy Master
             </h2>
-            <p className="text-xs text-[#857866] mt-1.5">
+            <p className="text-xs text-[#64748B] mt-1.5">
               Track retail chemist outlets, drug license numbers, monthly volume, and RCPA stock audits.
             </p>
           </div>
 
           <div className="flex items-center gap-3">
-            <Badge variant="primary" size="md">
+            <span className="text-xs font-bold px-3 py-1 rounded-full bg-teal-50 text-[#137F83] border border-teal-200">
               {chemists.length} Registered Pharmacies
-            </Badge>
+            </span>
             {canModify && onAddChemist && (
               <button
                 onClick={handleOpenAdd}
@@ -174,7 +174,7 @@ export const ChemistDirectory: React.FC<ChemistDirectoryProps> = ({
       {/* Search Bar */}
       <div className="neu-card p-4">
         <div className="relative">
-          <Search className="w-4 h-4 text-[#857866] absolute left-3.5 top-3" />
+          <Search className="w-4 h-4 text-[#64748B] absolute left-3.5 top-3" />
           <input
             type="text"
             placeholder="Search chemist shop name, license number, or contact person..."
@@ -190,42 +190,42 @@ export const ChemistDirectory: React.FC<ChemistDirectoryProps> = ({
         {filteredChemists.map((chem) => (
           <div
             key={chem.id}
-            className="neu-card p-5 flex flex-col justify-between hover:border-[#6C5636]/60 transition-all duration-200"
+            className="neu-card p-5 flex flex-col justify-between hover:border-[#18A6A6] transition-all duration-200"
           >
             <div>
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="font-bold text-base text-[#F2ECE1]">{chem.shopName}</h3>
-                  <p className="text-xs text-[#857866] font-medium flex items-center gap-1.5 mt-0.5">
-                    <Building2 className="w-3.5 h-3.5 text-[#B99D73]" />
+                  <h3 className="font-bold text-base text-[#10243A]">{chem.shopName}</h3>
+                  <p className="text-xs text-[#64748B] font-medium flex items-center gap-1.5 mt-0.5">
+                    <Building2 className="w-3.5 h-3.5 text-[#18A6A6]" />
                     {chem.name}
                   </p>
                 </div>
                 <Badge variant="success">Active Partner</Badge>
               </div>
 
-              <div className="mt-4 space-y-2.5 text-xs text-[#857866]">
-                <p className="flex items-start gap-1.5 text-[#857866]">
-                  <MapPin className="w-3.5 h-3.5 text-[#B99D73] shrink-0 mt-0.5" />
+              <div className="mt-4 space-y-2.5 text-xs text-[#64748B]">
+                <p className="flex items-start gap-1.5 text-[#64748B]">
+                  <MapPin className="w-3.5 h-3.5 text-[#18A6A6] shrink-0 mt-0.5" />
                   <span>{chem.location?.address || 'Hospital Road, Silchar'}</span>
                 </p>
 
-                <div className="grid grid-cols-2 gap-2 pt-2.5 border-t border-[#282319] text-[11px]">
+                <div className="grid grid-cols-2 gap-2 pt-2.5 border-t border-[#DCE4EB] text-[11px]">
                   <div>
-                    <span className="text-[#857866]/70 block">Drug License No:</span>
-                    <span className="font-mono font-semibold text-[#B99D73]">{chem.drugLicenseNumber}</span>
+                    <span className="text-[#64748B] block font-medium">Drug License No:</span>
+                    <span className="font-mono font-semibold text-[#137F83]">{chem.drugLicenseNumber}</span>
                   </div>
                   <div>
-                    <span className="text-[#857866]/70 block">Contact Person:</span>
-                    <span className="font-semibold text-[#F2ECE1]">{chem.contactPerson}</span>
+                    <span className="text-[#64748B] block font-medium">Contact Person:</span>
+                    <span className="font-semibold text-[#10243A]">{chem.contactPerson}</span>
                   </div>
                 </div>
 
-                <div className="pt-2.5 border-t border-[#282319] flex items-center justify-between text-xs">
-                  <span className="text-[#857866] flex items-center gap-1.5">
-                    <Phone className="w-3 h-3 text-[#B99D73]" /> {chem.phone}
+                <div className="pt-2.5 border-t border-[#DCE4EB] flex items-center justify-between text-xs">
+                  <span className="text-[#64748B] flex items-center gap-1.5">
+                    <Phone className="w-3 h-3 text-[#18A6A6]" /> {chem.phone}
                   </span>
-                  <span className="font-semibold text-[#B99D73] bg-[#181712] border border-[#282319] px-2.5 py-0.5 rounded-lg shadow-neu-sunken">
+                  <span className="font-semibold text-[#137F83] bg-[#F1F6F8] border border-[#DCE4EB] px-2.5 py-0.5 rounded-lg">
                     Monthly Vol: ₹{(chem.averageMonthlyTurnover / 100000).toFixed(1)}L
                   </span>
                 </div>
@@ -234,14 +234,14 @@ export const ChemistDirectory: React.FC<ChemistDirectoryProps> = ({
 
             {/* Actions */}
             {canModify && (
-              <div className="mt-4 pt-3.5 border-t border-[#282319] flex items-center justify-end gap-2">
+              <div className="mt-4 pt-3.5 border-t border-[#DCE4EB] flex items-center justify-end gap-2">
                 {onUpdateChemist && (
                   <button
                     type="button"
                     onClick={() => handleStartEdit(chem)}
-                    className="neu-btn flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs text-[#F2ECE1] cursor-pointer"
+                    className="neu-btn flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs text-[#10243A] cursor-pointer"
                   >
-                    <Edit2 className="w-3.5 h-3.5 text-[#B99D73]" />
+                    <Edit2 className="w-3.5 h-3.5 text-[#18A6A6]" />
                     <span>Edit</span>
                   </button>
                 )}
@@ -249,7 +249,7 @@ export const ChemistDirectory: React.FC<ChemistDirectoryProps> = ({
                   <button
                     type="button"
                     onClick={() => setDeletingChemist(chem)}
-                    className="neu-btn flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs text-rose-400 hover:text-rose-300 border-rose-950/40 cursor-pointer"
+                    className="neu-btn flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200 cursor-pointer"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                     <span>Delete</span>
@@ -263,23 +263,23 @@ export const ChemistDirectory: React.FC<ChemistDirectoryProps> = ({
 
       {/* Add Chemist Modal */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 bg-[#090907]/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="neu-card max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 border border-[#282319] shadow-neu-raised">
-            <div className="flex items-center justify-between pb-3 border-b border-[#282319]">
-              <h3 className="font-bold text-base text-[#F2ECE1] flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-[#6C5636]/20 border border-[#6C5636]/40 flex items-center justify-center">
-                  <Plus className="w-4 h-4 text-[#B99D73]" />
+        <div className="fixed inset-0 z-50 bg-[#10243A]/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="neu-card max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 border border-[#DCE4EB] shadow-xl">
+            <div className="flex items-center justify-between pb-3 border-b border-[#DCE4EB]">
+              <h3 className="font-bold text-base text-[#10243A] flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-teal-50 border border-teal-200 text-[#137F83] flex items-center justify-center">
+                  <Plus className="w-4 h-4 text-[#137F83]" />
                 </div>
                 Add Chemist Pharmacy
               </h3>
-              <button onClick={() => setIsAddModalOpen(false)} className="neu-btn p-1.5 rounded-xl text-[#857866] hover:text-[#F2ECE1]">
+              <button onClick={() => setIsAddModalOpen(false)} className="neu-btn p-1.5 rounded-xl text-[#64748B] hover:text-[#10243A]">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleSaveNew} className="mt-4 space-y-3.5 text-xs">
               <div>
-                <label className="font-semibold text-[#B99D73] block mb-1">Pharmacy / Shop Name *</label>
+                <label className="font-semibold text-[#10243A] block mb-1">Pharmacy / Shop Name *</label>
                 <input
                   type="text"
                   required
@@ -292,7 +292,7 @@ export const ChemistDirectory: React.FC<ChemistDirectoryProps> = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="font-semibold text-[#B99D73] block mb-1">Drug License Number</label>
+                  <label className="font-semibold text-[#10243A] block mb-1">Drug License Number</label>
                   <input
                     type="text"
                     placeholder="e.g. DL-2026-9901"
@@ -302,7 +302,7 @@ export const ChemistDirectory: React.FC<ChemistDirectoryProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="font-semibold text-[#B99D73] block mb-1">Contact Person</label>
+                  <label className="font-semibold text-[#10243A] block mb-1">Contact Person</label>
                   <input
                     type="text"
                     placeholder="e.g. Rajesh Ghosh"
@@ -314,7 +314,7 @@ export const ChemistDirectory: React.FC<ChemistDirectoryProps> = ({
               </div>
 
               <div>
-                <label className="font-semibold text-[#B99D73] block mb-1">Address</label>
+                <label className="font-semibold text-[#10243A] block mb-1">Address</label>
                 <input
                   type="text"
                   placeholder="e.g. Hospital Road, Near Civil Hospital"
@@ -326,7 +326,7 @@ export const ChemistDirectory: React.FC<ChemistDirectoryProps> = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="font-semibold text-[#B99D73] block mb-1">Phone Number</label>
+                  <label className="font-semibold text-[#10243A] block mb-1">Phone Number</label>
                   <input
                     type="text"
                     value={formData.phone}
@@ -335,7 +335,7 @@ export const ChemistDirectory: React.FC<ChemistDirectoryProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="font-semibold text-[#B99D73] block mb-1">Average Monthly Volume (₹)</label>
+                  <label className="font-semibold text-[#10243A] block mb-1">Average Monthly Volume (₹)</label>
                   <input
                     type="number"
                     value={formData.averageMonthlyTurnover}
@@ -345,11 +345,11 @@ export const ChemistDirectory: React.FC<ChemistDirectoryProps> = ({
                 </div>
               </div>
 
-              <div className="pt-4 flex items-center justify-end gap-2.5 border-t border-[#282319]">
+              <div className="pt-4 flex items-center justify-end gap-2.5 border-t border-[#DCE4EB]">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="neu-btn px-4 py-2 rounded-xl text-xs text-[#857866] hover:text-[#F2ECE1] cursor-pointer"
+                  className="neu-btn px-4 py-2 rounded-xl text-xs text-[#64748B] hover:text-[#10243A] cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -367,23 +367,23 @@ export const ChemistDirectory: React.FC<ChemistDirectoryProps> = ({
 
       {/* Edit Chemist Modal */}
       {editingChemist && (
-        <div className="fixed inset-0 z-50 bg-[#090907]/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="neu-card max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 border border-[#282319] shadow-neu-raised">
-            <div className="flex items-center justify-between pb-3 border-b border-[#282319]">
-              <h3 className="font-bold text-base text-[#F2ECE1] flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-[#6C5636]/20 border border-[#6C5636]/40 flex items-center justify-center">
-                  <Edit2 className="w-4 h-4 text-[#B99D73]" />
+        <div className="fixed inset-0 z-50 bg-[#10243A]/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="neu-card max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 border border-[#DCE4EB] shadow-xl">
+            <div className="flex items-center justify-between pb-3 border-b border-[#DCE4EB]">
+              <h3 className="font-bold text-base text-[#10243A] flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-teal-50 border border-teal-200 text-[#137F83] flex items-center justify-center">
+                  <Edit2 className="w-4 h-4 text-[#137F83]" />
                 </div>
                 Edit Chemist: {editingChemist.shopName}
               </h3>
-              <button onClick={() => setEditingChemist(null)} className="neu-btn p-1.5 rounded-xl text-[#857866] hover:text-[#F2ECE1]">
+              <button onClick={() => setEditingChemist(null)} className="neu-btn p-1.5 rounded-xl text-[#64748B] hover:text-[#10243A]">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleSaveEdit} className="mt-4 space-y-3.5 text-xs">
               <div>
-                <label className="font-semibold text-[#B99D73] block mb-1">Pharmacy / Shop Name *</label>
+                <label className="font-semibold text-[#10243A] block mb-1">Pharmacy / Shop Name *</label>
                 <input
                   type="text"
                   required
@@ -395,7 +395,7 @@ export const ChemistDirectory: React.FC<ChemistDirectoryProps> = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="font-semibold text-[#B99D73] block mb-1">Drug License Number</label>
+                  <label className="font-semibold text-[#10243A] block mb-1">Drug License Number</label>
                   <input
                     type="text"
                     value={formData.drugLicenseNumber}
@@ -404,7 +404,7 @@ export const ChemistDirectory: React.FC<ChemistDirectoryProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="font-semibold text-[#B99D73] block mb-1">Contact Person</label>
+                  <label className="font-semibold text-[#10243A] block mb-1">Contact Person</label>
                   <input
                     type="text"
                     value={formData.contactPerson}
@@ -415,7 +415,7 @@ export const ChemistDirectory: React.FC<ChemistDirectoryProps> = ({
               </div>
 
               <div>
-                <label className="font-semibold text-[#B99D73] block mb-1">Address</label>
+                <label className="font-semibold text-[#10243A] block mb-1">Address</label>
                 <input
                   type="text"
                   value={formData.address}
@@ -426,7 +426,7 @@ export const ChemistDirectory: React.FC<ChemistDirectoryProps> = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="font-semibold text-[#B99D73] block mb-1">Phone Number</label>
+                  <label className="font-semibold text-[#10243A] block mb-1">Phone Number</label>
                   <input
                     type="text"
                     value={formData.phone}
@@ -435,7 +435,7 @@ export const ChemistDirectory: React.FC<ChemistDirectoryProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="font-semibold text-[#B99D73] block mb-1">Monthly Volume (₹)</label>
+                  <label className="font-semibold text-[#10243A] block mb-1">Monthly Volume (₹)</label>
                   <input
                     type="number"
                     value={formData.averageMonthlyTurnover}
@@ -445,11 +445,11 @@ export const ChemistDirectory: React.FC<ChemistDirectoryProps> = ({
                 </div>
               </div>
 
-              <div className="pt-4 flex items-center justify-end gap-2.5 border-t border-[#282319]">
+              <div className="pt-4 flex items-center justify-end gap-2.5 border-t border-[#DCE4EB]">
                 <button
                   type="button"
                   onClick={() => setEditingChemist(null)}
-                  className="neu-btn px-4 py-2 rounded-xl text-xs text-[#857866] hover:text-[#F2ECE1] cursor-pointer"
+                  className="neu-btn px-4 py-2 rounded-xl text-xs text-[#64748B] hover:text-[#10243A] cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -467,31 +467,31 @@ export const ChemistDirectory: React.FC<ChemistDirectoryProps> = ({
 
       {/* Delete Modal */}
       {deletingChemist && (
-        <div className="fixed inset-0 z-50 bg-[#090907]/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="neu-card max-w-sm w-full p-6 animate-in fade-in zoom-in-95 border border-[#282319] shadow-neu-raised">
-            <div className="w-12 h-12 rounded-2xl bg-rose-950/40 border border-rose-800/40 text-rose-400 flex items-center justify-center mx-auto mb-4 shadow-neu-sunken">
+        <div className="fixed inset-0 z-50 bg-[#10243A]/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="neu-card max-w-sm w-full p-6 animate-in fade-in zoom-in-95 border border-[#DCE4EB] shadow-xl">
+            <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center mx-auto mb-4">
               <AlertTriangle className="w-6 h-6" />
             </div>
             
-            <h3 className="text-base font-bold text-center text-[#F2ECE1]">
+            <h3 className="text-base font-bold text-center text-[#10243A]">
               Remove Chemist Pharmacy?
             </h3>
-            <p className="text-xs text-[#857866] text-center mt-2 leading-relaxed">
-              Are you sure you want to remove <strong className="text-[#F2ECE1]">{deletingChemist.shopName}</strong> from the database?
+            <p className="text-xs text-[#64748B] text-center mt-2 leading-relaxed">
+              Are you sure you want to remove <strong className="text-[#10243A]">{deletingChemist.shopName}</strong> from the database?
             </p>
 
             <div className="mt-6 flex items-center justify-center gap-3">
               <button
                 type="button"
                 onClick={() => setDeletingChemist(null)}
-                className="neu-btn flex-1 py-2.5 rounded-xl text-xs text-[#857866] hover:text-[#F2ECE1] cursor-pointer"
+                className="neu-btn flex-1 py-2.5 rounded-xl text-xs text-[#64748B] hover:text-[#10243A] cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleDeleteConfirm}
-                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-rose-800 to-rose-700 hover:from-rose-700 hover:to-rose-600 border border-rose-500/30 text-white text-xs font-bold shadow-md cursor-pointer"
+                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-sm cursor-pointer"
               >
                 Yes, Delete
               </button>

@@ -18,19 +18,21 @@ export const TerritoryStaffView: React.FC<TerritoryStaffViewProps> = ({
 }) => {
   return (
     <div className="space-y-6">
-      <div className="neu-card p-5 border border-[#282319] flex items-center justify-between">
+      <div className="neu-card p-5 border border-[#DCE4EB] flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-[#F2ECE1] flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-[#6C5636]/20 border border-[#6C5636]/40 text-[#B99D73] flex items-center justify-center font-bold shadow-neu-sunken">
-              <Map className="w-4 h-4 text-[#B99D73]" />
+          <h2 className="text-xl font-bold text-[#10243A] flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-teal-50 border border-teal-200 text-[#137F83] flex items-center justify-center font-bold shadow-xs">
+              <Map className="w-4 h-4 text-[#137F83]" />
             </div>
             Territory & Field Force Management
           </h2>
-          <p className="text-xs text-[#857866] mt-1">
+          <p className="text-xs text-[#64748B] mt-1">
             Territory boundaries, headquarter allocations, and assigned field staff.
           </p>
         </div>
-        <Badge variant="primary" size="md">{territories.length} Active Territories</Badge>
+        <span className="text-xs font-bold px-3 py-1 rounded-full bg-teal-50 text-[#137F83] border border-teal-200">
+          {territories.length} Active Territories
+        </span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -106,47 +108,47 @@ export const TerritoryStaffView: React.FC<TerritoryStaffViewProps> = ({
           });
 
           return (
-            <div key={terr.id} className="neu-card border border-[#282319] p-5 space-y-4 hover:border-[#6C5636]/60 transition-all duration-200">
+            <div key={terr.id} className="neu-card border border-[#DCE4EB] p-5 space-y-4 hover:border-[#18A6A6] transition-all duration-200">
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="font-bold text-base text-[#F2ECE1]">{terr.name}</h3>
-                  <p className="text-xs text-[#857866] font-mono mt-0.5">Code: {terr.code} • {terr.zone}</p>
+                  <h3 className="font-bold text-base text-[#10243A]">{terr.name}</h3>
+                  <p className="text-xs text-[#64748B] font-mono mt-0.5">Code: {terr.code} • {terr.zone}</p>
                 </div>
                 <Badge variant="neutral">{terr.state}</Badge>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 text-xs p-3 rounded-xl bg-[#0c0c09] border border-[#282319] shadow-neu-sunken">
-                <div className="flex items-center gap-2 text-[#F2ECE1]">
-                  <Stethoscope className="w-4 h-4 text-[#B99D73]" />
-                  <span><strong className="text-[#B99D73]">{terrDocCount}</strong> Doctors</span>
+              <div className="grid grid-cols-2 gap-2 text-xs p-3 rounded-xl bg-[#F8FAFC] border border-[#DCE4EB]">
+                <div className="flex items-center gap-2 text-[#10243A]">
+                  <Stethoscope className="w-4 h-4 text-[#18A6A6]" />
+                  <span><strong className="text-[#137F83] font-bold">{terrDocCount}</strong> Doctors</span>
                 </div>
-                <div className="flex items-center gap-2 text-[#F2ECE1]">
-                  <Store className="w-4 h-4 text-[#B99D73]" />
-                  <span><strong className="text-[#B99D73]">{terrChemCount}</strong> Chemists</span>
+                <div className="flex items-center gap-2 text-[#10243A]">
+                  <Store className="w-4 h-4 text-[#18A6A6]" />
+                  <span><strong className="text-[#137F83] font-bold">{terrChemCount}</strong> Chemists</span>
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-[#282319] text-xs space-y-2">
+              <div className="pt-3 border-t border-[#DCE4EB] text-xs space-y-2">
                 <div>
-                  <span className="text-[#857866] text-[11px] block">Area Sales Manager (ASM):</span>
-                  <span className="font-semibold text-[#F2ECE1] flex items-center gap-1.5 mt-0.5">
-                    <UserCheck className="w-3.5 h-3.5 text-[#B99D73]" />
+                  <span className="text-[#64748B] text-[11px] block font-medium">Area Sales Manager (ASM):</span>
+                  <span className="font-semibold text-[#10243A] flex items-center gap-1.5 mt-0.5">
+                    <UserCheck className="w-3.5 h-3.5 text-[#18A6A6]" />
                     {manager?.name || 'Unassigned'}
                   </span>
                 </div>
 
                 <div>
-                  <span className="text-[#857866] text-[11px] block">Assigned Medical Representatives (MRs):</span>
+                  <span className="text-[#64748B] text-[11px] block font-medium">Assigned Medical Representatives (MRs):</span>
                   <div className="flex flex-wrap gap-1.5 mt-1.5">
                     {reps.length > 0 ? (
                       reps.map(r => (
-                        <span key={r.id} className="inline-flex items-center gap-1.5 bg-[#181712] border border-[#282319] text-[#F2ECE1] px-2.5 py-1 rounded-xl text-xs font-medium shadow-neu-sunken">
-                          <Users className="w-3 h-3 text-[#B99D73]" />
+                        <span key={r.id} className="inline-flex items-center gap-1.5 bg-white border border-[#DCE4EB] text-[#10243A] px-2.5 py-1 rounded-lg text-xs font-medium shadow-xs">
+                          <Users className="w-3 h-3 text-[#18A6A6]" />
                           {r.name} ({r.employeeCode})
                         </span>
                       ))
                     ) : (
-                      <span className="text-xs text-[#857866] italic">No MRs directly mapped</span>
+                      <span className="text-xs text-[#94A3B8] italic">No MRs directly mapped</span>
                     )}
                   </div>
                 </div>

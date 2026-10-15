@@ -141,19 +141,19 @@ export const CompanyManager: React.FC<CompanyManagerProps> = ({
   return (
     <div className="space-y-6">
       {/* Header & Stats Banner */}
-      <div className="neu-card p-6 border border-[#282319] shadow-neu-raised">
+      <div className="neu-card p-6 border border-[#DCE4EB]">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-[#6C5636]/20 border border-[#6C5636]/40 text-[#B99D73] flex items-center justify-center font-bold shadow-neu-sunken">
-                <Building2 className="w-5 h-5 text-[#B99D73]" />
+              <div className="w-10 h-10 rounded-xl bg-teal-50 border border-teal-200 text-[#137F83] flex items-center justify-center font-bold shadow-xs">
+                <Building2 className="w-5 h-5 text-[#137F83]" />
               </div>
-              <h2 className="text-xl font-bold text-[#F2ECE1]">Multi-Tenant Company Management</h2>
-              <span className="text-[10px] uppercase font-bold tracking-wider bg-[#181712] text-[#B99D73] border border-[#282319] px-2.5 py-0.5 rounded-full shadow-neu-sunken">
+              <h2 className="text-xl font-bold text-[#10243A]">Multi-Tenant Company Management</h2>
+              <span className="text-[10px] uppercase font-bold tracking-wider bg-teal-50 text-[#137F83] border border-teal-200 px-2.5 py-0.5 rounded-full">
                 Super Admin Exclusive
               </span>
             </div>
-            <p className="text-xs text-[#857866] mt-1.5">
+            <p className="text-xs text-[#64748B] mt-1.5">
               Configure and provision isolated enterprise tenant organizations, manage license tiers, seat limits, and company status.
             </p>
           </div>
@@ -168,26 +168,26 @@ export const CompanyManager: React.FC<CompanyManagerProps> = ({
         </div>
 
         {/* Global Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-4 border-t border-[#282319] text-xs">
-          <div className="bg-[#0c0c09] p-3 rounded-xl border border-[#282319] shadow-neu-sunken">
-            <span className="text-[#857866]">Total Companies</span>
-            <p className="text-lg font-bold text-[#F2ECE1] mt-0.5">{safeCompanies.length}</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-4 border-t border-[#DCE4EB] text-xs">
+          <div className="bg-[#F8FAFC] p-3 rounded-xl border border-[#DCE4EB]">
+            <span className="text-[#64748B] font-medium">Total Companies</span>
+            <p className="text-lg font-bold text-[#10243A] mt-0.5">{safeCompanies.length}</p>
           </div>
-          <div className="bg-[#0c0c09] p-3 rounded-xl border border-[#282319] shadow-neu-sunken">
-            <span className="text-[#857866]">Active Tenants</span>
-            <p className="text-lg font-bold text-[#A6C48A] mt-0.5">
+          <div className="bg-[#F8FAFC] p-3 rounded-xl border border-[#DCE4EB]">
+            <span className="text-[#64748B] font-medium">Active Tenants</span>
+            <p className="text-lg font-bold text-emerald-700 mt-0.5">
               {safeCompanies.filter(c => c.status === 'ACTIVE').length}
             </p>
           </div>
-          <div className="bg-[#0c0c09] p-3 rounded-xl border border-[#282319] shadow-neu-sunken">
-            <span className="text-[#857866]">Total Provisioned Seats</span>
-            <p className="text-lg font-bold text-[#B99D73] mt-0.5">
+          <div className="bg-[#F8FAFC] p-3 rounded-xl border border-[#DCE4EB]">
+            <span className="text-[#64748B] font-medium">Total Provisioned Seats</span>
+            <p className="text-lg font-bold text-[#137F83] mt-0.5">
               {safeCompanies.reduce((acc, c) => acc + (c.maxUsers || 0), 0)} Seats
             </p>
           </div>
-          <div className="bg-[#0c0c09] p-3 rounded-xl border border-[#282319] shadow-neu-sunken">
-            <span className="text-[#857866]">Active Field Personnel</span>
-            <p className="text-lg font-bold text-[#D4BD95] mt-0.5">
+          <div className="bg-[#F8FAFC] p-3 rounded-xl border border-[#DCE4EB]">
+            <span className="text-[#64748B] font-medium">Active Field Personnel</span>
+            <p className="text-lg font-bold text-[#10243A] mt-0.5">
               {safeCompanies.reduce((acc, c) => acc + (c.activeUsersCount || 0), 0)} Users
             </p>
           </div>
@@ -197,7 +197,7 @@ export const CompanyManager: React.FC<CompanyManagerProps> = ({
       {/* Filter & Search Bar */}
       <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
         <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#857866]" />
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748B]" />
           <input
             type="text"
             placeholder="Search company by name, code or HQ..."
@@ -206,7 +206,7 @@ export const CompanyManager: React.FC<CompanyManagerProps> = ({
             className="neu-input w-full pl-10 pr-3 py-2 text-xs"
           />
         </div>
-        <div className="text-xs text-[#857866] font-medium">
+        <div className="text-xs text-[#64748B] font-medium">
           Showing {filteredCompanies.length} of {safeCompanies.length} tenant organizations
         </div>
       </div>
@@ -221,26 +221,26 @@ export const CompanyManager: React.FC<CompanyManagerProps> = ({
               key={company.id}
               className={`neu-card border p-5 transition-all flex flex-col justify-between ${
                 isSelected 
-                  ? 'border-[#6C5636] ring-1 ring-[#B99D73]/30 shadow-neu-gold' 
-                  : 'border-[#282319] hover:border-[#6C5636]/60'
+                  ? 'border-[#18A6A6] ring-1 ring-[#18A6A6]/40 shadow-sm bg-gradient-to-b from-teal-50/20 to-white' 
+                  : 'border-[#DCE4EB] hover:border-[#18A6A6]'
               }`}
             >
               <div>
                 {/* Header */}
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-[#6C5636]/20 border border-[#6C5636]/40 flex items-center justify-center text-[#B99D73] font-bold text-sm shadow-neu-sunken">
+                    <div className="w-10 h-10 rounded-xl bg-teal-50 border border-teal-200 flex items-center justify-center text-[#137F83] font-bold text-sm">
                       {company.code.slice(0, 3)}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="text-sm font-bold text-[#F2ECE1]">{company.name}</h3>
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#181712] text-[#B99D73] border border-[#282319] shadow-neu-sunken">
+                        <h3 className="text-sm font-bold text-[#10243A]">{company.name}</h3>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#F1F6F8] text-[#10243A] border border-[#DCE4EB]">
                           {company.code}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1.5 text-xs text-[#857866] mt-0.5">
-                        <MapPin className="w-3 h-3 text-[#B99D73]" />
+                      <div className="flex items-center gap-1.5 text-xs text-[#64748B] mt-0.5">
+                        <MapPin className="w-3 h-3 text-[#18A6A6]" />
                         <span>{company.headquarters}, {company.state}</span>
                       </div>
                     </div>
@@ -249,37 +249,37 @@ export const CompanyManager: React.FC<CompanyManagerProps> = ({
                   <div className="flex items-center gap-1.5">
                     <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${
                       company.status === 'ACTIVE' 
-                        ? 'bg-[#101912] text-[#A6C48A] border border-[#384D2B]/60' 
-                        : 'bg-[#1c0f0f] text-[#E08A8A] border border-[#662B2B]/60'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                        : 'bg-rose-50 text-rose-700 border border-rose-200'
                     }`}>
                       {company.status}
                     </span>
-                    <span className="text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-[#181712] text-[#B99D73] border border-[#282319]">
+                    <span className="text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-teal-50 text-[#137F83] border border-teal-200">
                       {company.subscriptionPlan}
                     </span>
                   </div>
                 </div>
 
                 {/* Company Details & Stats */}
-                <div className="grid grid-cols-3 gap-2 mt-4 p-3 bg-[#0c0c09] rounded-xl border border-[#282319] text-center shadow-neu-sunken">
+                <div className="grid grid-cols-3 gap-2 mt-4 p-3 bg-[#F8FAFC] rounded-xl border border-[#DCE4EB] text-center">
                   <div>
-                    <span className="text-[10px] text-[#857866] block font-medium">Field MRs & Staff</span>
-                    <span className="text-xs font-bold text-[#F2ECE1] flex items-center justify-center gap-1 mt-0.5">
-                      <Users className="w-3 h-3 text-[#B99D73]" />
+                    <span className="text-[10px] text-[#64748B] block font-medium">Field MRs & Staff</span>
+                    <span className="text-xs font-bold text-[#10243A] flex items-center justify-center gap-1 mt-0.5">
+                      <Users className="w-3 h-3 text-[#18A6A6]" />
                       {company.activeUsersCount} / {company.maxUsers}
                     </span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-[#857866] block font-medium">Mapped Doctors</span>
-                    <span className="text-xs font-bold text-[#F2ECE1] flex items-center justify-center gap-1 mt-0.5">
-                      <Stethoscope className="w-3 h-3 text-[#B99D73]" />
+                    <span className="text-[10px] text-[#64748B] block font-medium">Mapped Doctors</span>
+                    <span className="text-xs font-bold text-[#10243A] flex items-center justify-center gap-1 mt-0.5">
+                      <Stethoscope className="w-3 h-3 text-[#18A6A6]" />
                       {company.activeDoctorsCount}
                     </span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-[#857866] block font-medium">Chemists</span>
-                    <span className="text-xs font-bold text-[#F2ECE1] flex items-center justify-center gap-1 mt-0.5">
-                      <Store className="w-3 h-3 text-[#D4BD95]" />
+                    <span className="text-[10px] text-[#64748B] block font-medium">Chemists</span>
+                    <span className="text-xs font-bold text-[#10243A] flex items-center justify-center gap-1 mt-0.5">
+                      <Store className="w-3 h-3 text-[#18A6A6]" />
                       {company.activeChemistsCount}
                     </span>
                   </div>
@@ -288,29 +288,29 @@ export const CompanyManager: React.FC<CompanyManagerProps> = ({
                 {/* Meta details */}
                 <div className="mt-3.5 space-y-1 text-xs">
                   <div className="flex items-center justify-between text-[11px]">
-                    <span className="text-[#857866]">GST Registration:</span>
-                    <span className="font-mono font-medium text-[#F2ECE1]">{company.gstNumber}</span>
+                    <span className="text-[#64748B]">GST Registration:</span>
+                    <span className="font-mono font-medium text-[#10243A]">{company.gstNumber}</span>
                   </div>
                   <div className="flex items-center justify-between text-[11px]">
-                    <span className="text-[#857866]">Corporate Email:</span>
-                    <span className="font-medium text-[#F2ECE1]">{company.contactEmail}</span>
+                    <span className="text-[#64748B]">Corporate Email:</span>
+                    <span className="font-medium text-[#10243A]">{company.contactEmail}</span>
                   </div>
                   <div className="flex items-center justify-between text-[11px]">
-                    <span className="text-[#857866]">Tenant Created:</span>
-                    <span className="text-[#857866]">{company.createdAt}</span>
+                    <span className="text-[#64748B]">Tenant Created:</span>
+                    <span className="text-[#64748B]">{company.createdAt}</span>
                   </div>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="mt-5 pt-3.5 border-t border-[#282319] flex items-center justify-between gap-2">
+              <div className="mt-5 pt-3.5 border-t border-[#DCE4EB] flex items-center justify-between gap-2">
                 {onSelectActiveCompany && (
                   <button
                     onClick={() => onSelectActiveCompany(company.id)}
                     className={`text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all cursor-pointer ${
                       isSelected
-                        ? 'bg-[#181712] text-[#B99D73] border-[#6C5636] font-bold shadow-neu-sunken'
-                        : 'neu-btn text-[#857866] hover:text-[#F2ECE1]'
+                        ? 'bg-teal-50 text-[#137F83] border-teal-200 font-bold'
+                        : 'neu-btn text-[#64748B] hover:text-[#10243A]'
                     }`}
                   >
                     {isSelected ? '✓ Filtered Company' : 'Scope Admin View'}
@@ -322,8 +322,8 @@ export const CompanyManager: React.FC<CompanyManagerProps> = ({
                     onClick={() => handleToggleStatus(company)}
                     className={`text-xs font-medium px-2.5 py-1.5 rounded-xl border transition-all cursor-pointer ${
                       company.status === 'ACTIVE'
-                        ? 'neu-btn text-amber-400 border-amber-900/60'
-                        : 'neu-btn text-emerald-400 border-emerald-900/60'
+                        ? 'neu-btn text-amber-700 border-amber-200 hover:bg-amber-50'
+                        : 'neu-btn text-emerald-700 border-emerald-200 hover:bg-emerald-50'
                     }`}
                     title="Toggle Active / Suspended status"
                   >
@@ -331,10 +331,10 @@ export const CompanyManager: React.FC<CompanyManagerProps> = ({
                   </button>
                   <button
                     onClick={() => handleOpenEditModal(company)}
-                    className="neu-btn p-1.5 rounded-xl text-[#857866] hover:text-[#B99D73] cursor-pointer"
+                    className="neu-btn p-1.5 rounded-xl text-[#10243A] hover:border-[#18A6A6] cursor-pointer"
                     title="Edit Company Details"
                   >
-                    <Edit3 className="w-3.5 h-3.5" />
+                    <Edit3 className="w-3.5 h-3.5 text-[#18A6A6]" />
                   </button>
                   {safeCompanies.length > 1 && (
                     <button
@@ -343,7 +343,7 @@ export const CompanyManager: React.FC<CompanyManagerProps> = ({
                           onDeleteCompany(company.id);
                         }
                       }}
-                      className="neu-btn p-1.5 rounded-xl text-rose-400 hover:text-rose-300 border-rose-900/60 cursor-pointer"
+                      className="neu-btn p-1.5 rounded-xl text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200 cursor-pointer"
                       title="Delete Company"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -358,23 +358,23 @@ export const CompanyManager: React.FC<CompanyManagerProps> = ({
 
       {/* Add / Edit Company Modal */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 bg-[#090907]/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="neu-card border border-[#282319] rounded-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-neu-raised animate-in fade-in zoom-in duration-200">
-            <div className="p-5 border-b border-[#282319] flex items-center justify-between sticky top-0 bg-[#11110e] z-10">
+        <div className="fixed inset-0 bg-[#10243A]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="neu-card border border-[#DCE4EB] rounded-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-xl animate-in fade-in zoom-in duration-200 bg-white">
+            <div className="p-5 border-b border-[#DCE4EB] flex items-center justify-between sticky top-0 bg-white z-10">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-[#6C5636]/20 border border-[#6C5636]/40 flex items-center justify-center text-[#B99D73] shadow-neu-sunken">
+                <div className="w-8 h-8 rounded-xl bg-teal-50 border border-teal-200 flex items-center justify-center text-[#137F83]">
                   <Building2 className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-[#F2ECE1] text-sm">
+                  <h3 className="font-bold text-[#10243A] text-sm">
                     {editingCompany ? 'Edit Pharma Company Tenant' : 'Provision New Pharma Company Tenant'}
                   </h3>
-                  <p className="text-[11px] text-[#857866]">Configure company organization and license limits</p>
+                  <p className="text-[11px] text-[#64748B]">Configure company organization and license limits</p>
                 </div>
               </div>
               <button
                 onClick={() => setIsAddModalOpen(false)}
-                className="neu-btn p-1.5 rounded-xl text-[#857866] hover:text-[#F2ECE1]"
+                className="neu-btn p-1.5 rounded-xl text-[#64748B] hover:text-[#10243A]"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -383,7 +383,7 @@ export const CompanyManager: React.FC<CompanyManagerProps> = ({
             <form onSubmit={handleSaveCompany} className="p-5 space-y-4 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="sm:col-span-2">
-                  <label className="block font-semibold text-[#B99D73] mb-1">Company Legal Name *</label>
+                  <label className="block font-semibold text-[#10243A] mb-1">Company Legal Name *</label>
                   <input
                     type="text"
                     required
@@ -394,7 +394,7 @@ export const CompanyManager: React.FC<CompanyManagerProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-[#B99D73] mb-1">Company Code *</label>
+                  <label className="block font-semibold text-[#10243A] mb-1">Company Code *</label>
                   <input
                     type="text"
                     required
@@ -408,7 +408,7 @@ export const CompanyManager: React.FC<CompanyManagerProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-[#B99D73] mb-1">Corporate Registration No. (CIN)</label>
+                  <label className="block font-semibold text-[#10243A] mb-1">Corporate Registration No. (CIN)</label>
                   <input
                     type="text"
                     placeholder="e.g. U24239AS2020PTC019842"
@@ -418,7 +418,7 @@ export const CompanyManager: React.FC<CompanyManagerProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-[#B99D73] mb-1">GSTIN</label>
+                  <label className="block font-semibold text-[#10243A] mb-1">GSTIN</label>
                   <input
                     type="text"
                     placeholder="e.g. 18AAACP1234F1Z8"
@@ -431,7 +431,7 @@ export const CompanyManager: React.FC<CompanyManagerProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-[#B99D73] mb-1">Contact Email *</label>
+                  <label className="block font-semibold text-[#10243A] mb-1">Contact Email *</label>
                   <input
                     type="email"
                     placeholder="e.g. admin@pharmaassam.in"
@@ -441,7 +441,7 @@ export const CompanyManager: React.FC<CompanyManagerProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-[#B99D73] mb-1">Contact Phone</label>
+                  <label className="block font-semibold text-[#10243A] mb-1">Contact Phone</label>
                   <input
                     type="text"
                     placeholder="e.g. +91 3842 267890"
@@ -454,7 +454,7 @@ export const CompanyManager: React.FC<CompanyManagerProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-[#B99D73] mb-1">Headquarters City</label>
+                  <label className="block font-semibold text-[#10243A] mb-1">Headquarters City</label>
                   <input
                     type="text"
                     placeholder="e.g. Silchar"
@@ -464,7 +464,7 @@ export const CompanyManager: React.FC<CompanyManagerProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-[#B99D73] mb-1">State / Territory</label>
+                  <label className="block font-semibold text-[#10243A] mb-1">State / Territory</label>
                   <input
                     type="text"
                     placeholder="e.g. Assam"
@@ -475,13 +475,13 @@ export const CompanyManager: React.FC<CompanyManagerProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-[#282319]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-[#DCE4EB]">
                 <div>
-                  <label className="block font-semibold text-[#B99D73] mb-1">License Subscription Plan</label>
+                  <label className="block font-semibold text-[#10243A] mb-1">License Subscription Plan</label>
                   <select
                     value={subscriptionPlan}
                     onChange={(e) => setSubscriptionPlan(e.target.value as any)}
-                    className="neu-input w-full px-3 py-2 bg-[#0c0c09] cursor-pointer font-semibold"
+                    className="neu-input w-full px-3 py-2 bg-white text-[#10243A] cursor-pointer font-semibold"
                   >
                     <option value="ENTERPRISE">👑 Enterprise (Unlimited Modules + Telemetry)</option>
                     <option value="PRO">⚡ Pro (SFA + HRMS + Orders)</option>
@@ -489,23 +489,23 @@ export const CompanyManager: React.FC<CompanyManagerProps> = ({
                   </select>
                 </div>
                 <div>
-                  <label className="block font-semibold text-[#B99D73] mb-1">Max Field User Seats</label>
+                  <label className="block font-semibold text-[#10243A] mb-1">Max Field User Seats</label>
                   <input
                     type="number"
                     min="1"
                     max="500"
                     value={maxUsers}
                     onChange={(e) => setMaxUsers(Number(e.target.value))}
-                    className="neu-input w-full px-3 py-2 font-bold font-mono"
+                    className="neu-input w-full px-3 py-2 font-bold font-mono text-[#10243A]"
                   />
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-[#282319] flex items-center justify-end gap-2.5">
+              <div className="pt-4 border-t border-[#DCE4EB] flex items-center justify-end gap-2.5">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="neu-btn px-4 py-2 rounded-xl text-[#857866] hover:text-[#F2ECE1] cursor-pointer"
+                  className="neu-btn px-4 py-2 rounded-xl text-[#64748B] hover:text-[#10243A] cursor-pointer"
                 >
                   Cancel
                 </button>

@@ -429,19 +429,19 @@ export const DatabaseStudio: React.FC<DatabaseStudioProps> = ({
   return (
     <div className="space-y-6">
       {/* Studio Header */}
-      <div className="neu-card p-6 border border-[#282319]">
+      <div className="neu-card p-6 border border-[#DCE4EB] bg-white">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-[#6C5636]/20 border border-[#6C5636]/40 text-[#B99D73] flex items-center justify-center font-bold shadow-neu-sunken">
-                <Database className="w-5 h-5 text-[#B99D73]" />
+              <div className="w-9 h-9 rounded-xl bg-teal-50 border border-teal-200 text-[#137F83] flex items-center justify-center font-bold">
+                <Database className="w-5 h-5 text-[#137F83]" />
               </div>
-              <h2 className="text-xl font-bold text-[#F2ECE1] tracking-tight">Master Database & Entity CRUD Studio</h2>
-              <span className="text-[10px] uppercase font-bold tracking-wider bg-[#181712] text-[#B99D73] border border-[#282319] px-2.5 py-0.5 rounded-full shadow-neu-sunken">
+              <h2 className="text-xl font-bold text-[#10243A] tracking-tight">Master Database & Entity CRUD Studio</h2>
+              <span className="text-[10px] uppercase font-bold tracking-wider bg-[#F1F6F8] text-[#137F83] border border-[#DCE4EB] px-2.5 py-0.5 rounded-full">
                 {isSuperAdmin ? 'Platform Root DB' : isAdmin ? `Company DB (${currentUser.companyName || 'Pharma Assam'})` : 'Delegated DB Access'}
               </span>
             </div>
-            <p className="text-xs text-[#857866] mt-1.5">
+            <p className="text-xs text-[#64748B] mt-1.5">
               Direct live database operations: Add, Edit, Remove, and Export Doctors, Chemists, Products, and Territory Alignments.
             </p>
           </div>
@@ -449,17 +449,17 @@ export const DatabaseStudio: React.FC<DatabaseStudioProps> = ({
           <div className="flex items-center gap-2.5 shrink-0">
             <button
               onClick={handleExportJSON}
-              className="neu-btn flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs text-[#857866] hover:text-[#F2ECE1] cursor-pointer"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs text-[#64748B] hover:text-[#10243A] bg-[#F8FAFC] border border-[#DCE4EB] transition-all cursor-pointer"
               title="Export Current Table as JSON"
             >
-              <Download className="w-3.5 h-3.5 text-[#B99D73]" />
+              <Download className="w-3.5 h-3.5 text-[#137F83]" />
               <span>Export JSON</span>
             </button>
 
             {canModifyDB && (
               <button
                 onClick={handleOpenAdd}
-                className="neu-btn-gold flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold cursor-pointer"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold cursor-pointer bg-[#10243A] hover:bg-[#182F49] text-white transition-all shadow-xs"
               >
                 <Plus className="w-4 h-4 stroke-[2.5]" />
                 <span>
@@ -471,13 +471,13 @@ export const DatabaseStudio: React.FC<DatabaseStudioProps> = ({
         </div>
 
         {/* DB Navigation Tabs */}
-        <div className="flex flex-wrap gap-2.5 mt-6 pt-4 border-t border-[#282319]">
+        <div className="flex flex-wrap gap-2.5 mt-6 pt-4 border-t border-[#DCE4EB]">
           <button
             onClick={() => setActiveTable('doctors')}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTable === 'doctors'
-                ? 'neu-btn-gold text-[#F2ECE1] shadow-neu-gold'
-                : 'neu-btn text-[#857866] hover:text-[#F2ECE1]'
+                ? 'bg-[#10243A] text-white shadow-xs'
+                : 'bg-[#F1F6F8] text-[#64748B] hover:text-[#10243A] border border-[#DCE4EB]'
             }`}
           >
             <Stethoscope className="w-4 h-4" />
@@ -488,8 +488,8 @@ export const DatabaseStudio: React.FC<DatabaseStudioProps> = ({
             onClick={() => setActiveTable('chemists')}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTable === 'chemists'
-                ? 'neu-btn-gold text-[#F2ECE1] shadow-neu-gold'
-                : 'neu-btn text-[#857866] hover:text-[#F2ECE1]'
+                ? 'bg-[#10243A] text-white shadow-xs'
+                : 'bg-[#F1F6F8] text-[#64748B] hover:text-[#10243A] border border-[#DCE4EB]'
             }`}
           >
             <Store className="w-4 h-4" />
@@ -500,8 +500,8 @@ export const DatabaseStudio: React.FC<DatabaseStudioProps> = ({
             onClick={() => setActiveTable('products')}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTable === 'products'
-                ? 'neu-btn-gold text-[#F2ECE1] shadow-neu-gold'
-                : 'neu-btn text-[#857866] hover:text-[#F2ECE1]'
+                ? 'bg-[#10243A] text-white shadow-xs'
+                : 'bg-[#F1F6F8] text-[#64748B] hover:text-[#10243A] border border-[#DCE4EB]'
             }`}
           >
             <Pill className="w-4 h-4" />
@@ -512,8 +512,8 @@ export const DatabaseStudio: React.FC<DatabaseStudioProps> = ({
             onClick={() => setActiveTable('territories')}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTable === 'territories'
-                ? 'neu-btn-gold text-[#F2ECE1] shadow-neu-gold'
-                : 'neu-btn text-[#857866] hover:text-[#F2ECE1]'
+                ? 'bg-[#10243A] text-white shadow-xs'
+                : 'bg-[#F1F6F8] text-[#64748B] hover:text-[#10243A] border border-[#DCE4EB]'
             }`}
           >
             <Map className="w-4 h-4" />
