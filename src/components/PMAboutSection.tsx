@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, Truck, Award, Target, Compass, HeartHandshake } from 'lucide-react';
+import { ShieldCheck, Truck, Award, Target, Compass, HeartHandshake, CheckCircle2 } from 'lucide-react';
 import { COMPANY_CONFIG } from '../data/companyConfig';
 
 interface PMAboutSectionProps {
@@ -12,62 +12,62 @@ export const PMAboutSection: React.FC<PMAboutSectionProps> = ({
   onNavigate
 }) => {
   const companyProfileRows = [
-    { label: 'Nature of Business', value: 'Manufacturer & Regional Supplier' },
-    { label: 'Operational Focus', value: 'Assam & North-East Healthcare' },
-    { label: 'Regulatory Compliance', value: 'WHO-GMP & State DCA Standard' },
-    { label: 'Market Covered', value: COMPANY_CONFIG.marketsServed },
+    { label: 'Nature of Business', value: 'Pharmaceutical Manufacturer & Regional Supplier' },
+    { label: 'Operational Focus', value: 'Assam & North-East Healthcare Supply Chain' },
+    { label: 'Regulatory Compliance', value: 'WHO-GMP & State Drug Control Standard' },
+    { label: 'Markets Served', value: COMPANY_CONFIG.marketsServed },
     { label: 'Corporate Management', value: COMPANY_CONFIG.directors },
-    { label: 'Registration Status', value: COMPANY_CONFIG.registrationNumber },
-    { label: 'Quality Standards', value: 'IP / USP Monograph Compliance' },
-    { label: 'Headquarters & Depot', value: COMPANY_CONFIG.registeredAddress }
+    { label: 'Registration & GSTIN', value: COMPANY_CONFIG.registrationNumber },
+    { label: 'Quality Standards', value: 'IP / BP / USP Monograph Compliance' },
+    { label: 'Central Depot & HQ', value: COMPANY_CONFIG.registeredAddress }
   ];
 
   return (
-    <section id="about" className="py-16 bg-white border-b border-slate-200">
+    <section id="about" className="py-16 bg-[#F5F8FA] border-b border-[#DCE4EB]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
         
-        {/* Section 1: Corporate Narrative */}
+        {/* Section 1: Corporate Narrative & Factsheet */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
           
           <div className="lg:col-span-7 space-y-5">
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 bg-[#c72828] rounded-full"></span>
-              <span className="text-xs font-bold uppercase tracking-wider text-[#c72828]">
-                Corporate Profile
+              <span className="w-2.5 h-2.5 bg-[#18A6A6] rounded-full"></span>
+              <span className="text-xs font-bold uppercase tracking-wider text-[#137F83]">
+                Corporate Profile & Factsheet
               </span>
             </div>
             
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-[#163e61] tracking-tight leading-tight">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#10243A] tracking-tight leading-tight">
               {COMPANY_CONFIG.name}
             </h2>
 
-            <p className="text-sm sm:text-base text-slate-700 leading-relaxed font-medium">
-              <span className="font-bold text-[#163e61]">{COMPANY_CONFIG.name}</span> is a thriving and dedicated regional manufacturer and supplier of superior quality pharmaceutical products. We understand the medical needs of institutions and practitioners across Assam and the North-East, focusing on providing dependable therapeutic solutions at reasonable, partner-friendly rates.
+            <p className="text-sm sm:text-base text-[#1E293B] leading-relaxed font-medium">
+              <strong className="text-[#10243A]">{COMPANY_CONFIG.name}</strong> is an established regional pharmaceutical manufacturing and distribution enterprise dedicated to supplying superior, WHO-GMP compliant therapeutics. We address clinical requirements across Assam and the North-East, prioritizing therapeutic reliability, stability, and ethical commercial partnerships.
             </p>
 
-            <p className="text-sm text-slate-600 leading-relaxed">
-              We utilize advanced pharmaceutical manufacturing technologies and certified APIs sourced from audited vendors. All products are formulated under strict quality control, conforming to Indian Pharmacopoeia (IP) monographs and WHO-GMP compliance.
+            <p className="text-sm text-[#64748B] leading-relaxed">
+              Our formulations incorporate tested APIs from audited suppliers. Each batch undergoes rigorous physicochemical and microbiological assays to comply with Indian Pharmacopoeia (IP) standards and state drug licensing norms.
             </p>
 
             {/* Product Assurance & Distribution Highlight Boxes */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
-                <div className="flex items-center gap-2 text-[#c72828]">
+              <div className="bg-white border border-[#DCE4EB] rounded-xl p-4 space-y-2 shadow-2xs">
+                <div className="flex items-center gap-2 text-[#18A6A6]">
                   <ShieldCheck className="w-5 h-5 flex-shrink-0" />
-                  <h4 className="font-bold text-sm text-[#163e61]">Product Assurance</h4>
+                  <h4 className="font-bold text-sm text-[#10243A]">Quality Assurance</h4>
                 </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  We supply pharmaceutical capsules, syrups, tablets, and injectables ensuring highest clinical safety, purity, and bioavailability with certified stability.
+                <p className="text-xs text-[#64748B] leading-relaxed">
+                  Every dosage form—capsules, syrups, tablets, and injectables—is released with batch certificates guaranteeing sterility, stability, and dissolution kinetics.
                 </p>
               </div>
 
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
-                <div className="flex items-center gap-2 text-[#163e61]">
-                  <Truck className="w-5 h-5 flex-shrink-0" />
-                  <h4 className="font-bold text-sm text-[#163e61]">Regional Logistics Network</h4>
+              <div className="bg-white border border-[#DCE4EB] rounded-xl p-4 space-y-2 shadow-2xs">
+                <div className="flex items-center gap-2 text-[#10243A]">
+                  <Truck className="w-5 h-5 flex-shrink-0 text-[#18A6A6]" />
+                  <h4 className="font-bold text-sm text-[#10243A]">Regional Logistics Network</h4>
                 </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Dedicated distribution hubs in Guwahati and authorized channel partners ensure rapid, temperature-controlled delivery across all Assam districts and neighboring regions.
+                <p className="text-xs text-[#64748B] leading-relaxed">
+                  Guwahati central depot and authorized regional partners ensure rapid, temperature-monitored transit across all Assam districts and neighboring states.
                 </p>
               </div>
             </div>
@@ -75,15 +75,15 @@ export const PMAboutSection: React.FC<PMAboutSectionProps> = ({
             <div className="pt-2 flex flex-wrap items-center gap-3">
               <button
                 onClick={onOpenEnquiry}
-                className="bg-[#c72828] hover:bg-red-700 text-white font-bold text-xs px-5 py-2.5 rounded-lg shadow transition-colors"
+                className="bg-[#18A6A6] hover:bg-[#137F83] text-white font-semibold text-xs px-5 py-2.5 rounded-xl shadow-2xs transition-colors cursor-pointer"
               >
-                Inquire Product MOQ
+                Inquire Commercial MOQ
               </button>
               <button
                 onClick={() => onNavigate('contact')}
-                className="bg-[#163e61] hover:bg-slate-800 text-white font-bold text-xs px-5 py-2.5 rounded-lg shadow transition-colors"
+                className="bg-[#10243A] hover:bg-[#182F49] text-white font-semibold text-xs px-5 py-2.5 rounded-xl shadow-2xs transition-colors cursor-pointer"
               >
-                View Regional Depot
+                View Regional Depot & Hub
               </button>
             </div>
 
@@ -91,30 +91,31 @@ export const PMAboutSection: React.FC<PMAboutSectionProps> = ({
 
           {/* Right Column: Company Factsheet Table */}
           <div className="lg:col-span-5">
-            <div className="bg-slate-50 border-2 border-[#163e61]/20 rounded-2xl p-6 shadow-lg">
+            <div className="bg-white border border-[#DCE4EB] rounded-2xl p-6 shadow-sm">
               
-              <div className="border-b border-slate-200 pb-3 mb-4">
-                <h3 className="text-lg font-bold text-[#163e61] flex items-center gap-2">
-                  <Award className="w-5 h-5 text-[#c72828]" />
-                  Company Profile & Factsheet
+              <div className="border-b border-[#DCE4EB] pb-3 mb-4">
+                <h3 className="text-base font-bold text-[#10243A] flex items-center gap-2">
+                  <Award className="w-5 h-5 text-[#18A6A6]" />
+                  Corporate Factsheet & Credentials
                 </h3>
-                <p className="text-xs text-slate-500">Regional pharmaceutical details</p>
+                <p className="text-xs text-[#64748B] mt-0.5">Licensed pharmaceutical distribution metrics</p>
               </div>
 
-              <div className="divide-y divide-slate-200 text-xs">
+              <div className="divide-y divide-[#F1F6F8] text-xs">
                 {companyProfileRows.map((row, idx) => (
                   <div key={idx} className="py-2.5 grid grid-cols-12 gap-2">
-                    <span className="col-span-5 font-bold text-slate-600">{row.label}</span>
-                    <span className="col-span-7 font-semibold text-slate-900 leading-tight">
+                    <span className="col-span-5 font-semibold text-[#64748B]">{row.label}</span>
+                    <span className="col-span-7 font-medium text-[#1E293B] leading-tight">
                       {row.value}
                     </span>
                   </div>
                 ))}
               </div>
 
-              <div className="mt-4 pt-3 border-t border-slate-200 text-center">
-                <span className="inline-block bg-emerald-100 text-emerald-800 text-[11px] font-bold px-3 py-1 rounded-full">
-                  ✓ Verified Regional Supply & Regulatory Standard
+              <div className="mt-4 pt-3 border-t border-[#DCE4EB] text-center">
+                <span className="inline-flex items-center gap-1.5 bg-teal-50 text-[#137F83] border border-teal-200 text-[11px] font-semibold px-3 py-1 rounded-full">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Verified Regulatory & Supply Standing
                 </span>
               </div>
 
@@ -126,10 +127,10 @@ export const PMAboutSection: React.FC<PMAboutSectionProps> = ({
         {/* Section 2: Vision, Mission & Values */}
         <div>
           <div className="text-center max-w-2xl mx-auto mb-8">
-            <h3 className="text-xl sm:text-2xl font-black text-[#163e61]">
+            <h3 className="text-xl sm:text-2xl font-bold text-[#10243A]">
               Our Guiding Principles
             </h3>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1">
+            <p className="text-xs sm:text-sm text-[#64748B] mt-1">
               Committed to ethical pharmaceutical excellence, therapeutic reliability, and patient well-being.
             </p>
           </div>
@@ -137,35 +138,35 @@ export const PMAboutSection: React.FC<PMAboutSectionProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             
             {/* Vision */}
-            <div className="bg-slate-50 rounded-xl border border-slate-200 p-6 text-center space-y-3 hover:shadow-lg transition-shadow">
-              <div className="w-14 h-14 mx-auto rounded-full bg-red-100 text-[#c72828] flex items-center justify-center">
-                <Target className="w-7 h-7" />
+            <div className="bg-white rounded-xl border border-[#DCE4EB] p-6 text-center space-y-3 hover:shadow-md transition-shadow">
+              <div className="w-12 h-12 mx-auto rounded-xl bg-[#E8EEF4] text-[#10243A] flex items-center justify-center">
+                <Target className="w-6 h-6 text-[#18A6A6]" />
               </div>
-              <h4 className="text-base font-bold text-[#163e61]">Our Vision</h4>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                To emerge as one of the most trusted pharmaceutical partners in the region, delivering quality formulations that enrich patient health and clinical outcomes.
+              <h4 className="text-base font-bold text-[#10243A]">Our Vision</h4>
+              <p className="text-xs text-[#64748B] leading-relaxed">
+                To stand as the most dependable pharmaceutical partner across the North-East, delivering high-integrity formulations that enrich clinical outcomes.
               </p>
             </div>
 
             {/* Mission */}
-            <div className="bg-slate-50 rounded-xl border border-slate-200 p-6 text-center space-y-3 hover:shadow-lg transition-shadow">
-              <div className="w-14 h-14 mx-auto rounded-full bg-blue-100 text-[#163e61] flex items-center justify-center">
-                <Compass className="w-7 h-7" />
+            <div className="bg-white rounded-xl border border-[#DCE4EB] p-6 text-center space-y-3 hover:shadow-md transition-shadow">
+              <div className="w-12 h-12 mx-auto rounded-xl bg-[#E8EEF4] text-[#10243A] flex items-center justify-center">
+                <Compass className="w-6 h-6 text-[#10243A]" />
               </div>
-              <h4 className="text-base font-bold text-[#163e61]">Our Mission</h4>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                To provide safe, efficacious, and affordable pharmaceutical products through strict regulatory adherence, continuous research, and reliable regional supply.
+              <h4 className="text-base font-bold text-[#10243A]">Our Mission</h4>
+              <p className="text-xs text-[#64748B] leading-relaxed">
+                To provide safe, efficacious, and accessible healthcare solutions through uncompromising regulatory adherence and consistent regional supply.
               </p>
             </div>
 
             {/* Values */}
-            <div className="bg-slate-50 rounded-xl border border-slate-200 p-6 text-center space-y-3 hover:shadow-lg transition-shadow">
-              <div className="w-14 h-14 mx-auto rounded-full bg-amber-100 text-amber-700 flex items-center justify-center">
-                <HeartHandshake className="w-7 h-7" />
+            <div className="bg-white rounded-xl border border-[#DCE4EB] p-6 text-center space-y-3 hover:shadow-md transition-shadow">
+              <div className="w-12 h-12 mx-auto rounded-xl bg-[#E8EEF4] text-[#137F83] flex items-center justify-center">
+                <HeartHandshake className="w-6 h-6 text-[#18A6A6]" />
               </div>
-              <h4 className="text-base font-bold text-[#163e61]">Core Values</h4>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Uncompromising quality integrity, ethical commercial transparency, clinical reliability, and enduring commitment to regional healthcare success.
+              <h4 className="text-base font-bold text-[#10243A]">Core Values</h4>
+              <p className="text-xs text-[#64748B] leading-relaxed">
+                Uncompromising pharmaceutical integrity, commercial transparency, medical practitioner support, and patient-centric dedication.
               </p>
             </div>
 

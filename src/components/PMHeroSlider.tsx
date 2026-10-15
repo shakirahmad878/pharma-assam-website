@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, ShieldCheck, Award, ArrowRight, Send, PackageCheck } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ShieldCheck, Award, ArrowRight, Send, PackageCheck, CheckCircle2 } from 'lucide-react';
 import { PRODUCTS } from '../data/products';
 import { Product } from '../types';
 
@@ -14,7 +14,7 @@ export const PMHeroSlider: React.FC<PMHeroSliderProps> = ({
   onOpenEnquiry,
   onNavigate
 }) => {
-  // We showcase 6 featured products from the catalog
+  // We showcase 6 featured formulations from the catalog
   const featuredIds = [
     'rabefill-dsr-capsules',
     'lycoreach-syrup',
@@ -27,11 +27,11 @@ export const PMHeroSlider: React.FC<PMHeroSliderProps> = ({
   const slides = PRODUCTS.filter(p => featuredIds.includes(p.id));
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  // Auto slide rotation every 5.5 seconds
+  // Auto slide rotation every 6 seconds
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide(prev => (prev + 1) % slides.length);
-    }, 5500);
+    }, 6000);
     return () => clearInterval(timer);
   }, [slides.length]);
 
@@ -43,96 +43,96 @@ export const PMHeroSlider: React.FC<PMHeroSliderProps> = ({
     setCurrentSlide(prev => (prev - 1 + slides.length) % slides.length);
   };
 
-  const current = slides[currentSlide];
+  const current = slides[currentSlide] || slides[0];
 
   return (
-    <div className="relative bg-gradient-to-b from-slate-50 via-white to-slate-100 border-b border-slate-200 overflow-hidden">
+    <div className="relative bg-gradient-to-b from-[#F5F8FA] via-white to-[#F1F6F8] border-b border-[#DCE4EB] overflow-hidden">
       
-      {/* Background Decorative Graphic */}
-      <div className="absolute inset-0 pointer-events-none opacity-5">
-        <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-[#163e61]"></div>
-        <div className="absolute -bottom-24 -left-24 w-96 h-96 rounded-full bg-[#c72828]"></div>
+      {/* Background Subtle Gradient Blobs */}
+      <div className="absolute inset-0 pointer-events-none opacity-20">
+        <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-[#18A6A6]/20 blur-3xl"></div>
+        <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-[#10243A]/10 blur-3xl"></div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16 relative">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center min-h-[420px]">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center min-h-[460px]">
           
-          {/* Left Column: Product Information */}
+          {/* Left Column: Formulation Information */}
           <div className="lg:col-span-7 space-y-5 animate-fadeIn">
             
-            {/* Top Badges */}
+            {/* Top Clinical Badges */}
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1 bg-red-100 text-[#c72828] text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                <Award className="w-3.5 h-3.5" />
-                Featured Formulation
+              <span className="inline-flex items-center gap-1.5 bg-[#E8EEF4] text-[#10243A] border border-[#DCE4EB] text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">
+                <Award className="w-3.5 h-3.5 text-[#18A6A6]" />
+                WHO-GMP Certified Formulation
               </span>
-              <span className="inline-flex items-center gap-1 bg-blue-100 text-[#163e61] text-xs font-semibold px-3 py-1 rounded-full">
-                <ShieldCheck className="w-3.5 h-3.5" />
+              <span className="inline-flex items-center gap-1.5 bg-teal-50 text-[#137F83] border border-teal-200 text-xs font-medium px-3 py-1 rounded-full">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#18A6A6]" />
                 {current.category}
               </span>
-              <span className="text-xs font-medium text-slate-500 bg-white border border-slate-200 px-2.5 py-1 rounded-full shadow-sm">
-                Origin: {current.countryOfOrigin || 'India'}
+              <span className="text-xs font-medium text-[#64748B] bg-white border border-[#DCE4EB] px-2.5 py-1 rounded-full shadow-2xs">
+                Pharmacopoeia: {current.pharmacopoeiaStandard}
               </span>
             </div>
 
-            {/* Product Title */}
+            {/* Product Title & Composition */}
             <div>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#163e61] tracking-tight leading-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#10243A] tracking-tight leading-tight">
                 {current.name}
               </h1>
-              <p className="mt-2 text-base sm:text-lg font-medium text-slate-700 leading-relaxed border-l-4 border-[#c72828] pl-3">
+              <p className="mt-3 text-base sm:text-lg font-medium text-[#1E293B] leading-relaxed border-l-4 border-[#18A6A6] pl-3.5 bg-white/60 py-1 rounded-r">
                 {current.genericComposition}
               </p>
             </div>
 
-            {/* Key Specs Matrix with MOQ */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
-              <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
-                <p className="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Packaging Size</p>
-                <p className="text-sm font-bold text-slate-800">{current.packagingSize || current.packaging}</p>
+            {/* Key Specs Matrix with Packaging & Standard MOQ */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-1">
+              <div className="bg-white p-3.5 rounded-xl border border-[#DCE4EB] shadow-2xs">
+                <p className="text-[10.5px] uppercase tracking-wider text-[#64748B] font-bold">Packaging Standard</p>
+                <p className="text-sm font-bold text-[#10243A] mt-0.5">{current.packagingSize || current.packaging}</p>
               </div>
-              <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
-                <p className="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Standard MOQ</p>
-                <p className="text-sm font-extrabold text-[#c72828] flex items-center gap-1">
+              <div className="bg-white p-3.5 rounded-xl border border-[#DCE4EB] shadow-2xs">
+                <p className="text-[10.5px] uppercase tracking-wider text-[#64748B] font-bold">Minimum Order Qty</p>
+                <p className="text-sm font-bold text-[#18A6A6] mt-0.5 flex items-center gap-1">
                   <PackageCheck className="w-3.5 h-3.5" />
                   {current.moq}
                 </p>
               </div>
-              <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm col-span-2 sm:col-span-1">
-                <p className="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Standard</p>
-                <p className="text-sm font-bold text-slate-800">{current.pharmacopoeiaStandard} Monograph</p>
+              <div className="bg-white p-3.5 rounded-xl border border-[#DCE4EB] shadow-2xs col-span-2 sm:col-span-1">
+                <p className="text-[10.5px] uppercase tracking-wider text-[#64748B] font-bold">Storage / Stability</p>
+                <p className="text-sm font-bold text-[#10243A] mt-0.5">{current.storageCondition || 'Store below 25°C'}</p>
               </div>
             </div>
 
             {/* Indication / Therapeutic Use */}
-            <p className="text-xs sm:text-sm text-slate-600 line-clamp-2">
-              <span className="font-semibold text-slate-800">Therapeutic Focus: </span>
+            <p className="text-xs sm:text-sm text-[#64748B] line-clamp-2 leading-relaxed">
+              <span className="font-semibold text-[#1E293B]">Therapeutic Indication: </span>
               {current.indication}
             </p>
 
             {/* Action Buttons */}
-            <div className="pt-3 flex flex-wrap items-center gap-3">
+            <div className="pt-2 flex flex-wrap items-center gap-3">
               <button
                 onClick={() => onOpenEnquiry(current.name)}
-                className="bg-[#c72828] hover:bg-red-700 text-white font-bold text-sm px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+                className="bg-[#18A6A6] hover:bg-[#137F83] text-white font-semibold text-sm px-5 py-2.5 rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer"
               >
                 <Send className="w-4 h-4" />
-                <span>Inquire MOQ & Quotation</span>
+                <span>Inquire B2B MOQ & Quote</span>
               </button>
 
               <button
                 onClick={() => onSelectProduct(current)}
-                className="bg-[#163e61] hover:bg-slate-800 text-white font-bold text-sm px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+                className="bg-[#10243A] hover:bg-[#182F49] text-white font-semibold text-sm px-5 py-2.5 rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer"
               >
-                <span>View Full Details</span>
+                <span>View Full Formulation Dossier</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
               <button
                 onClick={() => onNavigate('products')}
-                className="text-slate-700 hover:text-[#c72828] font-semibold text-sm px-4 py-3 rounded-lg border border-slate-300 hover:border-red-300 bg-white transition-all"
+                className="text-[#10243A] hover:text-[#18A6A6] hover:bg-white font-semibold text-sm px-4 py-2.5 rounded-xl border border-[#DCE4EB] bg-[#F1F6F8] transition-all cursor-pointer"
               >
-                Explore All Products
+                Browse All Formulations
               </button>
             </div>
 
@@ -141,27 +141,38 @@ export const PMHeroSlider: React.FC<PMHeroSliderProps> = ({
           {/* Right Column: High-Resolution Product Visual Showcase */}
           <div className="lg:col-span-5 flex justify-center items-center relative">
             
-            {/* Backdrop glow */}
-            <div className="absolute w-72 h-72 rounded-full bg-red-100/60 blur-3xl -z-10"></div>
-
-            {/* Product Card Showcase Box */}
+            {/* Backdrop clinical card */}
             <div 
               onClick={() => onSelectProduct(current)}
-              className="bg-white rounded-2xl shadow-xl border border-slate-200/80 p-6 flex flex-col items-center justify-center cursor-pointer group hover:shadow-2xl transition-all duration-300 max-w-sm w-full"
+              className="bg-white rounded-2xl shadow-md hover:shadow-xl border border-[#DCE4EB] hover:border-[#18A6A6] p-6 flex flex-col items-center justify-center cursor-pointer group transition-all duration-300 max-w-sm w-full relative"
             >
-              <div className="relative w-full h-64 sm:h-72 flex items-center justify-center p-2 overflow-hidden">
+              {/* Product Badge Pill */}
+              <div className="w-full flex items-center justify-between pb-3 border-b border-[#DCE4EB] mb-2">
+                <span className="text-[10px] font-bold text-[#137F83] bg-teal-50 px-2.5 py-0.5 rounded-full border border-teal-200 uppercase">
+                  Batch Tested
+                </span>
+                <span className="text-[10.5px] font-medium text-[#64748B]">
+                  Origin: {current.countryOfOrigin || 'India'}
+                </span>
+              </div>
+
+              {/* Product Image */}
+              <div className="relative w-full h-64 sm:h-72 flex items-center justify-center p-3 overflow-hidden bg-[#F5F8FA] rounded-xl border border-[#E8EEF4]">
                 <img
                   src={current.imageUrl}
                   alt={current.name}
-                  className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300 filter drop-shadow-md"
+                  className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300 filter drop-shadow-sm"
                 />
               </div>
 
               {/* Card Label */}
-              <div className="w-full mt-4 pt-3 border-t border-slate-100 text-center">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">{current.category}</p>
-                <p className="text-base font-extrabold text-[#163e61] group-hover:text-[#c72828] transition-colors">{current.name}</p>
-                <p className="text-xs text-[#c72828] font-bold mt-1">Minimum Order Qty: {current.moq}</p>
+              <div className="w-full mt-4 text-center">
+                <p className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider">{current.category}</p>
+                <p className="text-base font-bold text-[#10243A] group-hover:text-[#18A6A6] transition-colors mt-0.5">{current.name}</p>
+                <div className="flex items-center justify-center gap-1.5 mt-2 text-xs font-semibold text-[#18A6A6]">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Verified Pharmacopoeial Grade</span>
+                </div>
               </div>
             </div>
 
@@ -170,7 +181,7 @@ export const PMHeroSlider: React.FC<PMHeroSliderProps> = ({
         </div>
 
         {/* Carousel Slider Controls */}
-        <div className="mt-8 flex items-center justify-between border-t border-slate-200/60 pt-4">
+        <div className="mt-8 flex items-center justify-between border-t border-[#DCE4EB] pt-4">
           
           {/* Slide Indicator Dots & Titles */}
           <div className="flex items-center gap-2 overflow-x-auto py-1">
@@ -178,13 +189,13 @@ export const PMHeroSlider: React.FC<PMHeroSliderProps> = ({
               <button
                 key={s.id}
                 onClick={() => setCurrentSlide(idx)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-all whitespace-nowrap ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-all whitespace-nowrap cursor-pointer ${
                   idx === currentSlide
-                    ? 'bg-[#163e61] text-white font-bold shadow'
-                    : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200 font-medium'
+                    ? 'bg-[#10243A] text-white font-semibold shadow-xs'
+                    : 'bg-white text-[#64748B] hover:bg-[#E8EEF4] border border-[#DCE4EB] font-medium'
                 }`}
               >
-                <span className={`w-2 h-2 rounded-full ${idx === currentSlide ? 'bg-red-400' : 'bg-slate-400'}`}></span>
+                <span className={`w-2 h-2 rounded-full ${idx === currentSlide ? 'bg-[#18A6A6]' : 'bg-[#CBD5E1]'}`}></span>
                 <span>{s.name.split(' ')[0]}</span>
               </button>
             ))}
@@ -194,17 +205,17 @@ export const PMHeroSlider: React.FC<PMHeroSliderProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={prevSlide}
-              className="p-2 rounded-full bg-white border border-slate-300 text-slate-700 hover:bg-[#c72828] hover:text-white hover:border-[#c72828] transition-colors shadow-sm"
+              className="p-2 rounded-lg bg-white border border-[#DCE4EB] text-[#1E293B] hover:bg-[#18A6A6] hover:text-white hover:border-[#18A6A6] transition-colors shadow-2xs cursor-pointer"
               aria-label="Previous Slide"
             >
-              <ChevronLeft className="w-5 h-5" />
+              <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               onClick={nextSlide}
-              className="p-2 rounded-full bg-white border border-slate-300 text-slate-700 hover:bg-[#c72828] hover:text-white hover:border-[#c72828] transition-colors shadow-sm"
+              className="p-2 rounded-lg bg-white border border-[#DCE4EB] text-[#1E293B] hover:bg-[#18A6A6] hover:text-white hover:border-[#18A6A6] transition-colors shadow-2xs cursor-pointer"
               aria-label="Next Slide"
             >
-              <ChevronRight className="w-5 h-5" />
+              <ChevronRight className="w-4 h-4" />
             </button>
           </div>
 

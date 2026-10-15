@@ -64,33 +64,33 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-[#090907]/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-      <div className="neu-card border border-[#282319] rounded-2xl max-w-md w-full shadow-neu-raised animate-in fade-in zoom-in duration-200 overflow-hidden">
+    <div className="fixed inset-0 bg-[#10243A]/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+      <div className="bg-white border border-[#DCE4EB] rounded-2xl max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200 overflow-hidden">
         
         {/* Header */}
-        <div className="p-6 border-b border-[#282319] relative">
+        <div className="p-6 border-b border-[#DCE4EB] relative bg-[#10243A] text-white">
           <button
             onClick={onClose}
-            className="neu-btn absolute right-4 top-4 p-1.5 rounded-xl text-[#857866] hover:text-[#F2ECE1]"
+            className="absolute right-4 top-4 p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
           
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#6C5636]/20 border border-[#6C5636]/40 flex items-center justify-center text-[#B99D73] shadow-neu-sunken">
-              <Lock className="w-5 h-5 stroke-[2.5]" />
+            <div className="w-10 h-10 rounded-xl bg-[#182F49] border border-slate-700 flex items-center justify-center text-[#18A6A6] shadow-2xs">
+              <Lock className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-[#F2ECE1]">Switch User / Sign In</h2>
-              <p className="text-xs text-[#857866]">Enterprise Role-Based Access Control</p>
+              <h2 className="text-base font-bold text-white">Switch User / Field Sign In</h2>
+              <p className="text-xs text-slate-300">Enterprise Role-Based Access Control</p>
             </div>
           </div>
         </div>
 
         <div className="p-6 space-y-4">
           {errorMessage && (
-            <div className="p-3 bg-[#1c0f0f] border border-[#662B2B]/60 rounded-xl text-rose-400 flex items-start gap-2.5 text-xs shadow-neu-sunken">
-              <AlertCircle className="w-4 h-4 shrink-0 text-rose-400 mt-0.5" />
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 flex items-start gap-2.5 text-xs">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 mt-0.5" />
               <span>{errorMessage}</span>
             </div>
           )}
@@ -98,12 +98,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({
           {/* Form */}
           <form onSubmit={handleLogin} className="space-y-4 text-xs">
             <div>
-              <label className="block font-semibold text-[#B99D73] mb-1.5">
+              <label className="block font-semibold text-[#1E293B] mb-1.5">
                 Username or Employee ID
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <UserIcon className="h-4 w-4 text-[#857866]" />
+                  <UserIcon className="h-4 w-4 text-[#64748B]" />
                 </div>
                 <input
                   type="text"
@@ -114,16 +114,16 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                     setIdentifier(e.target.value);
                     if (errorMessage) setErrorMessage('');
                   }}
-                  className="neu-input w-full pl-10 pr-3.5 py-2.5"
+                  className="w-full pl-10 pr-3.5 py-2.5 text-xs rounded-xl border border-[#DCE4EB] bg-white focus:outline-none focus:ring-1 focus:ring-[#18A6A6] text-[#1E293B]"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block font-semibold text-[#B99D73] mb-1.5">Password</label>
+              <label className="block font-semibold text-[#1E293B] mb-1.5">Password</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <Lock className="h-4 w-4 text-[#857866]" />
+                  <Lock className="h-4 w-4 text-[#64748B]" />
                 </div>
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -134,12 +134,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                     setPassword(e.target.value);
                     if (errorMessage) setErrorMessage('');
                   }}
-                  className="neu-input w-full pl-10 pr-10 py-2.5 font-mono"
+                  className="w-full pl-10 pr-10 py-2.5 text-xs font-mono rounded-xl border border-[#DCE4EB] bg-white focus:outline-none focus:ring-1 focus:ring-[#18A6A6] text-[#1E293B]"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#857866] hover:text-[#F2ECE1] focus:outline-none"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#64748B] hover:text-[#10243A] focus:outline-none cursor-pointer"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -149,16 +149,16 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             <button
               type="submit"
               disabled={isLoading}
-              className="neu-btn-gold w-full py-2.5 px-4 rounded-xl font-bold flex items-center justify-center gap-2 text-xs mt-2 disabled:opacity-50 cursor-pointer"
+              className="w-full py-2.5 px-4 rounded-xl font-semibold flex items-center justify-center gap-2 text-xs mt-2 bg-[#10243A] hover:bg-[#182F49] text-white shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
             >
-              <LogIn className="w-4 h-4" />
+              <LogIn className="w-4 h-4 text-[#18A6A6]" />
               <span>{isLoading ? 'Authenticating...' : 'Sign In'}</span>
             </button>
           </form>
 
           {/* Quick select pills */}
-          <div className="pt-3 border-t border-[#282319]">
-            <p className="text-[11px] font-semibold text-[#857866] mb-2">Quick Fill Accounts:</p>
+          <div className="pt-3 border-t border-[#DCE4EB]">
+            <p className="text-[11px] font-semibold text-[#64748B] mb-2">Quick Fill Accounts:</p>
             <div className="flex flex-wrap gap-1.5">
               <button
                 type="button"
@@ -167,7 +167,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                   setPassword('Shakir@2026');
                   if (errorMessage) setErrorMessage('');
                 }}
-                className="neu-btn px-2.5 py-1 text-[#B99D73] hover:text-[#F2ECE1] rounded-xl text-[10px] font-medium transition-colors cursor-pointer"
+                className="bg-[#F5F8FA] hover:bg-[#E8EEF4] text-[#10243A] border border-[#DCE4EB] px-2.5 py-1 rounded-lg text-[10px] font-medium transition-colors cursor-pointer"
               >
                 Super Admin (shakir878)
               </button>
@@ -178,7 +178,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                   setPassword('Bodrud@2026');
                   if (errorMessage) setErrorMessage('');
                 }}
-                className="neu-btn px-2.5 py-1 text-[#D4BD95] hover:text-[#F2ECE1] rounded-xl text-[10px] font-medium transition-colors cursor-pointer"
+                className="bg-[#F5F8FA] hover:bg-[#E8EEF4] text-[#10243A] border border-[#DCE4EB] px-2.5 py-1 rounded-lg text-[10px] font-medium transition-colors cursor-pointer"
               >
                 Manager (bodrudsadiol)
               </button>
@@ -189,16 +189,16 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                   setPassword('1234');
                   if (errorMessage) setErrorMessage('');
                 }}
-                className="neu-btn px-2.5 py-1 text-[#857866] hover:text-[#F2ECE1] rounded-xl text-[10px] font-medium transition-colors cursor-pointer"
+                className="bg-[#F5F8FA] hover:bg-[#E8EEF4] text-[#10243A] border border-[#DCE4EB] px-2.5 py-1 rounded-lg text-[10px] font-medium transition-colors cursor-pointer"
               >
                 Field Rep (0002)
               </button>
             </div>
           </div>
 
-          <div className="pt-2 flex items-center justify-center gap-1.5 text-[11px] text-[#857866]">
-            <ShieldCheck className="w-3.5 h-3.5 text-[#B99D73]" />
-            <span>Encrypted Authentication & Session Security</span>
+          <div className="pt-2 flex items-center justify-center gap-1.5 text-[11px] text-[#64748B]">
+            <ShieldCheck className="w-3.5 h-3.5 text-[#18A6A6]" />
+            <span>Encrypted Session Security</span>
           </div>
         </div>
 

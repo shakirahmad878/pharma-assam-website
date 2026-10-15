@@ -7,34 +7,50 @@ export default {
   theme: {
     extend: {
       colors: {
-        neu: {
-          bg: '#090907',          // Base deep obsidian dark
-          surface: '#11110e',     // Slightly elevated dark surface
-          surfaceLight: '#181712',// Higher card layer
-          border: '#282319',      // Subtle edge highlight
-          borderLight: '#3d3424', // Neomorphic light rim
-          primary: '#6C5636',     // Rich deep warm bronze / amber brass
-          primaryLight: '#8A7049',// Elevated bronze highlight
-          primaryDark: '#4A3B24', // Deep recessed bronze shadow
-          accent: '#B99D73',      // Soft champagne golden sand highlight
-          accentLight: '#D4BD95', // Gleam champagne
-          accentDark: '#8F7550',  // Muted antique gold
-          textPrimary: '#F2ECE1', // Warm pearlescent ivory white
-          textSecondary: '#B99D73',// Champagne subtitle / muted text
-          textMuted: '#857866',    // Dark antique gold muted text
+        navy: {
+          950: '#0B1724',
+          900: '#10243A', // Primary Midnight Navy
+          800: '#182F49', // Secondary Deep Navy
+          700: '#234468',
+          600: '#325C8A',
         },
-        pharma: {
-          50: '#f7f4ed',
-          100: '#eee7d8',
-          200: '#dfd2b7',
-          300: '#cbb68f',
-          400: '#B99D73',
-          500: '#6C5636',
-          600: '#5c482c',
-          700: '#4b3a23',
-          800: '#382b1a',
-          900: '#1d170d',
-          950: '#090907',
+        teal: {
+          accent: '#18A6A6', // Primary Teal Accent
+          deep: '#137F83',   // Deep Teal
+          light: '#E6F7F7',  // Soft Teal Surface
+          50: '#F0FAFA',
+          100: '#D5F2F2',
+          500: '#18A6A6',
+          600: '#137F83',
+          700: '#0E6063',
+        },
+        clinical: {
+          white: '#FFFFFF',     // Clinical White
+          bg: '#F5F8FA',        // Soft Background
+          surface: '#FFFFFF',   // Surface Card
+          muted: '#F1F6F8',     // Muted Surface
+          border: '#DCE4EB',    // Subtle Borders
+          borderDark: '#CBD5E1',// Defined border
+          lightBlue: '#E8EEF4', // Light Blue-Gray
+          textPrimary: '#1E293B',   // Primary Text
+          textSecondary: '#64748B', // Secondary Text
+          textMuted: '#94A3B8',     // Muted Text
+        },
+        neu: {
+          bg: '#F5F8FA',
+          surface: '#FFFFFF',
+          surfaceLight: '#F8FAFC',
+          border: '#DCE4EB',
+          borderLight: '#E2E8F0',
+          primary: '#10243A',
+          primaryLight: '#182F49',
+          primaryDark: '#0B1724',
+          accent: '#18A6A6',
+          accentLight: '#22B8B8',
+          accentDark: '#137F83',
+          textPrimary: '#1E293B',
+          textSecondary: '#64748B',
+          textMuted: '#94A3B8',
         },
       },
       boxShadow: {

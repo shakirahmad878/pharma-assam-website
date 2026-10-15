@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, UserRole } from '../../types';
 import { OfflineSyncService } from '../../services/offlineSyncService';
-import { Shield, Radio, Activity, Wifi, WifiOff, KeyRound, LogIn, LogOut, Sparkles, Database, Menu } from 'lucide-react';
+import { Shield, Radio, Activity, Wifi, WifiOff, KeyRound, LogIn, LogOut, Sparkles, Database, Menu, Globe, ExternalLink } from 'lucide-react';
 
 interface NavbarProps {
   currentUser: User;
@@ -12,6 +12,7 @@ interface NavbarProps {
   onOpenChangePassword?: () => void;
   onOpenLogin?: () => void;
   onOpenDatabaseSync?: () => void;
+  onOpenPublicSite?: () => void;
   onLogout?: () => void;
   onToggleMobileMenu?: () => void;
 }
@@ -25,6 +26,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenChangePassword,
   onOpenLogin,
   onOpenDatabaseSync,
+  onOpenPublicSite,
   onLogout,
   onToggleMobileMenu,
 }) => {
@@ -39,7 +41,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   const handleToggleOnline = () => {
     setIsOnline(!isOnline);
     if (!isOnline) {
-      // Sync flushed
       const { syncedCount } = OfflineSyncService.flushQueue();
       if (syncedCount > 0) {
         alert(`Network Restored! Flushed ${syncedCount} queued reports successfully.`);
@@ -48,7 +49,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="bg-[#090907]/95 backdrop-blur-md border-b border-[#282319] text-[#F2ECE1] sticky top-0 z-40 shadow-[0_4px_16px_rgba(4,4,3,0.7)]">
+    <header className="bg-[#10243A] border-b border-[#182F49] text-white sticky top-0 z-40 shadow-xs">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2">
         
         {/* Mobile Hamburger Menu Button & Brand Logo */}
@@ -56,83 +57,83 @@ export const Navbar: React.FC<NavbarProps> = ({
           {onToggleMobileMenu && (
             <button
               onClick={onToggleMobileMenu}
-              className="lg:hidden p-2 rounded-xl neu-btn shrink-0"
+              className="lg:hidden p-2 rounded-lg bg-[#182F49] hover:bg-[#203D5E] text-slate-200 border border-slate-700 shrink-0 cursor-pointer"
               aria-label="Toggle navigation drawer"
             >
-              <Menu className="w-5 h-5 text-[#B99D73]" />
+              <Menu className="w-5 h-5 text-[#18A6A6]" />
             </button>
           )}
 
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-[#8A7049] via-[#6C5636] to-[#4A3B24] border border-[#B99D73]/40 flex items-center justify-center shadow-[2px_2px_8px_#040403,-2px_-2px_6px_#1c1a14] shrink-0">
-            <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-[#090907] stroke-[2.8]" />
+          <div className="w-9 h-9 rounded-xl bg-[#182F49] border border-slate-700 flex items-center justify-center shadow-xs shrink-0">
+            <Activity className="w-5 h-5 text-[#18A6A6]" />
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="font-bold text-sm sm:text-base tracking-tight text-[#F2ECE1]">RepPulse</span>
-              <span className="text-[9px] sm:text-[10px] uppercase font-bold tracking-wider bg-[#6C5636]/30 text-[#B99D73] px-1.5 py-0.5 rounded-md border border-[#6C5636]/50 shadow-[inset_1px_1px_3px_#040403]">
+              <span className="font-bold text-sm sm:text-base tracking-tight text-white">RepPulse</span>
+              <span className="text-[10px] uppercase font-bold tracking-wider bg-[#18A6A6]/20 text-[#18A6A6] px-1.5 py-0.5 rounded border border-[#18A6A6]/40">
                 SFA
               </span>
             </div>
-            <p className="text-[10px] text-[#B99D73]/70 hidden md:block">Intelligent Pharma SFA • Barak Division (Assam)</p>
+            <p className="text-[10px] text-slate-400 hidden md:block">Field Intelligence & Administration System</p>
           </div>
         </div>
 
         {/* Action Controls & Toolbar */}
         <div className="flex items-center gap-1.5 sm:gap-2">
           
+          {/* Switch to Public Corporate Site */}
+          {onOpenPublicSite && (
+            <button
+              onClick={onOpenPublicSite}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#182F49] hover:bg-[#203D5E] border border-slate-700 text-slate-200 transition-all cursor-pointer"
+              title="View Public Pharmaceutical Website"
+            >
+              <Globe className="w-3.5 h-3.5 text-[#18A6A6]" />
+              <span className="hidden sm:inline">Public Website</span>
+            </button>
+          )}
+
           {/* Platform Guided Tour Modal Trigger */}
           {onOpenDemoTour && (
             <button
               onClick={onOpenDemoTour}
-              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold neu-btn hover:text-[#B99D73] transition-all cursor-pointer"
+              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[#182F49] hover:bg-[#203D5E] border border-slate-700 text-slate-200 transition-all cursor-pointer"
               title="Start Interactive Guided Tour"
             >
-              <Sparkles className="w-3.5 h-3.5 text-[#B99D73] animate-pulse" />
-              <span className="hidden md:inline text-[#B99D73]">Guided Tour</span>
+              <Sparkles className="w-3.5 h-3.5 text-[#18A6A6]" />
+              <span className="hidden md:inline">Tour</span>
             </button>
           )}
 
           {/* Offline Mode Toggle Simulator */}
           <button
             onClick={handleToggleOnline}
-            className={`flex items-center gap-1 p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+            className={`flex items-center gap-1 p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border ${
               isOnline 
-                ? 'neu-btn text-[#D4BD95]' 
-                : 'bg-[#6C5636]/30 text-[#B99D73] border border-[#B99D73]/50 shadow-[inset_2px_2px_5px_#040403] animate-pulse'
+                ? 'bg-[#182F49] hover:bg-[#203D5E] text-slate-200 border-slate-700' 
+                : 'bg-amber-950/40 text-amber-300 border-amber-700/50 animate-pulse'
             }`}
             title="Toggle online / offline field simulator"
           >
-            {isOnline ? <Wifi className="w-3.5 h-3.5 text-[#B99D73]" /> : <WifiOff className="w-3.5 h-3.5 text-[#857866]" />}
+            {isOnline ? <Wifi className="w-3.5 h-3.5 text-[#18A6A6]" /> : <WifiOff className="w-3.5 h-3.5 text-amber-400" />}
             <span className="hidden lg:inline">{isOnline ? 'Online' : 'Offline'}</span>
             {pendingQueueCount > 0 && (
-              <span className="bg-[#B99D73] text-[#090907] px-1.5 rounded-full font-bold text-[9px]">
+              <span className="bg-[#18A6A6] text-white px-1.5 rounded-full font-bold text-[9px]">
                 {pendingQueueCount}
               </span>
             )}
           </button>
 
-          {/* Database Sync & Cloud Firestore Status */}
+          {/* Database Sync Status */}
           {onOpenDatabaseSync && (
             <button
               onClick={onOpenDatabaseSync}
-              className="flex items-center gap-1 p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl text-xs font-semibold neu-btn text-[#B99D73] hover:text-[#D4BD95] transition-all cursor-pointer"
-              title="Database Backup, Restore & Cloud Firestore Sync"
+              className="flex items-center gap-1 p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg text-xs font-medium bg-[#182F49] hover:bg-[#203D5E] border border-slate-700 text-slate-200 transition-all cursor-pointer"
+              title="Supabase Database Status & Sync"
             >
-              <span className="w-2 h-2 rounded-full bg-[#B99D73] animate-pulse"></span>
-              <Database className="w-3.5 h-3.5 text-[#B99D73]" />
-              <span className="hidden md:inline">Cloud DB</span>
-            </button>
-          )}
-
-          {/* Change Password Button */}
-          {onOpenChangePassword && (
-            <button
-              onClick={onOpenChangePassword}
-              className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold neu-btn text-[#F2ECE1] transition-all cursor-pointer"
-              title="Change Account Password"
-            >
-              <KeyRound className="w-3.5 h-3.5 text-[#B99D73]" />
-              <span className="hidden md:inline">Password</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <Database className="w-3.5 h-3.5 text-[#18A6A6]" />
+              <span className="hidden md:inline">DB Studio</span>
             </button>
           )}
 
@@ -140,38 +141,38 @@ export const Navbar: React.FC<NavbarProps> = ({
           {onOpenLogin && (
             <button
               onClick={onOpenLogin}
-              className="flex items-center gap-1 p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl text-xs font-medium neu-btn text-[#B99D73] hover:text-[#D4BD95] transition-all cursor-pointer"
+              className="flex items-center gap-1 p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg text-xs font-medium bg-[#182F49] hover:bg-[#203D5E] border border-slate-700 text-slate-200 transition-all cursor-pointer"
               title="Switch User Account"
             >
-              <LogIn className="w-3.5 h-3.5 text-[#B99D73]" />
-              <span className="hidden sm:inline font-semibold">Switch</span>
+              <LogIn className="w-3.5 h-3.5 text-[#18A6A6]" />
+              <span className="hidden sm:inline">Switch</span>
             </button>
           )}
 
           {/* User Profile & Sign Out */}
-          <div className="flex items-center gap-1.5 pl-1.5 sm:pl-2.5 border-l border-[#282319]">
+          <div className="flex items-center gap-1.5 pl-1.5 sm:pl-2.5 border-l border-slate-700">
             <div className="text-right hidden xl:block">
-              <span className="text-xs font-bold text-[#F2ECE1] block leading-tight">{currentUser.name}</span>
-              <span className="text-[10px] text-[#B99D73] leading-tight block">
+              <span className="text-xs font-bold text-white block leading-tight">{currentUser.name}</span>
+              <span className="text-[10px] text-[#18A6A6] leading-tight block font-medium">
                 {currentUser.role === 'SUPER_ADMIN' ? '👑 Super Admin' :
                  currentUser.role === 'ADMIN' ? '🏢 Company Admin' :
                  currentUser.role === 'MANAGER' ? '👔 Manager' : '🏃 Field MR'}
               </span>
             </div>
             
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#161510] border border-[#6C5636]/60 shadow-[inset_1px_1px_3px_#040403,1px_1px_4px_#181711] flex items-center justify-center font-bold text-xs text-[#B99D73] shrink-0">
+            <div className="w-8 h-8 rounded-full bg-[#182F49] border border-slate-700 flex items-center justify-center font-bold text-xs text-teal-300 shrink-0">
               {currentUser.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
             </div>
 
-            {/* Prominent Sign Out Button */}
+            {/* Sign Out Button */}
             {onLogout && (
               <button
                 onClick={onLogout}
-                className="flex items-center gap-1 p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl neu-btn text-[#df7a7a] hover:text-[#ff9292] hover:border-[#df7a7a]/40 transition-colors cursor-pointer shrink-0"
-                title="Sign Out / Lock Session"
+                className="flex items-center gap-1 p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg bg-[#182F49] hover:bg-rose-950/60 border border-slate-700 hover:border-rose-800 text-rose-300 transition-colors cursor-pointer shrink-0"
+                title="Sign Out"
               >
                 <LogOut className="w-3.5 h-3.5" />
-                <span className="hidden md:inline text-xs font-semibold">Sign Out</span>
+                <span className="hidden md:inline text-xs font-medium">Sign Out</span>
               </button>
             )}
           </div>

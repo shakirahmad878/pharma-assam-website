@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { User } from '../../types';
 import { AuthService } from '../../services/authService';
-import { Activity, Lock, User as UserIcon, Eye, EyeOff, ShieldCheck, ArrowRight, AlertCircle } from 'lucide-react';
+import { Activity, Lock, User as UserIcon, Eye, EyeOff, ShieldCheck, ArrowRight, AlertCircle, Globe } from 'lucide-react';
 
 interface LoginPageProps {
   onLoginSuccess: (user: User) => void;
   users: User[];
+  onOpenPublicSite?: () => void;
 }
 
-export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, users }) => {
+export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, users, onOpenPublicSite }) => {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -44,38 +45,48 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, users }) =
   };
 
   return (
-    <div className="min-h-screen bg-[#090907] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden text-[#F2ECE1]">
-      {/* Background Subtle Ambient Glows */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#6C5636]/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#B99D73]/10 rounded-full blur-[120px] pointer-events-none" />
+    <div className="min-h-screen bg-[#F5F8FA] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden text-[#1E293B]">
+      
+      {/* Top Bar Switch to Public Website */}
+      {onOpenPublicSite && (
+        <div className="absolute top-6 left-6 z-20">
+          <button
+            onClick={onOpenPublicSite}
+            className="flex items-center gap-2 bg-white hover:bg-[#F1F6F8] text-[#10243A] border border-[#DCE4EB] px-3.5 py-2 rounded-xl text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+          >
+            <Globe className="w-4 h-4 text-[#18A6A6]" />
+            <span>← Return to Public Website</span>
+          </button>
+        </div>
+      )}
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
         {/* Brand Header */}
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#8A7049] via-[#6C5636] to-[#4A3B24] border border-[#B99D73]/40 shadow-neu-raised mb-4">
-            <Activity className="w-8 h-8 text-[#090907] stroke-[2.8]" />
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#10243A] border border-[#182F49] shadow-xs mb-3 text-[#18A6A6]">
+            <Activity className="w-7 h-7" />
           </div>
-          <h2 className="text-2xl font-bold tracking-tight text-[#F2ECE1]">
-            RepPulse <span className="text-[#B99D73]">Enterprise Portal</span>
+          <h2 className="text-2xl font-extrabold tracking-tight text-[#10243A]">
+            RepPulse <span className="text-[#18A6A6]">Field Portal</span>
           </h2>
-          <p className="text-xs text-[#857866] mt-1.5">
-            Official Administration & Management Portal • Pharma Assam
+          <p className="text-xs text-[#64748B] mt-1">
+            Official SFA Administration & Field Force Workspace
           </p>
         </div>
 
         {/* Login Card */}
-        <div className="mt-7 neu-card p-7 sm:p-8 border border-[#282319]">
+        <div className="mt-6 bg-white rounded-2xl p-7 sm:p-8 border border-[#DCE4EB] shadow-sm">
           
           <div className="mb-6">
-            <h3 className="text-lg font-bold text-[#F2ECE1]">Sign In to Your Account</h3>
-            <p className="text-xs text-[#857866] mt-0.5">
-              Enter your authorized username or Employee ID to continue
+            <h3 className="text-base font-bold text-[#10243A]">Sign In to Your Workspace</h3>
+            <p className="text-xs text-[#64748B] mt-0.5">
+              Enter your authorized credentials or select a quick-access role below
             </p>
           </div>
 
           {error && (
-            <div className="mb-5 p-3 rounded-xl bg-rose-950/40 border border-rose-800/40 flex items-start gap-2.5 text-rose-300 text-xs shadow-neu-sunken">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
+            <div className="mb-5 p-3 rounded-xl bg-rose-50 border border-rose-200 flex items-start gap-2.5 text-rose-700 text-xs">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
               <span>{error}</span>
             </div>
           )}
@@ -83,24 +94,24 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, users }) =
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Username / Employee ID */}
             <div>
-              <label className="block text-xs font-semibold text-[#B99D73] mb-1.5">
+              <label className="block text-xs font-semibold text-[#1E293B] mb-1.5">
                 Username or Employee ID
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <UserIcon className="h-4 w-4 text-[#857866]" />
+                  <UserIcon className="h-4 w-4 text-[#64748B]" />
                 </div>
                 <input
                   type="text"
                   required
                   autoFocus
-                  placeholder="e.g. shakir878 / bodrudsadiol / EMP ID"
+                  placeholder="e.g. shakir878 / bodrudsadiol / 0002"
                   value={identifier}
                   onChange={(e) => {
                     setIdentifier(e.target.value);
                     if (error) setError(null);
                   }}
-                  className="neu-input w-full pl-10 pr-3.5 py-2.5 text-sm"
+                  className="w-full pl-10 pr-3.5 py-2.5 text-xs rounded-xl border border-[#DCE4EB] bg-white focus:outline-none focus:ring-1 focus:ring-[#18A6A6] text-[#1E293B]"
                 />
               </div>
             </div>
@@ -108,13 +119,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, users }) =
             {/* Password */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-semibold text-[#B99D73]">
+                <label className="block text-xs font-semibold text-[#1E293B]">
                   Password
                 </label>
               </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <Lock className="h-4 w-4 text-[#857866]" />
+                  <Lock className="h-4 w-4 text-[#64748B]" />
                 </div>
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -125,12 +136,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, users }) =
                     setPassword(e.target.value);
                     if (error) setError(null);
                   }}
-                  className="neu-input w-full pl-10 pr-10 py-2.5 text-sm font-mono"
+                  className="w-full pl-10 pr-10 py-2.5 text-xs font-mono rounded-xl border border-[#DCE4EB] bg-white focus:outline-none focus:ring-1 focus:ring-[#18A6A6] text-[#1E293B]"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[#857866] hover:text-[#B99D73] focus:outline-none"
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[#64748B] hover:text-[#10243A] focus:outline-none cursor-pointer"
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -145,35 +156,35 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, users }) =
             <button
               type="submit"
               disabled={isLoading}
-              className="neu-btn-gold w-full mt-3 flex items-center justify-center gap-2 py-3 px-4 font-bold text-sm rounded-xl cursor-pointer disabled:opacity-50"
+              className="w-full mt-3 flex items-center justify-center gap-2 py-2.5 px-4 font-semibold text-xs rounded-xl bg-[#10243A] hover:bg-[#182F49] text-white shadow-xs transition-colors cursor-pointer disabled:opacity-50"
             >
               {isLoading ? (
-                <span>Signing in...</span>
+                <span>Verifying credentials...</span>
               ) : (
                 <>
-                  <span>Sign In</span>
-                  <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+                  <span>Sign In to Field Portal</span>
+                  <ArrowRight className="w-4 h-4 text-[#18A6A6]" />
                 </>
               )}
             </button>
           </form>
 
           {/* Security Assurance Footer */}
-          <div className="mt-6 pt-5 border-t border-[#282319] flex items-center justify-center gap-2 text-[11px] text-[#857866]">
-            <ShieldCheck className="w-3.5 h-3.5 text-[#B99D73]" />
-            <span>Role-Based Access Control • Encrypted Session</span>
+          <div className="mt-6 pt-5 border-t border-[#DCE4EB] flex items-center justify-center gap-2 text-[11px] text-[#64748B]">
+            <ShieldCheck className="w-3.5 h-3.5 text-[#18A6A6]" />
+            <span>Role-Based PostgreSQL Session • Encrypted Transport</span>
           </div>
 
         </div>
 
         {/* Quick Credentials Card */}
-        <div className="mt-6 neu-card p-5 border border-[#282319]">
-          <div className="flex items-center gap-2 text-xs font-bold text-[#B99D73] mb-3">
-            <Lock className="w-3.5 h-3.5 text-[#B99D73]" />
-            <span>Authorized Login Credentials (1-Click Fill)</span>
+        <div className="mt-5 bg-white rounded-2xl p-5 border border-[#DCE4EB] shadow-2xs">
+          <div className="flex items-center gap-2 text-xs font-bold text-[#10243A] mb-3">
+            <Lock className="w-3.5 h-3.5 text-[#18A6A6]" />
+            <span>Authorized Test Accounts (1-Click Fill)</span>
           </div>
 
-          <div className="space-y-2.5">
+          <div className="space-y-2">
             {/* Super Admin */}
             <div 
               onClick={() => {
@@ -181,20 +192,20 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, users }) =
                 setPassword('Shakir@2026');
                 if (error) setError(null);
               }}
-              className="p-3 bg-[#0c0c09] hover:bg-[#14130f] border border-[#282319] hover:border-[#6C5636] rounded-xl cursor-pointer transition-all flex items-center justify-between group shadow-neu-sunken"
+              className="p-3 bg-[#F5F8FA] hover:bg-[#E8EEF4] border border-[#DCE4EB] rounded-xl cursor-pointer transition-all flex items-center justify-between group"
             >
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-[#F2ECE1] group-hover:text-[#B99D73] transition-colors">Super Admin</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#181712] text-[#B99D73] border border-[#282319] font-mono">Full Access</span>
+                  <span className="text-xs font-bold text-[#10243A]">Super Admin</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-teal-50 text-[#137F83] border border-teal-200 font-semibold">Full Root</span>
                 </div>
-                <div className="text-[11px] text-[#857866] mt-0.5">
-                  User: <span className="font-mono text-[#F2ECE1]">shakir878</span> • Pass: <span className="font-mono text-[#F2ECE1]">Shakir@2026</span>
+                <div className="text-[11px] text-[#64748B] mt-0.5">
+                  User: <span className="font-mono text-[#10243A] font-semibold">shakir878</span> • Pass: <span className="font-mono text-[#10243A]">Shakir@2026</span>
                 </div>
               </div>
               <button
                 type="button"
-                className="neu-btn text-[11px] font-bold text-[#B99D73] px-2.5 py-1 rounded-lg cursor-pointer"
+                className="text-[11px] font-semibold text-[#18A6A6] bg-white border border-[#DCE4EB] px-2.5 py-1 rounded-lg cursor-pointer"
               >
                 Auto Fill
               </button>
@@ -207,20 +218,20 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, users }) =
                 setPassword('Bodrud@2026');
                 if (error) setError(null);
               }}
-              className="p-3 bg-[#0c0c09] hover:bg-[#14130f] border border-[#282319] hover:border-[#6C5636] rounded-xl cursor-pointer transition-all flex items-center justify-between group shadow-neu-sunken"
+              className="p-3 bg-[#F5F8FA] hover:bg-[#E8EEF4] border border-[#DCE4EB] rounded-xl cursor-pointer transition-all flex items-center justify-between group"
             >
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-[#F2ECE1] group-hover:text-[#B99D73] transition-colors">Regional Manager (RSM)</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#181712] text-[#B99D73] border border-[#282319] font-mono">Barak Valley</span>
+                  <span className="text-xs font-bold text-[#10243A]">Regional Manager (RSM)</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-[#10243A] border border-[#DCE4EB] font-semibold">Barak Valley</span>
                 </div>
-                <div className="text-[11px] text-[#857866] mt-0.5">
-                  User: <span className="font-mono text-[#F2ECE1]">bodrudsadiol</span> • Pass: <span className="font-mono text-[#F2ECE1]">Bodrud@2026</span>
+                <div className="text-[11px] text-[#64748B] mt-0.5">
+                  User: <span className="font-mono text-[#10243A] font-semibold">bodrudsadiol</span> • Pass: <span className="font-mono text-[#10243A]">Bodrud@2026</span>
                 </div>
               </div>
               <button
                 type="button"
-                className="neu-btn text-[11px] font-bold text-[#B99D73] px-2.5 py-1 rounded-lg cursor-pointer"
+                className="text-[11px] font-semibold text-[#18A6A6] bg-white border border-[#DCE4EB] px-2.5 py-1 rounded-lg cursor-pointer"
               >
                 Auto Fill
               </button>
@@ -233,31 +244,26 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, users }) =
                 setPassword('1234');
                 if (error) setError(null);
               }}
-              className="p-3 bg-[#0c0c09] hover:bg-[#14130f] border border-[#282319] hover:border-[#6C5636] rounded-xl cursor-pointer transition-all flex items-center justify-between group shadow-neu-sunken"
+              className="p-3 bg-[#F5F8FA] hover:bg-[#E8EEF4] border border-[#DCE4EB] rounded-xl cursor-pointer transition-all flex items-center justify-between group"
             >
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-[#F2ECE1] group-hover:text-[#B99D73] transition-colors">Medical Representative</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#181712] text-[#B99D73] border border-[#282319] font-mono">Field Rep</span>
+                  <span className="text-xs font-bold text-[#10243A]">Medical Representative</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-[#10243A] border border-[#DCE4EB] font-semibold">Field Rep</span>
                 </div>
-                <div className="text-[11px] text-[#857866] mt-0.5">
-                  User: <span className="font-mono text-[#F2ECE1]">0002</span> • Pass: <span className="font-mono text-[#F2ECE1]">1234</span>
+                <div className="text-[11px] text-[#64748B] mt-0.5">
+                  User: <span className="font-mono text-[#10243A] font-semibold">0002</span> • Pass: <span className="font-mono text-[#10243A]">1234</span>
                 </div>
               </div>
               <button
                 type="button"
-                className="neu-btn text-[11px] font-bold text-[#B99D73] px-2.5 py-1 rounded-lg cursor-pointer"
+                className="text-[11px] font-semibold text-[#18A6A6] bg-white border border-[#DCE4EB] px-2.5 py-1 rounded-lg cursor-pointer"
               >
                 Auto Fill
               </button>
             </div>
           </div>
         </div>
-
-        {/* Support note */}
-        <p className="mt-6 text-center text-xs text-[#857866]">
-          Need access or password reset? Contact your System Administrator.
-        </p>
 
       </div>
     </div>

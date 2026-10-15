@@ -50,22 +50,22 @@ export const PMSendEnquiryModal: React.FC<PMSendEnquiryModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#10243A]/60 backdrop-blur-xs animate-fadeIn">
       <div 
-        className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-lg w-full max-h-[90vh] overflow-y-auto relative animate-scaleUp"
+        className="bg-white rounded-2xl shadow-2xl border border-[#DCE4EB] max-w-lg w-full max-h-[90vh] overflow-y-auto relative animate-scaleUp"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="bg-[#163e61] text-white px-6 py-4 flex items-center justify-between">
+        <div className="bg-[#10243A] text-white px-6 py-4 flex items-center justify-between">
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-red-300">
-              Wholesale & Institutional Enquiry
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#18A6A6]">
+              Wholesale & Institutional Inquiry
             </span>
-            <h3 className="text-base font-bold">Inquire MOQ & Product Quotation</h3>
+            <h3 className="text-base font-bold">Inquire MOQ & Batch Quotation</h3>
           </div>
           <button
             onClick={resetAndClose}
-            className="p-1 rounded-full text-slate-300 hover:text-white hover:bg-slate-700 transition-colors"
+            className="p-1 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -75,170 +75,148 @@ export const PMSendEnquiryModal: React.FC<PMSendEnquiryModalProps> = ({
         <div className="p-6">
           {isSuccess ? (
             <div className="py-8 text-center space-y-4 animate-fadeIn">
-              <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-md">
+              <div className="w-14 h-14 bg-teal-50 text-[#18A6A6] border border-teal-200 rounded-full flex items-center justify-center mx-auto shadow-xs">
                 <CheckCircle2 className="w-8 h-8" />
               </div>
-              <h4 className="text-xl font-bold text-[#163e61]">
-                MOQ Enquiry Sent Successfully!
+              <h4 className="text-xl font-bold text-[#10243A]">
+                Inquiry Sent Successfully
               </h4>
-              <p className="text-xs text-slate-600">
-                Thank you for inquiring about <strong>{productName}</strong>. Our distribution team will review your target quantity of <strong>{quantity} {unit}</strong> (Standard MOQ: {moq}) and contact you with wholesale pricing.
+              <p className="text-xs text-[#64748B] leading-relaxed">
+                Thank you for inquiring about <strong>{productName}</strong>. Our distribution desk will review your target quantity of <strong>{quantity} {unit}</strong> (Standard MOQ: {moq}) and reach out with wholesale terms.
               </p>
               <div className="pt-2 flex flex-col sm:flex-row justify-center gap-2">
                 <button
                   onClick={handleWhatsApp}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 rounded-lg shadow transition-colors flex items-center justify-center gap-1.5"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-4 py-2 rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <MessageSquare className="w-3.5 h-3.5" />
                   <span>Send on WhatsApp</span>
                 </button>
                 <button
                   onClick={resetAndClose}
-                  className="bg-[#163e61] text-white font-bold text-xs px-4 py-2 rounded-lg shadow hover:bg-slate-800 transition-colors"
+                  className="bg-[#10243A] text-white font-semibold text-xs px-4 py-2 rounded-xl shadow-xs hover:bg-[#182F49] transition-colors cursor-pointer"
                 >
                   Done
                 </button>
               </div>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+            <form onSubmit={handleSubmit} className="space-y-4">
               
-              {/* Product Info Banner */}
-              <div className="bg-slate-50 border border-slate-200 p-2.5 rounded-lg flex items-center justify-between">
-                <span className="font-bold text-[#163e61]">{productName}</span>
-                <span className="text-[11px] font-bold text-[#c72828] bg-red-50 px-2 py-0.5 rounded border border-red-100">
-                  MOQ: {moq}
-                </span>
-              </div>
-
-              {/* Product Selector */}
+              {/* Product Select */}
               <div>
-                <label className="block font-bold text-slate-700 mb-1">
-                  Product / Molecule <span className="text-red-500">*</span>
+                <label className="block text-xs font-semibold text-[#1E293B] mb-1">
+                  Product / Molecule <span className="text-rose-500">*</span>
                 </label>
                 <select
                   value={productName}
                   onChange={(e) => setProductName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#163e61]"
-                  required
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#DCE4EB] bg-white focus:outline-none focus:ring-1 focus:ring-[#18A6A6] font-medium text-[#1E293B] cursor-pointer"
                 >
                   {PRODUCTS.map(p => (
                     <option key={p.id} value={p.name}>
-                      {p.name} ({p.category}) [MOQ: {p.moq}]
+                      {p.name} ({p.category}) — [MOQ: {p.moq}]
                     </option>
                   ))}
                 </select>
               </div>
 
-              {/* Quantity & Unit */}
+              {/* Quantity */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    Enquiry Quantity <span className="text-red-500">*</span>
+                  <label className="block text-xs font-semibold text-[#1E293B] mb-1">
+                    Enquiry Quantity <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="number"
                     min="1"
                     value={quantity}
                     onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#163e61]"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-[#DCE4EB] bg-white focus:outline-none focus:ring-1 focus:ring-[#18A6A6]"
                     required
                   />
+                  <p className="text-[10px] text-[#64748B] mt-0.5">MOQ: {moq}</p>
                 </div>
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Unit</label>
+                  <label className="block text-xs font-semibold text-[#1E293B] mb-1">
+                    Packaging Unit
+                  </label>
                   <input
                     type="text"
                     value={unit}
                     readOnly
-                    className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-100 text-slate-600 font-bold"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-[#DCE4EB] bg-[#F1F6F8] text-[#10243A] font-bold"
                   />
                 </div>
               </div>
 
-              {/* Name & Phone */}
-              <div className="space-y-3">
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    Your Name / Pharmacy / Stockist Name <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="e.g. Dr. Rajesh Kumar / City Chemist"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="w-full pl-8 pr-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#163e61]"
-                      required
-                    />
-                    <User className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    Mobile Number <span className="text-red-500">*</span>
-                  </label>
-                  <div className="flex">
-                    <span className="inline-flex items-center px-2.5 rounded-l-lg border border-r-0 border-slate-300 bg-slate-100 text-slate-600 font-bold">
-                      +91
-                    </span>
-                    <input
-                      type="tel"
-                      placeholder="9876543210"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      className="w-full px-3 py-2 rounded-r-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#163e61]"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    Email Address (Optional)
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="email"
-                      placeholder="e.g. contact@domain.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-8 pr-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#163e61]"
-                    />
-                    <Mail className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    Target Region / Specific Requirements
-                  </label>
-                  <textarea
-                    rows={2}
-                    placeholder="Region of distribution (e.g. Assam, Mumbai, etc.), PCD interest, or batch inquiries..."
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#163e61]"
-                  ></textarea>
+              {/* Name */}
+              <div>
+                <label className="block text-xs font-semibold text-[#1E293B] mb-1">
+                  Stockist / Firm Name <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="e.g. Dr. A. Sharma / MediLife Distributors"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full pl-8 pr-3 py-2 text-xs rounded-xl border border-[#DCE4EB] bg-white focus:outline-none focus:ring-1 focus:ring-[#18A6A6]"
+                    required
+                  />
+                  <User className="w-3.5 h-3.5 text-[#64748B] absolute left-2.5 top-2.5" />
                 </div>
               </div>
 
-              {/* Submit Buttons */}
+              {/* Phone */}
+              <div>
+                <label className="block text-xs font-semibold text-[#1E293B] mb-1">
+                  Mobile / WhatsApp Number <span className="text-rose-500">*</span>
+                </label>
+                <div className="flex">
+                  <span className="inline-flex items-center px-2.5 rounded-l-xl border border-r-0 border-[#DCE4EB] bg-[#F1F6F8] text-[#64748B] text-xs font-bold">
+                    +91
+                  </span>
+                  <input
+                    type="tel"
+                    placeholder="9876543210"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full px-3 py-2 text-xs rounded-r-xl border border-[#DCE4EB] bg-white focus:outline-none focus:ring-1 focus:ring-[#18A6A6]"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Message */}
+              <div>
+                <label className="block text-xs font-semibold text-[#1E293B] mb-1">
+                  Specific Requirements (Optional)
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="Specify target territory, delivery timeline, or batch quantity..."
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#DCE4EB] bg-white focus:outline-none focus:ring-1 focus:ring-[#18A6A6]"
+                ></textarea>
+              </div>
+
+              {/* Actions */}
               <div className="pt-2 flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={resetAndClose}
-                  className="px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-100 font-semibold"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-[#64748B] hover:bg-[#F1F6F8] transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-[#c72828] hover:bg-red-700 text-white font-bold px-5 py-2 rounded-lg shadow transition-colors flex items-center gap-1.5"
+                  className="bg-[#18A6A6] hover:bg-[#137F83] text-white font-semibold text-xs px-5 py-2 rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
                   <Send className="w-3.5 h-3.5" />
-                  <span>Submit MOQ Enquiry</span>
+                  <span>Submit Inquiry</span>
                 </button>
               </div>
 
