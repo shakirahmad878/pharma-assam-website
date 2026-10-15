@@ -775,6 +775,8 @@ export default function App() {
             <TerritoryStaffView
               territories={territories}
               users={users}
+              doctors={doctors}
+              chemists={chemists}
             />
           )}
 

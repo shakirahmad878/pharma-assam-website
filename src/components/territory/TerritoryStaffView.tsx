@@ -1,14 +1,21 @@
 import React from 'react';
-import { Territory, User } from '../../types';
+import { Territory, User, Doctor, Chemist } from '../../types';
 import { Badge } from '../common/Badge';
 import { Map, Users, Stethoscope, Store, UserCheck } from 'lucide-react';
 
 interface TerritoryStaffViewProps {
   territories: Territory[];
   users: User[];
+  doctors?: Doctor[];
+  chemists?: Chemist[];
 }
 
-export const TerritoryStaffView: React.FC<TerritoryStaffViewProps> = ({ territories, users }) => {
+export const TerritoryStaffView: React.FC<TerritoryStaffViewProps> = ({
+  territories,
+  users,
+  doctors = [],
+  chemists = [],
+}) => {
   return (
     <div className="space-y-6">
       <div className="neu-card p-5 border border-[#282319] flex items-center justify-between">
@@ -28,8 +35,57 @@ export const TerritoryStaffView: React.FC<TerritoryStaffViewProps> = ({ territor
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {territories.map((terr) => {
-          const manager = users.find(u => u.id === terr.assignedManagerId);
-          const reps = users.filter(u => terr.assignedMRIds.includes(u.id));
+          // Dynamic doctor count from live database
+          const terrDocCount = doctors.filter((d) => {
+            const docDist = (d.territoryName || d.clinicLocation?.address || '').toLowerCase();
+            const terrDist = terr.headquarter.toLowerCase();
+            if (terr.id.includes('karimganj') || terrDist.includes('karimganj')) {
+              return docDist.includes('karimganj') || docDist.includes('patharkandi') || docDist.includes('badarpur') || docDist.includes('nilambazar') || docDist.includes('baraigram') || docDist.includes('maizdhi');
+            }
+            if (terr.id.includes('hailakandi') || terrDist.includes('hailakandi')) {
+              return docDist.includes('hailakandi') || docDist.includes('s.k. roy') || docDist.includes('lala');
+            }
+            if (terr.id.includes('cachar-02') || terr.code === 'SIL-02') {
+              return docDist.includes('ghungoor') || docDist.includes('smch') || docDist.includes('tarapur');
+            }
+            // default Silchar / Cachar
+            return docDist.includes('cachar') || docDist.includes('silchar') || (!docDist.includes('karimganj') && !docDist.includes('hailakandi'));
+          }).length;
+
+          // Dynamic chemist count from live database
+          const terrChemCount = chemists.filter((c) => {
+            const chemDist = (c.territoryName || c.shopName || c.location?.address || '').toLowerCase();
+            const terrDist = terr.headquarter.toLowerCase();
+            if (terr.id.includes('karimganj') || terrDist.includes('karimganj')) {
+              return chemDist.includes('karimganj') || chemDist.includes('shribhumi') || chemDist.includes('kxj');
+            }
+            if (terr.id.includes('hailakandi') || terrDist.includes('hailakandi')) {
+              return chemDist.includes('hailakandi') || chemDist.includes('hkd');
+            }
+            if (terr.id.includes('cachar-02') || terr.code === 'SIL-02') {
+              return chemDist.includes('ghungoor') || chemDist.includes('smch') || chemDist.includes('tarapur');
+            }
+            return chemDist.includes('cachar') || chemDist.includes('silchar') || chemDist.includes('ambicapatty');
+          }).length;
+
+          // Find manager or fallback to RSM Bodrud Jaman Sadiol
+          const manager = users.find(u => u.role === 'REGIONAL_MANAGER' || u.role === 'AREA_MANAGER') || users.find(u => u.id === terr.assignedManagerId);
+          
+          // Match MRs by territory or district
+          const reps = users.filter((u) => {
+            if (u.role !== 'MEDICAL_REP') return false;
+            const userTerr = (u.territoryName || '').toLowerCase();
+            if (terr.id.includes('karimganj') || terr.code === 'KGJ-01') {
+              return userTerr.includes('karimganj') || u.employeeCode === 'usr-mr-0002' || u.employeeCode === 'usr-mr-0004';
+            }
+            if (terr.id.includes('hailakandi') || terr.code === 'HLK-01') {
+              return userTerr.includes('hailakandi') || u.employeeCode === 'usr-mr-0003';
+            }
+            if (terr.id.includes('cachar') || terr.code.startsWith('SIL')) {
+              return userTerr.includes('silchar') || userTerr.includes('cachar') || (!userTerr.includes('karimganj') && !userTerr.includes('hailakandi'));
+            }
+            return terr.assignedMRIds.includes(u.id);
+          });
 
           return (
             <div key={terr.id} className="neu-card border border-[#282319] p-5 space-y-4 hover:border-[#6C5636]/60 transition-all duration-200">
@@ -44,11 +100,11 @@ export const TerritoryStaffView: React.FC<TerritoryStaffViewProps> = ({ territor
               <div className="grid grid-cols-2 gap-2 text-xs p-3 rounded-xl bg-[#0c0c09] border border-[#282319] shadow-neu-sunken">
                 <div className="flex items-center gap-2 text-[#F2ECE1]">
                   <Stethoscope className="w-4 h-4 text-[#B99D73]" />
-                  <span><strong className="text-[#B99D73]">{terr.doctorCount}</strong> Doctors</span>
+                  <span><strong className="text-[#B99D73]">{terrDocCount}</strong> Doctors</span>
                 </div>
                 <div className="flex items-center gap-2 text-[#F2ECE1]">
                   <Store className="w-4 h-4 text-[#B99D73]" />
-                  <span><strong className="text-[#B99D73]">{terr.chemistCount}</strong> Chemists</span>
+                  <span><strong className="text-[#B99D73]">{terrChemCount}</strong> Chemists</span>
                 </div>
               </div>
 
