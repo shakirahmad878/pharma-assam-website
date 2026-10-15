@@ -45,11 +45,17 @@ export const TerritoryStaffView: React.FC<TerritoryStaffViewProps> = ({
             if (terr.id.includes('hailakandi') || terrDist.includes('hailakandi')) {
               return docDist.includes('hailakandi') || docDist.includes('s.k. roy') || docDist.includes('lala');
             }
+            if (terr.id.includes('aizawl') || terrDist.includes('aizawl')) {
+              return docDist.includes('aizawl') || docDist.includes('mizoram') || docDist.includes('dawrpui') || docDist.includes('chanmari');
+            }
+            if (terr.id.includes('tripura') || terrDist.includes('agartala') || terrDist.includes('tripura')) {
+              return docDist.includes('tripura') || docDist.includes('agartala') || docDist.includes('kunjaban') || docDist.includes('agmc');
+            }
             if (terr.id.includes('cachar-02') || terr.code === 'SIL-02') {
               return docDist.includes('ghungoor') || docDist.includes('smch') || docDist.includes('tarapur');
             }
             // default Silchar / Cachar
-            return docDist.includes('cachar') || docDist.includes('silchar') || (!docDist.includes('karimganj') && !docDist.includes('hailakandi'));
+            return (docDist.includes('cachar') || docDist.includes('silchar')) && !docDist.includes('karimganj') && !docDist.includes('hailakandi') && !docDist.includes('aizawl') && !docDist.includes('tripura');
           }).length;
 
           // Dynamic chemist count from live database
@@ -61,6 +67,12 @@ export const TerritoryStaffView: React.FC<TerritoryStaffViewProps> = ({
             }
             if (terr.id.includes('hailakandi') || terrDist.includes('hailakandi')) {
               return chemDist.includes('hailakandi') || chemDist.includes('hkd');
+            }
+            if (terr.id.includes('aizawl') || terrDist.includes('aizawl')) {
+              return chemDist.includes('aizawl') || chemDist.includes('mizoram');
+            }
+            if (terr.id.includes('tripura') || terrDist.includes('agartala') || terrDist.includes('tripura')) {
+              return chemDist.includes('tripura') || chemDist.includes('agartala');
             }
             if (terr.id.includes('cachar-02') || terr.code === 'SIL-02') {
               return chemDist.includes('ghungoor') || chemDist.includes('smch') || chemDist.includes('tarapur');
@@ -81,8 +93,14 @@ export const TerritoryStaffView: React.FC<TerritoryStaffViewProps> = ({
             if (terr.id.includes('hailakandi') || terr.code === 'HLK-01') {
               return userTerr.includes('hailakandi') || u.employeeCode === 'usr-mr-0003';
             }
+            if (terr.id.includes('aizawl') || terr.code === 'AIZ-01') {
+              return userTerr.includes('aizawl') || userTerr.includes('mizoram');
+            }
+            if (terr.id.includes('tripura') || terr.code === 'AGR-01') {
+              return userTerr.includes('tripura') || userTerr.includes('agartala');
+            }
             if (terr.id.includes('cachar') || terr.code.startsWith('SIL')) {
-              return userTerr.includes('silchar') || userTerr.includes('cachar') || (!userTerr.includes('karimganj') && !userTerr.includes('hailakandi'));
+              return (userTerr.includes('silchar') || userTerr.includes('cachar')) && !userTerr.includes('karimganj') && !userTerr.includes('hailakandi');
             }
             return terr.assignedMRIds.includes(u.id);
           });

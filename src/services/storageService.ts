@@ -212,7 +212,16 @@ export class StorageService {
   // Territories
   static getTerritories(): Territory[] {
     const territories = this.getItem<Territory[]>(STORAGE_KEYS.TERRITORIES, INITIAL_TERRITORIES);
-    return Array.isArray(territories) && territories.length > 0 ? territories : INITIAL_TERRITORIES;
+    if (!Array.isArray(territories) || territories.length === 0) return INITIAL_TERRITORIES;
+    
+    // Ensure all baseline territories (including Aizawl and Tripura) exist
+    const merged = [...territories];
+    for (const initTerr of INITIAL_TERRITORIES) {
+      if (!merged.some(t => t.id === initTerr.id || t.code === initTerr.code)) {
+        merged.push(initTerr);
+      }
+    }
+    return merged;
   }
 
   static saveTerritories(territories: Territory[]): void {
