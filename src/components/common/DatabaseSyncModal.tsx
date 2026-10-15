@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StorageService } from '../../services/storageService';
-import { FirestoreService } from '../../services/firestoreService';
+import { SupabaseService } from '../../services/supabaseService';
 import { Database, Download, Upload, CheckCircle2, AlertTriangle, RefreshCw, X, Copy, Check, Cloud } from 'lucide-react';
 
 interface DatabaseSyncModalProps {
@@ -21,7 +21,7 @@ export const DatabaseSyncModal: React.FC<DatabaseSyncModalProps> = ({
 
   if (!isOpen) return null;
 
-  const isCloudConnected = FirestoreService.isConnected();
+  const isCloudConnected = SupabaseService.isConnected();
   const currentBackupJSON = StorageService.exportFullDatabaseJSON();
   const doctors = StorageService.getDoctors();
   const chemists = StorageService.getChemists();
@@ -35,23 +35,23 @@ export const DatabaseSyncModal: React.FC<DatabaseSyncModalProps> = ({
     setIsSyncingCloud(true);
     setStatusMessage(null);
     try {
-      // 1. Fetch any newly added records from Cloud Firestore
-      const [cloudDocs, cloudChems, cloudProds] = await Promise.all([
-        FirestoreService.fetchDoctors(),
-        FirestoreService.fetchChemists(),
-        FirestoreService.fetchProducts(),
+      // 1. Fetch any newly added records from Supabase Server
+      const [cloudDocs, cloudChems, cloudUsers] = await Promise.all([
+        SupabaseService.fetchDoctors(),
+        SupabaseService.fetchChemists(),
+        SupabaseService.fetchUsers(),
       ]);
 
       if (cloudDocs.length > 0) StorageService.saveDoctors(cloudDocs);
       if (cloudChems.length > 0) StorageService.saveChemists(cloudChems);
-      if (cloudProds.length > 0) StorageService.saveProducts(cloudProds);
+      if (cloudUsers.length > 0) StorageService.saveUsers(cloudUsers);
 
       // 2. Push local master records to cloud
-      const syncResult = await FirestoreService.syncAllLocalToCloud({
+      const syncResult = await SupabaseService.syncAllLocalToCloud({
         doctors: StorageService.getDoctors(),
         chemists: StorageService.getChemists(),
         products: StorageService.getProducts(),
-        users,
+        users: StorageService.getUsers(),
         companies,
         territories,
         dcrLogs,
@@ -148,7 +148,7 @@ export const DatabaseSyncModal: React.FC<DatabaseSyncModalProps> = ({
                 {isCloudConnected ? (
                   <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[#101912] text-[#A6C48A] border border-[#384D2B]/60 shadow-neu-sunken">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                    Cloud Firestore Online
+                    Supabase PostgreSQL Live
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[#1a140b] text-[#D4BD95] border border-[#8A7049]/60">
@@ -157,7 +157,7 @@ export const DatabaseSyncModal: React.FC<DatabaseSyncModalProps> = ({
                 )}
               </h3>
               <p className="text-xs text-[#857866] mt-0.5">
-                Connected to Google Cloud Firestore (<code className="text-[#B99D73]">reppulse-pharma</code>)
+                Connected to Serverless PostgreSQL (<code className="text-[#B99D73]">ibcyqtnpzdttwuhyhlra.supabase.co</code>)
               </p>
             </div>
           </div>
@@ -180,7 +180,7 @@ export const DatabaseSyncModal: React.FC<DatabaseSyncModalProps> = ({
 
         <div className="mt-4 space-y-4 overflow-y-auto flex-1 pr-1 text-xs">
           
-          {/* Section 1: Live Cloud Firestore Synchronization */}
+          {/* Section 1: Live Cloud Supabase Synchronization */}
           <div className="bg-[#0c0c09] p-4 rounded-xl border border-[#282319] shadow-neu-sunken">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -188,12 +188,12 @@ export const DatabaseSyncModal: React.FC<DatabaseSyncModalProps> = ({
                   <Cloud className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-[#F2ECE1] text-xs">Google Cloud Firestore Database</h4>
-                  <p className="text-[11px] text-[#857866]">Real-time sync between Web Portal, Field Mobile App, and Admin DB</p>
+                  <h4 className="font-bold text-[#F2ECE1] text-xs">Supabase Serverless PostgreSQL</h4>
+                  <p className="text-[11px] text-[#857866]">Real-time sync between Web Portal, Field Mobile APK, and Admin DB</p>
                 </div>
               </div>
               <span className="text-[10px] font-mono bg-[#181712] text-[#B99D73] px-2 py-0.5 rounded border border-[#282319]">
-                reppulse-pharma
+                Live Field DB
               </span>
             </div>
 
@@ -204,11 +204,11 @@ export const DatabaseSyncModal: React.FC<DatabaseSyncModalProps> = ({
               </div>
               <div className="bg-[#181712] p-2 rounded-xl border border-[#282319]">
                 <div className="text-base font-bold text-[#F2ECE1]">{chemists.length}</div>
-                <div className="text-[10px] text-[#857866]">Chemists</div>
+                <div className="text-[10px] text-[#857866]">Chemists / Firms</div>
               </div>
               <div className="bg-[#181712] p-2 rounded-xl border border-[#282319]">
-                <div className="text-base font-bold text-[#B99D73]">{products.length}</div>
-                <div className="text-[10px] text-[#857866]">Products</div>
+                <div className="text-base font-bold text-[#B99D73]">{users.length}</div>
+                <div className="text-[10px] text-[#857866]">Field Staff / Users</div>
               </div>
             </div>
 
@@ -218,7 +218,7 @@ export const DatabaseSyncModal: React.FC<DatabaseSyncModalProps> = ({
               className="neu-btn-gold w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl font-bold cursor-pointer disabled:opacity-50"
             >
               <RefreshCw className={`w-4 h-4 ${isSyncingCloud ? 'animate-spin' : ''}`} />
-              <span>{isSyncingCloud ? 'Synchronizing with Firestore...' : 'Sync Database with Cloud Firestore Now'}</span>
+              <span>{isSyncingCloud ? 'Synchronizing with Supabase...' : 'Sync Database with Supabase Server Now'}</span>
             </button>
           </div>
 

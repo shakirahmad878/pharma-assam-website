@@ -17,7 +17,7 @@ import {
 } from './data/mockData';
 import { AuthService } from './services/authService';
 import { StorageService } from './services/storageService';
-import { FirestoreService } from './services/firestoreService';
+import { SupabaseService } from './services/supabaseService';
 import { TelemetryService } from './services/telemetryService';
 import { Navbar } from './components/layout/Navbar';
 import { Sidebar, NavTab } from './components/layout/Sidebar';
@@ -133,10 +133,10 @@ export default function App() {
 
   // Real-time Two-Way Sync with Google Cloud Firestore
   useEffect(() => {
-    if (!FirestoreService.isConnected()) return;
+    if (!SupabaseService.isConnected()) return;
 
     // 1. Subscribe to live Doctor updates from Cloud
-    const unsubDoctors = FirestoreService.subscribeDoctors((cloudDocs) => {
+    const unsubDoctors = SupabaseService.subscribeDoctors((cloudDocs) => {
       if (cloudDocs && cloudDocs.length > 0) {
         setDoctors(cloudDocs);
         StorageService.saveDoctors(cloudDocs);
@@ -144,7 +144,7 @@ export default function App() {
     });
 
     // 2. Subscribe to live Chemists updates from Cloud
-    const unsubChemists = FirestoreService.subscribeChemists((cloudChems) => {
+    const unsubChemists = SupabaseService.subscribeChemists((cloudChems) => {
       if (cloudChems && cloudChems.length > 0) {
         setChemists(cloudChems);
         StorageService.saveChemists(cloudChems);
@@ -152,7 +152,7 @@ export default function App() {
     });
 
     // 3. Subscribe to live Products updates from Cloud
-    const unsubProducts = FirestoreService.subscribeProducts((cloudProds) => {
+    const unsubProducts = SupabaseService.subscribeProducts((cloudProds) => {
       if (cloudProds && cloudProds.length > 0) {
         setProducts(cloudProds);
         StorageService.saveProducts(cloudProds);
@@ -160,7 +160,7 @@ export default function App() {
     });
 
     // 4. Subscribe to live Territories updates from Cloud
-    const unsubTerritories = FirestoreService.subscribeTerritories((cloudTerrs) => {
+    const unsubTerritories = SupabaseService.subscribeTerritories((cloudTerrs) => {
       if (cloudTerrs && cloudTerrs.length > 0) {
         setTerritories(cloudTerrs);
         StorageService.saveTerritories(cloudTerrs);
@@ -168,7 +168,7 @@ export default function App() {
     });
 
     // 5. Subscribe to live Users updates from Cloud
-    const unsubUsers = FirestoreService.subscribeUsers((cloudUsers) => {
+    const unsubUsers = SupabaseService.subscribeUsers((cloudUsers) => {
       if (cloudUsers && cloudUsers.length > 0) {
         setUsers(cloudUsers);
         StorageService.saveUsers(cloudUsers);
@@ -176,7 +176,7 @@ export default function App() {
     });
 
     // 6. Subscribe to live Field Visits / DCR from Cloud
-    const unsubDCR = FirestoreService.subscribeDCRLogs((cloudDcr) => {
+    const unsubDCR = SupabaseService.subscribeDCRLogs((cloudDcr) => {
       if (cloudDcr && cloudDcr.length > 0) {
         setDcrLogs(cloudDcr);
         StorageService.saveDCRLogs(cloudDcr);
@@ -184,13 +184,13 @@ export default function App() {
     });
 
     // Initial check: if cloud has no doctors, seed local baseline to cloud
-    FirestoreService.fetchDoctors().then((existingCloudDocs) => {
+    SupabaseService.fetchDoctors().then((existingCloudDocs) => {
       if (!existingCloudDocs || existingCloudDocs.length === 0) {
         const localDocs = StorageService.getDoctors();
         const localChems = StorageService.getChemists();
         const localProds = StorageService.getProducts();
         if (localDocs.length > 0 || localChems.length > 0) {
-          FirestoreService.syncAllLocalToCloud({
+          SupabaseService.syncAllLocalToCloud({
             doctors: localDocs,
             chemists: localChems,
             products: localProds,

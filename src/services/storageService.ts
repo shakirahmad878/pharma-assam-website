@@ -9,7 +9,8 @@ import {
   INITIAL_DCR_LOGS,
   INITIAL_AUDIT_LOGS
 } from '../data/mockData';
-import { FirestoreService, normalizeDoctor, normalizeChemist } from './firestoreService';
+import { SupabaseService, normalizeDoctor, normalizeChemist } from './supabaseService';
+const DatabaseService = SupabaseService;
 
 const STORAGE_KEYS = {
   DOCTORS: 'reppulse_master_doctors',
@@ -72,8 +73,8 @@ export class StorageService {
     const current = this.getDoctors();
     const updated = [normalized, ...current.filter(d => d.id !== normalized.id)];
     this.saveDoctors(updated);
-    if (FirestoreService.isConnected()) {
-      await FirestoreService.saveDoctor(normalized);
+    if (DatabaseService.isConnected()) {
+      await DatabaseService.saveDoctor(normalized);
     }
   }
 
@@ -81,8 +82,8 @@ export class StorageService {
     const current = this.getDoctors();
     const updated = current.filter(d => d.id !== docId);
     this.saveDoctors(updated);
-    if (FirestoreService.isConnected()) {
-      await FirestoreService.deleteDoctor(docId);
+    if (DatabaseService.isConnected()) {
+      await DatabaseService.deleteDoctor(docId);
     }
   }
 
@@ -102,8 +103,8 @@ export class StorageService {
     const current = this.getChemists();
     const updated = [chem, ...current.filter(c => c.id !== chem.id)];
     this.saveChemists(updated);
-    if (FirestoreService.isConnected()) {
-      await FirestoreService.saveChemist(chem);
+    if (DatabaseService.isConnected()) {
+      await DatabaseService.saveChemist(chem);
     }
   }
 
@@ -111,8 +112,8 @@ export class StorageService {
     const current = this.getChemists();
     const updated = current.filter(c => c.id !== chemId);
     this.saveChemists(updated);
-    if (FirestoreService.isConnected()) {
-      await FirestoreService.deleteChemist(chemId);
+    if (DatabaseService.isConnected()) {
+      await DatabaseService.deleteChemist(chemId);
     }
   }
 
@@ -132,8 +133,8 @@ export class StorageService {
     const current = this.getProducts();
     const updated = [prod, ...current.filter(p => p.id !== prod.id)];
     this.saveProducts(updated);
-    if (FirestoreService.isConnected()) {
-      await FirestoreService.saveProduct(prod);
+    if (DatabaseService.isConnected()) {
+      await DatabaseService.saveProduct(prod);
     }
   }
 
@@ -141,8 +142,8 @@ export class StorageService {
     const current = this.getProducts();
     const updated = current.filter(p => p.id !== prodId);
     this.saveProducts(updated);
-    if (FirestoreService.isConnected()) {
-      await FirestoreService.deleteProduct(prodId);
+    if (DatabaseService.isConnected()) {
+      await DatabaseService.deleteProduct(prodId);
     }
   }
 
@@ -182,8 +183,8 @@ export class StorageService {
     const current = this.getUsers();
     const updated = [user, ...current.filter(u => u.id !== user.id)];
     this.saveUsers(updated);
-    if (FirestoreService.isConnected()) {
-      await FirestoreService.saveUser(user);
+    if (DatabaseService.isConnected()) {
+      await DatabaseService.saveUser(user);
     }
   }
 
@@ -191,8 +192,8 @@ export class StorageService {
     const current = this.getUsers();
     const updated = current.filter(u => u.id !== userId);
     this.saveUsers(updated);
-    if (FirestoreService.isConnected()) {
-      await FirestoreService.deleteUser(userId);
+    if (DatabaseService.isConnected()) {
+      await DatabaseService.deleteUser(userId);
     }
   }
 
@@ -222,8 +223,8 @@ export class StorageService {
     const current = this.getTerritories();
     const updated = [terr, ...current.filter(t => t.id !== terr.id)];
     this.saveTerritories(updated);
-    if (FirestoreService.isConnected()) {
-      await FirestoreService.saveTerritory(terr);
+    if (DatabaseService.isConnected()) {
+      await DatabaseService.saveTerritory(terr);
     }
   }
 
@@ -231,8 +232,8 @@ export class StorageService {
     const current = this.getTerritories();
     const updated = current.filter(t => t.id !== terrId);
     this.saveTerritories(updated);
-    if (FirestoreService.isConnected()) {
-      await FirestoreService.deleteTerritory(terrId);
+    if (DatabaseService.isConnected()) {
+      await DatabaseService.deleteTerritory(terrId);
     }
   }
 
@@ -250,8 +251,8 @@ export class StorageService {
     const current = this.getDCRLogs();
     const updated = [log, ...current.filter(l => l.id !== log.id)];
     this.saveDCRLogs(updated);
-    if (FirestoreService.isConnected()) {
-      await FirestoreService.saveDCRLog(log);
+    if (DatabaseService.isConnected()) {
+      await DatabaseService.saveDCRLog(log);
     }
   }
 
@@ -291,7 +292,7 @@ export class StorageService {
     const fullBackup = {
       version: '1.0',
       exportedAt: new Date().toISOString(),
-      database: 'Google Cloud Firestore (reppulse-pharma)',
+      database: 'Supabase Serverless PostgreSQL (ibcyqtnpzdttwuhyhlra)',
       doctors: this.getDoctors(),
       chemists: this.getChemists(),
       products: this.getProducts(),
@@ -322,8 +323,8 @@ export class StorageService {
       if (Array.isArray(data.plannedVisits)) this.savePlannedVisits(data.plannedVisits);
 
       // Also trigger cloud sync if connected
-      if (FirestoreService.isConnected()) {
-        FirestoreService.syncAllLocalToCloud({
+      if (DatabaseService.isConnected()) {
+        DatabaseService.syncAllLocalToCloud({
           doctors: this.getDoctors(),
           chemists: this.getChemists(),
           products: this.getProducts(),
@@ -331,12 +332,12 @@ export class StorageService {
           companies: this.getCompanies(),
           territories: this.getTerritories(),
           dcrLogs: this.getDCRLogs(),
-        }).catch(err => console.warn('[Firestore] Auto-sync on import error:', err));
+        }).catch(err => console.warn('[Supabase] Auto-sync on import error:', err));
       }
 
       return {
         success: true,
-        message: `Database restored and synced to Cloud Firestore! (${data.doctors?.length || 0} Doctors, ${data.chemists?.length || 0} Chemists, ${data.products?.length || 0} Products)`,
+        message: `Database restored and synced to Supabase! (${data.doctors?.length || 0} Doctors, ${data.chemists?.length || 0} Chemists, ${data.products?.length || 0} Products)`,
         counts: {
           doctors: data.doctors?.length || 0,
           chemists: data.chemists?.length || 0,
