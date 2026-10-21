@@ -1,6 +1,15 @@
 import { UserProfile, LateLoginRequest } from '../types';
 import { StorageService, STORAGE_KEYS } from './storageService';
-import { USER_BODRUD_ABM, USER_PRANJAL_MR, ALL_APP_USERS, CURRENT_USER_MOCK } from '../constants/mockData';
+import {
+  USER_SAMSUJ_CEO,
+  USER_SHAKIR_HR,
+  USER_BODRUD_RSM,
+  USER_BODRUD_ABM,
+  USER_PRANJAL_MR,
+  USER_SATYAM_MR,
+  ALL_APP_USERS,
+  CURRENT_USER_MOCK,
+} from '../constants/mockData';
 import { EmployeeService } from './employeeService';
 import { SupabaseDbService } from './supabase/supabaseDbService';
 
@@ -142,7 +151,7 @@ export class AuthService {
   }
 
   public static async setMrPin(newPin: string): Promise<boolean> {
-    return this.setUserPin('0002', newPin);
+    return this.setUserPin('NLCL-0004', newPin);
   }
 
   public static async checkAutoLogout(): Promise<{ autoLoggedOut: boolean; reason?: string }> {
@@ -156,7 +165,7 @@ export class AuthService {
     return { autoLoggedOut: false };
   }
 
-  public static async getTodayLateApproval(employeeCode = '0002'): Promise<LateLoginApproval | null> {
+  public static async getTodayLateApproval(employeeCode = 'NLCL-0004'): Promise<LateLoginApproval | null> {
     const todayStr = new Date().toISOString().split('T')[0];
 
     // 1. Check SupabaseDbService for live approval status
@@ -196,9 +205,9 @@ export class AuthService {
     const now = new Date();
     const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    const empId = employee?.id || 'usr-mr-0002';
+    const empId = employee?.id || 'usr-nlcl-0004';
     const empName = employee?.name || 'Pranjal Malakar';
-    const empCode = employee?.employeeCode || '0002';
+    const empCode = employee?.employeeCode || 'NLCL-0004';
 
     const req: LateLoginRequest = {
       id: `late_req_${empCode}_${Date.now()}`,
@@ -235,8 +244,8 @@ export class AuthService {
       employees = ALL_APP_USERS;
     }
 
-    const rsm = employees.find(e => e.role === 'REGIONAL_MANAGER' || e.employeeCode === '0001');
-    const rsmPersonalPin = await this.getUserPin(rsm?.employeeCode || '0001');
+    const rsm = employees.find(e => e.role === 'REGIONAL_MANAGER' || e.employeeCode === 'NLCL-0003' || e.employeeCode === '0001');
+    const rsmPersonalPin = await this.getUserPin(rsm?.employeeCode || 'NLCL-0003');
 
     // Only Bodrud's real employee PIN or configured PIN is accepted. NO backdoors!
     const isBodrudPin = Boolean(
@@ -315,7 +324,7 @@ export class AuthService {
 
   public static async loginWithPin(
     pin: string,
-    targetEmployeeCode = '0002',
+    targetEmployeeCode = 'NLCL-0004',
     ignoreCutoff = false
   ): Promise<{
     success: boolean;
@@ -341,7 +350,7 @@ export class AuthService {
           u.email.toLowerCase() === code ||
           (u.phone && (u.phone === cleanDigits || u.phone.includes(cleanDigits))) ||
           u.name.toLowerCase().includes(code)
-      ) || (code === '0001' ? USER_BODRUD_ABM : USER_PRANJAL_MR);
+      ) || (code.includes('0003') || code.includes('bodrud') || code === '0001' ? USER_BODRUD_ABM : USER_PRANJAL_MR);
 
     const userPersonalPin = await this.getUserPin(matchedTemplate.employeeCode);
     const userDbPin = matchedTemplate.pin;
@@ -411,8 +420,14 @@ export class AuthService {
     );
 
     if (!template) {
-      if (query.includes('0001') || query.includes('bodrud')) {
-        template = USER_BODRUD_ABM;
+      if (query.includes('0001') || query.includes('samsuj')) {
+        template = USER_SAMSUJ_CEO;
+      } else if (query.includes('0002') || query.includes('shakir')) {
+        template = USER_SHAKIR_HR;
+      } else if (query.includes('0003') || query.includes('bodrud')) {
+        template = USER_BODRUD_RSM;
+      } else if (query.includes('0005') || query.includes('satyam')) {
+        template = USER_SATYAM_MR;
       } else {
         template = USER_PRANJAL_MR;
       }

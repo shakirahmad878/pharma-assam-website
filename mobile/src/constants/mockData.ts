@@ -9,15 +9,48 @@ import {
   MonthlyTourProgramme,
 } from '../types';
 
-export const USER_BODRUD_RSM: UserProfile = {
-  id: 'usr-rsm-0001',
-  name: 'Bodrud Jaman Sadiol',
-  email: 'bodrud.rsm@reppulse.com',
-  role: 'REGIONAL_MANAGER',
-  employeeCode: '0001',
+export const USER_SAMSUJ_CEO: UserProfile = {
+  id: 'usr-nlcl-0001',
+  name: 'Samsuj Sadiol',
+  email: 'samsuj.ceo@pappudacompany.com',
+  role: 'SUPER_ADMIN',
+  employeeCode: 'NLCL-0001',
   territory: 'Barak Valley & Extended Divisions (Silchar, Hailakandi, Karimganj, Aizawl, Tripura)',
   headquarter: 'Silchar Regional HQ',
-  phone: '9435000001',
+  phone: '6900700102',
+  assignedRouteIds: [
+    'route-cachar-01',
+    'route-cachar-02',
+    'route-karimganj-01',
+    'route-hailakandi-01',
+    'route-aizawl-01',
+    'route-tripura-01',
+  ],
+  activeRouteId: 'route-cachar-01',
+};
+
+export const USER_SHAKIR_HR: UserProfile = {
+  id: 'usr-nlcl-0002',
+  name: 'Shakir Ahmad Barbhuiya',
+  email: 'shakir.hr@pappudacompany.com',
+  role: 'SUPER_ADMIN',
+  employeeCode: 'NLCL-0002',
+  territory: 'Assam - Corporate HQ',
+  headquarter: 'Silchar Corporate HQ',
+  phone: '9101494287',
+  assignedRouteIds: [],
+  activeRouteId: 'route-cachar-01',
+};
+
+export const USER_BODRUD_RSM: UserProfile = {
+  id: 'usr-nlcl-0003',
+  name: 'Bodrud Jaman Sadiol',
+  email: 'bodrud.rsm@pappudacompany.com',
+  role: 'REGIONAL_MANAGER',
+  employeeCode: 'NLCL-0003',
+  territory: 'Barak Valley & Extended Divisions (Silchar, Hailakandi, Karimganj, Aizawl, Tripura)',
+  headquarter: 'Silchar Regional HQ',
+  phone: '8099139305',
   assignedRouteIds: [
     'route-cachar-01',
     'route-cachar-02',
@@ -34,14 +67,14 @@ export const USER_BODRUD_RSM: UserProfile = {
 export const USER_BODRUD_ABM = USER_BODRUD_RSM;
 
 export const USER_PRANJAL_MR: UserProfile = {
-  id: 'usr-mr-0002',
+  id: 'usr-nlcl-0004',
   name: 'Pranjal Malakar',
-  email: 'pranjal.mr@reppulse.com',
+  email: 'pranjal.mr@pappudacompany.com',
   role: 'MEDICAL_REP',
-  employeeCode: '0002',
+  employeeCode: 'NLCL-0004',
   territory: 'Karimganj Division (Shribhumi)',
   headquarter: 'Karimganj HQ',
-  phone: '9435000002',
+  phone: '9864378424',
   assignedRouteIds: [
     'route-karimganj-01',
     'route-karimganj-02',
@@ -49,43 +82,29 @@ export const USER_PRANJAL_MR: UserProfile = {
   activeRouteId: 'route-karimganj-01',
 };
 
-export const USER_RAHUL_MR: UserProfile = {
-  id: 'usr-mr-0003',
-  name: 'Rahul Das',
-  email: 'rahul.mr@reppulse.com',
+export const USER_SATYAM_MR: UserProfile = {
+  id: 'usr-nlcl-0005',
+  name: 'Satyam',
+  email: 'satyam.mr@pappudacompany.com',
   role: 'MEDICAL_REP',
-  employeeCode: '0003',
-  territory: 'Hailakandi Division',
-  headquarter: 'Hailakandi HQ',
-  phone: '9435000003',
+  employeeCode: 'NLCL-0005',
+  territory: 'Silchar Division (Cachar)',
+  headquarter: 'Silchar HQ',
+  phone: '9394831412',
   assignedRouteIds: [
-    'route-hailakandi-01',
+    'route-cachar-01',
+    'route-cachar-02',
   ],
-  activeRouteId: 'route-hailakandi-01',
-};
-
-export const USER_BIKASH_MR: UserProfile = {
-  id: 'usr-mr-0004',
-  name: 'Bikash Paul',
-  email: 'bikash.mr@reppulse.com',
-  role: 'MEDICAL_REP',
-  employeeCode: '0004',
-  territory: 'Karimganj Division (Shribhumi)',
-  headquarter: 'Karimganj HQ',
-  phone: '9435000004',
-  assignedRouteIds: [
-    'route-karimganj-01',
-    'route-karimganj-02',
-  ],
-  activeRouteId: 'route-karimganj-01',
+  activeRouteId: 'route-cachar-01',
 };
 
 export const CURRENT_USER: UserProfile = USER_PRANJAL_MR;
 export const ALL_APP_USERS: UserProfile[] = [
+  USER_SAMSUJ_CEO,
+  USER_SHAKIR_HR,
   USER_BODRUD_RSM,
   USER_PRANJAL_MR,
-  USER_RAHUL_MR,
-  USER_BIKASH_MR,
+  USER_SATYAM_MR,
 ];
 
 export const BARAK_ROUTES: RoutePlan[] = [

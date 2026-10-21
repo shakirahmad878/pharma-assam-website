@@ -10,34 +10,67 @@ const LoginSchema = z.object({
   password: z.string().min(4)
 });
 
-// Demo accounts database
+// Enterprise User Accounts Database
 const DEMO_USERS = [
   {
-    id: 'usr-admin-01',
-    email: 'admin@sefmed.com',
+    id: 'usr-nlcl-0001',
+    email: 'samsuj.ceo@pappudacompany.com',
     password: 'password123',
-    name: 'Rajesh Sharma',
+    name: 'Samsuj Sadiol',
     role: 'SUPER_ADMIN',
-    employeeCode: 'EMP-HQ-001',
-    territory: 'National Headquarter'
+    employeeCode: 'NLCL-0001',
+    phone: '6900700102',
+    designation: 'Chief Executive Officer (CEO)',
+    reportingManager: 'Board of Directors',
+    territory: 'Silchar Regional HQ'
   },
   {
-    id: 'usr-asm-01',
-    email: 'asm.mumbai@sefmed.com',
+    id: 'usr-nlcl-0002',
+    email: 'shakir.hr@pappudacompany.com',
     password: 'password123',
-    name: 'Sunil Gavaskar',
-    role: 'AREA_MANAGER',
-    employeeCode: 'EMP-ASM-042',
-    territory: 'West Zone - Mumbai'
+    name: 'Shakir Ahmad Barbhuiya',
+    role: 'SUPER_ADMIN',
+    employeeCode: 'NLCL-0002',
+    phone: '9101494287',
+    designation: 'HR Manager',
+    reportingManager: 'CEO',
+    territory: 'Silchar Corporate HQ'
   },
   {
-    id: 'usr-mr-01',
-    email: 'vikram.mr@sefmed.com',
+    id: 'usr-nlcl-0003',
+    email: 'bodrud.rsm@pappudacompany.com',
     password: 'password123',
-    name: 'Vikram Mehta',
+    name: 'Bodrud Jaman Sadiol',
+    role: 'REGIONAL_MANAGER',
+    employeeCode: 'NLCL-0003',
+    phone: '8099139305',
+    designation: 'Regional Sales Manager',
+    reportingManager: 'CEO',
+    territory: 'Silchar Regional HQ'
+  },
+  {
+    id: 'usr-nlcl-0004',
+    email: 'pranjal.mr@pappudacompany.com',
+    password: 'password123',
+    name: 'Pranjal Malakar',
     role: 'MEDICAL_REP',
-    employeeCode: 'EMP-MUM-104',
-    territory: 'Mumbai South & Bandra'
+    employeeCode: 'NLCL-0004',
+    phone: '9864378424',
+    designation: 'Medical Representative',
+    reportingManager: 'Bodrud Jaman Sadiol',
+    territory: 'Karimganj HQ'
+  },
+  {
+    id: 'usr-nlcl-0005',
+    email: 'satyam.mr@pappudacompany.com',
+    password: 'password123',
+    name: 'Satyam',
+    role: 'MEDICAL_REP',
+    employeeCode: 'NLCL-0005',
+    phone: '9394831412',
+    designation: 'Medical Representative',
+    reportingManager: 'Bodrud Jaman Sadiol',
+    territory: 'Silchar HQ'
   }
 ];
 
@@ -51,7 +84,7 @@ router.post('/login', (req, res) => {
   const user = DEMO_USERS.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
 
   if (!user) {
-    return res.status(401).json({ success: false, error: 'Invalid credentials. Use admin@sefmed.com or vikram.mr@sefmed.com with password: password123' });
+    return res.status(401).json({ success: false, error: 'Invalid credentials. Use shakir.hr@pappudacompany.com with password: password123' });
   }
 
   const token = jwt.sign(
@@ -82,4 +115,4 @@ router.post('/login', (req, res) => {
   });
 });
 
-export default router;\n
+export default router;

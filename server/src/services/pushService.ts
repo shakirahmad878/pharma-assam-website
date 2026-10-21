@@ -40,4 +40,4 @@ export class PushNotificationService {
       data: { type: 'GEOFENCE_ALERT', doctorName, distanceMeters }
     });
   }
-}\n
+}

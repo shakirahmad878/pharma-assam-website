@@ -38,4 +38,4 @@ export function isWithinDoctorGeofence(
     isInside: dist <= radiusMeters,
     distanceMeters: Math.round(dist * 10) / 10
   };
-}\n
+}

@@ -211,7 +211,7 @@ export class SupabaseDbService {
           id,
           doctor_id: req.doctorId,
           doctor_name: req.doctorName,
-          requested_by_employee_id: 'usr-mr-0002',
+          requested_by_employee_id: 'usr-nlcl-0004',
           requested_by_name: req.requestedBy,
           district: req.district || 'Cachar',
           reason: req.reason,
@@ -588,7 +588,7 @@ export class SupabaseDbService {
           id: v.id,
           doctor_id: v.doctorId,
           doctor_name: v.doctorName,
-          employee_id: v.employeeId || 'usr-mr-0002',
+          employee_id: v.employeeId || 'usr-nlcl-0004',
           employee_name: v.employeeName || 'Pranjal Malakar',
           district: 'Cachar',
           visit_date: visitDate,
@@ -1053,7 +1053,7 @@ export class SupabaseDbService {
   }
 
   public static async getCustomTourPlans(employeeCode: string): Promise<Record<string, any>> {
-    const clean = (employeeCode || '0002').trim().toLowerCase();
+    const clean = (employeeCode || 'NLCL-0004').trim().toLowerCase();
     const tourPlansKey = `${STORAGE_KEYS.TOUR_PLANS_CACHE}_${clean}`;
     return await StorageService.getItem<Record<string, any>>(tourPlansKey, {});
   }
@@ -1063,7 +1063,7 @@ export class SupabaseDbService {
     dateKey: string,
     plan: { city: string; type: string; notes?: string }
   ): Promise<void> {
-    const clean = (employeeCode || '0002').trim().toLowerCase();
+    const clean = (employeeCode || 'NLCL-0004').trim().toLowerCase();
     const tourPlansKey = `${STORAGE_KEYS.TOUR_PLANS_CACHE}_${clean}`;
     const current = await StorageService.getItem<Record<string, any>>(tourPlansKey, {});
     current[dateKey] = plan;

@@ -71,4 +71,4 @@ export function requireManagerOrAdmin(req: AuthRequest, res: Response, next: Nex
     });
   }
   next();
-}\n
+}

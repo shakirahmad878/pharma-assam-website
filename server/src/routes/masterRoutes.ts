@@ -55,4 +55,4 @@ router.post('/doctors', (req, res) => {
   res.status(201).json({ success: true, data: newDoctor });
 });
 
-export default router;\n
+export default router;

@@ -129,4 +129,4 @@ router.patch('/tour-plans/:id/status', (req, res) => {
   res.json({ success: true, data: plan });
 });
 
-export default router;\n
+export default router;

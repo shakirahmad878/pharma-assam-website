@@ -129,4 +129,4 @@ router.get('/history/:userId', requireSuperAdmin, (req: AuthRequest, res) => {
   });
 });
 
-export default router;\n
+export default router;

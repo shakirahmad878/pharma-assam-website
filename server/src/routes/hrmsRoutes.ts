@@ -69,4 +69,4 @@ router.patch('/expenses/:id/approve', (req, res) => {
   res.json({ success: true, data: claim });
 });
 
-export default router;\n
+export default router;
