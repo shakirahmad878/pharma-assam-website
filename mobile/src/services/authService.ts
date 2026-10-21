@@ -263,9 +263,9 @@ export class AuthService {
     const todayStr = new Date().toISOString().split('T')[0];
     const now = await SupabaseDbService.fetchServerTime();
     const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const empId = employee?.id || 'usr-mr-0002';
+    const empId = employee?.id || 'usr-nlcl-0004';
     const empName = employee?.name || 'Pranjal Malakar';
-    const empCode = employee?.employeeCode || '0002';
+    const empCode = employee?.employeeCode || 'NLCL-0004';
 
     const req: LateLoginRequest = {
       id: `late_req_${empCode}_${Date.now()}`,

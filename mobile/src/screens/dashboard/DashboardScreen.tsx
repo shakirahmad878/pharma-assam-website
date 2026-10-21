@@ -8,6 +8,7 @@ import {
   RefreshControl,
   SafeAreaView,
   Alert,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, typography, spacing, radius, shadows } from '../../constants/theme';
@@ -94,9 +95,16 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           <Text style={styles.hamburgerText}>☰</Text>
         </TouchableOpacity>
 
-        <Text style={styles.companyTitle} numberOfLines={1}>
-          RepPulse
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Image
+            source={require('../../../assets/icon.png')}
+            style={{ width: 26, height: 26, borderRadius: 6 }}
+            resizeMode="contain"
+          />
+          <Text style={styles.companyTitle} numberOfLines={1}>
+            RepPulse
+          </Text>
+        </View>
 
         <View style={{ width: 24 }} />
       </View>

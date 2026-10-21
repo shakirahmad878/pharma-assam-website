@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   ToastAndroid,
   Platform,
+  Image,
 } from 'react-native';
 import { colors, typography, spacing } from '../constants/theme';
 import { AuthService } from '../services/authService';
@@ -175,6 +176,11 @@ export const RootNavigator: React.FC = () => {
   if (isAuthenticated === null) {
     return (
       <View style={styles.loadingContainer}>
+        <Image
+          source={require('../../assets/icon.png')}
+          style={{ width: 84, height: 84, borderRadius: 22, marginBottom: 18 }}
+          resizeMode="contain"
+        />
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Initializing RepPulse Enterprise SFA...</Text>
       </View>

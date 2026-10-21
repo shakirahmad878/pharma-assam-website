@@ -8,6 +8,7 @@ import {
   Modal,
   TouchableWithoutFeedback,
   Dimensions,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, typography, spacing, radius } from '../../constants/theme';
@@ -75,6 +76,17 @@ export const DrawerMenu: React.FC<DrawerMenuProps> = ({
         <View style={styles.drawerContainer}>
           {/* User Profile Header */}
           <View style={styles.profileHeader}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+              <Image
+                source={require('../../../assets/icon.png')}
+                style={{ width: 36, height: 36, borderRadius: 8 }}
+                resizeMode="contain"
+              />
+              <View>
+                <Text style={{ fontSize: 18, fontWeight: '800', color: '#0F172A', letterSpacing: -0.5 }}>RepPulse</Text>
+                <Text style={{ fontSize: 10, color: '#64748B', fontWeight: '600' }}>Pharma Field SFA</Text>
+              </View>
+            </View>
             <View style={styles.avatarCircle}>
               <Text style={styles.avatarInitial}>
                 {user?.name ? user.name.charAt(0).toUpperCase() : 'S'}
@@ -127,7 +139,7 @@ export const DrawerMenu: React.FC<DrawerMenuProps> = ({
 
           {/* Footer Version Tag */}
           <View style={styles.footer}>
-            <Text style={styles.footerText}>RepPulse v1.3.1 (Barak Division)</Text>
+            <Text style={styles.footerText}>RepPulse v1.7.1 (Barak Division)</Text>
           </View>
         </View>
       </View>

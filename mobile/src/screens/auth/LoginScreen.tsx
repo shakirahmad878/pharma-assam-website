@@ -10,6 +10,7 @@ import {
   Modal,
   Alert,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, typography, spacing, radius, shadows } from '../../constants/theme';
@@ -219,7 +220,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
     let interval: any = null;
     if (lateModalVisible && isWaitingForApproval) {
       interval = setInterval(async () => {
-        const empCode = employeeId.trim() || '0002';
+        const empCode = employeeId.trim() || 'NLCL-0004';
         const approval = await AuthService.getTodayLateApproval(empCode);
         if (approval && approval.isApproved) {
           setIsWaitingForApproval(false);
@@ -248,10 +249,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
     }
     setRequestingApproval(true);
     try {
-      const code = employeeId.trim() || '0002';
+      const code = employeeId.trim() || 'NLCL-0004';
       await AuthService.requestLateApproval(lateReason, {
         id: code,
-        name: code === '0002' ? 'Pranjal Malakar' : `Employee ${code}`,
+        name: code === 'NLCL-0004' ? 'Pranjal Malakar' : `Employee ${code}`,
         employeeCode: code,
       });
       setIsWaitingForApproval(true);
@@ -268,7 +269,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
 
   const handleCheckApprovalStatus = async () => {
     setRequestingApproval(true);
-    const empCode = employeeId.trim() || '0002';
+    const empCode = employeeId.trim() || 'NLCL-0004';
     const approval = await AuthService.getTodayLateApproval(empCode);
     setRequestingApproval(false);
 
@@ -298,10 +299,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
       return;
     }
     setRequestingApproval(true);
-    const code = employeeId.trim() || '0002';
+    const code = employeeId.trim() || 'NLCL-0004';
     const res = await AuthService.verifyManagerPin(managerPin, 'Manager In-Person Sign-off', {
       id: code,
-      name: code === '0002' ? 'Pranjal Malakar' : `Employee ${code}`,
+      name: code === 'NLCL-0004' ? 'Pranjal Malakar' : `Employee ${code}`,
       employeeCode: code,
     });
     setRequestingApproval(false);
@@ -330,7 +331,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
         {/* Brand Header */}
         <View style={styles.brandContainer}>
           <View style={styles.logoBadge}>
-            <Text style={styles.logoText}>💊</Text>
+            <Image
+              source={require('../../../assets/icon.png')}
+              style={styles.logoImage}
+              resizeMode="cover"
+            />
           </View>
           <Text style={styles.appTitle}>RepPulse</Text>
           <Text style={styles.appTagline}>Intelligent Pharma Sales Force Automation</Text>
@@ -420,7 +425,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
                 label="Employee ID or Registered Mobile"
                 value={employeeId}
                 onChangeText={setEmployeeId}
-                placeholder="e.g. 0001 (RSM) or 0002 (MR)"
+                placeholder="e.g. NLCL-0004 or Registered Mobile"
                 autoCapitalize="none"
               />
 
@@ -479,7 +484,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
                   setMobileNumber(val.replace(/\D/g, '').slice(0, 10));
                   setOtpSent(false);
                 }}
-                placeholder="e.g. 9435000001 (RSM) or 9435000002 (MR)"
+                placeholder="e.g. 9864378424 or 8099139305"
                 keyboardType="phone-pad"
                 maxLength={10}
               />
@@ -550,7 +555,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
                 label="Official Email or Employee ID"
                 value={email}
                 onChangeText={setEmail}
-                placeholder="e.g. 0001 or 0002"
+                placeholder="e.g. NLCL-0004 or official email"
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
@@ -811,15 +816,22 @@ const styles = StyleSheet.create({
   scrollContent: { padding: spacing.lg, justifyContent: 'center', minHeight: '100%' },
   brandContainer: { alignItems: 'center', marginBottom: spacing.md },
   logoBadge: {
-    width: 58,
-    height: 58,
+    width: 68,
+    height: 68,
     borderRadius: 18,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: '#0F172A',
+    overflow: 'hidden',
     marginBottom: spacing.xs,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  logoText: { fontSize: 28 },
+  logoImage: {
+    width: '100%',
+    height: '100%',
+  },
   appTitle: {
     color: '#0F172A',
     fontSize: typography.fontSize.xxl,
