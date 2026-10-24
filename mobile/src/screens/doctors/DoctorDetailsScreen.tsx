@@ -56,7 +56,7 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
   const [editClinic, setEditClinic] = useState('');
   const [editPhone, setEditPhone] = useState('');
   const [editTier, setEditTier] = useState<'A_PLUS' | 'A' | 'B' | 'C'>('A');
-  const [editDistrict, setEditDistrict] = useState<'Cachar' | 'Karimganj' | 'Hailakandi' | 'Aizawl' | 'Tripura'>('Cachar');
+  const [editDistrict, setEditDistrict] = useState<'Cachar' | 'Karimganj' | 'Hailakandi' | 'Aizawl' | 'Agartala' | 'Dharmanagar' | 'Tripura'>('Cachar');
   const [editArea, setEditArea] = useState('');
 
   // Delete Doctor Modal State
@@ -522,7 +522,7 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
 
               <Text style={styles.formInputLabel}>Territory District</Text>
               <View style={[styles.tierSelectorRow, { flexWrap: 'wrap' }]}>
-                {(['Cachar', 'Karimganj', 'Hailakandi', 'Aizawl', 'Tripura'] as const).map(d => (
+                {(['Cachar', 'Karimganj', 'Hailakandi', 'Aizawl', 'Agartala', 'Dharmanagar'] as const).map(d => (
                   <TouchableOpacity
                     key={d}
                     style={[styles.tierChip, editDistrict === d && styles.tierChipActive]}

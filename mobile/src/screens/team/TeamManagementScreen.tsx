@@ -25,6 +25,24 @@ interface TeamManagementScreenProps {
   onBack: () => void;
 }
 
+export const getRoleDetails = (role?: UserRole | string) => {
+  switch (role) {
+    case 'DIRECTOR':
+      return { label: 'Director', bg: '#EDE9FE', color: '#6D28D9' };
+    case 'HR_MANAGER':
+      return { label: 'HR Manager', bg: '#FCE7F3', color: '#BE185D' };
+    case 'SUPER_ADMIN':
+      return { label: 'Corporate Admin', bg: '#E0E7FF', color: '#3730A3' };
+    case 'REGIONAL_MANAGER':
+      return { label: 'RSM (Regional Manager)', bg: '#FEF3C7', color: '#B45309' };
+    case 'AREA_MANAGER':
+      return { label: 'ABM (Area Manager)', bg: '#EFF6FF', color: '#1D4ED8' };
+    case 'MEDICAL_REP':
+    default:
+      return { label: 'MR (Medical Rep)', bg: '#DCFCE7', color: '#15803D' };
+  }
+};
+
 export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onBack }) => {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(AuthService.getCurrentUser());
   const [employees, setEmployees] = useState<UserProfile[]>([]);
@@ -45,7 +63,12 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onBa
   const [formDivision, setFormDivision] = useState<DivisionType>('Cachar');
   const [formHq, setFormHq] = useState('Silchar HQ');
 
-  const isManager = currentUser?.role === 'REGIONAL_MANAGER' || currentUser?.role === 'AREA_MANAGER' || currentUser?.role === 'SUPER_ADMIN';
+  const isManager =
+    currentUser?.role === 'DIRECTOR' ||
+    currentUser?.role === 'HR_MANAGER' ||
+    currentUser?.role === 'SUPER_ADMIN' ||
+    currentUser?.role === 'REGIONAL_MANAGER' ||
+    currentUser?.role === 'AREA_MANAGER';
 
   // Screen Tab & Requests State
   const [screenTab, setScreenTab] = useState<'EMPLOYEES' | 'APPROVALS'>('EMPLOYEES');
@@ -194,8 +217,10 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onBa
         ? 'Karimganj Division (Shribhumi)'
         : formDivision === 'Aizawl'
         ? 'Aizawl Division (Mizoram)'
-        : formDivision === 'Tripura'
-        ? 'Tripura Division (Agartala)'
+        : formDivision === 'Agartala' || formDivision === 'Tripura'
+        ? 'Agartala Division (Tripura)'
+        : formDivision === 'Dharmanagar'
+        ? 'Dharmanagar Division (North Tripura)'
         : 'Silchar Division (Cachar)';
 
     if (isEditing) {
@@ -261,7 +286,8 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onBa
       (selectedDivision === 'Hailakandi' && (emp.territory?.toLowerCase().includes('hailakandi') || emp.headquarter?.toLowerCase().includes('hailakandi'))) ||
       (selectedDivision === 'Karimganj' && (emp.territory?.toLowerCase().includes('karimganj') || emp.headquarter?.toLowerCase().includes('karimganj'))) ||
       (selectedDivision === 'Aizawl' && (emp.territory?.toLowerCase().includes('aizawl') || emp.territory?.toLowerCase().includes('mizoram') || emp.headquarter?.toLowerCase().includes('aizawl'))) ||
-      (selectedDivision === 'Tripura' && (emp.territory?.toLowerCase().includes('tripura') || emp.territory?.toLowerCase().includes('agartala') || emp.headquarter?.toLowerCase().includes('agartala')));
+      ((selectedDivision === 'Agartala' || selectedDivision === 'Tripura') && (emp.territory?.toLowerCase().includes('tripura') || emp.territory?.toLowerCase().includes('agartala') || emp.headquarter?.toLowerCase().includes('agartala'))) ||
+      (selectedDivision === 'Dharmanagar' && (emp.territory?.toLowerCase().includes('dharmanagar') || emp.headquarter?.toLowerCase().includes('dharmanagar')));
 
     // 2. Search Filter
     const query = searchQuery.toLowerCase();
@@ -301,7 +327,7 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onBa
             {isManager ? 'Manager Privilege: Add, Modify & Reassign Employees' : 'Field View: Sales Force Directory'}
           </Text>
           <Text style={styles.authBannerSub}>
-            Logged in as {currentUser?.name} ({currentUser?.role === 'REGIONAL_MANAGER' ? 'RSM' : 'MR'}).
+            Logged in as {currentUser?.name} ({getRoleDetails(currentUser?.role).label}).
           </Text>
         </View>
       </View>
@@ -400,24 +426,10 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onBa
         )}
         renderItem={({ item }) => {
           const initial = item.name.charAt(0).toUpperCase();
-          const roleLabel =
-            item.role === 'REGIONAL_MANAGER'
-              ? 'RSM (Regional Manager)'
-              : item.role === 'AREA_MANAGER'
-              ? 'ABM (Area Manager)'
-              : 'MR (Medical Rep)';
-          const roleBg =
-            item.role === 'REGIONAL_MANAGER'
-              ? '#FEF3C7'
-              : item.role === 'AREA_MANAGER'
-              ? '#EFF6FF'
-              : '#DCFCE7';
-          const roleColor =
-            item.role === 'REGIONAL_MANAGER'
-              ? '#B45309'
-              : item.role === 'AREA_MANAGER'
-              ? '#1D4ED8'
-              : '#15803D';
+          const roleInfo = getRoleDetails(item.role);
+          const roleLabel = roleInfo.label;
+          const roleBg = roleInfo.bg;
+          const roleColor = roleInfo.color;
 
           return (
             <View style={styles.empCard}>
@@ -744,12 +756,14 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onBa
               />
 
               <Text style={styles.inputLabel}>Role / Designation *</Text>
-              <View style={styles.roleSelectionRow}>
+              <View style={[styles.roleSelectionRow, { flexWrap: 'wrap' }]}>
                 {(
                   [
-                    { key: 'MEDICAL_REP', label: 'MR' },
-                    { key: 'AREA_MANAGER', label: 'ABM' },
+                    { key: 'DIRECTOR', label: 'Director' },
+                    { key: 'HR_MANAGER', label: 'HR Manager' },
                     { key: 'REGIONAL_MANAGER', label: 'RSM' },
+                    { key: 'AREA_MANAGER', label: 'ABM' },
+                    { key: 'MEDICAL_REP', label: 'MR' },
                   ] as const
                 ).map((r) => (
                   <TouchableOpacity
@@ -769,7 +783,7 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onBa
                   <Text style={styles.inputLabel}>Employee ID / Code *</Text>
                   <TextInput
                     style={styles.modalInput}
-                    placeholder="e.g. 0005"
+                    placeholder="e.g. NLCL-0006"
                     value={formCode}
                     onChangeText={setFormCode}
                   />
@@ -789,14 +803,15 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onBa
               </View>
 
               <Text style={styles.inputLabel}>Assigned Division / District *</Text>
-              <View style={styles.divisionPickRow}>
+              <View style={[styles.divisionPickRow, { flexWrap: 'wrap' }]}>
                 {(
                   [
                     { key: 'Cachar', label: 'Silchar (Cachar)' },
                     { key: 'Hailakandi', label: 'Hailakandi' },
                     { key: 'Karimganj', label: 'Karimganj' },
                     { key: 'Aizawl', label: 'Aizawl (MZ)' },
-                    { key: 'Tripura', label: 'Tripura (TR)' },
+                    { key: 'Agartala', label: 'Agartala (TR)' },
+                    { key: 'Dharmanagar', label: 'Dharmanagar (TR)' },
                   ] as const
                 ).map((d) => (
                   <TouchableOpacity
@@ -807,7 +822,8 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onBa
                       if (d.key === 'Hailakandi') setFormHq('Hailakandi HQ');
                       else if (d.key === 'Karimganj') setFormHq('Karimganj HQ');
                       else if (d.key === 'Aizawl') setFormHq('Aizawl HQ');
-                      else if (d.key === 'Tripura') setFormHq('Agartala HQ');
+                      else if (d.key === 'Agartala') setFormHq('Agartala HQ');
+                      else if (d.key === 'Dharmanagar') setFormHq('Dharmanagar HQ');
                       else setFormHq('Silchar HQ');
                     }}
                   >

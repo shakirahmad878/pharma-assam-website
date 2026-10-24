@@ -32,6 +32,7 @@ import {
 } from '../../constants/mockData';
 import { PdfReportService } from '../../services/pdfReportService';
 import { AuthService } from '../../services/authService';
+import { EmployeeService } from '../../services/employeeService';
 import { SupabaseDbService } from '../../services/supabase/supabaseDbService';
 import { TourPlanRescheduleRequest } from '../../types';
 
@@ -1130,40 +1131,53 @@ export const MonthlySummaryScreen: React.FC<{ onBack: () => void }> = ({ onBack 
   const currentYearStr = new Date().getFullYear().toString();
 
   const currentUser = AuthService.getCurrentUser();
-  const isManager = currentUser?.role === 'REGIONAL_MANAGER' || currentUser?.role === 'AREA_MANAGER';
+  const isExecutiveOrManager =
+    currentUser?.role === 'DIRECTOR' ||
+    currentUser?.role === 'HR_MANAGER' ||
+    currentUser?.role === 'SUPER_ADMIN' ||
+    currentUser?.role === 'REGIONAL_MANAGER' ||
+    currentUser?.role === 'AREA_MANAGER';
 
   const [selectedMonth, setSelectedMonth] = useState(currentMonthName);
   const [selectedYear, setSelectedYear] = useState(currentYearStr);
   const [selectedAgent, setSelectedAgent] = useState<{ id: string; name: string; role: any; territory: string; employeeCode?: string }>({
-    id: currentUser?.id || 'usr-0001',
-    name: currentUser?.name || 'Bodrud Jaman Sadiol',
-    role: currentUser?.role || 'REGIONAL_MANAGER',
-    territory: currentUser?.territory || 'Barak Valley Division (Assam)',
-    employeeCode: currentUser?.employeeCode || '0001',
+    id: currentUser?.id || 'usr-nlcl-0004',
+    name: currentUser?.name || 'Pranjal Malakar',
+    role: currentUser?.role || 'MEDICAL_REP',
+    territory: currentUser?.territory || 'Karimganj Division (Shribhumi)',
+    employeeCode: currentUser?.employeeCode || 'NLCL-0004',
   });
-  const [userRole, setUserRole] = useState<'MEDICAL_REP' | 'REGIONAL_MANAGER'>(
-    isManager ? 'REGIONAL_MANAGER' : 'MEDICAL_REP'
-  );
   
   const [monthYearModalVisible, setMonthYearModalVisible] = useState(false);
   const [agentModalVisible, setAgentModalVisible] = useState(false);
+  const [teamAgents, setTeamAgents] = useState<any[]>([]);
 
-  const teamAgents = [
-    { id: 'usr-0001', name: 'Bodrud Jaman Sadiol', role: 'REGIONAL_MANAGER' as const, employeeCode: '0001', territory: 'Barak Valley Division (Silchar HQ)' },
-    { id: 'usr-0002', name: 'Pranjal Malakar', role: 'MEDICAL_REP' as const, employeeCode: '0002', territory: 'Silchar & Karimganj Beat (Barak Valley)' },
-    { id: 'usr-0003', name: 'Rahul Das', role: 'MEDICAL_REP' as const, employeeCode: '0003', territory: 'Hailakandi District' },
-    { id: 'usr-0004', name: 'Bikash Paul', role: 'MEDICAL_REP' as const, employeeCode: '0004', territory: 'Badarpur & Rural Corridor' },
-  ];
+  useEffect(() => {
+    EmployeeService.getEmployees().then(list => {
+      if (list && list.length > 0) {
+        setTeamAgents(list);
+      }
+    });
+  }, []);
 
   const handleAgentClick = () => {
-    if (userRole === 'MEDICAL_REP') {
+    if (!isExecutiveOrManager) {
       Alert.alert(
-        '🔒 Access Restricted to RSM / Admin',
-        'Medical Representatives (MR) are only authorized to view their own Monthly Performance Summary.\n\nOnly a Regional Sales Manager (RSM) or System Admin can inspect and switch between other agents.'
+        '🔒 Access Restricted to Management',
+        'Medical Representatives (MR) are authorized to view their own Monthly Performance Summary.\n\nDirectors, HR Managers, and Regional Managers (RSM) can inspect and switch between all field representatives.'
       );
     } else {
       setAgentModalVisible(true);
     }
+  };
+
+  const getAuthorityTitle = () => {
+    if (currentUser?.role === 'DIRECTOR') return 'Director Mode (Executive Access)';
+    if (currentUser?.role === 'HR_MANAGER') return 'HR Manager Mode (Executive Access)';
+    if (currentUser?.role === 'SUPER_ADMIN') return 'Corporate Admin (Executive Access)';
+    if (currentUser?.role === 'REGIONAL_MANAGER') return 'RSM Mode (Manager Access)';
+    if (currentUser?.role === 'AREA_MANAGER') return 'ABM Mode (Manager Access)';
+    return 'MR Mode (Own Profile Only)';
   };
 
   return (
@@ -1173,14 +1187,14 @@ export const MonthlySummaryScreen: React.FC<{ onBack: () => void }> = ({ onBack 
       {/* Role Authority Banner */}
       <View style={styles.authBadgeBanner}>
         <Text style={styles.authBadgeLabel}>Current Authority:</Text>
-        <View style={[styles.authRolePill, userRole === 'REGIONAL_MANAGER' && styles.authRolePillABM]}>
+        <View style={[styles.authRolePill, isExecutiveOrManager && styles.authRolePillABM]}>
           <Ionicons
-            name={userRole === 'REGIONAL_MANAGER' ? 'shield-checkmark' : 'lock-closed'}
+            name={isExecutiveOrManager ? 'shield-checkmark' : 'lock-closed'}
             size={13}
-            color={userRole === 'REGIONAL_MANAGER' ? '#16A34A' : '#2563EB'}
+            color={isExecutiveOrManager ? '#16A34A' : '#2563EB'}
           />
-          <Text style={[styles.authRoleText, userRole === 'REGIONAL_MANAGER' && styles.authRoleTextABM]}>
-            {userRole === 'REGIONAL_MANAGER' ? 'RSM Mode (Manager Access)' : 'MR Mode (Own Profile Only)'}
+          <Text style={[styles.authRoleText, isExecutiveOrManager && styles.authRoleTextABM]}>
+            {getAuthorityTitle()}
           </Text>
         </View>
       </View>
@@ -1210,7 +1224,7 @@ export const MonthlySummaryScreen: React.FC<{ onBack: () => void }> = ({ onBack 
               <Text style={styles.summaryUserTerritory}>{selectedAgent.territory}</Text>
             </View>
             <View style={styles.agentLockBadge}>
-              {userRole === 'REGIONAL_MANAGER' ? (
+              {isExecutiveOrManager ? (
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
                   <Text style={styles.switchAgentText}>Switch Agent</Text>
                   <Ionicons name="chevron-forward" size={14} color="#2563EB" />

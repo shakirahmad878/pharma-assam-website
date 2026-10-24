@@ -63,7 +63,13 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBack, onLogout }
   };
 
   const roleTitle =
-    user.role === 'REGIONAL_MANAGER'
+    user.role === 'DIRECTOR'
+      ? 'Director'
+      : user.role === 'HR_MANAGER'
+      ? 'HR Manager'
+      : user.role === 'SUPER_ADMIN'
+      ? 'Corporate Administrator'
+      : user.role === 'REGIONAL_MANAGER'
       ? 'Regional Sales Manager (RSM)'
       : user.role === 'AREA_MANAGER'
       ? 'Area Business Manager (ABM)'

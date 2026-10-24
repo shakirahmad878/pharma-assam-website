@@ -96,8 +96,8 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
   const [newPhone, setNewPhone] = useState('');
   const [newDlNumber, setNewDlNumber] = useState('');
   const [newFirmType, setNewFirmType] = useState<'Retailer' | 'Distributor' | 'Stockist'>('Retailer');
-  const [newFirmDistrict, setNewFirmDistrict] = useState<'Cachar' | 'Karimganj' | 'Hailakandi' | 'Aizawl' | 'Tripura'>(
-    userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : userDivision === 'Aizawl' ? 'Aizawl' : userDivision === 'Tripura' ? 'Tripura' : 'Cachar'
+  const [newFirmDistrict, setNewFirmDistrict] = useState<'Cachar' | 'Karimganj' | 'Hailakandi' | 'Aizawl' | 'Agartala' | 'Dharmanagar' | 'Tripura'>(
+    userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : userDivision === 'Aizawl' ? 'Aizawl' : userDivision === 'Agartala' ? 'Agartala' : userDivision === 'Dharmanagar' ? 'Dharmanagar' : 'Cachar'
   );
   const [capturedGps, setCapturedGps] = useState<LocationResult | null>(null);
   const [autoArea, setAutoArea] = useState('Acquiring GPS...');
@@ -108,7 +108,7 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
     const loc = await LocationService.getCurrentLocation();
     setGpsLoading(false);
     const targetDist = !isManager
-      ? (userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : userDivision === 'Aizawl' ? 'Aizawl' : userDivision === 'Tripura' ? 'Tripura' : 'Cachar')
+      ? (userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : userDivision === 'Aizawl' ? 'Aizawl' : userDivision === 'Agartala' ? 'Agartala' : userDivision === 'Dharmanagar' ? 'Dharmanagar' : 'Cachar')
       : newFirmDistrict;
 
     if (loc) {
@@ -126,7 +126,7 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
   };
 
   const openAddModal = () => {
-    const defaultDist = userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : userDivision === 'Aizawl' ? 'Aizawl' : userDivision === 'Tripura' ? 'Tripura' : 'Cachar';
+    const defaultDist = userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : userDivision === 'Aizawl' ? 'Aizawl' : userDivision === 'Agartala' ? 'Agartala' : userDivision === 'Dharmanagar' ? 'Dharmanagar' : 'Cachar';
     setNewFirmDistrict(defaultDist);
     setAddModalVisible(true);
     fetchGpsForFirm();
@@ -155,7 +155,7 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
     }
 
     const targetDist = !isManager
-      ? (userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : userDivision === 'Aizawl' ? 'Aizawl' : userDivision === 'Tripura' ? 'Tripura' : 'Cachar')
+      ? (userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : userDivision === 'Aizawl' ? 'Aizawl' : userDivision === 'Agartala' ? 'Agartala' : userDivision === 'Dharmanagar' ? 'Dharmanagar' : 'Cachar')
       : newFirmDistrict;
 
     const formattedFirmPhone = `+91 ${cleanDigits}`;
@@ -374,14 +374,14 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
                 <View style={{ marginBottom: 10 }}>
                   <Text style={styles.inputLabelSmall}>Division / District</Text>
                   <View style={styles.districtChipsRow}>
-                    {(['Cachar', 'Hailakandi', 'Karimganj', 'Aizawl', 'Tripura'] as const).map((dist) => (
+                    {(['Cachar', 'Hailakandi', 'Karimganj', 'Aizawl', 'Agartala', 'Dharmanagar'] as const).map((dist) => (
                       <TouchableOpacity
                         key={dist}
                         style={[styles.districtChip, newFirmDistrict === dist && styles.districtChipActive]}
                         onPress={() => setNewFirmDistrict(dist)}
                       >
                         <Text style={[styles.districtChipText, newFirmDistrict === dist && styles.districtChipTextActive]}>
-                          {dist === 'Cachar' ? 'Silchar' : dist === 'Aizawl' ? 'Aizawl (MZ)' : dist === 'Tripura' ? 'Tripura (TR)' : dist}
+                          {dist === 'Cachar' ? 'Silchar' : dist === 'Aizawl' ? 'Aizawl (MZ)' : dist === 'Agartala' ? 'Agartala' : dist === 'Dharmanagar' ? 'Dharmanagar' : dist}
                         </Text>
                       </TouchableOpacity>
                     ))}

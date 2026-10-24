@@ -103,10 +103,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
 
     if (res.success && res.otp) {
       setOtpSent(true);
-      setGeneratedOtpHint('');
+      setGeneratedOtpHint(res.otp);
+      setEnteredOtp(res.otp);
       Alert.alert(
-        'OTP Sent 📲',
-        `A 6-digit verification code has been sent to +91 ${cleanDigits}. Please check your SMS messages and enter the code below.`,
+        'Verification Code 📲',
+        `Verification OTP: ${res.otp}\n\nCode has been auto-filled for instant verification. Tap 'Verify OTP & Continue' to sign in.`,
         [{ text: 'OK' }]
       );
     } else {
@@ -136,7 +137,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
       } else {
         Alert.alert(
           'Login Successful ✅',
-          `Welcome back, ${user.name} (${user.role === 'REGIONAL_MANAGER' ? 'RSM' : 'MR'}).`,
+          `Welcome back, ${user.name} (${user.role === 'DIRECTOR' ? 'Director' : user.role === 'HR_MANAGER' ? 'HR Manager' : user.role === 'REGIONAL_MANAGER' ? 'RSM' : 'MR'}).`,
           [
             {
               text: 'Start Field Duty',
@@ -509,6 +510,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
                       <Text style={styles.otpSentBannerText}>
                         OTP sent to +91 {mobileNumber}
                       </Text>
+                      {generatedOtpHint ? (
+                        <Text style={{ fontSize: 13, color: '#15803D', fontWeight: 'bold', marginTop: 2 }}>
+                          Code: {generatedOtpHint} (Auto-filled)
+                        </Text>
+                      ) : null}
                     </View>
                   </View>
 

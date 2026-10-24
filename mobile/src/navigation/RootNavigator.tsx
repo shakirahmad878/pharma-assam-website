@@ -44,6 +44,7 @@ export type ScreenName =
   | 'VISIT_EXECUTION_LIST'
   | 'ORDERS'
   | 'SYNC'
+  | 'SYNC_CENTER'
   | 'PROFILE'
   | 'ROUTES'
   | 'HOSPITALS'
@@ -295,7 +296,7 @@ export const RootNavigator: React.FC = () => {
           <CommandsScreen onBack={pop} />
         )}
 
-        {currentScreen === 'SYNC' && (
+        {(currentScreen === 'SYNC' || currentScreen === 'SYNC_CENTER') && (
           <SyncCenterScreen onBack={pop} />
         )}
 

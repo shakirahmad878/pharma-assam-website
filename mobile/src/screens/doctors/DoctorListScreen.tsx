@@ -72,8 +72,8 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
   const [newDocClinic, setNewDocClinic] = useState('');
   const [newDocPhone, setNewDocPhone] = useState('');
   const [newDocTier, setNewDocTier] = useState<'A_PLUS' | 'A' | 'B' | 'C'>('A');
-  const [newDocDistrict, setNewDocDistrict] = useState<'Cachar' | 'Karimganj' | 'Hailakandi' | 'Aizawl' | 'Tripura'>(
-    userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : userDivision === 'Aizawl' ? 'Aizawl' : userDivision === 'Tripura' ? 'Tripura' : 'Cachar'
+  const [newDocDistrict, setNewDocDistrict] = useState<'Cachar' | 'Karimganj' | 'Hailakandi' | 'Aizawl' | 'Agartala' | 'Dharmanagar' | 'Tripura'>(
+    userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : userDivision === 'Aizawl' ? 'Aizawl' : userDivision === 'Agartala' ? 'Agartala' : userDivision === 'Dharmanagar' ? 'Dharmanagar' : 'Cachar'
   );
   const [newDocArea, setNewDocArea] = useState('');
   const [gpsLoading, setGpsLoading] = useState(false);
@@ -100,6 +100,22 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
     setActiveRoute(route);
   };
 
+  const handleAutoDetectArea = async () => {
+    setGpsLoading(true);
+    try {
+      const loc = await LocationService.getCurrentLocation();
+      if (loc) {
+        setCapturedCoords({ lat: loc.latitude, lng: loc.longitude });
+        const autoArea = await LocationService.reverseGeocodeArea(loc.latitude, loc.longitude);
+        if (autoArea) setNewDocArea(autoArea);
+      }
+    } catch (err) {
+      console.warn('GPS area detection error:', err);
+    } finally {
+      setGpsLoading(false);
+    }
+  };
+
   const handleOpenAddDoctorModal = async () => {
     setNewDocName('');
     setNewDocSpecialty('General Physician');
@@ -108,12 +124,12 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
     setNewDocTier('A');
     
     // Auto-lock district for MR, allow choice for Manager
-    const defaultDist = userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : userDivision === 'Aizawl' ? 'Aizawl' : userDivision === 'Tripura' ? 'Tripura' : 'Cachar';
+    const defaultDist = userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : userDivision === 'Aizawl' ? 'Aizawl' : userDivision === 'Agartala' ? 'Agartala' : userDivision === 'Dharmanagar' ? 'Dharmanagar' : 'Cachar';
     setNewDocDistrict(defaultDist);
     setNewDocArea('');
     setAddModalVisible(true);
 
-    // Auto-capture GPS with Anti-Mock verification
+    // Auto-capture GPS and auto-fill area via geofencing
     setGpsLoading(true);
     try {
       const loc = await LocationService.getCurrentLocation();
@@ -122,6 +138,10 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
           LocationService.validateAuthenticGps(loc, 'Doctor Clinic Geotagging');
         } else {
           setCapturedCoords({ lat: loc.latitude, lng: loc.longitude });
+          const detectedArea = await LocationService.reverseGeocodeArea(loc.latitude, loc.longitude);
+          if (detectedArea) {
+            setNewDocArea(detectedArea);
+          }
         }
       }
     } catch {
@@ -180,21 +200,15 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
       Alert.alert('Required Field', 'Please enter Area / Street / Landmark.');
       return;
     }
-    if (!newDocPhone.trim()) {
-      Alert.alert('Contact Info Required', 'Please enter Doctor Contact / Mobile Number.');
-      return;
-    }
-
+    let formattedPhone = '';
     const cleanPhoneDigits = newDocPhone.trim().replace(/\D/g, '');
-    if (cleanPhoneDigits.length !== 10 || !/^[6-9]\d{9}$/.test(cleanPhoneDigits)) {
-      Alert.alert(
-        'Invalid Mobile Number',
-        'Please enter a valid 10-digit Indian mobile number (e.g. 9435012345).'
-      );
-      return;
+    if (cleanPhoneDigits.length > 0) {
+      if (cleanPhoneDigits.length === 10) {
+        formattedPhone = `+91 ${cleanPhoneDigits}`;
+      } else {
+        formattedPhone = cleanPhoneDigits;
+      }
     }
-
-    const formattedPhone = `+91 ${cleanPhoneDigits}`;
 
     const formattedName = newDocName.trim().startsWith('Dr.')
       ? newDocName.trim()
@@ -202,7 +216,7 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
 
     // Target District
     const targetDist = !isManager
-      ? (userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : userDivision === 'Aizawl' ? 'Aizawl' : userDivision === 'Tripura' ? 'Tripura' : 'Cachar')
+      ? (userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : userDivision === 'Aizawl' ? 'Aizawl' : userDivision === 'Agartala' ? 'Agartala' : userDivision === 'Dharmanagar' ? 'Dharmanagar' : 'Cachar')
       : newDocDistrict;
 
     await DoctorService.addDoctor({
@@ -563,14 +577,14 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
                 <View style={{ marginBottom: 10 }}>
                   <Text style={styles.inputLabel}>Division / District</Text>
                   <View style={styles.districtChipsRow}>
-                    {(['Cachar', 'Hailakandi', 'Karimganj', 'Aizawl', 'Tripura'] as const).map((dist) => (
+                    {(['Cachar', 'Hailakandi', 'Karimganj', 'Aizawl', 'Agartala', 'Dharmanagar'] as const).map((dist) => (
                       <TouchableOpacity
                         key={dist}
                         style={[styles.districtChip, newDocDistrict === dist && styles.districtChipActive]}
                         onPress={() => setNewDocDistrict(dist)}
                       >
                         <Text style={[styles.districtChipText, newDocDistrict === dist && styles.districtChipTextActive]}>
-                          {dist === 'Cachar' ? 'Silchar' : dist === 'Aizawl' ? 'Aizawl (MZ)' : dist === 'Tripura' ? 'Tripura (TR)' : dist}
+                          {dist === 'Cachar' ? 'Silchar' : dist === 'Aizawl' ? 'Aizawl (MZ)' : dist === 'Agartala' ? 'Agartala' : dist === 'Dharmanagar' ? 'Dharmanagar' : dist}
                         </Text>
                       </TouchableOpacity>
                     ))}
@@ -614,23 +628,32 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
                 onChangeText={setNewDocClinic}
               />
 
-              {/* Area */}
-              <Text style={styles.inputLabel}>Area / Street / Landmark *</Text>
+              {/* Area with Geofencing Auto-Detect */}
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, marginBottom: 4 }}>
+                <Text style={[styles.inputLabel, { marginTop: 0, marginBottom: 0 }]}>Area / Street / Landmark *</Text>
+                <TouchableOpacity
+                  onPress={handleAutoDetectArea}
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#EFF6FF', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 }}
+                >
+                  <Ionicons name="navigate" size={12} color="#2563EB" />
+                  <Text style={{ fontSize: 11, color: '#2563EB', fontWeight: 'bold' }}>📍 Auto-Detect (GPS)</Text>
+                </TouchableOpacity>
+              </View>
               <TextInput
                 style={styles.formInput}
-                placeholder="e.g. Hospital Road / Station Road"
+                placeholder="Auto-detected via GPS geofence / edit anytime"
                 placeholderTextColor="#94A3B8"
                 value={newDocArea}
                 onChangeText={setNewDocArea}
               />
 
-              {/* Phone */}
-              <Text style={styles.inputLabel}>Doctor Contact Mobile *</Text>
+              {/* Phone (Optional) */}
+              <Text style={styles.inputLabel}>Doctor Contact Mobile (Optional)</Text>
               <View style={styles.inputWithIcon}>
                 <Text style={{ paddingLeft: 10, color: '#64748B', fontWeight: 'bold' }}>+91</Text>
                 <TextInput
                   style={styles.innerTextInput}
-                  placeholder="9435012345"
+                  placeholder="Optional 10-digit mobile number"
                   placeholderTextColor="#94A3B8"
                   value={newDocPhone}
                   onChangeText={(val) => setNewDocPhone(val.replace(/\D/g, '').slice(0, 10))}

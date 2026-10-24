@@ -94,7 +94,17 @@ export const DrawerMenu: React.FC<DrawerMenuProps> = ({
             </View>
             <Text style={styles.userName}>{user?.name || 'Shakir Ahmad'}</Text>
             <Text style={styles.userRole}>
-              {user?.role === 'MEDICAL_REP' ? 'Medical Representative (MR)' : user?.role || 'Representative'}
+              {user?.role === 'DIRECTOR'
+                ? 'Director'
+                : user?.role === 'HR_MANAGER'
+                ? 'HR Manager'
+                : user?.role === 'SUPER_ADMIN'
+                ? 'Corporate Admin'
+                : user?.role === 'REGIONAL_MANAGER'
+                ? 'Regional Sales Manager (RSM)'
+                : user?.role === 'AREA_MANAGER'
+                ? 'Area Business Manager (ABM)'
+                : 'Medical Representative (MR)'}
             </Text>
             <View style={styles.territoryRow}>
               <Ionicons name="location-outline" size={14} color="#1E3A8A" />

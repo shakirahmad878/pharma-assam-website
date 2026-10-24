@@ -2,7 +2,14 @@
  * RepPulse Mobile SFA - Core Domain Types (Barak Division, Assam)
  */
 
-export type UserRole = 'SUPER_ADMIN' | 'REGIONAL_MANAGER' | 'AREA_MANAGER' | 'MEDICAL_REP' | 'CHEMIST';
+export type UserRole =
+  | 'DIRECTOR'
+  | 'HR_MANAGER'
+  | 'SUPER_ADMIN'
+  | 'REGIONAL_MANAGER'
+  | 'AREA_MANAGER'
+  | 'MEDICAL_REP'
+  | 'CHEMIST';
 
 export interface UserProfile {
   id: string;
@@ -31,7 +38,7 @@ export interface RoutePlan {
   id: string;
   code: string;
   name: string;
-  district: 'Cachar' | 'Karimganj' | 'Hailakandi' | 'Aizawl' | 'Tripura' | string;
+  district: 'Cachar' | 'Karimganj' | 'Hailakandi' | 'Aizawl' | 'Agartala' | 'Dharmanagar' | 'Tripura' | string;
   areas?: string[];
   totalDoctors: number;
   totalHospitals: number;
@@ -188,7 +195,7 @@ export interface Doctor {
   tier: 'A_PLUS' | 'A' | 'B' | 'C';
   clinicName: string;
   clinicAddress: string;
-  district: 'Cachar' | 'Karimganj' | 'Hailakandi' | 'Aizawl' | 'Tripura' | string;
+  district: 'Cachar' | 'Karimganj' | 'Hailakandi' | 'Aizawl' | 'Agartala' | 'Dharmanagar' | 'Tripura' | string;
   area: string;
   routeId: string;
   latitude: number;
@@ -208,7 +215,7 @@ export interface Chemist {
   contactPerson: string;
   drugLicenseNumber: string;
   gstNumber?: string;
-  district: 'Cachar' | 'Karimganj' | 'Hailakandi' | 'Aizawl' | 'Tripura' | string;
+  district: 'Cachar' | 'Karimganj' | 'Hailakandi' | 'Aizawl' | 'Agartala' | 'Dharmanagar' | 'Tripura' | string;
   area: string;
   routeId: string;
   phone: string;

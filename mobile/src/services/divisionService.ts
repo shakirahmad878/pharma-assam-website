@@ -1,6 +1,6 @@
 import { UserProfile, Doctor, StockistFirm } from '../types';
 
-export type DivisionType = 'ALL' | 'Cachar' | 'Hailakandi' | 'Karimganj' | 'Aizawl' | 'Tripura';
+export type DivisionType = 'ALL' | 'Cachar' | 'Hailakandi' | 'Karimganj' | 'Aizawl' | 'Agartala' | 'Dharmanagar' | 'Tripura';
 
 export interface DivisionInfo {
   id: DivisionType;
@@ -15,13 +15,20 @@ export const DIVISIONS: DivisionInfo[] = [
   { id: 'Hailakandi', label: 'Hailakandi', district: 'Hailakandi', description: 'S.K. Roy Hospital & Lala Bazar Belt' },
   { id: 'Karimganj', label: 'Karimganj (Shribhumi)', district: 'Karimganj', description: 'Station Rd, Main Rd & Badarpur' },
   { id: 'Aizawl', label: 'Aizawl (Mizoram)', district: 'Aizawl', description: 'Civil Hospital, ZMC, Chanmari & Bawngkawn' },
-  { id: 'Tripura', label: 'Tripura (Agartala)', district: 'Tripura', description: 'AGMC & GBP Hospital, ILS, Akhaura Rd' },
+  { id: 'Agartala', label: 'Agartala (Tripura)', district: 'Agartala', description: 'AGMC & GBP Hospital, ILS, Akhaura Rd' },
+  { id: 'Dharmanagar', label: 'Dharmanagar (North Tripura)', district: 'Dharmanagar', description: 'District Hospital, Station Rd & Town Belt' },
 ];
 
 export class DivisionService {
   public static isManager(user: UserProfile | null): boolean {
     if (!user) return false;
-    return user.role === 'REGIONAL_MANAGER' || user.role === 'AREA_MANAGER' || user.role === 'SUPER_ADMIN';
+    return (
+      user.role === 'DIRECTOR' ||
+      user.role === 'HR_MANAGER' ||
+      user.role === 'SUPER_ADMIN' ||
+      user.role === 'REGIONAL_MANAGER' ||
+      user.role === 'AREA_MANAGER'
+    );
   }
 
   public static getUserDivision(user: UserProfile | null): DivisionType {
@@ -31,8 +38,9 @@ export class DivisionService {
     const territory = (user.territory || '').toLowerCase();
     const hq = (user.headquarter || '').toLowerCase();
 
+    if (territory.includes('dharmanagar') || hq.includes('dharmanagar')) return 'Dharmanagar';
     if (territory.includes('aizawl') || hq.includes('aizawl') || territory.includes('mizoram')) return 'Aizawl';
-    if (territory.includes('tripura') || hq.includes('tripura') || territory.includes('agartala') || hq.includes('agartala')) return 'Tripura';
+    if (territory.includes('tripura') || hq.includes('tripura') || territory.includes('agartala') || hq.includes('agartala')) return 'Agartala';
     if (territory.includes('hailakandi') || hq.includes('hailakandi')) return 'Hailakandi';
     if (territory.includes('karimganj') || hq.includes('karimganj') || territory.includes('shribhumi')) return 'Karimganj';
     if (territory.includes('silchar') || territory.includes('cachar') || hq.includes('silchar') || hq.includes('cachar')) return 'Cachar';
@@ -144,6 +152,16 @@ export class DivisionService {
         areaLower.includes('hapania') ||
         areaLower.includes('akhaura') ||
         areaLower.includes('chowmuhani')
+      );
+    }
+    if (targetLower.includes('dharmanagar')) {
+      return (
+        distLower.includes('dharmanagar') ||
+        distLower.includes('north tripura') ||
+        areaLower.includes('dharmanagar') ||
+        areaLower.includes('kadamtala') ||
+        areaLower.includes('churaibari') ||
+        areaLower.includes('panisagar')
       );
     }
     return distLower === targetLower;

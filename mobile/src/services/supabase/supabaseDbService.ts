@@ -338,19 +338,32 @@ export class SupabaseDbService {
       }
 
       const raw = await res.json();
-      const employees: UserProfile[] = raw.map((e: any) => ({
-        id: e.id,
-        employeeCode: e.employee_code,
-        name: e.name,
-        email: e.email,
-        role: e.role,
-        phone: e.phone,
-        pin: e.pin || '',
-        territory: e.territory,
-        headquarter: e.headquarter,
-        assignedRouteIds: e.assigned_route_ids || [],
-        activeRouteId: e.active_route_id || 'route-cachar-01',
-      }));
+      const employees: UserProfile[] = raw.map((e: any) => {
+        let normalizedRole = e.role;
+        if (e.employee_code === 'NLCL-0001' || (e.name && e.name.toLowerCase().includes('samsuj'))) {
+          normalizedRole = 'DIRECTOR';
+        } else if (e.employee_code === 'NLCL-0002' || (e.name && e.name.toLowerCase().includes('shakir'))) {
+          normalizedRole = 'HR_MANAGER';
+        } else if (e.employee_code === 'NLCL-0003' || (e.name && e.name.toLowerCase().includes('bodrud'))) {
+          normalizedRole = 'REGIONAL_MANAGER';
+        }
+
+        const territory = (e.territory || '').replace('Tripura', 'Agartala, Dharmanagar');
+
+        return {
+          id: e.id,
+          employeeCode: e.employee_code,
+          name: e.name,
+          email: e.email,
+          role: normalizedRole,
+          phone: e.phone,
+          pin: e.pin || '',
+          territory: territory,
+          headquarter: e.headquarter,
+          assignedRouteIds: e.assigned_route_ids || [],
+          activeRouteId: e.active_route_id || 'route-cachar-01',
+        };
+      });
 
       await StorageService.setItem(EMP_STORAGE_KEY, employees);
       return employees;
