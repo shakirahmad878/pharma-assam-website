@@ -312,7 +312,7 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
           <View style={{ flex: 1, marginLeft: 8 }}>
             <Text style={styles.headerTitle}>{mode === 'VISITS' ? 'Visits' : 'Doctors'}</Text>
             <Text style={styles.headerSubtitleText}>
-              {currentUser?.name || 'Representative'} ({isManager ? 'RSM' : 'MR'})
+              {currentUser?.name || 'Representative'} ({currentUser?.role === 'DIRECTOR' ? 'Director' : currentUser?.role === 'HR_MANAGER' ? 'HR Manager' : currentUser?.role === 'SUPER_ADMIN' ? 'Corporate Admin' : isManager ? 'RSM' : 'MR'})
             </Text>
           </View>
           <TouchableOpacity style={styles.refreshPill} onPress={loadData}>
@@ -366,7 +366,9 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
           <View style={styles.divisionHeaderRow}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
               <Ionicons name="business" size={14} color="#1D4ED8" />
-              <Text style={styles.divisionHeaderTitle}>SELECT DIVISION (RSM ACCESS):</Text>
+              <Text style={styles.divisionHeaderTitle}>
+                SELECT DIVISION ({currentUser?.role === 'DIRECTOR' ? 'DIRECTOR' : currentUser?.role === 'HR_MANAGER' ? 'HR MANAGER' : 'MANAGEMENT'} ACCESS):
+              </Text>
             </View>
             <Text style={styles.divisionCountBadge}>{filteredDoctors.length} Doctors</Text>
           </View>
@@ -529,14 +531,16 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
         }}
       />
 
-      {/* Floating Add Doctor Button */}
-      <TouchableOpacity
-        style={styles.fabBtn}
-        onPress={handleOpenAddDoctorModal}
-        activeOpacity={0.85}
-      >
-        <Ionicons name="add" size={28} color="#ffffff" />
-      </TouchableOpacity>
+      {/* Floating Add Doctor Button - Only shown in Doctors Master Tab, NOT in Visits tab */}
+      {mode === 'MASTER' && (
+        <TouchableOpacity
+          style={styles.fabBtn}
+          onPress={handleOpenAddDoctorModal}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="add" size={28} color="#ffffff" />
+        </TouchableOpacity>
+      )}
 
       {/* Bottom Share Bar */}
       <View style={styles.bottomBar}>
