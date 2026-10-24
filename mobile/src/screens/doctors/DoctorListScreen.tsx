@@ -637,15 +637,18 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
                 <Text style={[styles.inputLabel, { marginTop: 0, marginBottom: 0 }]}>Area / Street / Landmark *</Text>
                 <TouchableOpacity
                   onPress={handleAutoDetectArea}
-                  style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#EFF6FF', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 }}
+                  disabled={gpsLoading}
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#EFF6FF', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12, opacity: gpsLoading ? 0.6 : 1 }}
                 >
                   <Ionicons name="navigate" size={12} color="#2563EB" />
-                  <Text style={{ fontSize: 11, color: '#2563EB', fontWeight: 'bold' }}>📍 Auto-Detect (GPS)</Text>
+                  <Text style={{ fontSize: 11, color: '#2563EB', fontWeight: 'bold' }}>
+                    {gpsLoading ? 'Detecting GPS...' : '📍 Auto-Detect (GPS)'}
+                  </Text>
                 </TouchableOpacity>
               </View>
               <TextInput
                 style={styles.formInput}
-                placeholder="Auto-detected via GPS geofence / edit anytime"
+                placeholder={gpsLoading ? 'Detecting address via GPS...' : 'e.g. Radhamadhab Rd, Bilpar, Silchar'}
                 placeholderTextColor="#94A3B8"
                 value={newDocArea}
                 onChangeText={setNewDocArea}

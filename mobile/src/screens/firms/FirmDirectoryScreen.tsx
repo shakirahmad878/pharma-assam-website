@@ -118,7 +118,8 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
         setAutoArea('⚠️ Fake GPS Detected (Blocked)');
       } else {
         setCapturedGps(loc);
-        setAutoArea(`Commercial Hub & Main Market, ${targetDist}`);
+        const detected = await LocationService.reverseGeocodeArea(loc.latitude, loc.longitude);
+        setAutoArea(detected || `Commercial Hub, ${targetDist}`);
       }
     } else {
       setAutoArea(`${targetDist}`);
