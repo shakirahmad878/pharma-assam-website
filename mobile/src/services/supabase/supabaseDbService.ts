@@ -422,11 +422,16 @@ export class SupabaseDbService {
   }
 
   public static async updateEmployeePin(employeeCodeOrId: string, newPin: string): Promise<boolean> {
-    const cleanKey = (employeeCodeOrId || '').trim();
-    if (!this.isConnected()) return false;
+    const rawKey = (employeeCodeOrId || '').trim();
+    if (!this.isConnected() || !rawKey) return false;
     try {
-      await fetch(
-        `${SUPABASE_CONFIG.url}/rest/v1/employees?employee_code=eq.${encodeURIComponent(cleanKey)}`,
+      const cleanDigits = rawKey.replace(/\D/g, '');
+      const filter = cleanDigits.length === 10
+        ? `or=(phone.eq.${cleanDigits},employee_code.ilike.${encodeURIComponent(rawKey)})`
+        : `or=(employee_code.ilike.${encodeURIComponent(rawKey)},id.eq.${encodeURIComponent(rawKey)})`;
+
+      const res = await fetch(
+        `${SUPABASE_CONFIG.url}/rest/v1/employees?${filter}`,
         {
           method: 'PATCH',
           headers: this.getHeaders(),
@@ -436,7 +441,7 @@ export class SupabaseDbService {
           }),
         }
       );
-      return true;
+      return res.ok;
     } catch (err) {
       console.warn('[Supabase] updateEmployeePin error:', err);
       return false;

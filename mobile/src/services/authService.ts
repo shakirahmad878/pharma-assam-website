@@ -130,11 +130,20 @@ export class AuthService {
     if (cleanPin.length !== 4 || !/^\d{4}$/.test(cleanPin)) {
       return false;
     }
-    const cleanKey = (employeeCodeOrPhone || '').trim().toLowerCase();
-    await StorageService.setItem(`@REPPULSE_USER_PIN_${cleanKey}`, cleanPin);
+    const rawKey = (employeeCodeOrPhone || '').trim();
+    const upperKey = rawKey.toUpperCase();
+    const cleanDigits = rawKey.replace(/\D/g, '');
+
+    // Save locally under all variations for instant seamless login
+    await StorageService.setItem(`@REPPULSE_USER_PIN_${rawKey.toLowerCase()}`, cleanPin);
+    await StorageService.setItem(`@REPPULSE_USER_PIN_${upperKey}`, cleanPin);
+    if (cleanDigits.length === 10) {
+      await StorageService.setItem(`@REPPULSE_USER_PIN_${cleanDigits}`, cleanPin);
+    }
     await StorageService.setItem(STORAGE_KEYS.MR_LOGIN_PIN, cleanPin);
-    // Sync to Supabase PostgreSQL
-    await SupabaseDbService.updateEmployeePin(cleanKey, cleanPin);
+
+    // Sync to Supabase PostgreSQL (case-insensitive & phone match)
+    await SupabaseDbService.updateEmployeePin(upperKey || cleanDigits || rawKey, cleanPin);
     return true;
   }
 
