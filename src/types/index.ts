@@ -74,6 +74,8 @@ export interface InquiryFormData {
 // =================== SFA & TELEMETRY DOMAIN TYPES ===================
 
 export type UserRole = 
+  | 'DIRECTOR'
+  | 'HR_MANAGER'
   | 'SUPER_ADMIN' 
   | 'ADMIN' 
   | 'MANAGER' 

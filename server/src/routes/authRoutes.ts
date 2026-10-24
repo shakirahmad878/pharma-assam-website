@@ -20,7 +20,7 @@ const DEMO_USERS = [
     role: 'SUPER_ADMIN',
     employeeCode: 'NLCL-0001',
     phone: '6900700102',
-    designation: 'Chief Executive Officer (CEO)',
+    designation: 'Director',
     reportingManager: 'Board of Directors',
     territory: 'Silchar Regional HQ'
   },
@@ -33,7 +33,7 @@ const DEMO_USERS = [
     employeeCode: 'NLCL-0002',
     phone: '9101494287',
     designation: 'HR Manager',
-    reportingManager: 'CEO',
+    reportingManager: 'Director',
     territory: 'Silchar Corporate HQ'
   },
   {
@@ -45,7 +45,7 @@ const DEMO_USERS = [
     employeeCode: 'NLCL-0003',
     phone: '8099139305',
     designation: 'Regional Sales Manager',
-    reportingManager: 'CEO',
+    reportingManager: 'Director',
     territory: 'Silchar Regional HQ'
   },
   {

@@ -446,7 +446,7 @@ export class SupabaseService {
         id: e.id,
         name: e.name,
         email: e.email || `${e.employee_code?.toLowerCase()}@pharmaassam.com`,
-        role: (e.role || 'MEDICAL_REP') as UserRole,
+        role: (e.employee_code === 'NLCL-0001' ? 'DIRECTOR' : (e.employee_code === 'NLCL-0002' ? 'HR_MANAGER' : (e.role || 'MEDICAL_REP'))) as UserRole,
         phone: e.phone,
         employeeCode: e.employee_code,
         territoryId: e.active_route_id || 'route-cachar-01',

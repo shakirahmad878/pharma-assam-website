@@ -30,7 +30,7 @@ export const createDefaultLeaveBalances = (userId: string): LeaveBalanceRow[] =>
 
 /**
  * Official Employee Directory (NLCL-xxxx Hierarchy):
- * NLCL-0001: Samsuj Sadiol (CEO)
+ * NLCL-0001: Samsuj Sadiol (Director)
  * NLCL-0002: Shakir Ahmad Barbhuiya (HR Manager / Super Admin)
  * NLCL-0003: Bodrud Jaman Sadiol (Regional Sales Manager)
  * NLCL-0004: Pranjal Malakar (Medical Representative)
@@ -47,7 +47,7 @@ export const PRIMARY_SUPER_ADMIN_USER: HrmsUser = {
   department: 'Human Resources & Corporate People Operations',
   organizationUnit: 'Pappu Da Company > People Operations',
   locationHierarchy: 'India > Assam > Silchar > Corporate HQ',
-  l1Manager: { name: 'Samsuj Sadiol (CEO)', code: 'NLCL-0001' },
+  l1Manager: { name: 'Samsuj Sadiol (Director)', code: 'NLCL-0001' },
   l2Manager: { name: 'Board of Directors', code: 'BOD' },
   hrbp: { name: 'Self', code: 'NLCL-0002' },
   joiningDate: 'Jan 15, 2024',
@@ -64,8 +64,8 @@ export const USER_SAMSUJ_CEO: HrmsUser = {
   name: 'Samsuj Sadiol',
   email: 'samsuj.ceo@pappudacompany.com',
   role: 'HR_SUPER_ADMIN',
-  designation: 'Chief Executive Officer (CEO)',
-  grade: 'L7 | Chief Executive',
+  designation: 'Director',
+  grade: 'L7 | Director & Executive Leadership',
   department: 'Executive Leadership & Corporate Management',
   organizationUnit: 'Pappu Da Company > Executive Board',
   locationHierarchy: 'India > Assam > Silchar > Regional HQ',
@@ -91,7 +91,7 @@ export const USER_BODRUD_RSM: HrmsUser = {
   department: 'Field Sales & Distribution Operations',
   organizationUnit: 'Pappu Da Company > Field Sales',
   locationHierarchy: 'India > Assam > Silchar > Regional HQ',
-  l1Manager: { name: 'Samsuj Sadiol (CEO)', code: 'NLCL-0001' },
+  l1Manager: { name: 'Samsuj Sadiol (Director)', code: 'NLCL-0001' },
   l2Manager: { name: 'Board of Directors', code: 'BOD' },
   hrbp: { name: 'Shakir Ahmad Barbhuiya', code: 'NLCL-0002' },
   joiningDate: 'Jan 15, 2024',
@@ -114,7 +114,7 @@ export const USER_PRANJAL_MR: HrmsUser = {
   organizationUnit: 'Pappu Da Company > Field Sales > Karimganj',
   locationHierarchy: 'India > Assam > Karimganj > Karimganj HQ',
   l1Manager: { name: 'Bodrud Jaman Sadiol (RSM)', code: 'NLCL-0003' },
-  l2Manager: { name: 'Samsuj Sadiol (CEO)', code: 'NLCL-0001' },
+  l2Manager: { name: 'Samsuj Sadiol (Director)', code: 'NLCL-0001' },
   hrbp: { name: 'Shakir Ahmad Barbhuiya', code: 'NLCL-0002' },
   joiningDate: 'Feb 01, 2024',
   isActive: true,
@@ -136,7 +136,7 @@ export const USER_SATYAM_MR: HrmsUser = {
   organizationUnit: 'Pappu Da Company > Field Sales > Silchar',
   locationHierarchy: 'India > Assam > Silchar > Silchar HQ',
   l1Manager: { name: 'Bodrud Jaman Sadiol (RSM)', code: 'NLCL-0003' },
-  l2Manager: { name: 'Samsuj Sadiol (CEO)', code: 'NLCL-0001' },
+  l2Manager: { name: 'Samsuj Sadiol (Director)', code: 'NLCL-0001' },
   hrbp: { name: 'Shakir Ahmad Barbhuiya', code: 'NLCL-0002' },
   joiningDate: 'Feb 15, 2024',
   isActive: true,

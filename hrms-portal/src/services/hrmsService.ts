@@ -106,19 +106,19 @@ export class HrmsService {
 
           if (isCEO) {
             role = 'HR_SUPER_ADMIN';
-            designation = 'Chief Executive Officer (CEO)';
-            grade = 'L7 | Chief Executive';
+            designation = 'Director';
+            grade = 'L7 | Director & Executive Leadership';
             l1Manager = { name: 'Board of Directors', code: 'BOD' };
           } else if (isHRAdmin) {
             role = 'HR_SUPER_ADMIN';
             designation = 'HR Manager';
             grade = 'M2 | Manager';
-            l1Manager = { name: 'Samsuj Sadiol (CEO)', code: 'NLCL-0001' };
+            l1Manager = { name: 'Samsuj Sadiol (Director)', code: 'NLCL-0001' };
           } else if (isRSM) {
             role = 'HR_MANAGER';
             designation = 'Regional Sales Manager';
             grade = 'M1 | Regional Manager';
-            l1Manager = { name: 'Samsuj Sadiol (CEO)', code: 'NLCL-0001' };
+            l1Manager = { name: 'Samsuj Sadiol (Director)', code: 'NLCL-0001' };
           }
 
           return {
@@ -133,7 +133,7 @@ export class HrmsService {
             organizationUnit: isCEO ? 'Pappu Da Company > Executive Board' : (isHRAdmin ? 'Pappu Da Company > People Operations' : 'Pappu Da Company > Field Sales'),
             locationHierarchy: e.territory || e.headquarter || 'India > Assam > Silchar > Regional HQ',
             l1Manager,
-            l2Manager: { name: isCEO ? 'Board of Directors' : 'Samsuj Sadiol (CEO)', code: isCEO ? 'BOD' : 'NLCL-0001' },
+            l2Manager: { name: isCEO ? 'Board of Directors' : 'Samsuj Sadiol (Director)', code: isCEO ? 'BOD' : 'NLCL-0001' },
             hrbp: { name: 'Shakir Ahmad Barbhuiya', code: 'NLCL-0002' },
             joiningDate: e.created_at ? new Date(e.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'Jan 15, 2024',
             isActive: Boolean(e.is_active ?? true),
