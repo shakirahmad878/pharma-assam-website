@@ -450,7 +450,7 @@ export class SupabaseService {
         phone: e.phone,
         employeeCode: e.employee_code,
         territoryId: e.active_route_id || 'route-cachar-01',
-        territoryName: e.territory || e.headquarter || 'Silchar',
+        territoryName: (e.territory || e.headquarter || 'Silchar').replace(/\bTripura\b/g, 'Agartala, Dharmanagar'),
         isActive: Boolean(e.is_active ?? true),
         password: e.pin || '1234',
         companyId: 'comp-01',

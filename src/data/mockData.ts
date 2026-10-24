@@ -268,7 +268,72 @@ export const INITIAL_TERRITORIES: Territory[] = [
 export const INITIAL_AUDIT_LOGS: AuditLogEntry[] = [];
 export const INITIAL_PRODUCTS: Product[] = [];
 export const INITIAL_DOCTORS: Doctor[] = [];
-export const INITIAL_CHEMISTS: Chemist[] = [];
+export const INITIAL_CHEMISTS: Chemist[] = [
+  {
+    id: 'firm-sil-001',
+    name: 'BARAK PHARMA DISTRIBUTORS',
+    shopName: 'BARAK PHARMA DISTRIBUTORS',
+    contactPerson: 'S. K. Choudhury',
+    drugLicenseNumber: 'AS-SIL-2026-DL-1011',
+    gstNumber: '18AABCB1011Z1ZA',
+    territoryId: 'terr-cachar-01',
+    territoryName: 'Silchar Regional HQ',
+    phone: '+91 9435011223',
+    location: { latitude: 24.8218, longitude: 92.7971, address: 'Hospital Road, Ambicapatty, Silchar' },
+    associatedDoctors: [],
+    averageMonthlyTurnover: 450000,
+    companyId: 'comp-01',
+    companyName: 'Pappu Da Company / Pharma Assam'
+  },
+  {
+    id: 'firm-sil-002',
+    name: 'SANJIVANI MEDICAL STORE',
+    shopName: 'SANJIVANI MEDICAL STORE',
+    contactPerson: 'Debasish Paul',
+    drugLicenseNumber: 'AS-SIL-2026-DL-1022',
+    gstNumber: '18AABCS1022Z2ZB',
+    territoryId: 'terr-cachar-01',
+    territoryName: 'Silchar Regional HQ',
+    phone: '+91 9435022334',
+    location: { latitude: 24.7768, longitude: 92.7940, address: 'SMCH Gate, Ghungoor, Silchar' },
+    associatedDoctors: [],
+    averageMonthlyTurnover: 320000,
+    companyId: 'comp-01',
+    companyName: 'Pappu Da Company / Pharma Assam'
+  },
+  {
+    id: 'firm-kxj-001',
+    name: 'SHRIBHUMI WHOLESALE PHARMACEUTICALS',
+    shopName: 'SHRIBHUMI WHOLESALE PHARMACEUTICALS',
+    contactPerson: 'Prabir Roy',
+    drugLicenseNumber: 'AS-KXJ-2026-DL-3011',
+    gstNumber: '18AABCW3011Z3ZC',
+    territoryId: 'terr-karimganj-01',
+    territoryName: 'Karimganj HQ',
+    phone: '+91 9435044556',
+    location: { latitude: 24.8688, longitude: 92.3558, address: 'Station Road, Karimganj Town' },
+    associatedDoctors: [],
+    averageMonthlyTurnover: 500000,
+    companyId: 'comp-01',
+    companyName: 'Pappu Da Company / Pharma Assam'
+  },
+  {
+    id: 'firm-hkd-001',
+    name: 'HAILAKANDI MEDICO AGENCY',
+    shopName: 'HAILAKANDI MEDICO AGENCY',
+    contactPerson: 'M. H. Barbhuiya',
+    drugLicenseNumber: 'AS-HKD-2026-DL-2011',
+    gstNumber: '18AABCH2011Z4ZD',
+    territoryId: 'terr-hailakandi-01',
+    territoryName: 'Hailakandi HQ',
+    phone: '+91 9435033445',
+    location: { latitude: 24.6838, longitude: 92.5672, address: 'S.K. Roy Road, Main Market, Hailakandi' },
+    associatedDoctors: [],
+    averageMonthlyTurnover: 380000,
+    companyId: 'comp-01',
+    companyName: 'Pappu Da Company / Pharma Assam'
+  }
+];
 export const INITIAL_STOCKISTS: Stockist[] = [];
 export const INITIAL_STOPOVERS: RouteStopover[] = [];
 export const INITIAL_TELEMETRY_LOGS: LocationTelemetryPoint[] = [];

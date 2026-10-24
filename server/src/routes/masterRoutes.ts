@@ -3,18 +3,126 @@ import { z } from 'zod';
 
 const router = Router();
 
+// Live Verified Medical Practitioners in Barak Valley
 const DOCTORS = [
-  { id: 'doc-01', name: 'Dr. Alok Verma', qualification: 'MD, DM (Cardio)', specialty: 'Cardiology', tier: 'A_PLUS', clinicName: 'Lilavati Hospital & Research Centre', latitude: 19.0596, longitude: 72.8295, geofenceRadiusMeters: 100, phone: '+91 98201 23456', monthlyVisitTarget: 3, territory: 'Bandra West' },
-  { id: 'doc-02', name: 'Dr. Meera Kulkarni', qualification: 'MBBS, MD (Medicine)', specialty: 'Diabetology', tier: 'A', clinicName: 'Apex Diabetes Care', latitude: 19.0645, longitude: 72.8355, geofenceRadiusMeters: 100, phone: '+91 98202 34567', monthlyVisitTarget: 2, territory: 'Khar West' },
-  { id: 'doc-03', name: 'Dr. Rajesh Patel', qualification: 'MD (Pediatrics)', specialty: 'Pediatrics', tier: 'B', clinicName: 'Little Angels Clinic', latitude: 19.0720, longitude: 72.8410, geofenceRadiusMeters: 100, phone: '+91 98203 45678', monthlyVisitTarget: 2, territory: 'Santacruz' },
-  { id: 'doc-04', name: 'Dr. Ananya Roy', qualification: 'MS (Orthopedics)', specialty: 'Orthopedics', tier: 'A_PLUS', clinicName: 'Bone & Joint Speciality', latitude: 19.0510, longitude: 72.8240, geofenceRadiusMeters: 100, phone: '+91 98204 56789', monthlyVisitTarget: 3, territory: 'Bandra South' },
-  { id: 'doc-05', name: 'Dr. Farhan Qureshi', qualification: 'MD (Chest)', specialty: 'Pulmonology', tier: 'B', clinicName: 'BreathEasy Chest Clinic', latitude: 19.0800, longitude: 72.8450, geofenceRadiusMeters: 100, phone: '+91 98205 67890', monthlyVisitTarget: 1, territory: 'Vile Parle' }
+  {
+    id: 'doc-barak-1791257021378',
+    name: 'Dr. Kamalesh Dey',
+    qualification: 'MBBS',
+    specialty: 'General Physician',
+    tier: 'A',
+    clinicName: 'Radharaman Medisales',
+    latitude: 24.8651617,
+    longitude: 92.3729317,
+    geofenceRadiusMeters: 100,
+    phone: '+91 9435596542',
+    monthlyVisitTarget: 8,
+    territory: 'Karimganj HQ'
+  },
+  {
+    id: 'doc-barak-1791257349198',
+    name: 'Dr. AM Tapadar',
+    qualification: 'MBBS',
+    specialty: 'General Physician',
+    tier: 'B',
+    clinicName: 'Ashirwad Hospital',
+    latitude: 24.8621167,
+    longitude: 92.36934,
+    geofenceRadiusMeters: 100,
+    phone: '+91 9435596882',
+    monthlyVisitTarget: 8,
+    territory: 'Karimganj HQ'
+  },
+  {
+    id: 'doc-barak-1791257461313',
+    name: 'Dr. Subhashish Deb',
+    qualification: 'MBBS',
+    specialty: 'General Physician',
+    tier: 'B',
+    clinicName: 'Dristi Eye Clinic',
+    latitude: 24.8627179,
+    longitude: 92.3693382,
+    geofenceRadiusMeters: 100,
+    phone: '+91 8638339255',
+    monthlyVisitTarget: 8,
+    territory: 'Karimganj HQ'
+  },
+  {
+    id: 'doc-barak-1791257729198',
+    name: 'Dr. TK Banik',
+    qualification: 'MBBS',
+    specialty: 'General Physician',
+    tier: 'A',
+    clinicName: 'Nilima Medical Hall',
+    latitude: 24.8663117,
+    longitude: 92.363375,
+    geofenceRadiusMeters: 100,
+    phone: '+91 7558214220',
+    monthlyVisitTarget: 8,
+    territory: 'Karimganj HQ'
+  },
+  {
+    id: 'doc-barak-1791257859025',
+    name: 'Dr. Nabarun Das',
+    qualification: 'MBBS',
+    specialty: 'General Physician',
+    tier: 'B',
+    clinicName: 'Jivandeep',
+    latitude: 24.867489,
+    longitude: 92.3630161,
+    geofenceRadiusMeters: 100,
+    phone: '+91 8638452210',
+    monthlyVisitTarget: 8,
+    territory: 'Karimganj HQ'
+  }
 ];
 
+// Live Registered Wholesale Distributors & Stockists
 const CHEMISTS = [
-  { id: 'chm-01', shopName: 'Apollo Pharmacy Bandra', contactPerson: 'Ramesh Gupta', drugLicenseNumber: 'MH-MZ4-184920', gstNumber: '27AAAAA0000A1Z5', phone: '+91 98111 22233', territory: 'Bandra West', latitude: 19.0598, longitude: 72.8290 },
-  { id: 'chm-02', shopName: 'Wellness Forever Khar', contactPerson: 'Ashok Shah', drugLicenseNumber: 'MH-MZ4-192837', gstNumber: '27BBBBB1111B1Z2', phone: '+91 98222 33344', territory: 'Khar West', latitude: 19.0640, longitude: 72.8360 },
-  { id: 'chm-03', shopName: 'Noble Chemist Santacruz', contactPerson: 'Pravin Jain', drugLicenseNumber: 'MH-MZ4-203948', gstNumber: '27CCCCC2222C1Z9', phone: '+91 98333 44455', territory: 'Santacruz', latitude: 19.0715, longitude: 72.8415 }
+  {
+    id: 'firm-sil-001',
+    shopName: 'BARAK PHARMA DISTRIBUTORS',
+    contactPerson: 'S. K. Choudhury',
+    drugLicenseNumber: 'AS-SIL-2026-DL-1011',
+    gstNumber: '18AABCB1011Z1ZA',
+    phone: '+91 9435011223',
+    territory: 'Silchar Regional HQ',
+    latitude: 24.8218,
+    longitude: 92.7971
+  },
+  {
+    id: 'firm-sil-002',
+    shopName: 'SANJIVANI MEDICAL STORE',
+    contactPerson: 'Debasish Paul',
+    drugLicenseNumber: 'AS-SIL-2026-DL-1022',
+    gstNumber: '18AABCS1022Z2ZB',
+    phone: '+91 9435022334',
+    territory: 'Silchar Regional HQ',
+    latitude: 24.7768,
+    longitude: 92.7940
+  },
+  {
+    id: 'firm-kxj-001',
+    shopName: 'SHRIBHUMI WHOLESALE PHARMACEUTICALS',
+    contactPerson: 'Prabir Roy',
+    drugLicenseNumber: 'AS-KXJ-2026-DL-3011',
+    gstNumber: '18AABCW3011Z3ZC',
+    phone: '+91 9435044556',
+    territory: 'Karimganj HQ',
+    latitude: 24.8688,
+    longitude: 92.3558
+  },
+  {
+    id: 'firm-hkd-001',
+    shopName: 'HAILAKANDI MEDICO AGENCY',
+    contactPerson: 'M. H. Barbhuiya',
+    drugLicenseNumber: 'AS-HKD-2026-DL-2011',
+    gstNumber: '18AABCH2011Z4ZD',
+    phone: '+91 9435033445',
+    territory: 'Hailakandi HQ',
+    latitude: 24.6838,
+    longitude: 92.5672
+  }
 ];
 
 const PRODUCTS = [
@@ -37,7 +145,7 @@ const DoctorCreateSchema = z.object({
   clinicName: z.string(),
   latitude: z.number(),
   longitude: z.number(),
-  phone: z.string(),
+  phone: z.string().optional(),
   territory: z.string()
 });
 
@@ -48,10 +156,11 @@ router.post('/doctors', (req, res) => {
   const newDoctor = {
     id: `doc-${Date.now()}`,
     ...parsed.data,
+    phone: parsed.data.phone || '',
     geofenceRadiusMeters: 100,
-    monthlyVisitTarget: 2
+    monthlyVisitTarget: 8
   };
-  DOCTORS.push(newDoctor);
+  DOCTORS.push(newDoctor as any);
   res.status(201).json({ success: true, data: newDoctor });
 });
 

@@ -131,7 +131,7 @@ export class HrmsService {
             grade,
             department: isCEO || isHRAdmin ? 'Corporate Leadership & Operations' : 'Pharmaceutical Field Sales & Distribution',
             organizationUnit: isCEO ? 'Pappu Da Company > Executive Board' : (isHRAdmin ? 'Pappu Da Company > People Operations' : 'Pappu Da Company > Field Sales'),
-            locationHierarchy: e.territory || e.headquarter || 'India > Assam > Silchar > Regional HQ',
+            locationHierarchy: (e.territory || e.headquarter || 'India > Assam > Silchar > Regional HQ').replace(/\bTripura\b/g, 'Agartala, Dharmanagar'),
             l1Manager,
             l2Manager: { name: isCEO ? 'Board of Directors' : 'Samsuj Sadiol (Director)', code: isCEO ? 'BOD' : 'NLCL-0001' },
             hrbp: { name: 'Shakir Ahmad Barbhuiya', code: 'NLCL-0002' },
