@@ -187,6 +187,17 @@ export interface StockistFirm {
   routeId: string;
 }
 
+export interface DoctorClinic {
+  id: string;
+  name: string;
+  address: string;
+  area: string;
+  latitude: number;
+  longitude: number;
+  timing?: string;
+  isPrimary?: boolean;
+}
+
 export interface Doctor {
   id: string;
   name: string;
@@ -205,8 +216,11 @@ export interface Doctor {
   monthlyVisitTarget: number;
   completedVisitsThisMonth: number;
   todayVisitStatus: 'PENDING' | 'CHECKED_IN' | 'COMPLETED' | 'MISSED';
-  lastVisitDate?: string;
+    lastVisitDate?: string;
   isAssignedToMe: boolean;
+  assignedToEmployeeId?: string;
+  assignedToEmployeeName?: string;
+  clinics?: DoctorClinic[];
 }
 
 export interface Chemist {

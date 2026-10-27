@@ -20,7 +20,9 @@ import { DoctorService } from '../../services/doctorService';
 import { LocationService } from '../../services/location/locationService';
 import { GeofenceService } from '../../services/location/geofenceService';
 import { AuthService } from '../../services/authService';
-import { Doctor, GeofenceStatus, UserProfile } from '../../types';
+import { Doctor, DoctorClinic, GeofenceStatus, UserProfile } from '../../types';
+import { EmployeeService } from '../../services/employeeService';
+import { DivisionService } from '../../services/divisionService';
 
 interface DoctorDetailsScreenProps {
   doctorId: string;
@@ -82,7 +84,24 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
   });
   const [checkingLocation, setCheckingLocation] = useState(false);
 
-  const isManager = currentUser?.role === 'REGIONAL_MANAGER' || currentUser?.role === 'AREA_MANAGER';
+  // Multi-Chamber State
+  const [addClinicModalVisible, setAddClinicModalVisible] = useState(false);
+  const [newChamberName, setNewChamberName] = useState('');
+  const [newChamberArea, setNewChamberArea] = useState('');
+  const [newChamberTiming, setNewChamberTiming] = useState('Evening (5:00 PM - 8:30 PM)');
+  const [chamberCoords, setChamberCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [chamberGpsLoading, setChamberGpsLoading] = useState(false);
+  const [savingChamber, setSavingChamber] = useState(false);
+
+  // Assign MR State
+  const [assignModalVisible, setAssignModalVisible] = useState(false);
+  const [employeesList, setEmployeesList] = useState<UserProfile[]>([]);
+  const [mrSearch, setMrSearch] = useState('');
+  const [mrDivisionFilter, setMrDivisionFilter] = useState<string>('ALL');
+  const [assignMode, setAssignMode] = useState<'PERMANENT' | 'TODAY_ONLY'>('PERMANENT');
+  const [assigningLoading, setAssigningLoading] = useState(false);
+
+  const isManager = DivisionService.isManager(currentUser);
 
   useEffect(() => {
     setCurrentUser(AuthService.getCurrentUser());
@@ -134,6 +153,147 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
       });
     }
   };
+
+  // Chamber Handlers
+  const handleCaptureChamberGps = async () => {
+    setChamberGpsLoading(true);
+    try {
+      const loc = await LocationService.getCurrentLocation();
+      if (loc) {
+        if (loc.isMockLocation) {
+          LocationService.validateAuthenticGps(loc, 'Chamber Geotagging');
+        } else {
+          setChamberCoords({ lat: loc.latitude, lng: loc.longitude });
+          const autoArea = await LocationService.reverseGeocodeArea(loc.latitude, loc.longitude);
+          if (autoArea && !newChamberArea.trim()) {
+            setNewChamberArea(autoArea);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('GPS chamber capture error:', err);
+    } finally {
+      setChamberGpsLoading(false);
+    }
+  };
+
+  const handleSaveChamber = async () => {
+    if (!doctor) return;
+    if (!newChamberName.trim()) {
+      Alert.alert('Required Field', 'Please enter Chamber / Clinic Name.');
+      return;
+    }
+    if (!newChamberArea.trim()) {
+      Alert.alert('Required Field', 'Please enter Chamber Address / Area.');
+      return;
+    }
+    const lat = chamberCoords ? chamberCoords.lat : doctor.latitude;
+    const lng = chamberCoords ? chamberCoords.lng : doctor.longitude;
+
+    setSavingChamber(true);
+    try {
+      const updated = await DoctorService.addClinicToDoctor(doctor.id, {
+        name: newChamberName.trim(),
+        address: `${newChamberName.trim()}, ${newChamberArea.trim()}, ${doctor.district}`,
+        area: newChamberArea.trim(),
+        latitude: lat,
+        longitude: lng,
+        timing: newChamberTiming.trim(),
+      });
+
+      if (updated) {
+        setDoctor(updated);
+        setAddClinicModalVisible(false);
+        setNewChamberName('');
+        setNewChamberArea('');
+        setChamberCoords(null);
+        Alert.alert('Chamber Added ✅', `${newChamberName.trim()} has been registered. Geofence active for all chambers.`);
+        checkGeofence(updated);
+      }
+    } catch (err) {
+      Alert.alert('Error', 'Failed to add chamber.');
+    } finally {
+      setSavingChamber(false);
+    }
+  };
+
+  const handleRemoveClinic = async (clinicId: string, clinicName: string) => {
+    if (!doctor) return;
+    Alert.alert(
+      'Remove Chamber',
+      `Are you sure you want to remove "${clinicName}" from this doctor?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: async () => {
+            const updated = await DoctorService.removeClinicFromDoctor(doctor.id, clinicId);
+            if (updated) {
+              setDoctor(updated);
+              checkGeofence(updated);
+              Alert.alert('Chamber Removed', `"${clinicName}" has been removed.`);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  // Assign MR Handler
+  const handleAssignToMR = async (emp: UserProfile) => {
+    if (!doctor) return;
+    setAssigningLoading(true);
+    try {
+      if (assignMode === 'PERMANENT') {
+        const updated = await DoctorService.assignDoctorToEmployee(doctor.id, emp.id, emp.name);
+        if (updated) {
+          setDoctor(updated);
+          setAssignModalVisible(false);
+          Alert.alert('Representative Assigned ✅', `${doctor.name} is now officially assigned to ${emp.name} (${emp.headquarter || emp.territory}).`);
+        }
+      } else {
+        const updated = await DoctorService.updateDoctor(doctor.id, {
+          todayVisitStatus: 'PENDING',
+          assignedToEmployeeId: emp.id,
+          assignedToEmployeeName: emp.name,
+        });
+        if (updated) {
+          setDoctor(updated);
+          setAssignModalVisible(false);
+          Alert.alert('Today\'s Visit Delegated ✅', `Today\'s call for ${doctor.name} has been delegated to ${emp.name}.`);
+        }
+      }
+    } catch (err) {
+      Alert.alert('Error', 'Failed to update assignment.');
+    } finally {
+      setAssigningLoading(false);
+    }
+  };
+
+  const filteredEmployees = employeesList.filter((e) => {
+    const matchRole = e.role === 'MEDICAL_REP' || e.role === 'AREA_MANAGER' || e.role === 'REGIONAL_MANAGER';
+    if (!matchRole) return false;
+
+    if (mrDivisionFilter !== 'ALL') {
+      const terr = (e.territory || '').toLowerCase();
+      const hq = (e.headquarter || '').toLowerCase();
+      const target = mrDivisionFilter.toLowerCase();
+      if (!terr.includes(target) && !hq.includes(target)) {
+        return false;
+      }
+    }
+
+    if (mrSearch.trim()) {
+      const q = mrSearch.toLowerCase();
+      return (
+        e.name.toLowerCase().includes(q) ||
+        (e.employeeCode && e.employeeCode.toLowerCase().includes(q)) ||
+        (e.phone && e.phone.includes(q))
+      );
+    }
+    return true;
+  });
 
   const handleOpenEdit = () => {
     if (!doctor) return;
@@ -354,18 +514,78 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
           </Text>
         </Card>
 
-        {/* Clinic Details */}
-        <Card>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-            <Text style={styles.sectionTitle}>Clinic Information</Text>
-            <TouchableOpacity onPress={handleOpenEdit}>
-              <Text style={styles.editSectionLink}>✏️ Edit</Text>
-            </TouchableOpacity>
-          </View>
-          <Text style={styles.clinicName}>🏥 {doctor.clinicName}</Text>
-          <Text style={styles.clinicAddr}>{doctor.clinicAddress}</Text>
-          <Text style={styles.clinicPhone}>📞 {doctor.phone}</Text>
-        </Card>
+        {/* Registered Chambers & Clinics Card */}
+        {(() => {
+          const doctorClinics: DoctorClinic[] = (doctor.clinics && doctor.clinics.length > 0)
+            ? doctor.clinics
+            : [{
+                id: 'clinic-primary',
+                name: doctor.clinicName,
+                address: doctor.clinicAddress,
+                area: doctor.area,
+                latitude: doctor.latitude,
+                longitude: doctor.longitude,
+                isPrimary: true,
+              }];
+
+          return (
+            <Card>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.sectionTitle}>Chambers & Clinics ({doctorClinics.length})</Text>
+                  <Text style={{ fontSize: 11, color: '#64748B' }}>Geofence verified across all registered chambers</Text>
+                </View>
+                <View style={{ flexDirection: 'row', gap: 6 }}>
+                  <TouchableOpacity
+                    style={styles.addChamberBtn}
+                    onPress={() => {
+                      setNewChamberName('');
+                      setNewChamberArea('');
+                      setChamberCoords(null);
+                      setAddClinicModalVisible(true);
+                    }}
+                  >
+                    <Ionicons name="add-circle" size={15} color="#2563EB" />
+                    <Text style={styles.addChamberBtnText}>+ Chamber</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.editSectionLinkBtn} onPress={handleOpenEdit}>
+                    <Text style={styles.editSectionLink}>✏️ Edit</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {doctorClinics.map((c, idx) => (
+                <View key={c.id || idx} style={styles.clinicItemBox}>
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                      <Text style={styles.clinicItemTitle}>🏥 {c.name}</Text>
+                      {c.isPrimary && (
+                        <View style={styles.primaryBadge}>
+                          <Text style={styles.primaryBadgeText}>Primary</Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={styles.clinicItemAddr}>{c.address || c.area}</Text>
+                    {c.timing ? <Text style={styles.clinicItemTiming}>🕒 {c.timing}</Text> : null}
+                    <Text style={styles.clinicItemCoords}>
+                      📍 Coordinates: {c.latitude?.toFixed(4)}, {c.longitude?.toFixed(4)}
+                    </Text>
+                  </View>
+                  {!c.isPrimary && (
+                    <TouchableOpacity
+                      style={{ padding: 6 }}
+                      onPress={() => handleRemoveClinic(c.id, c.name)}
+                    >
+                      <Ionicons name="trash-outline" size={17} color="#DC2626" />
+                    </TouchableOpacity>
+                  )}
+                </View>
+              ))}
+
+              <Text style={[styles.clinicPhone, { marginTop: 10 }]}>📞 Phone: {doctor.phone}</Text>
+            </Card>
+          );
+        })()}
 
         {/* Target & History */}
         <Card>
@@ -613,6 +833,191 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
           </View>
         </View>
       </Modal>
+    {/* Add Chamber / Clinic Modal */}
+      <Modal visible={addClinicModalVisible} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { maxHeight: '90%' }]}>
+            <View style={styles.modalHeaderRow}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="business" size={20} color={colors.primary} />
+                <Text style={styles.modalHeaderTitle}>Add Another Chamber</Text>
+              </View>
+              <TouchableOpacity onPress={() => setAddClinicModalVisible(false)}>
+                <Ionicons name="close" size={22} color="#64748B" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Text style={styles.modalSubtitle}>
+                Register additional chamber for {doctor?.name}. Geofencing will automatically detect and verify visits at this location.
+              </Text>
+
+              <Text style={styles.formInputLabel}>Chamber / Clinic Name *</Text>
+              <TextInput
+                style={styles.formInput}
+                value={newChamberName}
+                onChangeText={setNewChamberName}
+                placeholder="e.g. Lifeline Polyclinic / Evening Chamber"
+                placeholderTextColor="#94A3B8"
+              />
+
+              <Text style={styles.formInputLabel}>Address / Area / Landmark *</Text>
+              <TextInput
+                style={styles.formInput}
+                value={newChamberArea}
+                onChangeText={setNewChamberArea}
+                placeholder="e.g. Station Road, Hospital Chowmuhani"
+                placeholderTextColor="#94A3B8"
+              />
+
+              <Text style={styles.formInputLabel}>Visiting Timings / Schedule</Text>
+              <TextInput
+                style={styles.formInput}
+                value={newChamberTiming}
+                onChangeText={setNewChamberTiming}
+                placeholder="e.g. Evening 5:00 PM - 8:30 PM (Mon-Sat)"
+                placeholderTextColor="#94A3B8"
+              />
+
+              {/* Geotagging button */}
+              <View style={styles.gpsCaptureCard}>
+                <Text style={styles.gpsCaptureTitle}>Chamber GPS Geotagging</Text>
+                <Text style={styles.gpsCaptureSub}>
+                  {chamberCoords
+                    ? `📍 Geotagged: ${chamberCoords.lat.toFixed(5)}, ${chamberCoords.lng.toFixed(5)}`
+                    : 'Capture current device location as chamber GPS coordinates.'}
+                </Text>
+                <TouchableOpacity
+                  style={[styles.captureGpsBtn, chamberGpsLoading && { opacity: 0.7 }]}
+                  onPress={handleCaptureChamberGps}
+                  disabled={chamberGpsLoading}
+                >
+                  <Ionicons name="location" size={16} color="#FFF" />
+                  <Text style={styles.captureGpsBtnText}>
+                    {chamberGpsLoading ? 'Acquiring GPS Fix...' : chamberCoords ? '↻ Retake Chamber GPS' : '📍 Capture Current Location'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <TouchableOpacity
+                style={[styles.saveChangesBtn, savingChamber && { opacity: 0.7 }]}
+                onPress={handleSaveChamber}
+                disabled={savingChamber}
+              >
+                <Text style={styles.saveChangesBtnText}>
+                  {savingChamber ? 'Saving...' : 'Save Chamber & Activate Geofence'}
+                </Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Assign Doctor to Representative Modal (RSM / Manager Feature) */}
+      <Modal visible={assignModalVisible} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { maxHeight: '90%' }]}>
+            <View style={styles.modalHeaderRow}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="person-add" size={20} color={colors.primary} />
+                <Text style={styles.modalHeaderTitle}>Assign Doctor to MR</Text>
+              </View>
+              <TouchableOpacity onPress={() => setAssignModalVisible(false)}>
+                <Ionicons name="close" size={22} color="#64748B" />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.modalSubtitle}>
+              Assign <Text style={{ fontWeight: '700', color: '#0F172A' }}>{doctor?.name}</Text> ({doctor?.district}) to a field representative.
+            </Text>
+
+            {/* Assignment Mode Pills */}
+            <View style={styles.assignModeRow}>
+              <TouchableOpacity
+                style={[styles.assignModePill, assignMode === 'PERMANENT' && styles.assignModePillActive]}
+                onPress={() => setAssignMode('PERMANENT')}
+              >
+                <Text style={[styles.assignModePillText, assignMode === 'PERMANENT' && styles.assignModePillTextActive]}>
+                  Permanent Beat
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.assignModePill, assignMode === 'TODAY_ONLY' && styles.assignModePillActive]}
+                onPress={() => setAssignMode('TODAY_ONLY')}
+              >
+                <Text style={[styles.assignModePillText, assignMode === 'TODAY_ONLY' && styles.assignModePillTextActive]}>
+                  Today\'s Call Only
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Division Filter Pills */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, marginVertical: 8 }}>
+              {['ALL', 'Dharmanagar', 'Agartala', 'Karimganj', 'Hailakandi', 'Cachar', 'Aizawl'].map((div) => (
+                <TouchableOpacity
+                  key={div}
+                  style={[styles.mrDivChip, mrDivisionFilter === div && styles.mrDivChipActive]}
+                  onPress={() => setMrDivisionFilter(div)}
+                >
+                  <Text style={[styles.mrDivChipText, mrDivisionFilter === div && styles.mrDivChipTextActive]}>
+                    {div === 'Cachar' ? 'Silchar' : div}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            {/* Search MR */}
+            <View style={styles.mrSearchBox}>
+              <Ionicons name="search" size={16} color="#64748B" />
+              <TextInput
+                style={styles.mrSearchInput}
+                placeholder="Search MR by name, code, phone..."
+                placeholderTextColor="#94A3B8"
+                value={mrSearch}
+                onChangeText={setMrSearch}
+              />
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 280, marginTop: 8 }}>
+              {filteredEmployees.length === 0 ? (
+                <View style={{ padding: 20, alignItems: 'center' }}>
+                  <Text style={{ color: '#94A3B8', fontSize: 13 }}>No representatives match filter.</Text>
+                </View>
+              ) : (
+                filteredEmployees.map((emp) => {
+                  const isCurrent = doctor?.assignedToEmployeeId === emp.id || doctor?.assignedToEmployeeName === emp.name;
+                  return (
+                    <TouchableOpacity
+                      key={emp.id}
+                      style={[styles.empSelectItem, isCurrent && styles.empSelectItemCurrent]}
+                      onPress={() => handleAssignToMR(emp)}
+                      disabled={assigningLoading}
+                    >
+                      <View style={styles.empAvatar}>
+                        <Text style={styles.empAvatarText}>{emp.name.charAt(0).toUpperCase()}</Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <Text style={styles.empSelectName}>{emp.name}</Text>
+                          {isCurrent && (
+                            <View style={styles.currentTag}>
+                              <Text style={styles.currentTagText}>Current</Text>
+                            </View>
+                          )}
+                        </View>
+                        <Text style={styles.empSelectMeta}>
+                          {emp.employeeCode} • {emp.headquarter || emp.territory || 'Field Rep'}
+                        </Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+                    </TouchableOpacity>
+                  );
+                })
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -781,5 +1186,249 @@ const styles = StyleSheet.create({
   orText: { fontSize: 10, fontWeight: '800', color: '#94A3B8' },
   authorizeBtn: { backgroundColor: '#0F172A', paddingHorizontal: 16, justifyContent: 'center', borderRadius: radius.sm },
   authorizeBtnText: { color: '#ffffff', fontSize: 12, fontWeight: '700' },
-});
 
+  // Multi-Chamber & Assignment Styles
+  assignedRepRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 6,
+    paddingTop: 6,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+  },
+  assignedRepText: {
+    fontSize: 12,
+    color: '#64748B',
+    flex: 1,
+  },
+  reassignBtnPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+  },
+  reassignBtnPillText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#2563EB',
+  },
+  addChamberBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+  },
+  addChamberBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#2563EB',
+  },
+  editSectionLinkBtn: {
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+  },
+  clinicItemBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#F8FAFC',
+    padding: 10,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    marginTop: 8,
+  },
+  clinicItemTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  primaryBadge: {
+    backgroundColor: '#DBEAFE',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: radius.full,
+  },
+  primaryBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#1E40AF',
+  },
+  clinicItemAddr: {
+    fontSize: 11,
+    color: '#475569',
+    marginTop: 1,
+  },
+  clinicItemTiming: {
+    fontSize: 11,
+    color: '#0369A1',
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  clinicItemCoords: {
+    fontSize: 10,
+    color: '#94A3B8',
+    marginTop: 2,
+  },
+  gpsCaptureCard: {
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+    borderRadius: radius.md,
+    padding: 10,
+    marginTop: 12,
+    marginBottom: 6,
+  },
+  gpsCaptureTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#166534',
+  },
+  gpsCaptureSub: {
+    fontSize: 11,
+    color: '#15803D',
+    marginTop: 2,
+    marginBottom: 8,
+  },
+  captureGpsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#16A34A',
+    paddingVertical: 8,
+    borderRadius: radius.sm,
+  },
+  captureGpsBtnText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  assignModeRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 10,
+    marginBottom: 6,
+  },
+  assignModePill: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 6,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    backgroundColor: '#F8FAFC',
+    alignItems: 'center',
+  },
+  assignModePillActive: {
+    backgroundColor: '#EFF6FF',
+    borderColor: '#2563EB',
+  },
+  assignModePillText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#475569',
+    textAlign: 'center',
+  },
+  assignModePillTextActive: {
+    color: '#2563EB',
+    fontWeight: '800',
+  },
+  mrDivChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    backgroundColor: '#F8FAFC',
+  },
+  mrDivChipActive: {
+    backgroundColor: '#2563EB',
+    borderColor: '#2563EB',
+  },
+  mrDivChipText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#475569',
+  },
+  mrDivChipTextActive: {
+    color: '#FFF',
+    fontWeight: '700',
+  },
+  mrSearchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F1F5F9',
+    borderRadius: radius.md,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    gap: 6,
+    marginTop: 4,
+  },
+  mrSearchInput: {
+    flex: 1,
+    fontSize: 12,
+    color: '#0F172A',
+    padding: 0,
+  },
+  empSelectItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    backgroundColor: '#FFF',
+    marginBottom: 6,
+  },
+  empSelectItemCurrent: {
+    borderColor: '#2563EB',
+    backgroundColor: '#F0F9FF',
+  },
+  empAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#2563EB',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  empAvatarText: {
+    color: '#FFF',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  empSelectName: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  empSelectMeta: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 1,
+  },
+  currentTag: {
+    backgroundColor: '#DBEAFE',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: radius.full,
+  },
+  currentTagText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#1E40AF',
+  },
+});

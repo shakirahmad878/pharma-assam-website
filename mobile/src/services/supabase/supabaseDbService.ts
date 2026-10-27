@@ -92,6 +92,19 @@ export class SupabaseDbService {
         longitude: d.longitude || 92.7970,
         geofenceRadiusMeters: d.geofence_radius_meters || 100,
         isAssignedToMe: Boolean(d.is_assigned_to_me),
+        assignedToEmployeeId: d.assigned_employee_id || undefined,
+        assignedToEmployeeName: d.assigned_employee_name || undefined,
+        clinics: d.clinics && Array.isArray(d.clinics) && d.clinics.length > 0
+          ? d.clinics
+          : (d.clinic_name ? [{
+              id: 'clinic-primary',
+              name: d.clinic_name,
+              address: d.clinic_address || '',
+              area: d.area || '',
+              latitude: d.latitude || 24.8215,
+              longitude: d.longitude || 92.7970,
+              isPrimary: true
+            }] : []),
       }));
 
       await StorageService.setItem(STORAGE_KEYS.DOCTORS_CACHE, doctors);
@@ -132,6 +145,9 @@ export class SupabaseDbService {
           longitude: doc.longitude,
           geofence_radius_meters: doc.geofenceRadiusMeters || 100,
           is_assigned_to_me: Boolean(doc.isAssignedToMe),
+          assigned_employee_id: doc.assignedToEmployeeId || null,
+          assigned_employee_name: doc.assignedToEmployeeName || null,
+          clinics: doc.clinics || [],
           updated_at: new Date().toISOString(),
         }),
       });
@@ -165,6 +181,9 @@ export class SupabaseDbService {
     if (updates.latitude !== undefined) payload.latitude = updates.latitude;
     if (updates.longitude !== undefined) payload.longitude = updates.longitude;
     if (updates.geofenceRadiusMeters !== undefined) payload.geofence_radius_meters = updates.geofenceRadiusMeters;
+    if (updates.assignedToEmployeeId !== undefined) payload.assigned_employee_id = updates.assignedToEmployeeId;
+    if (updates.assignedToEmployeeName !== undefined) payload.assigned_employee_name = updates.assignedToEmployeeName;
+    if (updates.clinics !== undefined) payload.clinics = updates.clinics;
 
     try {
       await fetch(`${SUPABASE_CONFIG.url}/rest/v1/doctors?id=eq.${encodeURIComponent(id)}`, {

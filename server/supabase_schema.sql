@@ -56,6 +56,9 @@ CREATE TABLE IF NOT EXISTS doctors (
     longitude DOUBLE PRECISION NOT NULL,
     geofence_radius_meters INT NOT NULL DEFAULT 100,
     is_assigned_to_me BOOLEAN NOT NULL DEFAULT false,
+    assigned_employee_id TEXT,
+    assigned_employee_name TEXT,
+    clinics JSONB DEFAULT '[]'::jsonb,
     created_by_employee_id TEXT REFERENCES employees(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()

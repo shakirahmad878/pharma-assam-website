@@ -485,6 +485,26 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
                   <Text style={styles.docCodeText}>ID #{item.id.replace(/\D/g, '') || '1833'} • {item.clinicName}</Text>
                   <Text style={styles.docLocationText}>📍 {item.area}, {item.district}</Text>
 
+                  {/* Assigned Rep & Chambers Count */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginVertical: 3, flexWrap: 'wrap' }}>
+                    <View style={[styles.assignedRepBadge, !item.assignedToEmployeeName && { backgroundColor: '#F1F5F9' }]}>
+                      <Ionicons
+                        name={item.assignedToEmployeeName ? "person" : "person-outline"}
+                        size={11}
+                        color={item.assignedToEmployeeName ? "#0369A1" : "#64748B"}
+                      />
+                      <Text style={[styles.assignedRepBadgeText, !item.assignedToEmployeeName && { color: '#64748B' }]}>
+                        {item.assignedToEmployeeName ? `Rep: ${item.assignedToEmployeeName}` : 'Unassigned'}
+                      </Text>
+                    </View>
+                    {item.clinics && item.clinics.length > 1 && (
+                      <View style={styles.chambersCountBadge}>
+                        <Ionicons name="business" size={11} color="#15803D" />
+                        <Text style={styles.chambersCountBadgeText}>{item.clinics.length} Chambers</Text>
+                      </View>
+                    )}
+                  </View>
+
                   {item.phone ? (
                     <Text style={styles.docPhoneText}>📞 {item.phone}</Text>
                   ) : null}
@@ -1228,5 +1248,34 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '800',
+  },
+
+  assignedRepBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#E0F2FE',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: radius.full,
+  },
+  assignedRepBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#0369A1',
+  },
+  chambersCountBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#DCFCE7',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: radius.full,
+  },
+  chambersCountBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#15803D',
   },
 });

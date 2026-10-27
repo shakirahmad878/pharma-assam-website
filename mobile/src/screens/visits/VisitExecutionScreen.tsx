@@ -14,6 +14,7 @@ import { Header } from '../../components/common/Header';
 import { Badge } from '../../components/common/Badge';
 import { VisitService } from '../../services/visitService';
 import { DoctorService } from '../../services/doctorService';
+import { AuthService } from '../../services/authService';
 import { MOCK_PRODUCTS, CURRENT_USER } from '../../constants/mockData';
 import { Doctor, AccompaniedPerson, VisitRecord } from '../../types';
 
@@ -137,8 +138,8 @@ export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
       doctorId: doctor.id,
       doctorName: doctor.name,
       clinicName: doctor.clinicName,
-      employeeId: CURRENT_USER.id,
-      employeeName: CURRENT_USER.name,
+      employeeId: (AuthService.getCurrentUser() || CURRENT_USER).id,
+      employeeName: (AuthService.getCurrentUser() || CURRENT_USER).name,
       accompaniedBy,
       accompaniedName: getAccompaniedName(accompaniedBy),
       routeId: doctor.routeId,

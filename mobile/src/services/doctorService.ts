@@ -141,4 +141,61 @@ export class DoctorService {
       await this.rejectDoctorDeletion(requestId, managerName);
     }
   }
+
+  public static async assignDoctorToEmployee(
+    doctorId: string,
+    employeeId: string,
+    employeeName: string
+  ): Promise<Doctor | null> {
+    return await this.updateDoctor(doctorId, {
+      assignedToEmployeeId: employeeId,
+      assignedToEmployeeName: employeeName,
+    });
+  }
+
+  public static async addClinicToDoctor(
+    doctorId: string,
+    clinic: { name: string; address: string; area: string; latitude: number; longitude: number; timing?: string }
+  ): Promise<Doctor | null> {
+    const doctor = await this.getDoctorById(doctorId);
+    if (!doctor) return null;
+
+    const newClinic = {
+      ...clinic,
+      id: 'clinic-' + Date.now(),
+      isPrimary: false,
+    };
+
+    const existingClinics = (doctor.clinics && Array.isArray(doctor.clinics) && doctor.clinics.length > 0)
+      ? [...doctor.clinics]
+      : [{
+          id: 'clinic-primary',
+          name: doctor.clinicName,
+          address: doctor.clinicAddress,
+          area: doctor.area,
+          latitude: doctor.latitude,
+          longitude: doctor.longitude,
+          isPrimary: true,
+        }];
+
+    const updatedClinics = [...existingClinics, newClinic];
+
+    return await this.updateDoctor(doctorId, {
+      clinics: updatedClinics,
+    });
+  }
+
+  public static async removeClinicFromDoctor(
+    doctorId: string,
+    clinicId: string
+  ): Promise<Doctor | null> {
+    const doctor = await this.getDoctorById(doctorId);
+    if (!doctor || !doctor.clinics) return null;
+
+    const updatedClinics = doctor.clinics.filter(c => c.id !== clinicId);
+    return await this.updateDoctor(doctorId, {
+      clinics: updatedClinics,
+    });
+  }
+
 }
