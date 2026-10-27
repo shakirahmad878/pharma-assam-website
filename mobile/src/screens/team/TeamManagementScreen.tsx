@@ -182,10 +182,12 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onBa
     setFormPhone(emp.phone ? emp.phone.replace(/\D/g, '').slice(-10) : '');
     
     const territoryLower = (emp.territory || '').toLowerCase();
-    if (territoryLower.includes('hailakandi')) setFormDivision('Hailakandi');
-    else if (territoryLower.includes('karimganj')) setFormDivision('Karimganj');
-    else if (territoryLower.includes('aizawl') || territoryLower.includes('mizoram')) setFormDivision('Aizawl');
-    else if (territoryLower.includes('tripura') || territoryLower.includes('agartala')) setFormDivision('Tripura');
+    const hqLower = (emp.headquarter || '').toLowerCase();
+    if (territoryLower.includes('hailakandi') || hqLower.includes('hailakandi')) setFormDivision('Hailakandi');
+    else if (territoryLower.includes('karimganj') || hqLower.includes('karimganj')) setFormDivision('Karimganj');
+    else if (territoryLower.includes('aizawl') || territoryLower.includes('mizoram') || hqLower.includes('aizawl')) setFormDivision('Aizawl');
+    else if (territoryLower.includes('agartala') || hqLower.includes('agartala')) setFormDivision('Agartala');
+    else if (territoryLower.includes('dharmanagar') || hqLower.includes('dharmanagar') || territoryLower.includes('tripura') || hqLower.includes('tripura')) setFormDivision('Dharmanagar');
     else setFormDivision('Cachar');
 
     setFormHq(emp.headquarter || 'Silchar HQ');
@@ -217,9 +219,9 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onBa
         ? 'Karimganj Division (Shribhumi)'
         : formDivision === 'Aizawl'
         ? 'Aizawl Division (Mizoram)'
-        : formDivision === 'Agartala' || formDivision === 'Tripura'
-        ? 'Agartala Division (Tripura)'
-        : formDivision === 'Dharmanagar'
+        : formDivision === 'Agartala'
+        ? 'Agartala Division (West Tripura)'
+        : formDivision === 'Dharmanagar' || formDivision === 'Tripura'
         ? 'Dharmanagar Division (North Tripura)'
         : 'Silchar Division (Cachar)';
 
@@ -286,8 +288,12 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onBa
       (selectedDivision === 'Hailakandi' && (emp.territory?.toLowerCase().includes('hailakandi') || emp.headquarter?.toLowerCase().includes('hailakandi'))) ||
       (selectedDivision === 'Karimganj' && (emp.territory?.toLowerCase().includes('karimganj') || emp.headquarter?.toLowerCase().includes('karimganj'))) ||
       (selectedDivision === 'Aizawl' && (emp.territory?.toLowerCase().includes('aizawl') || emp.territory?.toLowerCase().includes('mizoram') || emp.headquarter?.toLowerCase().includes('aizawl'))) ||
-      ((selectedDivision === 'Agartala' || selectedDivision === 'Tripura') && (emp.territory?.toLowerCase().includes('tripura') || emp.territory?.toLowerCase().includes('agartala') || emp.headquarter?.toLowerCase().includes('agartala'))) ||
-      (selectedDivision === 'Dharmanagar' && (emp.territory?.toLowerCase().includes('dharmanagar') || emp.headquarter?.toLowerCase().includes('dharmanagar')));
+      (selectedDivision === 'Agartala' && (emp.territory?.toLowerCase().includes('agartala') || emp.headquarter?.toLowerCase().includes('agartala'))) ||
+      ((selectedDivision === 'Dharmanagar' || selectedDivision === 'Tripura') && (
+        emp.territory?.toLowerCase().includes('dharmanagar') || 
+        emp.headquarter?.toLowerCase().includes('dharmanagar') || 
+        ((emp.territory?.toLowerCase().includes('tripura') || emp.headquarter?.toLowerCase().includes('tripura')) && !emp.territory?.toLowerCase().includes('agartala') && !emp.headquarter?.toLowerCase().includes('agartala'))
+      ));
 
     // 2. Search Filter
     const query = searchQuery.toLowerCase();
@@ -810,8 +816,8 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onBa
                     { key: 'Hailakandi', label: 'Hailakandi' },
                     { key: 'Karimganj', label: 'Karimganj' },
                     { key: 'Aizawl', label: 'Aizawl (MZ)' },
-                    { key: 'Agartala', label: 'Agartala (TR)' },
-                    { key: 'Dharmanagar', label: 'Dharmanagar (TR)' },
+                    { key: 'Agartala', label: 'Agartala HQ' },
+                    { key: 'Dharmanagar', label: 'Dharmanagar HQ' },
                   ] as const
                 ).map((d) => (
                   <TouchableOpacity

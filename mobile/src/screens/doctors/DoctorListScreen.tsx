@@ -589,7 +589,7 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
                         onPress={() => setNewDocDistrict(dist)}
                       >
                         <Text style={[styles.districtChipText, newDocDistrict === dist && styles.districtChipTextActive]}>
-                          {dist === 'Cachar' ? 'Silchar' : dist === 'Aizawl' ? 'Aizawl (MZ)' : dist === 'Agartala' ? 'Agartala' : dist === 'Dharmanagar' ? 'Dharmanagar' : dist}
+                          {dist === 'Cachar' ? 'Silchar' : dist === 'Aizawl' ? 'Aizawl (MZ)' : dist === 'Agartala' ? 'Agartala HQ' : dist === 'Dharmanagar' ? 'Dharmanagar HQ' : dist}
                         </Text>
                       </TouchableOpacity>
                     ))}

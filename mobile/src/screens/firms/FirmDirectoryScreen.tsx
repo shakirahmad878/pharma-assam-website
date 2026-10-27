@@ -383,7 +383,7 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
                         onPress={() => setNewFirmDistrict(dist)}
                       >
                         <Text style={[styles.districtChipText, newFirmDistrict === dist && styles.districtChipTextActive]}>
-                          {dist === 'Cachar' ? 'Silchar' : dist === 'Aizawl' ? 'Aizawl (MZ)' : dist === 'Agartala' ? 'Agartala' : dist === 'Dharmanagar' ? 'Dharmanagar' : dist}
+                          {dist === 'Cachar' ? 'Silchar' : dist === 'Aizawl' ? 'Aizawl (MZ)' : dist === 'Agartala' ? 'Agartala HQ' : dist === 'Dharmanagar' ? 'Dharmanagar HQ' : dist}
                         </Text>
                       </TouchableOpacity>
                     ))}

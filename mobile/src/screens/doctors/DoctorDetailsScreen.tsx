@@ -540,7 +540,7 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
                     onPress={() => setEditDistrict(d)}
                   >
                     <Text style={[styles.tierChipText, editDistrict === d && styles.tierChipTextActive]}>
-                      {d === 'Cachar' ? 'Silchar' : d}
+                      {d === 'Cachar' ? 'Silchar' : d === 'Agartala' ? 'Agartala HQ' : d === 'Dharmanagar' ? 'Dharmanagar HQ' : d}
                     </Text>
                   </TouchableOpacity>
                 ))}

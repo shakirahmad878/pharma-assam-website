@@ -15,8 +15,8 @@ export const DIVISIONS: DivisionInfo[] = [
   { id: 'Hailakandi', label: 'Hailakandi', district: 'Hailakandi', description: 'S.K. Roy Hospital & Lala Bazar Belt' },
   { id: 'Karimganj', label: 'Karimganj (Shribhumi)', district: 'Karimganj', description: 'Station Rd, Main Rd & Badarpur' },
   { id: 'Aizawl', label: 'Aizawl (Mizoram)', district: 'Aizawl', description: 'Civil Hospital, ZMC, Chanmari & Bawngkawn' },
-  { id: 'Agartala', label: 'Agartala (Tripura)', district: 'Agartala', description: 'AGMC & GBP Hospital, ILS, Akhaura Rd' },
-  { id: 'Dharmanagar', label: 'Dharmanagar (North Tripura)', district: 'Dharmanagar', description: 'District Hospital, Station Rd & Town Belt' },
+  { id: 'Agartala', label: 'Agartala HQ (West Tripura)', district: 'Agartala', description: 'Capital healthcare corridor: AGMC & GBP Hospital, ILS, Akhaura Rd' },
+  { id: 'Dharmanagar', label: 'Dharmanagar HQ (North Tripura)', district: 'Dharmanagar', description: 'North Tripura hub: District Hospital, Station Rd & Town Belt' },
 ];
 
 export class DivisionService {
@@ -38,9 +38,9 @@ export class DivisionService {
     const territory = (user.territory || '').toLowerCase();
     const hq = (user.headquarter || '').toLowerCase();
 
-    if (territory.includes('dharmanagar') || hq.includes('dharmanagar')) return 'Dharmanagar';
+    if (territory.includes('agartala') || hq.includes('agartala')) return 'Agartala';
+    if (territory.includes('dharmanagar') || hq.includes('dharmanagar') || territory.includes('tripura') || hq.includes('tripura')) return 'Dharmanagar';
     if (territory.includes('aizawl') || hq.includes('aizawl') || territory.includes('mizoram')) return 'Aizawl';
-    if (territory.includes('tripura') || hq.includes('tripura') || territory.includes('agartala') || hq.includes('agartala')) return 'Agartala';
     if (territory.includes('hailakandi') || hq.includes('hailakandi')) return 'Hailakandi';
     if (territory.includes('karimganj') || hq.includes('karimganj') || territory.includes('shribhumi')) return 'Karimganj';
     if (territory.includes('silchar') || territory.includes('cachar') || hq.includes('silchar') || hq.includes('cachar')) return 'Cachar';
@@ -140,11 +140,10 @@ export class DivisionService {
         areaLower.includes('treasury square')
       );
     }
-    if (targetLower === 'tripura' || targetLower.includes('agartala')) {
+    if (targetLower.includes('agartala')) {
       return (
         distLower.includes('agartala') ||
         distLower.includes('west tripura') ||
-        (distLower.includes('tripura') && !distLower.includes('dharmanagar') && !distLower.includes('north tripura')) ||
         areaLower.includes('agartala') ||
         areaLower.includes('kunjaban') ||
         areaLower.includes('gbp') ||
@@ -156,10 +155,11 @@ export class DivisionService {
         areaLower.includes('bhati abhoynagar')
       );
     }
-    if (targetLower.includes('dharmanagar')) {
+    if (targetLower.includes('dharmanagar') || targetLower === 'tripura') {
       return (
         distLower.includes('dharmanagar') ||
         distLower.includes('north tripura') ||
+        distLower === 'tripura' ||
         areaLower.includes('dharmanagar') ||
         areaLower.includes('uptakhali') ||
         areaLower.includes('upthakhali') ||
