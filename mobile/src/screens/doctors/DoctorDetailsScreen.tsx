@@ -106,7 +106,22 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
   useEffect(() => {
     setCurrentUser(AuthService.getCurrentUser());
     loadDoctor();
+    EmployeeService.getEmployees().then(emps => {
+      if (emps && emps.length > 0) setEmployeesList(emps);
+    }).catch(() => {});
   }, [doctorId]);
+
+  const handleOpenAssignModal = async () => {
+    setAssignModalVisible(true);
+    try {
+      const emps = await EmployeeService.getEmployees();
+      if (emps && emps.length > 0) {
+        setEmployeesList(emps);
+      }
+    } catch (err) {
+      console.warn('Failed to load employees for assignment:', err);
+    }
+  };
 
   const loadDoctor = async () => {
     const doc = await DoctorService.getDoctorById(doctorId);
@@ -427,6 +442,14 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
               <Text style={styles.docName}>{doctor.name}</Text>
               <Text style={styles.docQual}>{doctor.qualification}</Text>
               <Text style={styles.docSpecialty}>Specialty: {doctor.specialty}</Text>
+              {doctor.assignedToEmployeeName ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
+                  <Ionicons name="person-circle-outline" size={13} color="#6B7280" />
+                  <Text style={{ fontSize: 11, color: '#4B5563', fontWeight: '600' }}>
+                    MR: {doctor.assignedToEmployeeName}
+                  </Text>
+                </View>
+              ) : null}
             </View>
             <View style={{ alignItems: 'flex-end', gap: 6 }}>
               <TouchableOpacity
@@ -442,6 +465,12 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
               <TouchableOpacity style={styles.editBtnPill} onPress={handleOpenEdit}>
                 <Ionicons name="create-outline" size={13} color="#2563EB" />
                 <Text style={styles.editBtnPillText}>Edit Info</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.assignBtnPill} onPress={handleOpenAssignModal}>
+                <Ionicons name="swap-horizontal" size={13} color="#7C3AED" />
+                <Text style={styles.assignBtnPillText}>
+                  {doctor.assignedToEmployeeName ? 'Reassign MR' : 'Assign MR'}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1043,6 +1072,18 @@ const styles = StyleSheet.create({
     borderColor: '#BFDBFE',
   },
   editBtnPillText: { fontSize: 11, fontWeight: '700', color: '#2563EB' },
+  assignBtnPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#F5F3FF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: '#DDD6FE',
+  },
+  assignBtnPillText: { fontSize: 11, fontWeight: '700', color: '#7C3AED' },
   editSectionLink: { fontSize: 12, fontWeight: '700', color: '#2563EB' },
 
   modalOverlay: {
