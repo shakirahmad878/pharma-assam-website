@@ -90,14 +90,15 @@ export class DivisionService {
 
   public static matchesDivision(district?: string, area?: string, targetDiv?: DivisionType): boolean {
     if (!targetDiv || targetDiv === 'ALL') return true;
-    const distLower = (district || '').toLowerCase();
-    const areaLower = (area || '').toLowerCase();
-    const targetLower = targetDiv.toLowerCase();
+    const distLower = (district || '').trim().toLowerCase();
+    const areaLower = (area || '').trim().toLowerCase();
+    const targetLower = targetDiv.trim().toLowerCase();
 
+    // 1. Silchar / Cachar
     if (targetLower === 'cachar' || targetLower.includes('silchar')) {
+      if (distLower === 'cachar' || distLower.includes('silchar')) return true;
+      if (['dharmanagar', 'agartala', 'karimganj', 'hailakandi', 'aizawl'].includes(distLower)) return false;
       return (
-        distLower.includes('cachar') ||
-        distLower.includes('silchar') ||
         areaLower.includes('silchar') ||
         areaLower.includes('smch') ||
         areaLower.includes('hospital road') ||
@@ -106,19 +107,24 @@ export class DivisionService {
         areaLower.includes('rangirkhari')
       );
     }
+
+    // 2. Hailakandi
     if (targetLower === 'hailakandi') {
+      if (distLower === 'hailakandi') return true;
+      if (['dharmanagar', 'agartala', 'cachar', 'karimganj', 'aizawl'].includes(distLower)) return false;
       return (
-        distLower.includes('hailakandi') ||
         areaLower.includes('hailakandi') ||
         areaLower.includes('lala') ||
         areaLower.includes('katlicherra') ||
         areaLower.includes('algapur')
       );
     }
+
+    // 3. Karimganj (Shribhumi)
     if (targetLower === 'karimganj') {
+      if (distLower === 'karimganj' || distLower.includes('shribhumi')) return true;
+      if (['dharmanagar', 'agartala', 'cachar', 'hailakandi', 'aizawl'].includes(distLower)) return false;
       return (
-        distLower.includes('karimganj') ||
-        distLower.includes('shribhumi') ||
         areaLower.includes('karimganj') ||
         areaLower.includes('badarpur') ||
         areaLower.includes('shribhumi') ||
@@ -126,10 +132,12 @@ export class DivisionService {
         areaLower.includes('patharkandi')
       );
     }
+
+    // 4. Aizawl (Mizoram)
     if (targetLower === 'aizawl' || targetLower.includes('mizo')) {
+      if (distLower === 'aizawl' || distLower.includes('mizoram')) return true;
+      if (['dharmanagar', 'agartala', 'cachar', 'karimganj', 'hailakandi'].includes(distLower)) return false;
       return (
-        distLower.includes('aizawl') ||
-        distLower.includes('mizoram') ||
         areaLower.includes('aizawl') ||
         areaLower.includes('chanmari') ||
         areaLower.includes('bawngkawn') ||
@@ -140,11 +148,18 @@ export class DivisionService {
         areaLower.includes('treasury square')
       );
     }
+
+    // 5. Agartala HQ (West Tripura)
     if (targetLower.includes('agartala')) {
+      // If doctor is explicitly in Dharmanagar or another district, NEVER match Agartala!
+      if (distLower === 'dharmanagar' || distLower.includes('north tripura')) return false;
+      if (['cachar', 'karimganj', 'hailakandi', 'aizawl'].includes(distLower)) return false;
+      if (distLower === 'agartala' || distLower.includes('west tripura')) return true;
+
+      // Road names like "Assam - Agartala Rd" in Sanichhara/North Tripura should NOT match Agartala city
+      const cleanArea = areaLower.replace(/assam\s*-\s*agartala\s*(rd|road)?/g, '').replace(/agartala\s*(rd|road)/g, '');
       return (
-        distLower.includes('agartala') ||
-        distLower.includes('west tripura') ||
-        areaLower.includes('agartala') ||
+        cleanArea.includes('agartala') ||
         areaLower.includes('kunjaban') ||
         areaLower.includes('gbp') ||
         areaLower.includes('agmc') ||
@@ -155,11 +170,14 @@ export class DivisionService {
         areaLower.includes('bhati abhoynagar')
       );
     }
+
+    // 6. Dharmanagar HQ (North Tripura) - captures all North Tripura + legacy Tripura data
     if (targetLower.includes('dharmanagar') || targetLower === 'tripura') {
+      if (distLower === 'agartala' || distLower.includes('west tripura')) return false;
+      if (['cachar', 'karimganj', 'hailakandi', 'aizawl'].includes(distLower)) return false;
+      if (distLower === 'dharmanagar' || distLower.includes('north tripura') || distLower === 'tripura') return true;
+
       return (
-        distLower.includes('dharmanagar') ||
-        distLower.includes('north tripura') ||
-        distLower === 'tripura' ||
         areaLower.includes('dharmanagar') ||
         areaLower.includes('uptakhali') ||
         areaLower.includes('upthakhali') ||
@@ -174,6 +192,7 @@ export class DivisionService {
         areaLower.includes('rajbari')
       );
     }
+
     return distLower === targetLower;
   }
 }
