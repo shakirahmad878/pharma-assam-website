@@ -68,12 +68,16 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
   const [geofenceEval, setGeofenceEval] = useState<{
     status: GeofenceStatus;
     distanceMeters: number;
+    accuracyMeters?: number;
     isWithinRadius: boolean;
+    accuracyAcceptable?: boolean;
+    canStartVisit?: boolean;
     statusText: string;
   }>({
     status: 'NOT_STARTED',
     distanceMeters: 0,
     isWithinRadius: false,
+    canStartVisit: false,
     statusText: 'Checking satellite distance...',
   });
   const [checkingLocation, setCheckingLocation] = useState(false);
@@ -412,25 +416,32 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
             title={
               doctor.todayVisitStatus === 'COMPLETED'
                 ? "✔ Visit Completed Today"
-                : geofenceEval.isWithinRadius
+                : geofenceEval.canStartVisit
                 ? "✓ Start Geofence Verified Visit"
-                : `🚫 Out of Range (${Math.round(geofenceEval.distanceMeters)}m Away)`
+                : !geofenceEval.isWithinRadius
+                ? `🚫 Out of Range (${Math.round(geofenceEval.distanceMeters)}m Away)`
+                : `📡 Weak GPS Signal (±${Math.round(geofenceEval.accuracyMeters || 0)}m)`
             }
             onPress={() => {
               if (doctor.todayVisitStatus === 'COMPLETED') {
                 Alert.alert('Visit Done', `You have already logged today's visit for ${doctor.name}.`);
                 return;
               }
-              if (geofenceEval.isWithinRadius) {
+              if (geofenceEval.canStartVisit) {
                 onStartVisit(doctor, true, geofenceEval.distanceMeters);
-              } else {
+              } else if (!geofenceEval.isWithinRadius) {
                 Alert.alert(
                   'Visit Blocked - Out of 100m Range 🚫',
                   `You are currently ${Math.round(geofenceEval.distanceMeters)}m away from ${doctor.clinicName}.\n\nRepPulse requires you to be physically within the 100-meter clinic perimeter to start and complete this visit.`
                 );
+              } else {
+                Alert.alert(
+                  'Weak GPS Satellite Signal 📡',
+                  `You are within the clinic perimeter (${Math.round(geofenceEval.distanceMeters)}m), but phone GPS satellite accuracy is currently ±${Math.round(geofenceEval.accuracyMeters || 0)}m.\n\nPlease step near a window or open door for a few seconds to get a stronger satellite lock.`
+                );
               }
             }}
-            variant={geofenceEval.isWithinRadius && doctor.todayVisitStatus !== 'COMPLETED' ? "primary" : "secondary"}
+            variant={geofenceEval.canStartVisit && doctor.todayVisitStatus !== 'COMPLETED' ? "primary" : "secondary"}
           />
         </View>
 

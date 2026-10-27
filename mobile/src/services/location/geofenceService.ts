@@ -41,40 +41,48 @@ export class GeofenceService {
   ): {
     status: GeofenceStatus;
     distanceMeters: number;
+    accuracyMeters: number;
     isWithinRadius: boolean;
     accuracyAcceptable: boolean;
+    canStartVisit: boolean;
     statusText: string;
   } {
     if (isMockLocation) {
       return {
         status: 'OUTSIDE_RADIUS',
         distanceMeters: 9999,
+        accuracyMeters: currentAccuracyMeters,
         isWithinRadius: false,
         accuracyAcceptable: false,
+        canStartVisit: false,
         statusText: '🚫 Fake GPS Blocked: Developer mock location detected. Turn off mock apps in settings.'
       };
     }
 
     const distance = this.calculateDistanceMeters(clinicLat, clinicLng, currentLat, currentLng);
-    const accuracyAcceptable = currentAccuracyMeters <= 35.0; // Max allowable accuracy tolerance
+    // Allow realistic indoor GPS satellite reception tolerance up to 100m for field clinics
+    const accuracyAcceptable = currentAccuracyMeters <= 100.0;
     const isWithinRadius = distance <= radiusMeters;
+    const canStartVisit = isWithinRadius && accuracyAcceptable;
 
     let status: GeofenceStatus = 'OUTSIDE_RADIUS';
     let statusText = `Outside Clinic Radius (${distance}m away / max ${radiusMeters}m)`;
 
-    if (!accuracyAcceptable) {
-      status = 'LOCATION_ACCURACY_LOW';
-      statusText = `Low GPS Accuracy (±${currentAccuracyMeters}m). Waiting for stronger satellite fix...`;
-    } else if (isWithinRadius) {
+    if (canStartVisit) {
       status = 'WITHIN_RADIUS';
-      statusText = `Within Clinic Geofence (${distance}m away). Verification Passed.`;
+      statusText = `Within Clinic Geofence (${distance}m away • GPS ±${Math.round(currentAccuracyMeters)}m). Verification Passed.`;
+    } else if (isWithinRadius && !accuracyAcceptable) {
+      status = 'LOCATION_ACCURACY_LOW';
+      statusText = `Low GPS Accuracy (±${Math.round(currentAccuracyMeters)}m). Step near window for satellite fix...`;
     }
 
     return {
       status,
       distanceMeters: distance,
-      isWithinRadius: isWithinRadius && accuracyAcceptable,
+      accuracyMeters: currentAccuracyMeters,
+      isWithinRadius,
       accuracyAcceptable,
+      canStartVisit,
       statusText
     };
   }

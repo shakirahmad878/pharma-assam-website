@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS doctors (
     clinic_name TEXT NOT NULL,
     clinic_address TEXT,
     area TEXT NOT NULL,
-    district TEXT NOT NULL CHECK (district IN ('Cachar', 'Hailakandi', 'Karimganj', 'Aizawl', 'Tripura')),
+    district TEXT NOT NULL CHECK (district IN ('Cachar', 'Hailakandi', 'Karimganj', 'Aizawl', 'Tripura', 'Agartala', 'Dharmanagar')),
     phone TEXT,
     tier TEXT NOT NULL DEFAULT 'A' CHECK (tier IN ('A_PLUS', 'A', 'B', 'C')),
     monthly_visit_target INT NOT NULL DEFAULT 8,
@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS firms (
     phone TEXT NOT NULL,
     dl_number TEXT NOT NULL DEFAULT 'AS-REG-2026-DL-0000',
     area TEXT NOT NULL,
-    district TEXT NOT NULL CHECK (district IN ('Cachar', 'Hailakandi', 'Karimganj', 'Aizawl', 'Tripura')),
+    district TEXT NOT NULL CHECK (district IN ('Cachar', 'Hailakandi', 'Karimganj', 'Aizawl', 'Tripura', 'Agartala', 'Dharmanagar')),
     address TEXT,
     latitude DOUBLE PRECISION,
     longitude DOUBLE PRECISION,
@@ -179,7 +179,8 @@ VALUES
     ('terr-hailakandi', 'HQ-HKD-01', 'Hailakandi Division', 'Hailakandi', 'Assam', 'Hailakandi HQ', 'Subdivisional healthcare network & S.K. Roy Civil Hospital area'),
     ('terr-karimganj', 'HQ-KXJ-01', 'Karimganj Division (Shribhumi)', 'Karimganj', 'Assam', 'Karimganj HQ', 'Commercial wholesale market, Station Road & Civil Hospital belt'),
     ('terr-aizawl', 'HQ-AIZ-01', 'Aizawl Division', 'Aizawl', 'Mizoram', 'Aizawl HQ', 'Capital healthcare corridor: Civil Hospital, ZMC Falkawn & Chanmari'),
-    ('terr-tripura', 'HQ-AGT-01', 'Tripura Division', 'Tripura', 'Tripura', 'Agartala HQ', 'Capital medical hub: AGMC & GBP Hospital, TMC Hapania & Akhaura Road')
+    ('terr-tripura', 'HQ-AGT-01', 'Tripura Division', 'Tripura', 'Tripura', 'Agartala HQ', 'Capital medical hub: AGMC & GBP Hospital, TMC Hapania & Akhaura Road'),
+    ('terr-dharmanagar', 'HQ-DMN-01', 'Dharmanagar Division', 'Dharmanagar', 'Tripura', 'Dharmanagar HQ', 'North Tripura HQ covering District Hospital, Station Rd & Town Belt')
 ON CONFLICT (district) DO UPDATE 
 SET name = EXCLUDED.name, headquarter_name = EXCLUDED.headquarter_name, description = EXCLUDED.description;
 

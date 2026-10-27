@@ -127,8 +127,9 @@ export const FirmDirectoryScreen: React.FC<FirmDirectoryScreenProps> = ({ onBack
   };
 
   const openAddModal = () => {
-    const defaultDist = userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : userDivision === 'Aizawl' ? 'Aizawl' : userDivision === 'Agartala' ? 'Agartala' : userDivision === 'Dharmanagar' ? 'Dharmanagar' : 'Cachar';
-    setNewFirmDistrict(defaultDist);
+    const activeTabDist = selectedDivision && selectedDivision !== 'ALL' ? selectedDivision : null;
+    const defaultDist = activeTabDist || (userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : userDivision === 'Aizawl' ? 'Aizawl' : userDivision === 'Agartala' ? 'Agartala' : userDivision === 'Dharmanagar' ? 'Dharmanagar' : 'Cachar');
+    setNewFirmDistrict(defaultDist as any);
     setAddModalVisible(true);
     fetchGpsForFirm();
   };

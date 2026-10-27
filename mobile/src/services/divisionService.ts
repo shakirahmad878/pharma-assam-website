@@ -142,16 +142,18 @@ export class DivisionService {
     }
     if (targetLower === 'tripura' || targetLower.includes('agartala')) {
       return (
-        distLower.includes('tripura') ||
         distLower.includes('agartala') ||
-        areaLower.includes('tripura') ||
+        distLower.includes('west tripura') ||
+        (distLower.includes('tripura') && !distLower.includes('dharmanagar') && !distLower.includes('north tripura')) ||
         areaLower.includes('agartala') ||
         areaLower.includes('kunjaban') ||
         areaLower.includes('gbp') ||
         areaLower.includes('agmc') ||
         areaLower.includes('hapania') ||
         areaLower.includes('akhaura') ||
-        areaLower.includes('chowmuhani')
+        areaLower.includes('chowmuhani') ||
+        areaLower.includes('bamyal') ||
+        areaLower.includes('bhati abhoynagar')
       );
     }
     if (targetLower.includes('dharmanagar')) {
@@ -159,9 +161,17 @@ export class DivisionService {
         distLower.includes('dharmanagar') ||
         distLower.includes('north tripura') ||
         areaLower.includes('dharmanagar') ||
+        areaLower.includes('uptakhali') ||
+        areaLower.includes('upthakhali') ||
+        areaLower.includes('sanichhara') ||
+        areaLower.includes('sanicherra') ||
+        areaLower.includes('tilthai') ||
         areaLower.includes('kadamtala') ||
         areaLower.includes('churaibari') ||
-        areaLower.includes('panisagar')
+        areaLower.includes('panisagar') ||
+        areaLower.includes('deochhara') ||
+        areaLower.includes('kanchanpur') ||
+        areaLower.includes('rajbari')
       );
     }
     return distLower === targetLower;

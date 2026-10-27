@@ -123,9 +123,10 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
     setNewDocPhone('');
     setNewDocTier('A');
     
-    // Auto-lock district for MR, allow choice for Manager
-    const defaultDist = userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : userDivision === 'Aizawl' ? 'Aizawl' : userDivision === 'Agartala' ? 'Agartala' : userDivision === 'Dharmanagar' ? 'Dharmanagar' : 'Cachar';
-    setNewDocDistrict(defaultDist);
+    // Auto-lock district for MR, allow choice for Manager (defaults to active tab)
+    const activeTabDist = selectedDivision && selectedDivision !== 'ALL' ? selectedDivision : null;
+    const defaultDist = activeTabDist || (userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : userDivision === 'Aizawl' ? 'Aizawl' : userDivision === 'Agartala' ? 'Agartala' : userDivision === 'Dharmanagar' ? 'Dharmanagar' : 'Cachar');
+    setNewDocDistrict(defaultDist as any);
     setNewDocArea('');
     setAddModalVisible(true);
 
@@ -227,7 +228,7 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
       tier: newDocTier,
       district: targetDist,
       area: newDocArea.trim(),
-      clinicAddress: `${newDocClinic.trim()}, ${newDocArea.trim()}, ${targetDist}`,
+      clinicAddress: newDocArea.trim().endsWith(targetDist) ? `${newDocClinic.trim()}, ${newDocArea.trim()}` : `${newDocClinic.trim()}, ${newDocArea.trim()}, ${targetDist}`,
       latitude: capturedCoords.lat,
       longitude: capturedCoords.lng,
       monthlyVisitTarget: newDocTier === 'A_PLUS' ? 12 : newDocTier === 'A' ? 8 : 4,
