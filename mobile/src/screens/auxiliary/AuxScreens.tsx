@@ -29,10 +29,12 @@ import {
   SFCRouteEntry,
   DoctorBusinessPlan,
   RetailerSalesPlan,
+  BARAK_ROUTES,
 } from '../../constants/mockData';
 import { PdfReportService } from '../../services/pdfReportService';
 import { AuthService } from '../../services/authService';
 import { EmployeeService } from '../../services/employeeService';
+import { DivisionService } from '../../services/divisionService';
 import { SupabaseDbService } from '../../services/supabase/supabaseDbService';
 import { TourPlanRescheduleRequest } from '../../types';
 
@@ -87,6 +89,7 @@ export const TourPlanScreen: React.FC<{ onBack: () => void; onNavigate?: (s: str
 
   // Live & Cached Data
   const currentUser = AuthService.getCurrentUser();
+  const isManager = DivisionService.isManager(currentUser);
   const [customPlans, setCustomPlans] = useState<Record<string, any>>({});
   const [rescheduleRequests, setRescheduleRequests] = useState<TourPlanRescheduleRequest[]>([]);
 
@@ -99,6 +102,12 @@ export const TourPlanScreen: React.FC<{ onBack: () => void; onNavigate?: (s: str
   const firstDayOfWeek = new Date(year, month, 1).getDay(); // 0 = Sun
   const blankCells = Array.from({ length: firstDayOfWeek }, (_, i) => i);
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+
+  // Check if any plan exists for this specific month
+  const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
+  const hasMonthPlan = Object.keys(customPlans).some(
+    k => k.startsWith(monthPrefix) && customPlans[k]?.city && customPlans[k]?.city !== 'No Plan Created'
+  );
 
   // Real today
   const realToday = new Date();
@@ -142,13 +151,8 @@ export const TourPlanScreen: React.FC<{ onBack: () => void; onNavigate?: (s: str
       return customPlans[dateKey].city;
     }
     const d = new Date(year, month, dayNum);
-    const dayOfWeek = d.getDay();
-    if (dayOfWeek === 0) return 'Weekly Rest / Sunday';
-    if (dayOfWeek === 1 || dayOfWeek === 4) return 'Karimganj Main & Station Area';
-    if (dayOfWeek === 2) return 'Badarpur Beat';
-    if (dayOfWeek === 3) return 'Patherkandi & Ramkrishna Nagar';
-    if (dayOfWeek === 5) return 'Silchar SMCH & Hospital Road';
-    return 'Hailakandi Civil Hospital Road';
+    if (d.getDay() === 0) return 'Weekly Rest / Sunday';
+    return 'No Plan Created';
   };
 
   const getPendingRescheduleForDay = (dayNum: number): TourPlanRescheduleRequest | undefined => {
@@ -159,7 +163,7 @@ export const TourPlanScreen: React.FC<{ onBack: () => void; onNavigate?: (s: str
   const getDayStatusColor = (dayNum: number) => {
     const dateKey = getDateKey(dayNum);
     const d = new Date(year, month, dayNum);
-    if (d.getDay() === 0) return '#2563EB'; // Sunday / Holiday
+    if (d.getDay() === 0) return '#94A3B8'; // Sunday / Rest
 
     // Check if pending reschedule
     const pending = rescheduleRequests.find(r => r.originalDate === dateKey && r.status === 'PENDING');
@@ -170,12 +174,37 @@ export const TourPlanScreen: React.FC<{ onBack: () => void; onNavigate?: (s: str
     if (approvedNew) return '#10B981'; // Green
 
     if (customPlans[dateKey]?.type === 'LEAVE') return '#9333EA';
-    if (isCurrentMonth && dayNum < todayDayNum) return '#06B6D4'; // Past visit
-    return '#16A34A'; // TourPlan green
+
+    // Only active green if a real plan exists!
+    if (customPlans[dateKey]?.city && customPlans[dateKey]?.city !== 'No Plan Created') {
+      if (isCurrentMonth && dayNum < todayDayNum) return '#06B6D4'; // Past visit
+      return '#16A34A'; // TourPlan active
+    }
+
+    return '#E2E8F0'; // Unplanned gray dot
   };
 
   const handleDayPress = (dayNum: number) => {
     setSelectedDay(dayNum);
+    const beat = getBeatForDay(dayNum);
+    if (beat === 'No Plan Created') {
+      if (isManager) {
+        Alert.alert(
+          'No Tour Plan',
+          `No tour plan beat has been created for ${dayNum} ${monthName} ${year}.\n\nWould you like to create the monthly tour plan now?`,
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: '➕ Create Plan', onPress: () => setCreateModalVisible(true) }
+          ]
+        );
+      } else {
+        Alert.alert(
+          'No Tour Plan',
+          `No visit scheduled for ${dayNum} ${monthName} ${year} by your RSM.`
+        );
+      }
+      return;
+    }
     setActionModalVisible(true);
   };
 
@@ -311,6 +340,30 @@ export const TourPlanScreen: React.FC<{ onBack: () => void; onNavigate?: (s: str
           </TouchableOpacity>
         </View>
 
+        {/* No Tour Plan Alert Banner for Unplanned Months */}
+        {!hasMonthPlan ? (
+          <View style={styles.noPlanAlertBox}>
+            <Ionicons name="calendar-outline" size={24} color="#D97706" />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.noPlanAlertTitle}>No Tour Plan for {monthTitle}</Text>
+              <Text style={styles.noPlanAlertSub}>
+                {isManager
+                  ? 'No monthly tour programme created for this month. Tap below to create beat schedule.'
+                  : 'Tour plan not yet assigned by your RSM for this month.'}
+              </Text>
+            </View>
+            {isManager && (
+              <TouchableOpacity
+                style={styles.createPlanPillBtn}
+                onPress={() => setCreateModalVisible(true)}
+              >
+                <Ionicons name="add-circle" size={15} color="#FFFFFF" />
+                <Text style={styles.createPlanPillBtnText}>Create Plan</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        ) : null}
+
         {viewMode === 'CALENDAR' ? (
           <>
             {/* Days of Week Header */}
@@ -391,13 +444,13 @@ export const TourPlanScreen: React.FC<{ onBack: () => void; onNavigate?: (s: str
             </View>
           </>
         ) : (
-          /* List View */
           <View style={{ marginTop: 8 }}>
             {days.map(day => {
               const beat = getBeatForDay(day);
               const isSun = new Date(year, month, day).getDay() === 0;
               const pendingResched = getPendingRescheduleForDay(day);
               const isToday = isCurrentMonth && day === todayDayNum;
+              const hasPlan = beat !== 'No Plan Created' && !isSun;
 
               return (
                 <TouchableOpacity
@@ -408,7 +461,7 @@ export const TourPlanScreen: React.FC<{ onBack: () => void; onNavigate?: (s: str
                     borderRadius: radius.md,
                     marginBottom: 8,
                     borderLeftWidth: 4,
-                    borderLeftColor: isSun ? '#2563EB' : pendingResched ? '#F59E0B' : '#16A34A',
+                    borderLeftColor: isSun ? '#94A3B8' : pendingResched ? '#F59E0B' : hasPlan ? '#16A34A' : '#CBD5E1',
                     ...shadows.sm,
                   }}
                   onPress={() => handleDayPress(day)}
@@ -422,11 +475,15 @@ export const TourPlanScreen: React.FC<{ onBack: () => void; onNavigate?: (s: str
                       <View style={{ backgroundColor: '#FEF3C7', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 }}>
                         <Text style={{ color: '#B45309', fontSize: 10, fontWeight: 'bold' }}>RESCHEDULE PENDING</Text>
                       </View>
-                    ) : (
+                    ) : hasPlan ? (
                       <Text style={{ fontSize: 11, color: '#64748B' }}>10 Docs • 4 Chemists</Text>
+                    ) : (
+                      <View style={{ backgroundColor: '#F1F5F9', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
+                        <Text style={{ color: '#94A3B8', fontSize: 10, fontWeight: '700' }}>{isSun ? 'SUNDAY' : 'NO PLAN'}</Text>
+                      </View>
                     )}
                   </View>
-                  <Text style={{ fontSize: 13, color: '#334155', marginTop: 4 }}>
+                  <Text style={{ fontSize: 13, color: hasPlan ? '#334155' : '#94A3B8', marginTop: 4, fontStyle: hasPlan ? 'normal' : 'italic' }}>
                     📍 {beat}
                   </Text>
                   {pendingResched && (
@@ -442,11 +499,15 @@ export const TourPlanScreen: React.FC<{ onBack: () => void; onNavigate?: (s: str
       </ScrollView>
 
       {/* Bottom Action Button */}
-      <View style={styles.bottomBarFixed}>
-        <TouchableOpacity style={styles.fullWidthBtn} onPress={() => setCreateModalVisible(true)}>
-          <Text style={styles.fullWidthBtnText}>CREATE / EDIT TOUR PLAN</Text>
-        </TouchableOpacity>
-      </View>
+      {isManager ? (
+        <View style={styles.bottomBarFixed}>
+          <TouchableOpacity style={styles.fullWidthBtn} onPress={() => setCreateModalVisible(true)}>
+            <Text style={styles.fullWidthBtnText}>
+              {hasMonthPlan ? 'EDIT TOUR PLAN' : '➕ CREATE TOUR PLAN'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
 
       {/* Day Action Modal */}
       <Modal visible={actionModalVisible} transparent animationType="fade">
@@ -582,7 +643,38 @@ export const TourPlanScreen: React.FC<{ onBack: () => void; onNavigate?: (s: str
           <View style={styles.createModalBox}>
             <Text style={styles.modalHeaderTitle}>Create Tour Plan ({monthTitle})</Text>
             <Text style={styles.modalFieldLabel}>Assigned Work Beat / Territory</Text>
-            <TextInput style={styles.modalInput} value={newCity} onChangeText={setNewCity} />
+
+            {/* Quick Route Selector Pills */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 6 }}>
+              <View style={{ flexDirection: 'row', gap: 6 }}>
+                {BARAK_ROUTES.map(r => (
+                  <TouchableOpacity
+                    key={r.id}
+                    style={{
+                      paddingHorizontal: 8,
+                      paddingVertical: 5,
+                      borderRadius: radius.sm,
+                      backgroundColor: newCity === r.name ? '#2563EB' : '#F1F5F9',
+                      borderWidth: 1,
+                      borderColor: newCity === r.name ? '#2563EB' : '#CBD5E1',
+                    }}
+                    onPress={() => setNewCity(r.name)}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 11,
+                        color: newCity === r.name ? '#FFFFFF' : '#334155',
+                        fontWeight: '600',
+                      }}
+                    >
+                      {r.code}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
+
+            <TextInput style={styles.modalInput} value={newCity} onChangeText={setNewCity} placeholder="e.g. Silchar Central / Karimganj Main" />
             <Text style={styles.modalFieldLabel}>Target Doctor Calls / Day</Text>
             <TextInput style={styles.modalInput} value={newDoctorTarget} keyboardType="numeric" onChangeText={setNewDoctorTarget} />
             <Text style={styles.modalFieldLabel}>Target Chemist / Stockist Calls</Text>
@@ -1752,6 +1844,42 @@ const styles = StyleSheet.create({
     ...shadows.sm,
   },
   monthNavTitle: { fontSize: 15, fontWeight: '700', color: colors.textPrimary },
+  noPlanAlertBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#F59E0B',
+    borderRadius: radius.md,
+    padding: 12,
+    marginBottom: spacing.sm,
+    gap: 10,
+  },
+  noPlanAlertTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#92400E',
+  },
+  noPlanAlertSub: {
+    fontSize: 11,
+    color: '#B45309',
+    marginTop: 2,
+    lineHeight: 15,
+  },
+  createPlanPillBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2563EB',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: radius.sm,
+    gap: 4,
+  },
+  createPlanPillBtnText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '700',
+  },
 
   // Calendar
   calendarWeekRow: {
