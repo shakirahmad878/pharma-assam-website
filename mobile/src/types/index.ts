@@ -24,6 +24,8 @@ export interface UserProfile {
   token?: string;
   assignedRouteIds: string[];
   activeRouteId?: string;
+  sessionDate?: string;
+  loginTimestamp?: number;
 }
 
 export type GeofenceStatus =

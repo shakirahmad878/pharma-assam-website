@@ -3,6 +3,7 @@ import { StorageService, STORAGE_KEYS } from './storageService';
 import { SyncService } from './sync/syncService';
 import { BackgroundTelemetryManager } from './location/backgroundTelemetry';
 import { AuthService } from './authService';
+import { RouteService } from './routeService';
 
 export class AttendanceService {
   public static async getTodayAttendance(): Promise<{ isPunchedIn: boolean; record: AttendanceRecord | null; punchInTime: string | null }> {
@@ -23,10 +24,18 @@ export class AttendanceService {
     accuracyMeters: number;
     selfieUri: string;
     isMockLocation: boolean;
+    routeId?: string;
+    routeName?: string;
   }): Promise<AttendanceRecord> {
     const user = AuthService.getCurrentUser();
     const now = new Date();
     const today = now.toISOString().split('T')[0];
+
+    // If route was selected, set it active across the app & user session
+    if (params.routeId) {
+      await RouteService.setActiveRoute(params.routeId);
+      await AuthService.updateUserProfile({ activeRouteId: params.routeId });
+    }
 
     const newRecord: AttendanceRecord = {
       id: 'att_' + Date.now().toString(),
@@ -34,6 +43,8 @@ export class AttendanceService {
       employeeName: user?.name || 'Shakir Ahmad',
       date: today,
       punchInTimestamp: now.toISOString(),
+      routeId: params.routeId,
+      routeName: params.routeName,
       latitude: params.latitude,
       longitude: params.longitude,
       accuracyMeters: params.accuracyMeters,

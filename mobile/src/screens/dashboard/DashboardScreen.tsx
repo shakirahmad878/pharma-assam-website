@@ -60,6 +60,21 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     setRefreshing(false);
   };
 
+  const handleTilePress = (screen: string) => {
+    if (user?.role === 'MEDICAL_REP' && !isWorking) {
+      Alert.alert(
+        'Duty Shift Required ⚠️',
+        'Please tap "Start Working" first to capture your selfie and select your designated route before conducting field visits.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Start Working Now', onPress: () => onNavigate('ATTENDANCE') }
+        ]
+      );
+      return;
+    }
+    onNavigate(screen);
+  };
+
   const handleDutyPress = async () => {
     if (isWorking) {
       Alert.alert(
@@ -132,6 +147,24 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       {/* Offline Sync Status & Quick Sync Bar */}
       <SyncStatusBar onOpenSyncCenter={() => onNavigate('SYNC_CENTER')} />
 
+      {/* Mandatory Start Working Alert Banner for MR */}
+      {user?.role === 'MEDICAL_REP' && !isWorking ? (
+        <TouchableOpacity
+          style={styles.mandatoryStartBanner}
+          onPress={() => onNavigate('ATTENDANCE')}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="alert-circle" size={22} color="#B45309" />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.mandatoryStartBannerTitle}>Duty Shift Not Started</Text>
+            <Text style={styles.mandatoryStartBannerSub}>
+              Tap to capture selfie & select your working route to unlock doctor calls & orders.
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color="#B45309" />
+        </TouchableOpacity>
+      ) : null}
+
       {/* Dark Charcoal Action Grid */}
       <ScrollView
         contentContainerStyle={styles.scrollGridContent}
@@ -144,7 +177,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           {/* Tile 1: VISITS */}
           <TouchableOpacity
             style={styles.tileCard}
-            onPress={() => onNavigate('VISIT_EXECUTION_LIST')}
+            onPress={() => handleTilePress('VISIT_EXECUTION_LIST')}
             activeOpacity={0.75}
           >
             <Ionicons name="location-outline" size={32} color="#FFFFFF" />
@@ -154,7 +187,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           {/* Tile 2: DOCTORS */}
           <TouchableOpacity
             style={styles.tileCard}
-            onPress={() => onNavigate('DOCTORS')}
+            onPress={() => handleTilePress('DOCTORS')}
             activeOpacity={0.75}
           >
             <Ionicons name="people-outline" size={32} color="#FFFFFF" />
@@ -164,7 +197,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           {/* Tile 3: FIRMS */}
           <TouchableOpacity
             style={styles.tileCard}
-            onPress={() => onNavigate('FIRMS')}
+            onPress={() => handleTilePress('FIRMS')}
             activeOpacity={0.75}
           >
             <Ionicons name="cube-outline" size={32} color="#FFFFFF" />
@@ -409,5 +442,29 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 32,
     fontWeight: 'bold',
+  },
+  mandatoryStartBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#F59E0B',
+    paddingHorizontal: spacing.md,
+    paddingVertical: 10,
+    marginHorizontal: spacing.md,
+    marginTop: spacing.sm,
+    borderRadius: radius.md,
+    gap: 10,
+  },
+  mandatoryStartBannerTitle: {
+    color: '#92400E',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  mandatoryStartBannerSub: {
+    color: '#B45309',
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 2,
   },
 });

@@ -20,6 +20,8 @@ declare module 'react-native' {
   export const Image: any;
   export const ImageBackground: any;
   export const Linking: any;
+  export const AppState: any;
+  export type AppStateStatus = any;
   export type TextInputProps = any;
   export type ViewStyle = any;
   export type TextStyle = any;

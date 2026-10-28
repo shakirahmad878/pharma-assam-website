@@ -38,6 +38,26 @@ export class AuthService {
     return hours === 23 && minutes >= 59;
   }
 
+  public static async isSessionExpired(session: UserProfile | null): Promise<boolean> {
+    if (!session) return true;
+    const now = await SupabaseDbService.fetchServerTime();
+    const todayStr = now.toISOString().split('T')[0];
+
+    // 1. If session was created on a previous day, it is expired!
+    if (session.sessionDate && session.sessionDate !== todayStr) {
+      return true;
+    }
+
+    // 2. If it is past 11:59 PM, daily shift is concluded
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+    if (hours === 23 && minutes >= 59) {
+      return true;
+    }
+
+    return false;
+  }
+
   public static async isPast730PM(): Promise<boolean> {
     return this.isPast1159PM();
   }
@@ -109,9 +129,14 @@ export class AuthService {
     const customPin = await StorageService.getItem<string>(`@REPPULSE_USER_PIN_${userTemplate.employeeCode}`, '');
     const hasSetPin = Boolean(customPin && customPin.length === 4);
 
+    const now = await SupabaseDbService.fetchServerTime();
+    const todayStr = now.toISOString().split('T')[0];
+
     const user: UserProfile = {
       ...userTemplate,
       phone: cleanDigits,
+      sessionDate: todayStr,
+      loginTimestamp: now.getTime(),
       token: 'jwt_live_otp_' + Date.now().toString() + '_' + Math.random().toString(36).substring(7),
     };
 
@@ -164,12 +189,15 @@ export class AuthService {
   }
 
   public static async checkAutoLogout(): Promise<{ autoLoggedOut: boolean; reason?: string }> {
-    if (this.currentUser && (await this.isPast1159PM())) {
-      await this.logout();
-      return {
-        autoLoggedOut: true,
-        reason: 'Daily duty shift concluded at 11:59 PM (23:59). Automatically logged out for the day.',
-      };
+    if (this.currentUser) {
+      const expired = await this.isSessionExpired(this.currentUser);
+      if (expired) {
+        await this.logout();
+        return {
+          autoLoggedOut: true,
+          reason: 'Daily duty shift concluded. Please enter your 4-digit PIN to begin duty for today.',
+        };
+      }
     }
     return { autoLoggedOut: false };
   }
@@ -306,12 +334,18 @@ export class AuthService {
   }
 
   public static async restoreSession(): Promise<UserProfile | null> {
-    // If past 11:59 PM, auto logout
-    if (await this.isPast1159PM()) {
+    const session = await StorageService.getItem<UserProfile | null>(STORAGE_KEYS.AUTH_SESSION, null);
+    if (!session) {
+      this.currentUser = null;
+      return null;
+    }
+
+    // If session is from previous day or shift concluded, auto logout
+    if (await this.isSessionExpired(session)) {
       await this.logout();
       return null;
     }
-    const session = await StorageService.getItem<UserProfile | null>(STORAGE_KEYS.AUTH_SESSION, null);
+
     this.currentUser = session;
     return session;
   }
@@ -394,8 +428,13 @@ export class AuthService {
       }
     }
 
+    const now = await SupabaseDbService.fetchServerTime();
+    const todayStr = now.toISOString().split('T')[0];
+
     const user: UserProfile = {
       ...matchedTemplate,
+      sessionDate: todayStr,
+      loginTimestamp: now.getTime(),
       token: 'jwt_live_pin_' + Date.now().toString() + '_' + Math.random().toString(36).substring(7),
     };
 
@@ -474,8 +513,13 @@ export class AuthService {
       }
     }
 
+    const now = await SupabaseDbService.fetchServerTime();
+    const todayStr = now.toISOString().split('T')[0];
+
     const user: UserProfile = {
       ...template,
+      sessionDate: todayStr,
+      loginTimestamp: now.getTime(),
       token: 'jwt_live_' + Date.now().toString() + '_' + Math.random().toString(36).substring(7),
     };
 

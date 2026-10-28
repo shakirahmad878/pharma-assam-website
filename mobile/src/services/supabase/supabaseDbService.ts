@@ -594,6 +594,8 @@ export class SupabaseDbService {
           punch_in_timestamp: att.punchInTimestamp,
           punch_out_timestamp: att.punchOutTimestamp || null,
           status: att.status || 'PUNCHED_IN',
+          route_id: att.routeId || null,
+          route_name: att.routeName || null,
           latitude: att.latitude,
           longitude: att.longitude,
           accuracy_meters: att.accuracyMeters,

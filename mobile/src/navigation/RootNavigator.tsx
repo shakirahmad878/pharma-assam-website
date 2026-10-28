@@ -9,9 +9,13 @@ import {
   ToastAndroid,
   Platform,
   Image,
+  AppState,
+  AppStateStatus,
+  Alert,
 } from 'react-native';
 import { colors, typography, spacing } from '../constants/theme';
 import { AuthService } from '../services/authService';
+import { AttendanceService } from '../services/attendanceService';
 import { NetworkBanner } from '../components/common/NetworkBanner';
 import { DrawerMenu } from '../components/navigation/DrawerMenu';
 
@@ -78,12 +82,23 @@ export const RootNavigator: React.FC = () => {
   const lastBackPressRef = useRef<number>(0);
 
   useEffect(() => {
-    AuthService.restoreSession().then(user => {
+    const initSession = async () => {
+      const user = await AuthService.restoreSession();
       setIsAuthenticated(!!user);
       setCurrentUser(user);
-    });
 
-    // Check for 11:59 PM auto-logout every 30 seconds
+      // If user is a field representative and has not punched in today, require Start Working
+      if (user && user.role === 'MEDICAL_REP') {
+        const att = await AttendanceService.getTodayAttendance();
+        if (!att.isPunchedIn) {
+          setCurrentScreen('ATTENDANCE');
+        }
+      }
+    };
+
+    initSession();
+
+    // Check for auto-logout every 30 seconds
     const timer = setInterval(async () => {
       const check = await AuthService.checkAutoLogout();
       if (check.autoLoggedOut) {
@@ -91,12 +106,30 @@ export const RootNavigator: React.FC = () => {
         setCurrentUser(null);
         historyRef.current = [];
         if (Platform.OS === 'android') {
-          ToastAndroid.show('Shift Concluded (11:59 PM). Automatically logged out.', ToastAndroid.LONG);
+          ToastAndroid.show(check.reason || 'Shift Concluded. Automatically logged out.', ToastAndroid.LONG);
         }
       }
     }, 30000);
 
-    return () => clearInterval(timer);
+    // AppState listener: Check session immediately whenever app becomes active
+    const appStateSub = AppState.addEventListener('change', async (nextState: AppStateStatus) => {
+      if (nextState === 'active') {
+        const check = await AuthService.checkAutoLogout();
+        if (check.autoLoggedOut) {
+          setIsAuthenticated(false);
+          setCurrentUser(null);
+          historyRef.current = [];
+          if (Platform.OS === 'android') {
+            ToastAndroid.show('Daily duty shift concluded. Please login again.', ToastAndroid.LONG);
+          }
+        }
+      }
+    });
+
+    return () => {
+      clearInterval(timer);
+      appStateSub.remove();
+    };
   }, []);
 
   // Hardware Back Button Handler
@@ -108,6 +141,19 @@ export const RootNavigator: React.FC = () => {
       }
 
       if (!isAuthenticated) return false;
+
+      // If MR has not started working, keep them on ATTENDANCE
+      if (currentUser?.role === 'MEDICAL_REP' && currentScreen === 'ATTENDANCE') {
+        AttendanceService.getTodayAttendance().then(att => {
+          if (!att.isPunchedIn) {
+            Alert.alert(
+              'Start Working Required ⚠️',
+              'Please capture your selfie and select your designated working route to start field duty.'
+            );
+          }
+        });
+        return true;
+      }
 
       // If we have screen history to pop
       if (historyRef.current.length > 0) {
@@ -166,7 +212,26 @@ export const RootNavigator: React.FC = () => {
     setCurrentParams(params || null);
   };
 
-  const handleNavigate = (screen: string, params?: any) => {
+  const handleNavigate = async (screen: string, params?: any) => {
+    // If MR has not started working, protect field screens
+    if (
+      currentUser?.role === 'MEDICAL_REP' &&
+      screen !== 'ATTENDANCE' &&
+      screen !== 'LOGIN' &&
+      screen !== 'PROFILE'
+    ) {
+      const att = await AttendanceService.getTodayAttendance();
+      if (!att.isPunchedIn) {
+        Alert.alert(
+          'Start Working Required ⚠️',
+          'You must mark attendance and select your working route before accessing field tools.',
+          [{ text: 'Start Working Now', onPress: () => replace('ATTENDANCE') }]
+        );
+        replace('ATTENDANCE');
+        return;
+      }
+    }
+
     if (screen === 'DASHBOARD') {
       replace('DASHBOARD');
       return;
@@ -191,9 +256,18 @@ export const RootNavigator: React.FC = () => {
   if (!isAuthenticated) {
     return (
       <LoginScreen
-        onLoginSuccess={() => {
+        onLoginSuccess={async () => {
           setIsAuthenticated(true);
-          setCurrentUser(AuthService.getCurrentUser());
+          const user = AuthService.getCurrentUser();
+          setCurrentUser(user);
+
+          if (user && user.role === 'MEDICAL_REP') {
+            const att = await AttendanceService.getTodayAttendance();
+            if (!att.isPunchedIn) {
+              replace('ATTENDANCE');
+              return;
+            }
+          }
           replace('DASHBOARD');
         }}
         onForgotPassword={() => alert('Password reset link sent to your registered regional manager.')}
@@ -230,7 +304,16 @@ export const RootNavigator: React.FC = () => {
         )}
 
         {currentScreen === 'ATTENDANCE' && (
-          <AttendanceScreen onBack={pop} />
+          <AttendanceScreen
+            onBack={() => {
+              if (historyRef.current.length > 0) {
+                pop();
+              } else {
+                replace('DASHBOARD');
+              }
+            }}
+            isMandatoryStart={currentUser?.role === 'MEDICAL_REP'}
+          />
         )}
 
         {currentScreen === 'DOCTORS' && (

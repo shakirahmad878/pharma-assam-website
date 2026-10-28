@@ -20,12 +20,15 @@ import { Button } from '../../components/common/Button';
 import { LocationService, LocationResult } from '../../services/location/locationService';
 import { AttendanceService } from '../../services/attendanceService';
 import { AuthService } from '../../services/authService';
+import { RouteService } from '../../services/routeService';
+import { RoutePlan, AttendanceRecord } from '../../types';
 
 interface AttendanceScreenProps {
   onBack: () => void;
+  isMandatoryStart?: boolean;
 }
 
-export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack }) => {
+export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack, isMandatoryStart = false }) => {
   const [location, setLocation] = useState<LocationResult | null>(null);
   const [loadingLoc, setLoadingLoc] = useState(false);
   const [isPunchedIn, setIsPunchedIn] = useState(false);
@@ -33,18 +36,41 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack }) =>
   const [selfieUri, setSelfieUri] = useState<string | null>(null);
   const [capturing, setCapturing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [routes, setRoutes] = useState<RoutePlan[]>([]);
+  const [selectedRouteId, setSelectedRouteId] = useState<string>('');
+  const [todayRecord, setTodayRecord] = useState<AttendanceRecord | null>(null);
 
   useEffect(() => {
     fetchLocation();
     checkTodayStatus();
+    loadRoutes();
   }, []);
+
+  const loadRoutes = async () => {
+    try {
+      const list = await RouteService.getRoutes();
+      setRoutes(list);
+      const activeId = await RouteService.getActiveRouteId();
+      if (activeId && list.some(r => r.id === activeId)) {
+        setSelectedRouteId(activeId);
+      } else if (list.length > 0) {
+        setSelectedRouteId(list[0].id);
+      }
+    } catch (err) {
+      console.warn('Failed to load routes:', err);
+    }
+  };
 
   const checkTodayStatus = async () => {
     const today = await AttendanceService.getTodayAttendance();
     setIsPunchedIn(today.isPunchedIn);
     setPunchInTime(today.punchInTime);
+    setTodayRecord(today.record);
     if (today.record?.selfieBase64OrUri) {
       setSelfieUri(today.record.selfieBase64OrUri);
+    }
+    if (today.record?.routeId) {
+      setSelectedRouteId(today.record.routeId);
     }
   };
 
@@ -115,6 +141,11 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack }) =>
       return;
     }
 
+    if (!selectedRouteId) {
+      Alert.alert('Working Route Required', 'Please select your assigned working beat/route for today before starting duty.');
+      return;
+    }
+
     const now = new Date();
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
@@ -161,24 +192,28 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack }) =>
     }
     if (!currentLoc) return;
 
+    const chosenRoute = routes.find(r => r.id === selectedRouteId);
     setSubmitting(true);
-    await AttendanceService.punchIn({
+    const newRecord = await AttendanceService.punchIn({
       latitude: currentLoc.latitude,
       longitude: currentLoc.longitude,
       accuracyMeters: currentLoc.accuracyMeters,
       selfieUri,
       isMockLocation: currentLoc.isMockLocation,
+      routeId: selectedRouteId,
+      routeName: chosenRoute?.name || 'Assigned Beat Route',
     });
     setSubmitting(false);
 
     setIsPunchedIn(true);
+    setTodayRecord(newRecord);
     const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     setPunchInTime(nowTime);
 
     Alert.alert(
       'Punch In Successful ✅',
-      `Duty started at ${nowTime}. Geotagged selfie recorded and 15-minute background telemetry is active.`,
-      [{ text: 'Proceed to Dashboard', onPress: onBack }]
+      `Duty started at ${nowTime} on "${chosenRoute?.name || 'Assigned Beat Route'}". Geotagged selfie recorded and 15-minute background telemetry is active.`,
+      [{ text: 'Proceed to Field Duty', onPress: onBack }]
     );
   };
 
@@ -202,11 +237,22 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack }) =>
     );
   };
 
+  const handleBack = () => {
+    if (isMandatoryStart && !isPunchedIn) {
+      Alert.alert(
+        'Start Working Required',
+        'Please complete your duty check-in (Selfie & Working Route) before proceeding to field operations.'
+      );
+      return;
+    }
+    onBack();
+  };
+
   const user = AuthService.getCurrentUser();
 
   return (
     <SafeAreaView style={styles.container}>
-      <Header title="Daily Attendance" subtitle="Geotagged Selfie & GPS Lock" showBack onBack={onBack} />
+      <Header title="Daily Attendance" subtitle="Geotagged Selfie & GPS Lock" showBack onBack={handleBack} />
       <ScrollView contentContainerStyle={styles.content}>
         {/* Status Card */}
         <Card>
@@ -216,6 +262,11 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack }) =>
               <Text style={styles.statusTime}>
                 {isPunchedIn ? `Punched In at ${punchInTime}` : 'Not Checked In'}
               </Text>
+              {todayRecord?.routeName ? (
+                <Text style={styles.activeRouteStatus}>
+                  🗺️ Beat: {todayRecord.routeName}
+                </Text>
+              ) : null}
               <Text style={styles.empInfo}>
                 {user?.name || 'Shakir Ahmad'} ({user?.employeeCode || 'REP-AS-904'})
               </Text>
@@ -298,6 +349,61 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack }) =>
           </TouchableOpacity>
         </Card>
 
+        {/* Working Route / Beat Selection (Mandatory for Field Operations) */}
+        {!isPunchedIn ? (
+          <Card>
+            <View style={styles.sectionHeaderRow}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Ionicons name="map-outline" size={18} color={colors.primary} />
+                <Text style={styles.sectionHeader}>Working Route / Beat</Text>
+              </View>
+              <Badge label="Required *" variant="warning" />
+            </View>
+            <Text style={styles.cameraDesc}>
+              Select the designated field beat you are visiting today. 15-minute background telemetry and doctor calls will sync directly to this route.
+            </Text>
+
+            {routes.length === 0 ? (
+              <View style={{ paddingVertical: 14, alignItems: 'center' }}>
+                <ActivityIndicator size="small" color={colors.primary} />
+                <Text style={{ fontSize: 12, color: '#94A3B8', marginTop: 6 }}>Loading designated beat routes...</Text>
+              </View>
+            ) : (
+              <View style={styles.routeListWrap}>
+                {routes.map((r) => {
+                  const isSelected = selectedRouteId === r.id;
+                  return (
+                    <TouchableOpacity
+                      key={r.id}
+                      style={[styles.routeSelectCard, isSelected && styles.routeSelectCardActive]}
+                      onPress={() => setSelectedRouteId(r.id)}
+                      activeOpacity={0.85}
+                    >
+                      <View style={[styles.routeRadioCircle, isSelected && styles.routeRadioCircleActive]}>
+                        {isSelected ? <View style={styles.routeRadioInner} /> : null}
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <Text style={[styles.routeNameText, isSelected && styles.routeNameTextActive]}>
+                            {r.name}
+                          </Text>
+                          <Text style={styles.routeCodeBadge}>{r.code}</Text>
+                        </View>
+                        <Text style={styles.routeAreaText}>
+                          📍 {(r.areas && r.areas.length > 0) ? r.areas.join(', ') : r.description || r.district}
+                        </Text>
+                        <Text style={styles.routeMetaText}>
+                          {r.totalDoctors} Doctors • {r.totalChemists} Chemists • {r.totalHospitals} Hospitals
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
+          </Card>
+        ) : null}
+
         {/* Punch In / Out Actions */}
         <View style={styles.actionContainer}>
           {isPunchedIn ? (
@@ -308,7 +414,13 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack }) =>
             />
           ) : (
             <Button
-              title="Confirm Punch In & Start Shift"
+              title={
+                !selfieUri
+                  ? '📷 1. Capture Selfie to Continue'
+                  : !selectedRouteId
+                  ? '🗺️ 2. Select Route to Start'
+                  : 'Confirm Punch In & Start Shift'
+              }
               onPress={handlePunchIn}
               loading={submitting}
               variant="primary"
@@ -414,5 +526,81 @@ const styles = StyleSheet.create({
   },
   actionContainer: {
     marginTop: spacing.lg,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.xs,
+  },
+  activeRouteStatus: {
+    fontSize: 12,
+    color: '#0369A1',
+    fontWeight: '700',
+    marginTop: 4,
+  },
+  routeListWrap: {
+    marginTop: spacing.sm,
+    gap: 8,
+  },
+  routeSelectCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    borderRadius: radius.md,
+    padding: spacing.md,
+    gap: 12,
+  },
+  routeSelectCardActive: {
+    backgroundColor: '#EFF6FF',
+    borderColor: '#2563EB',
+  },
+  routeRadioCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#94A3B8',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  routeRadioCircleActive: {
+    borderColor: '#2563EB',
+  },
+  routeRadioInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#2563EB',
+  },
+  routeNameText: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.textPrimary,
+  },
+  routeNameTextActive: {
+    color: '#1E40AF',
+  },
+  routeCodeBadge: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#2563EB',
+    backgroundColor: '#DBEAFE',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: radius.sm,
+  },
+  routeAreaText: {
+    fontSize: typography.fontSize.xs,
+    color: '#475569',
+    marginTop: 3,
+  },
+  routeMetaText: {
+    fontSize: 10,
+    color: '#94A3B8',
+    marginTop: 2,
+    fontWeight: '600',
   },
 });
