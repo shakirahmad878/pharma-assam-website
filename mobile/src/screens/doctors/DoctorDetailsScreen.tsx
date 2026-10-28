@@ -466,12 +466,14 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
                 <Ionicons name="create-outline" size={13} color="#2563EB" />
                 <Text style={styles.editBtnPillText}>Edit Info</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.assignBtnPill} onPress={handleOpenAssignModal}>
-                <Ionicons name="swap-horizontal" size={13} color="#7C3AED" />
-                <Text style={styles.assignBtnPillText}>
-                  {doctor.assignedToEmployeeName ? 'Reassign MR' : 'Assign MR'}
-                </Text>
-              </TouchableOpacity>
+              {isManager && (
+                <TouchableOpacity style={styles.assignBtnPill} onPress={handleOpenAssignModal}>
+                  <Ionicons name="swap-horizontal" size={13} color="#7C3AED" />
+                  <Text style={styles.assignBtnPillText}>
+                    {doctor.assignedToEmployeeName ? 'Reassign MR' : 'Assign MR'}
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         </Card>
