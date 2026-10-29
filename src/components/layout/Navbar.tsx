@@ -81,17 +81,17 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Action Controls & Toolbar */}
         <div className="flex items-center gap-1.5 sm:gap-2">
           
-          {/* Switch to Public Corporate Site */}
-          {onOpenPublicSite && (
-            <button
-              onClick={onOpenPublicSite}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#182F49] hover:bg-[#203D5E] border border-slate-700 text-slate-200 transition-all cursor-pointer"
-              title="View Public Pharmaceutical Website"
-            >
-              <Globe className="w-3.5 h-3.5 text-[#18A6A6]" />
-              <span className="hidden sm:inline">Public Website</span>
-            </button>
-          )}
+          {/* External Link to Public Corporate Site (Opens in new tab, never disrupts SFA session) */}
+          <a
+            href="https://shakirahmad878.github.io/pharma-assam-website/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#182F49] hover:bg-[#203D5E] border border-slate-700 text-slate-200 transition-all cursor-pointer"
+            title="Open Public Pharmaceutical Website in new tab"
+          >
+            <Globe className="w-3.5 h-3.5 text-[#18A6A6]" />
+            <span className="hidden sm:inline">Public Website</span>
+          </a>
 
           {/* Platform Guided Tour Modal Trigger */}
           {onOpenDemoTour && (

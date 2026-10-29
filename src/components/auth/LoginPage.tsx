@@ -47,18 +47,18 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, users, onO
   return (
     <div className="min-h-screen bg-[#F5F8FA] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden text-[#1E293B]">
       
-      {/* Top Bar Switch to Public Website */}
-      {onOpenPublicSite && (
-        <div className="absolute top-6 left-6 z-20">
-          <button
-            onClick={onOpenPublicSite}
-            className="flex items-center gap-2 bg-white hover:bg-[#F1F6F8] text-[#10243A] border border-[#DCE4EB] px-3.5 py-2 rounded-xl text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
-          >
-            <Globe className="w-4 h-4 text-[#18A6A6]" />
-            <span>← Return to Public Website</span>
-          </button>
-        </div>
-      )}
+      {/* Link to Public Website (External, opens in new tab) */}
+      <div className="absolute top-6 left-6 z-20">
+        <a
+          href="https://shakirahmad878.github.io/pharma-assam-website/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 bg-white hover:bg-[#F1F6F8] text-[#10243A] border border-[#DCE4EB] px-3.5 py-2 rounded-xl text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+        >
+          <Globe className="w-4 h-4 text-[#18A6A6]" />
+          <span>Visit Corporate Website ↗</span>
+        </a>
+      </div>
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
         {/* Brand Header */}

@@ -43,45 +43,11 @@ import { ChangePasswordModal } from './components/auth/ChangePasswordModal';
 import { DatabaseSyncModal } from './components/common/DatabaseSyncModal';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { ShieldCheck, Users, Stethoscope, FileText, LayoutDashboard, Menu } from 'lucide-react';
-import { PMTopBar } from './components/PMTopBar';
-import { PMHeader } from './components/PMHeader';
-import { PMHeroSlider } from './components/PMHeroSlider';
-import { PMCategoryShowcase } from './components/PMCategoryShowcase';
-import { PMProductCatalog } from './components/PMProductCatalog';
-import { PMAboutSection } from './components/PMAboutSection';
-import { PMFlipbook } from './components/PMFlipbook';
-import { PMEnquiryForm } from './components/PMEnquiryForm';
-import { PMContactSection } from './components/PMContactSection';
-import { PMFooter } from './components/PMFooter';
-import { PMProductModal } from './components/PMProductModal';
-import { PMSendEnquiryModal } from './components/PMSendEnquiryModal';
-import { PMSidebarNav } from './components/PMSidebarNav';
-import { PRODUCTS } from './data/products';
-import { ProductCategory } from './types';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(() => AuthService.getCurrentUser());
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
-  // View mode: 'website' (public-facing corporate pharmaceutical portal) or 'portal' (internal SFA field force app)
-  const [viewMode, setViewMode] = useState<'website' | 'portal'>(() => {
-    const hash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
-    const portalHashes = [
-      'portal', 'sfa', 'login', 'admin', 'admin_portal', 'admin-portal',
-      'staff', 'users', 'employees', 'team', 'dashboard', 'manager',
-      'doctors', 'chemists', 'products', 'territories', 'dcr',
-      'tour_plans', 'tour', 'orders', 'rcpa', 'attendance', 'expenses',
-      'mis_reports', 'reports', 'fleet_tracking', 'fleet'
-    ];
-    return portalHashes.includes(hash) ? 'portal' : 'website';
-  });
-
-  const [activePublicSection, setActivePublicSection] = useState<string>('home');
-  const [selectedPublicProduct, setSelectedPublicProduct] = useState<Product | null>(null);
-  const [isEnquiryModalOpen, setIsEnquiryModalOpen] = useState<boolean>(false);
-  const [enquiryProductName, setEnquiryProductName] = useState<string>(PRODUCTS[0].name);
-  const [selectedPublicCategory, setSelectedPublicCategory] = useState<ProductCategory | 'All Products'>('All Products');
-  const [isPublicSidebarOpen, setIsPublicSidebarOpen] = useState<boolean>(false);
 
   const [activeTab, setActiveTab] = useState<NavTab>(() => {
     const hash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
@@ -126,82 +92,40 @@ export default function App() {
   
   const [isSimulatingPing, setIsSimulatingPing] = useState(false);
 
-  // Public Website navigation and inquiry helpers
-  const handleNavigatePublic = (sectionId: string) => {
-    setActivePublicSection(sectionId);
-    if (sectionId === 'home') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-      const el = document.getElementById(sectionId);
-      if (el) {
-        const offset = 80;
-        const bodyRect = document.body.getBoundingClientRect().top;
-        const elementRect = el.getBoundingClientRect().top;
-        const elementPosition = elementRect - bodyRect;
-        const offsetPosition = elementPosition - offset;
-
-        window.scrollTo({
-          top: offsetPosition,
-          behavior: 'smooth'
-        });
-      }
-    }
-  };
-
-  const handleOpenEnquiryModal = (productName?: string) => {
-    setEnquiryProductName(productName || PRODUCTS[0].name);
-    setIsEnquiryModalOpen(true);
-  };
-
-  // Sync tab and view mode with URL Hash
+  // Sync tab with URL Hash
   useEffect(() => {
     const parseHash = () => {
       const hash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
-      const portalHashes = [
-        'portal', 'sfa', 'login', 'admin', 'admin_portal', 'admin-portal',
-        'staff', 'users', 'employees', 'team', 'dashboard', 'manager',
-        'doctors', 'chemists', 'products', 'territories', 'dcr',
-        'tour_plans', 'tour', 'orders', 'rcpa', 'attendance', 'expenses',
-        'mis_reports', 'reports', 'fleet_tracking', 'fleet'
-      ];
-      if (portalHashes.includes(hash)) {
-        setViewMode('portal');
-        if (hash === 'admin' || hash === 'admin_portal' || hash === 'admin-portal') {
-          setActiveTab('admin_portal');
-        } else if (hash === 'dashboard' || hash === 'manager') {
-          setActiveTab('dashboard');
-        } else if (hash === 'doctors') {
-          setActiveTab('doctors');
-        } else if (hash === 'chemists') {
-          setActiveTab('chemists');
-        } else if (hash === 'products') {
-          setActiveTab('products');
-        } else if (hash === 'territories') {
-          setActiveTab('territories');
-        } else if (hash === 'dcr') {
-          setActiveTab('dcr');
-        } else if (hash === 'tour_plans' || hash === 'tour') {
-          setActiveTab('tour_plans');
-        } else if (hash === 'orders') {
-          setActiveTab('orders');
-        } else if (hash === 'rcpa') {
-          setActiveTab('rcpa');
-        } else if (hash === 'attendance') {
-          setActiveTab('attendance');
-        } else if (hash === 'expenses') {
-          setActiveTab('expenses');
-        } else if (hash === 'mis_reports' || hash === 'reports') {
-          setActiveTab('mis_reports');
-        } else if (hash === 'fleet_tracking' || hash === 'fleet') {
-          setActiveTab('fleet_tracking');
-        } else if (hash === 'staff' || hash === 'users' || hash === 'employees' || hash === 'team') {
-          setActiveTab('staff');
-        }
-      } else {
-        setViewMode('website');
-        if (['home', 'about', 'products', 'flipbook', 'contact', 'enquiry'].includes(hash)) {
-          setActivePublicSection(hash);
-        }
+      if (hash === 'admin' || hash === 'admin_portal' || hash === 'admin-portal') {
+        setActiveTab('admin_portal');
+      } else if (hash === 'dashboard' || hash === 'manager') {
+        setActiveTab('dashboard');
+      } else if (hash === 'doctors') {
+        setActiveTab('doctors');
+      } else if (hash === 'chemists') {
+        setActiveTab('chemists');
+      } else if (hash === 'products') {
+        setActiveTab('products');
+      } else if (hash === 'territories') {
+        setActiveTab('territories');
+      } else if (hash === 'dcr') {
+        setActiveTab('dcr');
+      } else if (hash === 'tour_plans' || hash === 'tour') {
+        setActiveTab('tour_plans');
+      } else if (hash === 'orders') {
+        setActiveTab('orders');
+      } else if (hash === 'rcpa') {
+        setActiveTab('rcpa');
+      } else if (hash === 'attendance') {
+        setActiveTab('attendance');
+      } else if (hash === 'expenses') {
+        setActiveTab('expenses');
+      } else if (hash === 'mis_reports' || hash === 'reports') {
+        setActiveTab('mis_reports');
+      } else if (hash === 'fleet_tracking' || hash === 'fleet') {
+        setActiveTab('fleet_tracking');
+      } else if (hash === 'staff' || hash === 'users' || hash === 'employees' || hash === 'team') {
+        setActiveTab('staff');
       }
     };
 
@@ -660,125 +584,12 @@ export default function App() {
     }, 600);
   };
 
-  // If in Website view mode, render the Public Corporate Pharmaceutical Website
-  if (viewMode === 'website') {
-    return (
-      <div className="min-h-screen bg-[#F5F8FA] text-[#1E293B] flex flex-col justify-between selection:bg-[#18A6A6] selection:text-white font-sans antialiased">
-        
-        {/* 1. Official Top Bar */}
-        <PMTopBar 
-          onOpenEnquiry={() => handleOpenEnquiryModal()}
-          onOpenPortal={() => {
-            setViewMode('portal');
-            window.location.hash = 'portal';
-          }}
-        />
-
-        {/* 2. Official Corporate Header & Mega Dropdown Navigation */}
-        <PMHeader
-          activeSection={activePublicSection}
-          onNavigate={handleNavigatePublic}
-          onSelectProduct={(product) => setSelectedPublicProduct(product)}
-          onOpenEnquiry={handleOpenEnquiryModal}
-          onOpenSidebar={() => setIsPublicSidebarOpen(true)}
-          onOpenPortal={() => {
-            setViewMode('portal');
-            window.location.hash = 'portal';
-          }}
-        />
-
-        {/* Main Content Sections */}
-        <main className="flex-grow">
-          
-          {/* 3. Hero Showcase Slider */}
-          <section id="home">
-            <PMHeroSlider
-              onSelectProduct={(product) => setSelectedPublicProduct(product)}
-              onOpenEnquiry={handleOpenEnquiryModal}
-              onNavigate={handleNavigatePublic}
-            />
-          </section>
-
-          {/* 4. Product Categories Showcase */}
-          <PMCategoryShowcase
-            onSelectCategory={(cat) => setSelectedPublicCategory(cat)}
-            onNavigate={handleNavigatePublic}
-          />
-
-          {/* 5. Full Product Catalog Directory */}
-          <PMProductCatalog
-            selectedCategory={selectedPublicCategory}
-            onSelectCategory={(cat) => setSelectedPublicCategory(cat)}
-            onSelectProduct={(product) => setSelectedPublicProduct(product)}
-            onOpenEnquiry={handleOpenEnquiryModal}
-          />
-
-          {/* 6. Official About Us & Factsheet Section */}
-          <PMAboutSection
-            onOpenEnquiry={() => handleOpenEnquiryModal()}
-            onNavigate={handleNavigatePublic}
-          />
-
-          {/* 7. Clinical Flipbook / Visual Aid Viewer */}
-          <PMFlipbook
-            onOpenEnquiry={handleOpenEnquiryModal}
-            onSelectProduct={(product) => setSelectedPublicProduct(product)}
-          />
-
-          {/* 8. Quick Requirement / Direct Enquiry Form */}
-          <PMEnquiryForm defaultProduct={enquiryProductName} />
-
-          {/* 9. Official Contact Details, Registered Address & Map */}
-          <PMContactSection />
-
-        </main>
-
-        {/* 10. Official Footer */}
-        <PMFooter
-          onNavigate={handleNavigatePublic}
-          onSelectCategory={(cat) => setSelectedPublicCategory(cat)}
-          onOpenPortal={() => {
-            setViewMode('portal');
-            window.location.hash = 'portal';
-          }}
-        />
-
-        {/* Modals & Drawers */}
-        <PMProductModal
-          product={selectedPublicProduct}
-          onClose={() => setSelectedPublicProduct(null)}
-          onOpenEnquiry={handleOpenEnquiryModal}
-        />
-
-        <PMSendEnquiryModal
-          isOpen={isEnquiryModalOpen}
-          onClose={() => setIsEnquiryModalOpen(false)}
-          defaultProductName={enquiryProductName}
-        />
-
-        <PMSidebarNav
-          isOpen={isPublicSidebarOpen}
-          onClose={() => setIsPublicSidebarOpen(false)}
-          activeSection={activePublicSection}
-          onNavigate={handleNavigatePublic}
-          onSelectCategory={(cat) => setSelectedPublicCategory(cat)}
-          onOpenEnquiry={() => handleOpenEnquiryModal()}
-        />
-
-      </div>
-    );
-  }
-
-  // If in Portal view mode and user is not authenticated, render dedicated Login Page
+  // If user is not authenticated, render dedicated Login Page
   if (!currentUser) {
     return (
       <LoginPage
         onLoginSuccess={handleLoginSuccess}
         users={users}
-        onOpenPublicSite={() => {
-          setViewMode('website');
-          window.location.hash = 'home';
-        }}
       />
     );
   }
@@ -796,10 +607,6 @@ export default function App() {
         onOpenChangePassword={() => setIsChangePasswordModalOpen(true)}
         onOpenLogin={() => setIsLoginModalOpen(true)}
         onOpenDatabaseSync={() => setIsDatabaseSyncModalOpen(true)}
-        onOpenPublicSite={() => {
-          setViewMode('website');
-          window.location.hash = 'home';
-        }}
         onLogout={handleLogout}
         onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
       />

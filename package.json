@@ -5,9 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist --repo https://github.com/shakirahmad878/reppulse-pharma-sfa.git && gh-pages -d dist --repo https://github.com/shakirahmad878/pharma-assam-website.git",
+    "dev:website": "vite --mode website",
+    "build": "tsc -b && vite build --mode portal",
+    "build:portal": "tsc -b && vite build --mode portal",
+    "build:website": "tsc -b && vite build --mode website",
+    "deploy:portal": "npm run build:portal && gh-pages -d dist --repo https://github.com/shakirahmad878/reppulse-pharma-sfa.git",
+    "deploy:website": "npm run build:website && gh-pages -d dist --repo https://github.com/shakirahmad878/pharma-assam-website.git",
+    "deploy": "npm run deploy:portal && npm run deploy:website",
     "lint": "oxlint",
     "preview": "vite preview"
   },
