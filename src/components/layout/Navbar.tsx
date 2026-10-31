@@ -93,19 +93,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span className="hidden sm:inline">Public Website</span>
           </a>
 
-          {/* Platform Guided Tour Modal Trigger */}
-          {onOpenDemoTour && (
-            <button
-              onClick={onOpenDemoTour}
-              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[#182F49] hover:bg-[#203D5E] border border-slate-700 text-slate-200 transition-all cursor-pointer"
-              title="Start Interactive Guided Tour"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-[#18A6A6]" />
-              <span className="hidden md:inline">Tour</span>
-            </button>
-          )}
-
-          {/* Offline Mode Toggle Simulator */}
+          {/* Network Connectivity Status */}
           <button
             onClick={handleToggleOnline}
             className={`flex items-center gap-1 p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border ${
@@ -113,7 +101,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 ? 'bg-[#182F49] hover:bg-[#203D5E] text-slate-200 border-slate-700' 
                 : 'bg-amber-950/40 text-amber-300 border-amber-700/50 animate-pulse'
             }`}
-            title="Toggle online / offline field simulator"
+            title="Network Connectivity & Offline Storage Status"
           >
             {isOnline ? <Wifi className="w-3.5 h-3.5 text-[#18A6A6]" /> : <WifiOff className="w-3.5 h-3.5 text-amber-400" />}
             <span className="hidden lg:inline">{isOnline ? 'Online' : 'Offline'}</span>

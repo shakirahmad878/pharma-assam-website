@@ -36,7 +36,6 @@ import { RCPAAuditView } from './components/rcpa/RCPAAuditView';
 import { GeoAttendanceView } from './components/hrms/GeoAttendanceView';
 import { ExpenseClaimsView } from './components/expenses/ExpenseClaimsView';
 import { MISReportsView } from './components/reports/MISReportsView';
-import { GuidedDemoModal } from './components/demo/GuidedDemoModal';
 import { LoginPage } from './components/auth/LoginPage';
 import { LoginModal } from './components/auth/LoginModal';
 import { ChangePasswordModal } from './components/auth/ChangePasswordModal';
@@ -68,7 +67,6 @@ export default function App() {
     if (hash === 'fleet_tracking' || hash === 'fleet') return 'fleet_tracking';
     return 'admin_portal';
   });
-  const [isDemoTourOpen, setIsDemoTourOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
   const [isDatabaseSyncModalOpen, setIsDatabaseSyncModalOpen] = useState(false);
@@ -603,7 +601,6 @@ export default function App() {
         onRoleChange={handleRoleChange}
         isSimulatingTelemetry={isSimulatingPing}
         onTriggerTelemetryPing={handleTriggerTelemetryPing}
-        onOpenDemoTour={() => setIsDemoTourOpen(true)}
         onOpenChangePassword={() => setIsChangePasswordModalOpen(true)}
         onOpenLogin={() => setIsLoginModalOpen(true)}
         onOpenDatabaseSync={() => setIsDatabaseSyncModalOpen(true)}
@@ -897,18 +894,6 @@ export default function App() {
           setCurrentUser(updatedUser);
           logAudit('UPDATE', 'USER', updatedUser.id, updatedUser.name, `User ${updatedUser.name} updated account password`);
         }}
-      />
-
-      {/* Interactive Guided Demo Simulator Modal */}
-      <GuidedDemoModal
-        isOpen={isDemoTourOpen}
-        onClose={() => setIsDemoTourOpen(false)}
-        onNavigateTab={(tab) => {
-          if (tab === 'live-tracking' || tab === 'fleet_tracking') setActiveTab('fleet_tracking');
-          else if (tab === 'tour_plans' || tab === 'tour') setActiveTab('tour_plans');
-          else setActiveTab(tab as any);
-        }}
-        onSetRole={(role) => handleRoleChange(role)}
       />
 
     </div>

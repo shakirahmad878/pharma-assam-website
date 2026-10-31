@@ -32,7 +32,7 @@ export const PerformanceGoalsView: React.FC<PerformanceGoalsViewProps> = ({ curr
   const [targetMetric, setTargetMetric] = useState('');
   const [achievedMetric, setAchievedMetric] = useState('');
 
-  const filteredGoals = goals.filter(g => g.cycle === selectedCycle);
+  const filteredGoals = goals.filter(g => g.employeeId === currentUser.id && g.cycle === selectedCycle);
   const totalWeight = filteredGoals.reduce((sum, g) => sum + g.weightPercent, 0);
   const averageScore = filteredGoals.length > 0 
     ? (filteredGoals.reduce((sum, g) => sum + g.score, 0) / filteredGoals.length).toFixed(1)
@@ -187,13 +187,29 @@ export const PerformanceGoalsView: React.FC<PerformanceGoalsViewProps> = ({ curr
 
       {/* Goal Cards Grid (Darwinbox Screen 6 Scorecards) */}
       <div className="space-y-4">
-        {filteredGoals.map((g, idx) => {
-          const scorePercent = Math.min(100, Math.round((g.score / 5.0) * 100));
-          return (
-            <div 
-              key={g.id} 
-              className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs hover:border-slate-300 transition-all space-y-3"
+        {filteredGoals.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-slate-200 p-10 text-center shadow-xs">
+            <Target className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+            <h4 className="font-bold text-slate-800 text-sm">No Performance Goals Defined for Cycle {selectedCycle}</h4>
+            <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+              Set up your key performance indicators (KPIs) and operational milestones for this appraisal period.
+            </p>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="mt-4 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-xl text-xs inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
             >
+              <Plus className="w-4 h-4" />
+              Add First Goal
+            </button>
+          </div>
+        ) : (
+          filteredGoals.map((g, idx) => {
+            const scorePercent = Math.min(100, Math.round((g.score / 5.0) * 100));
+            return (
+              <div 
+                key={g.id} 
+                className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs hover:border-slate-300 transition-all space-y-3"
+              >
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                 <div className="flex items-start gap-3">
                   <span className="w-7 h-7 rounded-xl bg-sky-50 text-sky-700 font-bold text-xs flex items-center justify-center shrink-0 border border-sky-100">
@@ -242,7 +258,8 @@ export const PerformanceGoalsView: React.FC<PerformanceGoalsViewProps> = ({ curr
               </div>
             </div>
           );
-        })}
+        })
+      )}
       </div>
 
       {/* MODAL: Add New Goal */}

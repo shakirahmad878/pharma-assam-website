@@ -27,7 +27,6 @@ export const HrmsLoginPage: React.FC<HrmsLoginPageProps> = ({ onLoginSuccess, us
   const [showPin, setShowPin] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [showDirectory, setShowDirectory] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,12 +54,6 @@ export const HrmsLoginPage: React.FC<HrmsLoginPageProps> = ({ onLoginSuccess, us
         setError(result.error || 'Authentication failed. Please verify your credentials.');
       }
     }, 350);
-  };
-
-  const handleSelectDemoUser = (user: HrmsUser) => {
-    setIdentifier(user.employeeCode);
-    setPin('1234');
-    setError(null);
   };
 
   return (
@@ -198,47 +191,15 @@ export const HrmsLoginPage: React.FC<HrmsLoginPageProps> = ({ onLoginSuccess, us
             </button>
           </form>
 
-          {/* Quick Credential Helper Accordion */}
-          <div className="mt-6 pt-4 border-t border-slate-100">
-            <button
-              type="button"
-              onClick={() => setShowDirectory(!showDirectory)}
-              className="w-full flex items-center justify-between text-[11px] font-semibold text-slate-500 hover:text-sky-700 transition-colors cursor-pointer"
+          {/* Corporate HR Access Support */}
+          <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+            <span>Forgot PIN or need account access?</span>
+            <a 
+              href="mailto:hr@nlcl.in" 
+              className="font-bold text-sky-600 hover:underline"
             >
-              <span className="flex items-center gap-1.5">
-                <KeyRound className="w-3.5 h-3.5 text-sky-600" />
-                Quick Employee Login Switcher (Evaluation)
-              </span>
-              <span className="text-xs text-slate-400">{showDirectory ? '▲' : '▼'}</span>
-            </button>
-
-            {showDirectory && (
-              <div className="mt-3 space-y-1.5 animate-in fade-in slide-in-from-top-1 duration-150">
-                <p className="text-[10px] text-slate-400 mb-2">
-                  Select an employee to pre-fill their credentials and verify individual data isolation:
-                </p>
-                {users.map(u => (
-                  <button
-                    key={u.id}
-                    type="button"
-                    onClick={() => handleSelectDemoUser(u)}
-                    className="w-full text-left px-3 py-2 rounded-xl bg-slate-50 hover:bg-sky-50 border border-slate-200/60 hover:border-sky-200 transition-all flex items-center justify-between text-xs cursor-pointer group"
-                  >
-                    <div>
-                      <span className="font-bold text-slate-800 group-hover:text-sky-700 block">
-                        {u.name}
-                      </span>
-                      <span className="text-[10px] text-slate-400">
-                        {u.designation} • <span className="font-mono text-sky-700 font-semibold">{u.employeeCode}</span>
-                      </span>
-                    </div>
-                    <span className="text-[10px] bg-white border border-slate-200 text-slate-600 px-2 py-0.5 rounded-md font-mono">
-                      PIN: 1234
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
+              Contact People Operations
+            </a>
           </div>
 
         </div>

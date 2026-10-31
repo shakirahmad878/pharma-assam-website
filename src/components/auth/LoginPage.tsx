@@ -177,92 +177,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, users, onO
 
         </div>
 
-        {/* Quick Credentials Card */}
-        <div className="mt-5 bg-white rounded-2xl p-5 border border-[#DCE4EB] shadow-2xs">
-          <div className="flex items-center gap-2 text-xs font-bold text-[#10243A] mb-3">
-            <Lock className="w-3.5 h-3.5 text-[#18A6A6]" />
-            <span>Authorized Test Accounts (1-Click Fill)</span>
+        {/* Enterprise Support Card */}
+        <div className="mt-5 bg-white rounded-2xl p-5 border border-[#DCE4EB] shadow-2xs text-xs text-[#64748B]">
+          <div className="flex items-center justify-between mb-2">
+            <span className="font-bold text-[#10243A]">Field Force Technical Support</span>
+            <span className="text-[10px] bg-slate-100 text-[#10243A] px-2 py-0.5 rounded-full font-mono">Assam HQ</span>
           </div>
-
-          <div className="space-y-2">
-            {/* Super Admin */}
-            <div 
-              onClick={() => {
-                setIdentifier('shakir878');
-                setPassword('Shakir@2026');
-                if (error) setError(null);
-              }}
-              className="p-3 bg-[#F5F8FA] hover:bg-[#E8EEF4] border border-[#DCE4EB] rounded-xl cursor-pointer transition-all flex items-center justify-between group"
-            >
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-[#10243A]">Super Admin</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-teal-50 text-[#137F83] border border-teal-200 font-semibold">Full Root</span>
-                </div>
-                <div className="text-[11px] text-[#64748B] mt-0.5">
-                  User: <span className="font-mono text-[#10243A] font-semibold">shakir878</span> • Pass: <span className="font-mono text-[#10243A]">Shakir@2026</span>
-                </div>
-              </div>
-              <button
-                type="button"
-                className="text-[11px] font-semibold text-[#18A6A6] bg-white border border-[#DCE4EB] px-2.5 py-1 rounded-lg cursor-pointer"
-              >
-                Auto Fill
-              </button>
-            </div>
-
-            {/* Regional Manager */}
-            <div 
-              onClick={() => {
-                setIdentifier('bodrudsadiol');
-                setPassword('Bodrud@2026');
-                if (error) setError(null);
-              }}
-              className="p-3 bg-[#F5F8FA] hover:bg-[#E8EEF4] border border-[#DCE4EB] rounded-xl cursor-pointer transition-all flex items-center justify-between group"
-            >
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-[#10243A]">Regional Manager (RSM)</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-[#10243A] border border-[#DCE4EB] font-semibold">Barak Valley</span>
-                </div>
-                <div className="text-[11px] text-[#64748B] mt-0.5">
-                  User: <span className="font-mono text-[#10243A] font-semibold">bodrudsadiol</span> • Pass: <span className="font-mono text-[#10243A]">Bodrud@2026</span>
-                </div>
-              </div>
-              <button
-                type="button"
-                className="text-[11px] font-semibold text-[#18A6A6] bg-white border border-[#DCE4EB] px-2.5 py-1 rounded-lg cursor-pointer"
-              >
-                Auto Fill
-              </button>
-            </div>
-
-            {/* Field MR */}
-            <div 
-              onClick={() => {
-                setIdentifier('0002');
-                setPassword('1234');
-                if (error) setError(null);
-              }}
-              className="p-3 bg-[#F5F8FA] hover:bg-[#E8EEF4] border border-[#DCE4EB] rounded-xl cursor-pointer transition-all flex items-center justify-between group"
-            >
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-[#10243A]">Medical Representative</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-[#10243A] border border-[#DCE4EB] font-semibold">Field Rep</span>
-                </div>
-                <div className="text-[11px] text-[#64748B] mt-0.5">
-                  User: <span className="font-mono text-[#10243A] font-semibold">0002</span> • Pass: <span className="font-mono text-[#10243A]">1234</span>
-                </div>
-              </div>
-              <button
-                type="button"
-                className="text-[11px] font-semibold text-[#18A6A6] bg-white border border-[#DCE4EB] px-2.5 py-1 rounded-lg cursor-pointer"
-              >
-                Auto Fill
-              </button>
-            </div>
-          </div>
+          <p className="text-[11px] leading-relaxed">
+            For credential assistance, account provisioning, or field device registration, contact IT & Administration at <a href="mailto:support@nlcl.in" className="text-[#18A6A6] font-semibold hover:underline">support@nlcl.in</a>.
+          </p>
         </div>
 
       </div>

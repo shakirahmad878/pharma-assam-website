@@ -676,7 +676,12 @@ export class HrmsService {
   // ==========================================
 
   static getPayslips(): PayslipRecord[] {
-    return getItem<PayslipRecord[]>(KEYS.PAYSLIPS, INITIAL_PAYSLIPS);
+    const slips = getItem<PayslipRecord[]>(KEYS.PAYSLIPS, INITIAL_PAYSLIPS);
+    if (!slips || slips.length === 0) {
+      // Auto-compute baseline September 2026 payroll for all active workforce
+      return this.runMonthlyPayroll('September 2026', 2026);
+    }
+    return slips;
   }
 
   static runMonthlyPayroll(monthYear: string, year: number): PayslipRecord[] {

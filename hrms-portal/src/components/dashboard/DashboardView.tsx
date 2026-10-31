@@ -113,7 +113,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <div>
                 {/* Red Wishes Header */}
                 <div className="bg-[#E53935] text-white px-4 py-2.5 flex items-center justify-between">
-                  <span className="font-bold text-xs">Today (21 Oct 2026)</span>
+                  <span className="font-bold text-xs">
+                    Today ({new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })})
+                  </span>
                   <Sparkles className="w-4 h-4" />
                 </div>
 
@@ -146,31 +148,39 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 </div>
 
                 {/* Wishes List */}
-                <div className="p-3.5 space-y-3">
-                  {filteredWishes.map(item => (
-                    <div key={item.id} className="flex items-center justify-between text-xs py-1 border-b border-slate-50 last:border-none">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 to-rose-500 text-white font-bold text-xs flex items-center justify-center shrink-0">
-                          {item.name[0]}
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-slate-800 text-xs">{item.name}</h4>
-                          <p className="text-[10px] text-slate-400">{item.employeeCode} | {item.designation}</p>
-                        </div>
-                      </div>
-                      <span className="p-1.5 bg-rose-50 text-rose-600 rounded-lg">
-                        <Cake className="w-4 h-4" />
-                      </span>
+                <div className="p-3.5 space-y-3 min-h-[90px] flex flex-col justify-center">
+                  {filteredWishes.length === 0 ? (
+                    <div className="text-center text-slate-400 text-xs py-3">
+                      No {wishesTab === 'BIRTHDAY' ? 'birthdays' : wishesTab === 'WORK_ANNIVERSARY' ? 'work anniversaries' : 'new joiners'} today
                     </div>
-                  ))}
+                  ) : (
+                    filteredWishes.slice(0, 3).map(item => (
+                      <div key={item.id} className="flex items-center justify-between text-xs py-1 border-b border-slate-50 last:border-none">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 to-rose-500 text-white font-bold text-xs flex items-center justify-center shrink-0">
+                            {item.name[0]}
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-slate-800 text-xs">{item.name}</h4>
+                            <p className="text-[10px] text-slate-400">{item.employeeCode} | {item.designation}</p>
+                          </div>
+                        </div>
+                        <span className="p-1.5 bg-rose-50 text-rose-600 rounded-lg">
+                          <Cake className="w-4 h-4" />
+                        </span>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
 
-              <div className="p-2.5 border-t border-slate-100 text-center">
-                <span className="text-[11px] font-bold text-sky-600 hover:underline cursor-pointer">
-                  +2 more wishes
-                </span>
-              </div>
+              {filteredWishes.length > 3 && (
+                <div className="p-2.5 border-t border-slate-100 text-center">
+                  <span className="text-[11px] font-bold text-sky-600 hover:underline cursor-pointer">
+                    +{filteredWishes.length - 3} more wishes
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Upcoming Holidays Card */}
