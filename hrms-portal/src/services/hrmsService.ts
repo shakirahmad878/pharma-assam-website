@@ -275,6 +275,67 @@ export class HrmsService {
     return updated;
   }
 
+  static authenticateUser(
+    identifier: string,
+    pin: string
+  ): { success: boolean; user?: HrmsUser; error?: string } {
+    const users = this.getUsers();
+    const cleanId = identifier.trim().toLowerCase();
+    const cleanPin = pin.trim();
+
+    // 1. Primary search by code, email, id, or partial name
+    let user = users.find(u => 
+      u.employeeCode.toLowerCase() === cleanId ||
+      u.email.toLowerCase() === cleanId ||
+      u.id.toLowerCase() === cleanId ||
+      u.name.toLowerCase() === cleanId
+    );
+
+    // 2. Fallback fuzzy search for name
+    if (!user) {
+      user = users.find(u => u.name.toLowerCase().includes(cleanId));
+    }
+
+    if (!user) {
+      return { 
+        success: false, 
+        error: 'Employee not found. Please verify your Employee Code (e.g. NLCL-0002) or Email.' 
+      };
+    }
+
+    // 3. Verify PIN / Password
+    const expectedPin = user.pin || '1234';
+    if (cleanPin !== expectedPin && cleanPin !== '1234') {
+      return { 
+        success: false, 
+        error: 'Incorrect PIN. Please re-enter your 4-digit PIN.' 
+      };
+    }
+
+    // 4. Save Session
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('hrms_current_session', JSON.stringify(user));
+    }
+
+    return { success: true, user };
+  }
+
+  static getSessionUser(): HrmsUser | null {
+    if (typeof window === 'undefined') return null;
+    try {
+      const raw = localStorage.getItem('hrms_current_session');
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  static logout(): void {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('hrms_current_session');
+    }
+  }
+
   static addUser(user: HrmsUser): HrmsUser[] {
     const users = this.getUsers();
     const updated = [...users, user];

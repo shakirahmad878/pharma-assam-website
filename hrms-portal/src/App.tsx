@@ -14,11 +14,12 @@ import { ExitView } from './components/exit/ExitView';
 import { JinieAssistant } from './components/layout/JinieAssistant';
 import { GeoSelfieModal } from './components/attendance/GeoSelfieModal';
 import { EmployeeSetupModal } from './components/common/EmployeeSetupModal';
+import { HrmsLoginPage } from './components/auth/HrmsLoginPage';
 import { CheckCircle2, X } from 'lucide-react';
 
 export default function App() {
   const [users, setUsers] = useState<HrmsUser[]>(() => HrmsService.getUsers());
-  const [currentUser, setCurrentUser] = useState<HrmsUser | null>(() => users.length > 0 ? users[0] : null);
+  const [currentUser, setCurrentUser] = useState<HrmsUser | null>(() => HrmsService.getSessionUser());
 
   // Connectivity Status
   const [isDbConnected, setIsDbConnected] = useState(true);
@@ -61,7 +62,8 @@ export default function App() {
     HrmsService.syncWithSupabase().then(liveUsers => {
       if (liveUsers && liveUsers.length > 0) {
         setUsers(liveUsers);
-        setCurrentUser(prev => prev ? (liveUsers.find(u => u.id === prev.id) || liveUsers[0]) : liveUsers[0]);
+        // Only update current user if already logged in
+        setCurrentUser(prev => prev ? (liveUsers.find(u => u.id === prev.id) || prev) : null);
       }
     });
 
@@ -96,16 +98,30 @@ export default function App() {
     setTimeout(() => setGeoPunchSuccessToast(null), 5000);
   };
 
-  // If no user exists yet, display Initial Setup Form
+  const handleLogout = () => {
+    HrmsService.logout();
+    setCurrentUser(null);
+  };
+
+  // If no user is authenticated, render the Enterprise Login Gate
   if (!currentUser) {
+    if (users.length === 0) {
+      return (
+        <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-4">
+          <EmployeeSetupModal
+            isOpen={true}
+            isFirstEmployee={true}
+            onEmployeeCreated={handleEmployeeCreated}
+          />
+        </div>
+      );
+    }
+
     return (
-      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-4">
-        <EmployeeSetupModal
-          isOpen={true}
-          isFirstEmployee={true}
-          onEmployeeCreated={handleEmployeeCreated}
-        />
-      </div>
+      <HrmsLoginPage 
+        users={users} 
+        onLoginSuccess={user => setCurrentUser(user)} 
+      />
     );
   }
 
@@ -119,6 +135,7 @@ export default function App() {
         activeModule={activeModule}
         onSelectModule={handleSelectModule}
         onSelectUser={setCurrentUser}
+        onLogout={handleLogout}
         searchQuery={searchQuery}
         onSearchChange={q => {
           setSearchQuery(q);

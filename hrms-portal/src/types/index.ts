@@ -29,6 +29,7 @@ export interface HrmsUser {
   costCenter: string;
   workMode?: WorkMode;
   baseSalary?: number;
+  pin?: string;
 }
 
 export type LeaveType = 
