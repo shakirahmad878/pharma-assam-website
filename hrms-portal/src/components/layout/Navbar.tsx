@@ -13,7 +13,16 @@ import {
   Navigation,
   LogOut,
   Shield,
-  UserCheck
+  UserCheck,
+  Receipt,
+  Calendar,
+  FileText,
+  CheckCircle2,
+  Clock,
+  ArrowRight,
+  Sparkles,
+  MapPin,
+  Briefcase
 } from 'lucide-react';
 
 export type ActiveModule = 
@@ -57,15 +66,39 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [showAdminSwitcher, setShowAdminSwitcher] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Dropdown States for Tasks, Workgroups, and Alerts
+  const [isTasksOpen, setIsTasksOpen] = useState(false);
+  const [isWorkgroupsOpen, setIsWorkgroupsOpen] = useState(false);
+  const [isAlertsOpen, setIsAlertsOpen] = useState(false);
+
+  const tasksRef = useRef<HTMLDivElement>(null);
+  const workgroupsRef = useRef<HTMLDivElement>(null);
+  const alertsRef = useRef<HTMLDivElement>(null);
+
   const isSuperAdminOrDirector = 
     currentUser.role === 'HR_SUPER_ADMIN' || 
     currentUser.employeeCode === 'NLCL-0001' || 
     currentUser.employeeCode === 'NLCL-0002';
 
+  const isApprover = 
+    isSuperAdminOrDirector || 
+    currentUser.role === 'HR_MANAGER' || 
+    currentUser.employeeCode === 'NLCL-0003';
+
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (dropdownRef.current && !dropdownRef.current.contains(target)) {
         setIsProfileOpen(false);
+      }
+      if (tasksRef.current && !tasksRef.current.contains(target)) {
+        setIsTasksOpen(false);
+      }
+      if (workgroupsRef.current && !workgroupsRef.current.contains(target)) {
+        setIsWorkgroupsOpen(false);
+      }
+      if (alertsRef.current && !alertsRef.current.contains(target)) {
+        setIsAlertsOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -125,29 +158,320 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Right Utility Actions */}
         <div className="flex items-center gap-3 shrink-0 text-xs text-slate-600">
           
-          <button 
-            onClick={() => onSelectModule('LEAVE')}
-            className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
-          >
-            <CheckSquare className="w-4 h-4 text-slate-500" />
-            <span>Tasks</span>
-            <ChevronDown className="w-3 h-3 text-slate-400" />
-          </button>
+          {/* Tasks Menu */}
+          <div className="relative" ref={tasksRef}>
+            <button 
+              type="button"
+              onClick={() => {
+                setIsTasksOpen(!isTasksOpen);
+                setIsWorkgroupsOpen(false);
+                setIsAlertsOpen(false);
+                setIsProfileOpen(false);
+              }}
+              className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer text-xs font-semibold ${
+                isTasksOpen ? 'bg-sky-50 text-sky-700' : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              <CheckSquare className="w-4 h-4 text-sky-600" />
+              <span>Tasks</span>
+              <span className="w-4 h-4 rounded-full bg-sky-100 text-sky-700 text-[10px] font-black flex items-center justify-center">
+                {isApprover ? '3' : '2'}
+              </span>
+              <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform duration-200 ${isTasksOpen ? 'rotate-180 text-sky-600' : ''}`} />
+            </button>
 
-          <button 
-            onClick={() => onSelectModule('REIMBURSEMENT')}
-            className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
-          >
-            <MessageSquare className="w-4 h-4 text-slate-500" />
-            <span>Workgroups</span>
-            <ChevronDown className="w-3 h-3 text-slate-400" />
-          </button>
+            {/* Tasks Flyout Panel */}
+            {isTasksOpen && (
+              <div className="absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded-2xl shadow-2xl py-3 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                <div className="px-4 pb-2.5 border-b border-slate-100 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 font-bold text-slate-900 text-xs">
+                    <CheckSquare className="w-4 h-4 text-sky-600" />
+                    <span>My Actionable Tasks</span>
+                  </div>
+                  <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-2 py-0.5 rounded-full">
+                    {isApprover ? '3 Pending' : '2 Pending'}
+                  </span>
+                </div>
 
-          <button className="flex items-center gap-1 px-2.5 py-1.5 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer relative">
-            <Bell className="w-4 h-4 text-slate-500" />
-            <span>Alerts</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 absolute top-1.5 right-1.5"></span>
-          </button>
+                <div className="p-2 space-y-1 text-xs">
+                  {/* Task 1: Reimbursements */}
+                  <button
+                    onClick={() => {
+                      onSelectModule('REIMBURSEMENT');
+                      setIsTasksOpen(false);
+                    }}
+                    className="w-full text-left p-2.5 rounded-xl hover:bg-slate-50 transition-colors flex items-start gap-3 cursor-pointer group"
+                  >
+                    <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600 shrink-0">
+                      <Receipt className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-slate-800 group-hover:text-sky-600 transition-colors flex items-center justify-between">
+                        <span className="truncate">
+                          {isApprover ? 'Review Team Reimbursements' : 'File Monthly Expense Claim'}
+                        </span>
+                        <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        {isApprover 
+                          ? 'Audit travel vouchers & attached bill receipts' 
+                          : 'Attach conveyance receipts for manager sign-off'}
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* Task 2: Attendance Check-in */}
+                  <button
+                    onClick={() => {
+                      onSelectModule('ATTENDANCE');
+                      setIsTasksOpen(false);
+                    }}
+                    className="w-full text-left p-2.5 rounded-xl hover:bg-slate-50 transition-colors flex items-start gap-3 cursor-pointer group"
+                  >
+                    <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600 shrink-0">
+                      <Clock className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-slate-800 group-hover:text-sky-600 transition-colors flex items-center justify-between">
+                        <span>Attendance Roster & Punches</span>
+                        <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        Verify GPS-tagged check-ins and regularization
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* Task 3: Performance Goals */}
+                  <button
+                    onClick={() => {
+                      onSelectModule('PERFORMANCE');
+                      setIsTasksOpen(false);
+                    }}
+                    className="w-full text-left p-2.5 rounded-xl hover:bg-slate-50 transition-colors flex items-start gap-3 cursor-pointer group"
+                  >
+                    <div className="p-2 rounded-lg bg-sky-50 text-sky-600 shrink-0">
+                      <Calendar className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-slate-800 group-hover:text-sky-600 transition-colors flex items-center justify-between">
+                        <span>Performance Appraisal Goals</span>
+                        <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        Review Cycle H2 target metrics & achievements
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* Task 4: Payslips */}
+                  <button
+                    onClick={() => {
+                      onSelectModule('PAYROLL');
+                      setIsTasksOpen(false);
+                    }}
+                    className="w-full text-left p-2.5 rounded-xl hover:bg-slate-50 transition-colors flex items-start gap-3 cursor-pointer group"
+                  >
+                    <div className="p-2 rounded-lg bg-amber-50 text-amber-700 shrink-0">
+                      <FileText className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-slate-800 group-hover:text-sky-600 transition-colors flex items-center justify-between">
+                        <span>Statutory Payslips & Form 16</span>
+                        <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        Download September 2026 EPF-compliant payslip
+                      </p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Workgroups Menu */}
+          <div className="relative" ref={workgroupsRef}>
+            <button 
+              type="button"
+              onClick={() => {
+                setIsWorkgroupsOpen(!isWorkgroupsOpen);
+                setIsTasksOpen(false);
+                setIsAlertsOpen(false);
+                setIsProfileOpen(false);
+              }}
+              className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer text-xs font-semibold ${
+                isWorkgroupsOpen ? 'bg-sky-50 text-sky-700' : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              <MessageSquare className="w-4 h-4 text-slate-500" />
+              <span>Workgroups</span>
+              <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform duration-200 ${isWorkgroupsOpen ? 'rotate-180 text-sky-600' : ''}`} />
+            </button>
+
+            {/* Workgroups Flyout Panel */}
+            {isWorkgroupsOpen && (
+              <div className="absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded-2xl shadow-2xl py-3 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                <div className="px-4 pb-2.5 border-b border-slate-100 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 font-bold text-slate-900 text-xs">
+                    <Users className="w-4 h-4 text-sky-600" />
+                    <span>Enterprise Workgroups</span>
+                  </div>
+                  <span className="text-[10px] text-slate-400 font-mono">NLCL Circles</span>
+                </div>
+
+                <div className="p-2 space-y-1.5 text-xs">
+                  {/* Group 1: Barak Valley Sales Force */}
+                  <div className="p-2.5 rounded-xl bg-slate-50/70 border border-slate-100 hover:border-sky-200 hover:bg-sky-50/30 transition-all">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-bold text-slate-800">Barak Valley Field Sales</span>
+                      <span className="text-[9px] font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded-full">Active</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500">
+                      Silchar & Karimganj territory sales reps, doctor call scheduling & stockist supply.
+                    </p>
+                    <div className="mt-2 flex items-center justify-between text-[10px] text-slate-400 border-t border-slate-100/80 pt-1.5">
+                      <span>4 Field Members</span>
+                      <span className="font-semibold text-sky-700">Silchar HQ</span>
+                    </div>
+                  </div>
+
+                  {/* Group 2: Doctor Detailing & Sampling */}
+                  <div className="p-2.5 rounded-xl bg-slate-50/70 border border-slate-100 hover:border-sky-200 hover:bg-sky-50/30 transition-all">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-bold text-slate-800">Doctor Detailing & Sampling</span>
+                      <span className="text-[9px] font-bold bg-sky-100 text-sky-800 px-1.5 py-0.2 rounded-full">Operations</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500">
+                      Pharmaceutical sample dispatch, doctor feedback collation & RCPA audits.
+                    </p>
+                    <div className="mt-2 flex items-center justify-between text-[10px] text-slate-400 border-t border-slate-100/80 pt-1.5">
+                      <span>Clinical Outreach</span>
+                      <span className="font-semibold text-sky-700">Regional HQ</span>
+                    </div>
+                  </div>
+
+                  {/* Group 3: Corporate Leadership & Compliance */}
+                  <div className="p-2.5 rounded-xl bg-slate-50/70 border border-slate-100 hover:border-sky-200 hover:bg-sky-50/30 transition-all">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-bold text-slate-800">Corporate HQ & Compliance</span>
+                      <span className="text-[9px] font-bold bg-purple-100 text-purple-800 px-1.5 py-0.2 rounded-full">Executive</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500">
+                      Statutory labor compliance, payroll disbursement & executive board decisions.
+                    </p>
+                    <div className="mt-2 flex items-center justify-between text-[10px] text-slate-400 border-t border-slate-100/80 pt-1.5">
+                      <span>Executive Board</span>
+                      <span className="font-semibold text-purple-700">Assam Corporate</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Alerts Menu */}
+          <div className="relative" ref={alertsRef}>
+            <button 
+              type="button"
+              onClick={() => {
+                setIsAlertsOpen(!isAlertsOpen);
+                setIsTasksOpen(false);
+                setIsWorkgroupsOpen(false);
+                setIsProfileOpen(false);
+              }}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer text-xs font-semibold relative ${
+                isAlertsOpen ? 'bg-sky-50 text-sky-700' : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              <Bell className="w-4 h-4 text-slate-500" />
+              <span>Alerts</span>
+              <span className="w-2 h-2 rounded-full bg-rose-500 absolute top-1 right-1 animate-pulse"></span>
+            </button>
+
+            {/* Alerts Flyout Panel */}
+            {isAlertsOpen && (
+              <div className="absolute right-0 mt-2 w-84 bg-white border border-slate-200 rounded-2xl shadow-2xl py-3 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                <div className="px-4 pb-2.5 border-b border-slate-100 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 font-bold text-slate-900 text-xs">
+                    <Bell className="w-4 h-4 text-rose-500" />
+                    <span>System Alerts & Notifications</span>
+                  </div>
+                  <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full">
+                    3 New
+                  </span>
+                </div>
+
+                <div className="p-2 space-y-1.5 text-xs">
+                  {/* Alert 1 */}
+                  <div 
+                    onClick={() => {
+                      onSelectModule('PAYROLL');
+                      setIsAlertsOpen(false);
+                    }}
+                    className="p-2.5 rounded-xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100 cursor-pointer flex items-start gap-3 group"
+                  >
+                    <div className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 shrink-0 mt-0.5">
+                      <FileText className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="font-bold text-slate-800 group-hover:text-sky-600 transition-colors block">
+                        September 2026 Salary Slips Available
+                      </span>
+                      <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                        Statutory EPF & ESIC payslips are generated and ready for direct download.
+                      </p>
+                      <span className="text-[10px] text-slate-400 mt-1 block">1 hour ago • Payroll Hub</span>
+                    </div>
+                  </div>
+
+                  {/* Alert 2 */}
+                  <div 
+                    onClick={() => {
+                      onSelectModule('LEAVE');
+                      setIsAlertsOpen(false);
+                    }}
+                    className="p-2.5 rounded-xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100 cursor-pointer flex items-start gap-3 group"
+                  >
+                    <div className="p-1.5 rounded-lg bg-amber-50 text-amber-600 shrink-0 mt-0.5">
+                      <Calendar className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="font-bold text-slate-800 group-hover:text-sky-600 transition-colors block">
+                        Upcoming Holiday: Diwali (Deepavali)
+                      </span>
+                      <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                        National holiday announced on Mon, 09 Nov 2026. Review calendar.
+                      </p>
+                      <span className="text-[10px] text-slate-400 mt-1 block">Corporate Calendar</span>
+                    </div>
+                  </div>
+
+                  {/* Alert 3 */}
+                  <div 
+                    onClick={() => {
+                      onSelectModule('ATTENDANCE');
+                      setIsAlertsOpen(false);
+                    }}
+                    className="p-2.5 rounded-xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100 cursor-pointer flex items-start gap-3 group"
+                  >
+                    <div className="p-1.5 rounded-lg bg-sky-50 text-sky-600 shrink-0 mt-0.5">
+                      <MapPin className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="font-bold text-slate-800 group-hover:text-sky-600 transition-colors block">
+                        Geo-Attendance Telemetry Active
+                      </span>
+                      <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                        100m GPS perimeter verified for {currentUser.locationHierarchy.split('>').slice(-2).join(' - ')}.
+                      </p>
+                      <span className="text-[10px] text-slate-400 mt-1 block">Live GPS Active</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* User Profile Menu */}
           <div className="relative ml-1" ref={dropdownRef}>
