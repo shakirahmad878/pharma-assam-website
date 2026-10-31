@@ -545,53 +545,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </button>
                 </div>
 
-                {/* Super Admin / Director Masquerade Switcher (Gated) */}
-                {isSuperAdminOrDirector && (
-                  <div className="px-3 pt-2 pb-1 border-t border-slate-100">
-                    <button
-                      type="button"
-                      onClick={() => setShowAdminSwitcher(!showAdminSwitcher)}
-                      className="w-full flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50/80 px-2.5 py-1.5 rounded-lg border border-amber-200/60 cursor-pointer"
-                    >
-                      <span className="flex items-center gap-1">
-                        <Shield className="w-3 h-3 text-amber-600" />
-                        Super Admin View-As
-                      </span>
-                      <span>{showAdminSwitcher ? '▲' : '▼'}</span>
-                    </button>
-
-                    {showAdminSwitcher && (
-                      <div className="mt-2 space-y-1 max-h-44 overflow-y-auto pr-1">
-                        <p className="text-[9px] text-slate-400 mb-1 px-1">
-                          Auditing mode: switch view to inspect another staff member's permissions.
-                        </p>
-                        {users.map(u => (
-                          <button
-                            key={u.id}
-                            onClick={() => {
-                              onSelectUser(u);
-                              setIsProfileOpen(false);
-                            }}
-                            className={`w-full text-left px-2.5 py-1.5 text-[11px] rounded-lg flex items-center justify-between transition-colors cursor-pointer ${
-                              u.id === currentUser.id 
-                                ? 'bg-sky-50 text-sky-800 font-bold' 
-                                : 'text-slate-700 hover:bg-slate-100'
-                            }`}
-                          >
-                            <div>
-                              <span className="font-semibold block">{u.name}</span>
-                              <span className="text-[9px] text-slate-400">{u.designation} ({u.employeeCode})</span>
-                            </div>
-                            {u.id === currentUser.id && (
-                              <span className="w-1.5 h-1.5 rounded-full bg-sky-600"></span>
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
                 {/* Add Employee (HR Only) */}
                 {(currentUser.role === 'HR_SUPER_ADMIN' || currentUser.role === 'HR_MANAGER') && (
                   <div className="px-3 pt-1 border-t border-slate-100">
