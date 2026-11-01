@@ -674,6 +674,7 @@ export default function App() {
               telemetryLogs={telemetryLogs}
               doctors={doctors}
               dcrLogs={dcrLogs}
+              users={users}
             />
           )}
 

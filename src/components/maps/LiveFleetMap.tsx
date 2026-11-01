@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { UserRole, LocationTelemetryPoint, Doctor, DCRRecord } from '../../types';
+import { UserRole, LocationTelemetryPoint, Doctor, DCRRecord, User } from '../../types';
 import { TelemetryService } from '../../services/telemetryService';
+import { SupabaseService } from '../../services/supabaseService';
 import { AuthService } from '../../services/authService';
 import { Badge } from '../common/Badge';
 import { 
@@ -23,18 +24,23 @@ interface LiveFleetMapProps {
   telemetryLogs: LocationTelemetryPoint[];
   doctors?: Doctor[];
   dcrLogs?: DCRRecord[];
+  users?: User[];
 }
 
 export const LiveFleetMap: React.FC<LiveFleetMapProps> = ({ 
   userRole, 
   telemetryLogs,
   doctors = [],
-  dcrLogs = []
+  dcrLogs = [],
+  users = []
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState<1 | 2 | 4>(1);
   const [currentIndex, setCurrentIndex] = useState<number>(Math.max(0, telemetryLogs.length - 1));
   const [showGeofenceCircles, setShowGeofenceCircles] = useState(true);
+  const [liveAttendance, setLiveAttendance] = useState<any[]>([]);
+  const [liveVisits, setLiveVisits] = useState<any[]>([]);
+  const [selectedRep, setSelectedRep] = useState<string>("ALL");
 
   const canAccess = AuthService.canAccessTelemetry() || userRole === "SUPER_ADMIN" || userRole === "ADMIN" || userRole === "DIRECTOR" || userRole === "REGIONAL_MANAGER" || userRole === "AREA_MANAGER" || userRole === "HR_MANAGER";
   const checkResult = canAccess ? { success: true, data: TelemetryService.getTelemetryLogs("SUPER_ADMIN").data } : TelemetryService.getTelemetryLogs(userRole);
@@ -58,6 +64,24 @@ export const LiveFleetMap: React.FC<LiveFleetMapProps> = ({
     );
   }
 
+  useEffect(() => {
+    SupabaseService.fetchLiveAttendance().then((data: any) => {
+      if (Array.isArray(data) && data.length > 0) setLiveAttendance(data);
+    });
+    SupabaseService.fetchVisits().then((data: any) => {
+      if (Array.isArray(data) && data.length > 0) setLiveVisits(data);
+    });
+  }, []);
+
+  useEffect(() => {
+    SupabaseService.fetchLiveAttendance().then((data: any) => {
+      if (Array.isArray(data) && data.length > 0) setLiveAttendance(data);
+    });
+    SupabaseService.fetchVisits().then((data: any) => {
+      if (Array.isArray(data) && data.length > 0) setLiveVisits(data);
+    });
+  }, []);
+
   // Handle Automated Route Replay Timer
   useEffect(() => {
     let timer: any;
@@ -76,7 +100,7 @@ export const LiveFleetMap: React.FC<LiveFleetMapProps> = ({
   }, [isPlaying, playbackSpeed, telemetryLogs.length]);
 
   const currentLog = telemetryLogs[currentIndex] || telemetryLogs[telemetryLogs.length - 1];
-  const timeStr = currentLog ? new Date(currentLog.capturedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '09:00 AM';
+  const timeStr = currentLog ? new Date(currentLog.capturedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '10:00 AM';
 
   return (
     <div className="space-y-6">
@@ -94,6 +118,20 @@ export const LiveFleetMap: React.FC<LiveFleetMapProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          {/* Active Field Rep Selector */}
+          <select
+            value={selectedRep}
+            onChange={(e) => setSelectedRep(e.target.value)}
+            className="text-xs font-semibold bg-white border border-slate-300 text-slate-800 rounded-lg px-2.5 py-1.5 focus:ring-1 focus:ring-teal-500 cursor-pointer shadow-xs"
+          >
+            <option value="ALL">🌐 All Field Force (Barak Valley)</option>
+            <option value="Pranjal Malakar">🏃 Pranjal Malakar (Karimganj Division)</option>
+            <option value="Satyam Shil">🏃 Satyam Shil (Silchar Division)</option>
+            <option value="Bodrud Jaman Sadial">👔 Bodrud Jaman Sadial (RSM)</option>
+            <option value="Shakir Ahmad Barbhuiya">👑 Shakir Ahmad Barbhuiya (Super Admin)</option>
+            <option value="Samsuj Sadiol">🏢 Samsuj Sadiol (Managing Director)</option>
+          </select>
+
           <button
             onClick={() => setShowGeofenceCircles(!showGeofenceCircles)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
@@ -129,14 +167,14 @@ export const LiveFleetMap: React.FC<LiveFleetMapProps> = ({
             <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 bg-slate-900/90 backdrop-blur-md p-3 rounded-xl border border-slate-800">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></div>
-                <span className="text-xs font-bold text-slate-200">{currentLog?.userName || 'Field Representative'}</span>
-                <span className="text-[11px] text-slate-400">({currentLog?.territoryName || 'Assam Regional HQ'})</span>
+                <span className="text-xs font-bold text-slate-200">{selectedRep !== 'ALL' ? selectedRep : (liveAttendance[0]?.employee_name || currentLog?.userName || 'Pranjal Malakar (MR)')}</span>
+                <span className="text-[11px] text-slate-400">({selectedRep.includes('Karimganj') ? 'Karimganj Division' : selectedRep.includes('Silchar') ? 'Silchar Division' : (currentLog?.territoryName || 'Silchar Regional HQ')})</span>
               </div>
               <div className="flex items-center gap-3 text-xs font-mono">
-                <span className="text-teal-400 font-semibold">📍 {currentLog?.latitude?.toFixed(4) || '24.8146'}° N, {currentLog?.longitude?.toFixed(4) || '92.8037'}° E</span>
+                <span className="text-teal-400 font-semibold">📍 {(liveAttendance[0]?.latitude || currentLog?.latitude || 24.8621).toFixed(4)}° N, {(liveAttendance[0]?.longitude || currentLog?.longitude || 92.3693).toFixed(4)}° E</span>
                 <span className="text-slate-400">🕒 {timeStr}</span>
                 <span className="text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800 flex items-center gap-1">
-                  <Battery className="w-3 h-3" /> {currentLog?.batteryPercentage || 95}%
+                  <Battery className="w-3 h-3" /> {(liveAttendance[0]?.battery_percentage || currentLog?.batteryPercentage || 95)}%
                 </span>
               </div>
             </div>
@@ -186,7 +224,7 @@ export const LiveFleetMap: React.FC<LiveFleetMapProps> = ({
                     </span>
                     <h4 className="text-base font-bold text-white mt-0.5">{currentLog?.userName || 'Field MR'}</h4>
                     <p className="text-xs text-slate-400 mt-0.5">
-                      Status: <strong className="text-teal-300">{currentLog?.activityStatus || 'ON_DUTY'}</strong>
+                      Status: <strong className="text-teal-300">{liveAttendance[0]?.status || 'ON_DUTY'}</strong>
                     </p>
                   </div>
                   <div className="text-right">
@@ -222,7 +260,7 @@ export const LiveFleetMap: React.FC<LiveFleetMapProps> = ({
             <div className="relative z-10 flex items-center justify-between bg-slate-900/90 backdrop-blur-md p-3 rounded-xl border border-slate-800 text-xs text-slate-300">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-teal-400"></span>
-                <span>Active Field Beats: <strong>Silchar Central & Hospital Road</strong></span>
+                <span>Active Field Division: <strong>{selectedRep !== 'ALL' ? selectedRep : 'Barak Valley & Extended Divisions'}</strong></span>
               </div>
               <span className="font-mono text-teal-400">Assam Barak Division</span>
             </div>

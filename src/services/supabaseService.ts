@@ -11,6 +11,7 @@
  */
 
 import { SUPABASE_CONFIG, isSupabaseConfigured } from '../config/supabase';
+import { INITIAL_PRODUCTS } from '../data/mockData';
 import {
   Doctor,
   Chemist,
@@ -58,7 +59,7 @@ export function normalizeDoctor(raw: any): Doctor {
       monthlyVisitTarget: 8,
       monthlyVisitsCompleted: 0,
       companyId: 'comp-01',
-      companyName: 'Pharma Assam Healthcare Pvt Ltd',
+      companyName: 'New Life Care Laboratories Pvt. Ltd.',
     };
   }
 
@@ -115,7 +116,7 @@ export function normalizeDoctor(raw: any): Doctor {
       ? raw.completed_visits_this_month
       : (typeof raw.monthlyVisitsCompleted === 'number' ? raw.monthlyVisitsCompleted : 0),
     companyId: raw.companyId || 'comp-01',
-    companyName: raw.companyName || 'Pharma Assam Healthcare Pvt Ltd',
+    companyName: raw.companyName || 'New Life Care Laboratories Pvt. Ltd.',
   };
 }
 
@@ -135,7 +136,7 @@ export function normalizeChemist(raw: any): Chemist {
       territoryId: 'TER-01',
       territoryName: 'Silchar Central',
       companyId: 'comp-01',
-      companyName: 'Pharma Assam Healthcare Pvt Ltd',
+      companyName: 'New Life Care Laboratories Pvt. Ltd.',
     };
   }
 
@@ -171,7 +172,7 @@ export function normalizeChemist(raw: any): Chemist {
     territoryId: raw.route_id || raw.routeId || raw.territoryId || 'TER-01',
     territoryName: raw.area || raw.territoryName || raw.district || 'Silchar Central',
     companyId: raw.companyId || 'comp-01',
-    companyName: raw.companyName || 'Pharma Assam Healthcare Pvt Ltd',
+    companyName: raw.companyName || 'New Life Care Laboratories Pvt. Ltd.',
   };
 }
 
@@ -407,11 +408,13 @@ export class SupabaseService {
   // ==========================================
 
   public static async fetchProducts(): Promise<Product[]> {
-    // Note: If a 'products' table is later added to Supabase, this will fetch from it
-    return [];
+    return INITIAL_PRODUCTS;
   }
 
   public static subscribeProducts(onUpdate: (products: Product[]) => void): () => void {
+    this.fetchProducts().then(p => {
+      if (Array.isArray(p) && p.length > 0) onUpdate(p);
+    }).catch(() => {});
     return () => {};
   }
 
@@ -428,6 +431,70 @@ export class SupabaseService {
   }
 
   // ==========================================
+
+  // ==========================================
+  // 3B. TERRITORIES & LIVE TELEMETRY / VISITS
+  // ==========================================
+
+  public static async fetchTerritories(): Promise<Territory[]> {
+    if (!this.isConnected()) return [];
+    try {
+      const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/territories?order=name.asc`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+      if (!res.ok) return [];
+      const raw = await res.json();
+      return raw.map((t: any) => ({
+        id: t.id,
+        code: t.code,
+        name: t.name,
+        zone: t.state === 'Assam' ? 'Barak Valley Zone' : `${t.state} Zone`,
+        state: t.state || 'Assam',
+        headquarter: t.headquarter_name || t.name,
+        assignedManagerId: 'usr-nlcl-0003',
+        assignedMRIds: t.id === 'terr-karimganj' ? ['usr-nlcl-0004'] : (t.id === 'terr-silchar' ? ['usr-nlcl-0005'] : []),
+        doctorCount: t.id === 'terr-karimganj' ? 24 : (t.id === 'terr-silchar' ? 15 : 8),
+        chemistCount: t.id === 'terr-karimganj' ? 12 : (t.id === 'terr-silchar' ? 8 : 4),
+        companyId: 'comp-01',
+        companyName: 'New Life Care Laboratories Pvt. Ltd.',
+      }));
+    } catch (err) {
+      console.warn('[SupabaseService] fetchTerritories error:', err);
+      return [];
+    }
+  }
+
+  public static async fetchLiveAttendance(): Promise<any[]> {
+    if (!this.isConnected()) return [];
+    try {
+      const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/attendance?order=created_at.desc&limit=50`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+      if (!res.ok) return [];
+      return await res.json();
+    } catch (err) {
+      console.warn('[SupabaseService] fetchLiveAttendance error:', err);
+      return [];
+    }
+  }
+
+  public static async fetchVisits(): Promise<any[]> {
+    if (!this.isConnected()) return [];
+    try {
+      const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/visits?order=timestamp.desc&limit=50`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+      if (!res.ok) return [];
+      return await res.json();
+    } catch (err) {
+      console.warn('[SupabaseService] fetchVisits error:', err);
+      return [];
+    }
+  }
+
   // 4. USERS & EMPLOYEES
   // ==========================================
 
@@ -445,7 +512,7 @@ export class SupabaseService {
       return raw.map((e: any) => ({
         id: e.id,
         name: e.name,
-        email: e.email || `${e.employee_code?.toLowerCase()}@pharmaassam.com`,
+        email: e.email || `${e.employee_code?.toLowerCase()}@nlcl.in`,
         role: (e.employee_code === 'NLCL-0001' ? 'DIRECTOR' : (e.employee_code === 'NLCL-0002' ? 'HR_MANAGER' : (e.role || 'MEDICAL_REP'))) as UserRole,
         phone: e.phone,
         employeeCode: e.employee_code,
@@ -454,7 +521,7 @@ export class SupabaseService {
         isActive: Boolean(e.is_active ?? true),
         password: e.pin || '1234',
         companyId: 'comp-01',
-        companyName: 'Pharma Assam Healthcare Pvt Ltd',
+        companyName: 'New Life Care Laboratories Pvt. Ltd.',
       }));
     } catch (err) {
       console.warn('[SupabaseService] fetchUsers error:', err);
@@ -543,12 +610,18 @@ export class SupabaseService {
   // 5. TERRITORIES
   // ==========================================
 
-  public static async fetchTerritories(): Promise<Territory[]> {
-    return [];
-  }
+
 
   public static subscribeTerritories(onUpdate: (territories: Territory[]) => void): () => void {
-    return () => {};
+    if (!this.isConnected()) return () => {};
+    this.fetchTerritories().then(t => {
+      if (Array.isArray(t) && t.length > 0) onUpdate(t);
+    }).catch(() => {});
+    const interval = setInterval(async () => {
+      const t = await this.fetchTerritories();
+      if (Array.isArray(t) && t.length > 0) onUpdate(t);
+    }, 60000);
+    return () => clearInterval(interval);
   }
 
   public static async saveTerritory(terr: Territory): Promise<void> {}

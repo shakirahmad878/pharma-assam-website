@@ -387,8 +387,12 @@ export const UserAccessManager: React.FC<UserAccessManagerProps> = ({
             </thead>
             <tbody className="divide-y divide-[#DCE4EB] font-medium text-[#10243A]">
               {filteredUsers.map((user) => {
-                const isSuper = user.role === 'SUPER_ADMIN';
+                const isDirector = user.role === 'DIRECTOR' || user.employeeCode === 'NLCL-0001';
+                const isSuper = (user.role === 'SUPER_ADMIN' || user.employeeCode === 'NLCL-0002') && !isDirector;
                 const isCompAdmin = user.role === 'ADMIN';
+                const isRsm = user.role === 'REGIONAL_MANAGER' || user.employeeCode === 'NLCL-0003';
+                const isAbm = user.role === 'AREA_MANAGER';
+                const isHrMgr = user.role === 'HR_MANAGER';
                 const isMgr = AuthService.isManager(user);
                 const isCurrent = user.id === currentUser.id;
 
@@ -398,12 +402,14 @@ export const UserAccessManager: React.FC<UserAccessManagerProps> = ({
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-3">
                         <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs border ${
-                          isSuper 
+                          isDirector
+                            ? 'bg-purple-50 text-purple-700 border-purple-200'
+                            : isSuper 
                             ? 'bg-teal-50 text-[#137F83] border-teal-200' 
                             : isCompAdmin 
                             ? 'bg-blue-50 text-blue-700 border-blue-200' 
-                            : isMgr 
-                            ? 'bg-slate-100 text-[#10243A] border-slate-200' 
+                            : isRsm || isMgr
+                            ? 'bg-indigo-50 text-indigo-700 border-indigo-200' 
                             : 'bg-[#F1F6F8] text-[#64748B] border-[#DCE4EB]'
                         }`}>
                           {user.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
@@ -430,27 +436,51 @@ export const UserAccessManager: React.FC<UserAccessManagerProps> = ({
 
                     {/* Role */}
                     <td className="py-3.5 px-4">
+                      {isDirector && (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                          <Building2 className="w-3 h-3 text-purple-700" />
+                          Managing Director
+                        </span>
+                      )}
                       {isSuper && (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-teal-50 text-[#137F83] border border-teal-200">
                           <Shield className="w-3 h-3 text-[#137F83]" />
                           Super Admin
                         </span>
                       )}
-                      {isCompAdmin && (
+                      {isRsm && (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                          <Users className="w-3 h-3 text-indigo-700" />
+                          Regional Sales Manager
+                        </span>
+                      )}
+                      {isAbm && (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-sky-50 text-sky-700 border border-sky-200">
+                          <Users className="w-3 h-3 text-sky-700" />
+                          Area Business Manager
+                        </span>
+                      )}
+                      {isHrMgr && (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                          <Users className="w-3 h-3 text-amber-700" />
+                          HR Manager
+                        </span>
+                      )}
+                      {isCompAdmin && !isDirector && (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
                           <Building2 className="w-3 h-3 text-blue-700" />
                           Company Admin
                         </span>
                       )}
-                      {isMgr && (
+                      {isMgr && !isRsm && !isAbm && !isHrMgr && (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-100 text-[#10243A] border border-slate-200">
                           <Users className="w-3 h-3 text-[#64748B]" />
                           Manager
                         </span>
                       )}
-                      {!isSuper && !isCompAdmin && !isMgr && (
+                      {!isDirector && !isSuper && !isCompAdmin && !isRsm && !isAbm && !isHrMgr && !isMgr && (
                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#F1F6F8] text-[#64748B] border border-[#DCE4EB]">
-                          Field Rep (MR)
+                          Field MR
                         </span>
                       )}
                     </td>
@@ -458,7 +488,7 @@ export const UserAccessManager: React.FC<UserAccessManagerProps> = ({
                     {/* Company & Territory */}
                     <td className="py-3.5 px-4">
                       <div className="font-semibold text-[#10243A] truncate max-w-[180px]">
-                        {user.companyName || 'Global Platform'}
+                        New Life Care Laboratories Pvt. Ltd.
                       </div>
                       <div className="text-[11px] text-[#64748B] flex items-center gap-1 mt-0.5">
                         <MapPin className="w-3 h-3 text-[#18A6A6] shrink-0" />

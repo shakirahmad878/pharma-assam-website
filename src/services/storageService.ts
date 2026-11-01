@@ -28,7 +28,7 @@ const STORAGE_KEYS = {
 // Known mock IDs to purge if found in old cache
 const MOCK_DOC_IDS = new Set(['doc-01', 'doc-02', 'doc-03', 'doc-04', 'doc-05', 'doc-06', 'doc-07', 'doc-08', 'doc-09', 'doc-10', 'doc-11']);
 const MOCK_CHEM_IDS = new Set(['chem-01', 'chem-02', 'chem-03', 'chem-04']);
-const MOCK_PROD_IDS = new Set(['prod-01', 'prod-02', 'prod-03', 'prod-04']);
+const MOCK_PROD_IDS = new Set(['prod-01', 'prod-02', 'prod-03', 'prod-04', 'prod-05', 'prod-06']);
 const MOCK_COMP_IDS = new Set(['comp-02', 'comp-03']);
 const MOCK_USER_IDS = new Set(['usr-admin-comp-02', 'usr-mgr-01', 'usr-mgr-02', 'usr-mr-01', 'usr-mr-02', 'usr-mr-03']);
 const MOCK_AUDIT_IDS = new Set(['aud-01', 'aud-02', 'aud-03', 'aud-04', 'aud-05']);
@@ -120,8 +120,16 @@ export class StorageService {
   // Products
   static getProducts(): Product[] {
     const products = this.getItem<Product[]>(STORAGE_KEYS.PRODUCTS, INITIAL_PRODUCTS);
-    if (!Array.isArray(products)) return [];
-    return products.filter(p => !MOCK_PROD_IDS.has(p.id));
+    if (!Array.isArray(products) || products.length === 0) {
+      this.setItem(STORAGE_KEYS.PRODUCTS, INITIAL_PRODUCTS);
+      return INITIAL_PRODUCTS;
+    }
+    const filtered = products.filter(p => !MOCK_PROD_IDS.has(p.id));
+    if (filtered.length === 0) {
+      this.setItem(STORAGE_KEYS.PRODUCTS, INITIAL_PRODUCTS);
+      return INITIAL_PRODUCTS;
+    }
+    return filtered;
   }
 
   static saveProducts(products: Product[]): void {
@@ -164,7 +172,7 @@ export class StorageService {
       } else {
         const role = (initUser.username === 'shakir878' || initUser.id === 'usr-nlcl-0002') 
           ? 'SUPER_ADMIN' 
-          : (initUser.role || merged[existingIdx].role);
+          : (initUser.employeeCode === 'NLCL-0001' ? 'DIRECTOR' : (initUser.employeeCode === 'NLCL-0003' ? 'REGIONAL_MANAGER' : (initUser.role || merged[existingIdx].role)));
         merged[existingIdx] = {
           ...merged[existingIdx],
           password: initUser.password || merged[existingIdx].password,

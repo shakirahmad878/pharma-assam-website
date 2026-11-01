@@ -99,7 +99,7 @@ export const GeoAttendanceView: React.FC<GeoAttendanceViewProps> = ({ currentUse
               : 'Punch in with GPS verification to begin recording doctor calls and automated travel allowance.'}
           </p>
           <div className="flex flex-wrap items-center gap-4 pt-1 text-xs text-[#64748B]">
-            <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[#137F83]" /> Shift: 09:00 AM – 06:30 PM</span>
+            <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[#137F83]" /> Shift: 10:00 AM – 06:30 PM</span>
             <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-[#137F83]" /> Territory: {currentUser?.territoryName || 'Silchar HQ, Assam'}</span>
           </div>
         </div>
