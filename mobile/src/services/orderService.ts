@@ -1,12 +1,14 @@
 import { POBOrder, CartItem, Product } from '../types';
 import { StorageService, STORAGE_KEYS } from './storageService';
 import { SyncService } from './sync/syncService';
-import { PRODUCTS_MOCK } from '../constants/mockData';
+import { PRODUCTS_MOCK, CURRENT_USER } from '../constants/mockData';
+import { AuthService } from './authService';
 
 export class OrderService {
   public static async getProducts(): Promise<Product[]> {
     const cached = await StorageService.getItem<Product[]>(STORAGE_KEYS.PRODUCTS_CACHE, []);
-    if (cached && cached.length > 0) return cached;
+    const isLegacy = cached && cached.length > 0 && cached.some(p => p.id === 'prod-01' || p.brandName.includes('CardioPulse'));
+    if (cached && cached.length > 0 && !isLegacy) return cached;
 
     await StorageService.setItem(STORAGE_KEYS.PRODUCTS_CACHE, PRODUCTS_MOCK);
     return PRODUCTS_MOCK;
@@ -32,14 +34,17 @@ export class OrderService {
 
     orderData.items.forEach(item => {
       subTotal += item.itemTotal;
-      gstAmount += (item.itemTotal * item.product.gstRate) / 100;
+      const rate = item.product.gstRate ?? 5;
+      gstAmount += (item.itemTotal * rate) / 100;
     });
+
+    const currentUser = AuthService.getCurrentUser() || CURRENT_USER;
 
     const newOrder: POBOrder = {
       id: `pob_${Date.now()}`,
       orderNumber: `POB-2026-${Math.floor(1000 + Math.random() * 9000)}`,
-      employeeId: 'usr-mr-01',
-      employeeName: 'Vikram Mehta',
+      employeeId: currentUser?.id || 'usr-mr-01',
+      employeeName: currentUser?.name || 'Field Representative',
       buyerType: orderData.buyerType,
       buyerId: orderData.buyerId,
       buyerName: orderData.buyerName,
