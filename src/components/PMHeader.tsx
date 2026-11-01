@@ -65,23 +65,34 @@ export const PMHeader: React.FC<PMHeaderProps> = ({
         {/* Main Header Row */}
         <div className="flex items-center justify-between h-20 gap-3 sm:gap-6">
           
-          {/* Company Brand Logo & Title */}
-          <div className="flex items-center gap-3 flex-shrink-0 cursor-pointer" onClick={() => handleNavClick('home')}>
-            <div className="w-11 h-11 rounded-xl bg-[#10243A] flex items-center justify-center text-[#18A6A6] shadow-sm flex-shrink-0 border border-[#182F49]">
-              <Building2 className="w-6 h-6" />
-            </div>
-            <div className="flex-shrink-0">
-              <div className="flex items-center gap-2">
-                <span className="text-base sm:text-lg md:text-xl font-bold tracking-tight text-[#10243A] whitespace-nowrap">
-                  {COMPANY_CONFIG.name}
-                </span>
-                <span className="text-[10px] font-semibold text-[#137F83] bg-[#E8EEF4] border border-[#DCE4EB] px-2 py-0.5 rounded tracking-wider uppercase whitespace-nowrap hidden sm:inline-block">
-                  PHARMACEUTICALS
-                </span>
+          {/* Sidebar Menu Trigger & Company Brand Logo */}
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <button
+              onClick={onOpenSidebar}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-100/90 hover:bg-slate-200 text-slate-900 text-xs font-bold transition-all border border-slate-200 shadow-2xs cursor-pointer active:scale-95"
+              title="Open Navigation Menu"
+            >
+              <Menu className="w-4 h-4 text-[#18A6A6]" />
+              <span>Menu</span>
+            </button>
+
+            <div className="flex items-center gap-3 cursor-pointer" onClick={() => handleNavClick('home')}>
+              <div className="w-11 h-11 rounded-xl bg-[#10243A] flex items-center justify-center text-[#18A6A6] shadow-sm flex-shrink-0 border border-[#182F49]">
+                <Building2 className="w-6 h-6" />
               </div>
-              <p className="text-[10.5px] text-[#64748B] font-medium tracking-wide uppercase mt-0.5 whitespace-nowrap">
-                WHO-GMP COMPLIANT FORMULATIONS & DISTRIBUTION
-              </p>
+              <div className="flex-shrink-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-base sm:text-lg md:text-xl font-bold tracking-tight text-[#10243A] whitespace-nowrap">
+                    {COMPANY_CONFIG.name}
+                  </span>
+                  <span className="text-[10px] font-semibold text-[#137F83] bg-[#E8EEF4] border border-[#DCE4EB] px-2 py-0.5 rounded tracking-wider uppercase whitespace-nowrap hidden sm:inline-block">
+                    PHARMACEUTICALS
+                  </span>
+                </div>
+                <p className="text-[10.5px] text-[#64748B] font-medium tracking-wide uppercase mt-0.5 whitespace-nowrap">
+                  WHO-GMP COMPLIANT FORMULATIONS & DISTRIBUTION
+                </p>
+              </div>
             </div>
           </div>
 
