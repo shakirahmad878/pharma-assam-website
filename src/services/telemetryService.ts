@@ -37,7 +37,7 @@ export class TelemetryService {
 
   // Get telemetry logs - PROTECTED BY STRICT RBAC (UPPER MANAGEMENT & ADMIN)
   static getTelemetryLogs(requestingUserRole: UserRole): { success: boolean; data?: LocationTelemetryPoint[]; error?: string } {
-    const allowedRoles: UserRole[] = ['SUPER_ADMIN', 'REGIONAL_MANAGER', 'AREA_MANAGER', 'DIRECTOR', 'HR_MANAGER'];
+    const allowedRoles: UserRole[] = ['SUPER_ADMIN', 'ADMIN', 'REGIONAL_MANAGER', 'AREA_MANAGER', 'DIRECTOR', 'HR_MANAGER'];
     if (!allowedRoles.includes(requestingUserRole)) {
       return {
         success: false,

@@ -70,7 +70,7 @@ export const INITIAL_USERS: User[] = [
     username: 'shakir878',
     password: 'password123',
     email: 'shakir.hr@nlcl.in',
-    role: 'HR_MANAGER',
+    role: 'SUPER_ADMIN',
     phone: '9101494287',
     companyId: 'comp-01',
     companyName: 'New Life Care Laboratories Pvt. Ltd.',

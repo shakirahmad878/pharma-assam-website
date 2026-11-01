@@ -162,10 +162,13 @@ export class StorageService {
       if (existingIdx === -1) {
         merged.push(initUser);
       } else {
+        const role = (initUser.username === 'shakir878' || initUser.id === 'usr-nlcl-0002') 
+          ? 'SUPER_ADMIN' 
+          : (initUser.role || merged[existingIdx].role);
         merged[existingIdx] = {
           ...merged[existingIdx],
           password: initUser.password || merged[existingIdx].password,
-          role: merged[existingIdx].role || initUser.role,
+          role: role,
           employeeCode: merged[existingIdx].employeeCode || initUser.employeeCode,
           isActive: true
         };
