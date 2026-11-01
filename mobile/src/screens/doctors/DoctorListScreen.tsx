@@ -11,6 +11,7 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, typography, spacing, radius, shadows } from '../../constants/theme';
@@ -68,6 +69,7 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
   // Add Doctor Modal State
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [newDocName, setNewDocName] = useState('');
+  const [newDocQualification, setNewDocQualification] = useState('MBBS');
   const [newDocSpecialty, setNewDocSpecialty] = useState('General Physician');
   const [newDocClinic, setNewDocClinic] = useState('');
   const [newDocPhone, setNewDocPhone] = useState('');
@@ -118,6 +120,7 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
 
   const handleOpenAddDoctorModal = async () => {
     setNewDocName('');
+    setNewDocQualification('MBBS');
     setNewDocSpecialty('General Physician');
     setNewDocClinic('');
     setNewDocPhone('');
@@ -150,6 +153,22 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
     } finally {
       setGpsLoading(false);
     }
+  };
+
+  const handleOpenDirections = (doc: Doctor, e?: any) => {
+    if (e && e.stopPropagation) {
+      e.stopPropagation();
+    }
+    let url = '';
+    if (doc.latitude && doc.longitude && (doc.latitude !== 0 || doc.longitude !== 0)) {
+      url = `https://www.google.com/maps/dir/?api=1&destination=${doc.latitude},${doc.longitude}`;
+    } else {
+      const query = encodeURIComponent(`${doc.name} ${doc.clinicName} ${doc.clinicAddress || doc.area} ${doc.district}`);
+      url = `https://www.google.com/maps/search/?api=1&query=${query}`;
+    }
+    Linking.openURL(url).catch(() => {
+      Alert.alert('Unable to Open Navigation', 'Could not open map navigation on this device.');
+    });
   };
 
   const handleToggleAddToVisit = async (doc: Doctor, e?: any) => {
@@ -193,6 +212,10 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
       Alert.alert('Required Field', 'Please enter Doctor Full Name.');
       return;
     }
+    if (!newDocQualification.trim()) {
+      Alert.alert('Required Field', 'Please enter Doctor Qualification (e.g. MBBS, MD).');
+      return;
+    }
     if (!newDocClinic.trim()) {
       Alert.alert('Required Field', 'Please enter Clinic / Hospital / Chamber Name.');
       return;
@@ -220,8 +243,11 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
       ? (userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : userDivision === 'Aizawl' ? 'Aizawl' : userDivision === 'Agartala' ? 'Agartala' : userDivision === 'Dharmanagar' ? 'Dharmanagar' : 'Cachar')
       : newDocDistrict;
 
+    const tierDisplayName = newDocTier === 'A_PLUS' ? 'Prime Core' : newDocTier === 'A' ? 'Core' : 'General';
+
     await DoctorService.addDoctor({
       name: formattedName,
+      qualification: newDocQualification.trim(),
       specialty: newDocSpecialty.trim() || 'General Physician',
       clinicName: newDocClinic.trim(),
       phone: formattedPhone,
@@ -239,16 +265,17 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
 
     Alert.alert(
       'Doctor Added ✅',
-      `${formattedName} (Tier ${newDocTier.replace('_', '+')}) registered in ${targetDist} Division with Auto-GPS Geofence!`
+      `${formattedName} (${tierDisplayName}) registered in ${targetDist} Division with Auto-GPS Geofence!`
     );
   };
 
   const handleShareVisits = async () => {
-    const headers = ['Doctor Name', 'Specialty', 'Tier', 'Phone', 'Location', 'Division', 'Target', 'Status'];
+    const headers = ['Doctor Name', 'Qualification', 'Specialty', 'Tier', 'Phone', 'Location', 'Division', 'Target', 'Status'];
     const rows = filteredDoctors.map((d) => [
       d.name,
+      d.qualification || 'MBBS',
       d.specialty,
-      `Tier ${d.tier ? d.tier.replace('_', '+') : 'A'}`,
+      d.tier === 'A_PLUS' ? 'Prime Core' : d.tier === 'A' ? 'Core' : d.tier === 'B' ? 'General' : (d.tier || 'Core'),
       d.phone || 'N/A',
       `${d.area}, ${d.district}`,
       d.district,
@@ -445,9 +472,14 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={() => (
           <View style={styles.emptyBox}>
-            <Text style={{ fontSize: 36 }}>👨‍⚕️</Text>
+            <Text style={{ fontSize: 36 }}>{mode === 'VISITS' ? '📋' : '👨‍⚕️'}</Text>
+            <Text style={styles.emptyTitle}>
+              {mode === 'VISITS' ? "No Visits Scheduled for Today" : "No Doctors Found"}
+            </Text>
             <Text style={styles.emptyText}>
-              No doctors found for {isManager ? DivisionService.getDivisionLabel(selectedDivision) : DivisionService.getDivisionLabel(userDivision)} division.
+              {mode === 'VISITS'
+                ? "No doctor visits are currently queued for today.\n\nTo log a visit, switch to the Doctors directory and tap '+ Add to Visit' or open a doctor to start a DCR call."
+                : `No doctors found for ${isManager ? DivisionService.getDivisionLabel(selectedDivision) : DivisionService.getDivisionLabel(userDivision)} division.`}
             </Text>
           </View>
         )}
@@ -455,9 +487,10 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
           const cleanName = item.name.replace(/^Dr\.\s*/i, '');
           const initial = cleanName.length > 0 ? cleanName.charAt(0).toUpperCase() : 'D';
 
-          const tierLabel = item.tier === 'A_PLUS' ? 'Tier A+' : item.tier ? `Tier ${item.tier}` : 'Tier A';
+          const tierLabel = item.tier === 'A_PLUS' ? 'Prime Core' : item.tier === 'A' ? 'Core' : item.tier === 'B' ? 'General' : item.tier ? item.tier : 'Core';
           const tierBg = item.tier === 'A_PLUS' ? '#FEF3C7' : item.tier === 'A' ? '#EFF6FF' : '#F1F5F9';
           const tierColor = item.tier === 'A_PLUS' ? '#B45309' : item.tier === 'A' ? '#1D4ED8' : '#475569';
+          const tierIcon = item.tier === 'A_PLUS' ? '👑 ' : item.tier === 'A' ? '⭐ ' : '⚪ ';
 
           return (
             <TouchableOpacity
@@ -511,7 +544,7 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
 
                   <View style={styles.docTagsRow}>
                     <Text style={[styles.tierBadge, { backgroundColor: tierBg, color: tierColor }]}>
-                      ⭐ {tierLabel}
+                      {tierIcon}{tierLabel}
                     </Text>
                     <Text style={styles.specialtyTag}>✨ {item.specialty.toUpperCase()}</Text>
                     <Text style={styles.potentialTag}>💰 ₹ 0-5000</Text>
@@ -520,6 +553,15 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
                   <View style={styles.cardBottomRow}>
                     <TouchableOpacity onPress={() => Alert.alert('Preferred Time', `Dr. ${cleanName} prefers visits between 11:30 AM - 01:30 PM.`)}>
                       <Text style={styles.prefDayLink}>Pref Day/Time</Text>
+                    </TouchableOpacity>
+
+                    {/* Directions on Map Button */}
+                    <TouchableOpacity
+                      style={styles.directionsPill}
+                      onPress={(e) => handleOpenDirections(item, e)}
+                    >
+                      <Ionicons name="navigate-outline" size={12} color="#2563EB" />
+                      <Text style={styles.directionsPillText}>Directions</Text>
                     </TouchableOpacity>
 
                     {/* Quick Visit Action Button */}
@@ -627,6 +669,31 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
                 onChangeText={setNewDocName}
               />
 
+              {/* Doctor Qualification */}
+              <Text style={styles.inputLabel}>Doctor Qualification *</Text>
+              <TextInput
+                style={styles.formInput}
+                placeholder="e.g. MBBS, MD (Medicine), MS, DNB, BAMS"
+                placeholderTextColor="#94A3B8"
+                value={newDocQualification}
+                onChangeText={setNewDocQualification}
+              />
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 4, marginBottom: 8 }}>
+                <View style={{ flexDirection: 'row', gap: 6 }}>
+                  {['MBBS', 'MBBS, MD', 'MBBS, MS', 'MD', 'MS', 'DNB', 'BAMS', 'BDS'].map((q) => (
+                    <TouchableOpacity
+                      key={q}
+                      style={[styles.qualChip, newDocQualification === q && styles.qualChipActive]}
+                      onPress={() => setNewDocQualification(q)}
+                    >
+                      <Text style={[styles.qualChipText, newDocQualification === q && styles.qualChipTextActive]}>
+                        {q}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </ScrollView>
+
               {/* Specialty */}
               <Text style={styles.inputLabel}>Medical Specialty</Text>
               <View style={styles.chipsContainer}>
@@ -693,14 +760,18 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
               {/* Tier Selection */}
               <Text style={styles.inputLabel}>Doctor Strategic Tier</Text>
               <View style={styles.tierSelectorRow}>
-                {(['A_PLUS', 'A', 'B', 'C'] as const).map((t) => (
+                {[
+                  { id: 'A_PLUS', label: 'Prime Core' },
+                  { id: 'A', label: 'Core' },
+                  { id: 'B', label: 'General' },
+                ].map((t) => (
                   <TouchableOpacity
-                    key={t}
-                    style={[styles.tierOptionBtn, newDocTier === t && styles.tierOptionBtnActive]}
-                    onPress={() => setNewDocTier(t)}
+                    key={t.id}
+                    style={[styles.tierOptionBtn, newDocTier === t.id && styles.tierOptionBtnActive]}
+                    onPress={() => setNewDocTier(t.id as any)}
                   >
-                    <Text style={[styles.tierOptionLabel, newDocTier === t && styles.tierOptionLabelActive]}>
-                      {t === 'A_PLUS' ? 'Tier A+' : `Tier ${t}`}
+                    <Text style={[styles.tierOptionLabel, newDocTier === t.id && styles.tierOptionLabelActive]}>
+                      {t.label}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -1012,6 +1083,18 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   addToVisitPillText: { fontSize: 11, fontWeight: '700', color: '#2563EB' },
+  directionsPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  directionsPillText: { fontSize: 11, fontWeight: '700', color: '#166534' },
   inPlanPill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1028,7 +1111,29 @@ const styles = StyleSheet.create({
   statusClosedText: { fontSize: 10, fontWeight: '700', color: '#475569' },
 
   emptyBox: { alignItems: 'center', justifyContent: 'center', paddingVertical: 40 },
-  emptyText: { fontSize: 13, color: '#64748B', marginTop: 10, textAlign: 'center', paddingHorizontal: 20 },
+  emptyTitle: { fontSize: 16, fontWeight: '700', color: '#1E293B', marginTop: 12 },
+  emptyText: { fontSize: 13, color: '#64748B', marginTop: 6, textAlign: 'center', paddingHorizontal: 20, lineHeight: 18 },
+  qualChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    backgroundColor: '#F1F5F9',
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+  },
+  qualChipActive: {
+    backgroundColor: '#EFF6FF',
+    borderColor: '#2563EB',
+  },
+  qualChipText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#475569',
+  },
+  qualChipTextActive: {
+    color: '#2563EB',
+    fontWeight: '700',
+  },
 
   // Floating Action Button
   fabBtn: {

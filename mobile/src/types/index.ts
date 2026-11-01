@@ -205,7 +205,7 @@ export interface Doctor {
   name: string;
   qualification: string;
   specialty: string;
-  tier: 'A_PLUS' | 'A' | 'B' | 'C';
+  tier: 'A_PLUS' | 'A' | 'B' | 'C'; // A_PLUS = Prime Core, A = Core, B = General
   clinicName: string;
   clinicAddress: string;
   district: 'Cachar' | 'Karimganj' | 'Hailakandi' | 'Aizawl' | 'Agartala' | 'Dharmanagar' | 'Tripura' | string;
@@ -217,7 +217,7 @@ export interface Doctor {
   phone: string;
   monthlyVisitTarget: number;
   completedVisitsThisMonth: number;
-  todayVisitStatus: 'PENDING' | 'CHECKED_IN' | 'COMPLETED' | 'MISSED';
+  todayVisitStatus: 'NOT_SCHEDULED' | 'PENDING' | 'CHECKED_IN' | 'COMPLETED' | 'MISSED';
     lastVisitDate?: string;
   isAssignedToMe: boolean;
   assignedToEmployeeId?: string;

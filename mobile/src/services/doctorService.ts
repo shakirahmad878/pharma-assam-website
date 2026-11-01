@@ -66,7 +66,7 @@ export class DoctorService {
       phone: newDoc.phone || '+91 9435000000',
       monthlyVisitTarget: 8,
       completedVisitsThisMonth: 0,
-      todayVisitStatus: 'PENDING',
+      todayVisitStatus: 'NOT_SCHEDULED',
       isAssignedToMe: true,
     };
     await SupabaseDbService.addDoctor(doc);

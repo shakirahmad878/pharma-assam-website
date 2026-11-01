@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   TextInput,
   Alert,
+  Linking,
 } from 'react-native';
 import { colors, typography, spacing, radius, shadows } from '../../constants/theme';
 import { Header } from '../../components/common/Header';
@@ -40,27 +41,36 @@ export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
   const [visitPurpose, setVisitPurpose] = useState<VisitRecord['visitPurpose']>('ROUTINE_CALL');
   const [prescribingHabit, setPrescribingHabit] = useState<VisitRecord['doctorPrescribingHabit']>('CORE_PRESCRIBER');
   
-  // Products Detailed (Multi-select)
-  const [selectedProductIds, setSelectedProductIds] = useState<string[]>(['prod-01']);
-  const [productReactions, setProductReactions] = useState<{ [id: string]: 'HIGH_INTEREST' | 'MODERATE' | 'NEUTRAL' }>({
-    'prod-01': 'HIGH_INTEREST',
-  });
+  // Products Detailed (Multi-select) - starts empty until MR details products
+  const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
+  const [productReactions, setProductReactions] = useState<{ [id: string]: 'HIGH_INTEREST' | 'MODERATE' | 'NEUTRAL' }>({});
 
-  // Samples & Inputs
-  const [sampleQuantities, setSampleQuantities] = useState<{ [id: string]: number }>({
-    'prod-01': 2,
-  });
-  const [selectedInputs, setSelectedInputs] = useState<string[]>(['Visual Aid Flipchart', 'Prescription Pad']);
+  // Samples & Inputs - starts empty until MR distributes
+  const [sampleQuantities, setSampleQuantities] = useState<{ [id: string]: number }>({});
+  const [selectedInputs, setSelectedInputs] = useState<string[]>([]);
   
-  // Discussion Notes
+  // Discussion Notes & Mandatory Doctor Feedback
   const [discussionNotes, setDiscussionNotes] = useState('');
   const [doctorFeedback, setDoctorFeedback] = useState('');
   const [pobAmount, setPobAmount] = useState('');
-  const [nextVisitDate, setNextVisitDate] = useState('22 Sep 2026');
+  const [nextVisitDate, setNextVisitDate] = useState('');
 
   // Visit Timer
   const [durationMinutes, setDurationMinutes] = useState(8);
   const [submitting, setSubmitting] = useState(false);
+
+  const handleOpenChamberMap = () => {
+    let url = '';
+    if (doctor.latitude && doctor.longitude && (doctor.latitude !== 0 || doctor.longitude !== 0)) {
+      url = `https://www.google.com/maps/dir/?api=1&destination=${doctor.latitude},${doctor.longitude}`;
+    } else {
+      const query = encodeURIComponent(`${doctor.name} ${doctor.clinicName} ${doctor.clinicAddress || doctor.area}`);
+      url = `https://www.google.com/maps/search/?api=1&query=${query}`;
+    }
+    Linking.openURL(url).catch(() => {
+      Alert.alert('Unable to Open Navigation', 'Could not open Google Maps navigation on this device.');
+    });
+  };
 
   const toggleProduct = (prodId: string) => {
     if (selectedProductIds.includes(prodId)) {
@@ -113,6 +123,14 @@ export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
       return;
     }
 
+    if (!doctorFeedback.trim()) {
+      Alert.alert(
+        'Doctor Feedback Mandatory 📝',
+        'Please enter the Doctor Feedback / Response before completing this DCR call.'
+      );
+      return;
+    }
+
     setSubmitting(true);
 
     const detailedProducts = MOCK_PRODUCTS.filter(p => selectedProductIds.includes(p.id));
@@ -156,14 +174,14 @@ export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
       checkOutLongitude: doctor.longitude,
       visitDurationMinutes: durationMinutes,
       visitPurpose,
-      discussionNotes: discussionNotes.trim() || 'Detailed core cardiology and antibiotic portfolio. Doctor confirmed regular prescription support.',
+      discussionNotes: discussionNotes.trim(),
       productsDiscussed: detailedProducts.map(p => p.brandName),
       productReactions: reactions,
       samplesDistributed: samples,
       promotionalInputsGiven: selectedInputs,
       doctorPrescribingHabit: prescribingHabit,
-      doctorFeedback: doctorFeedback.trim() || 'Positive response to CardioPulse-AM and CefoPulse-CV.',
-      nextFollowUpDate: nextVisitDate,
+      doctorFeedback: doctorFeedback.trim(),
+      nextFollowUpDate: nextVisitDate || undefined,
       pobAmount: pobAmount ? parseFloat(pobAmount) : undefined,
       status: 'COMPLETED',
     });
@@ -202,6 +220,15 @@ export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
               variant={isGeofenceVerified ? 'success' : 'primary'}
             />
           </View>
+
+          {/* Chamber Map Navigation Button */}
+          <TouchableOpacity
+            style={styles.navigateBtn}
+            onPress={handleOpenChamberMap}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.navigateBtnText}>🗺️ Chamber Directions (Google Maps)</Text>
+          </TouchableOpacity>
         </View>
 
         {/* 1. Accompanied By / Joint Working Section */}
@@ -387,22 +414,39 @@ export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
           </View>
         </View>
 
-        {/* 7. Discussion Notes & Secondary Order */}
+        {/* 7. Mandatory Doctor Feedback & Discussion Notes */}
         <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>📝 Discussion Notes & Feedback</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+            <Text style={styles.sectionTitle}>📝 Doctor Visit Feedback</Text>
+            <View style={{ backgroundColor: '#FEE2E2', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+              <Text style={{ color: '#DC2626', fontSize: 10, fontWeight: '700' }}>* MANDATORY</Text>
+            </View>
+          </View>
+          <Text style={styles.sectionSubtitle}>Record doctor's reaction, prescription commitments, or product objections</Text>
           
-          <Text style={styles.inputLbl}>Clinical Discussion Summary:</Text>
+          <Text style={styles.inputLbl}>Doctor's Feedback / Response * :</Text>
           <TextInput
-            style={styles.textInputArea}
-            placeholder="Key discussion points, dosage questions, efficacy feedback..."
+            style={[styles.textInputArea, !doctorFeedback.trim() && { borderColor: '#FCA5A5' }]}
+            placeholder="e.g. Doctor agreed to initiate CardioPulse-AM for 10 hypertensive patients; asked for clinical literature on CefoPulse-CV."
             placeholderTextColor="#94A3B8"
             multiline
             numberOfLines={3}
+            value={doctorFeedback}
+            onChangeText={setDoctorFeedback}
+          />
+
+          <Text style={[styles.inputLbl, { marginTop: 12 }]}>Clinical Discussion Summary (Optional):</Text>
+          <TextInput
+            style={styles.textInputArea}
+            placeholder="Key detailing points covered, indications discussed..."
+            placeholderTextColor="#94A3B8"
+            multiline
+            numberOfLines={2}
             value={discussionNotes}
             onChangeText={setDiscussionNotes}
           />
 
-          <Text style={styles.inputLbl}>Secondary POB Order Value (if booked during call):</Text>
+          <Text style={[styles.inputLbl, { marginTop: 12 }]}>Secondary POB Order Value (if booked during call):</Text>
           <TextInput
             style={styles.textInputSingle}
             placeholder="e.g. 3500.00"
@@ -451,6 +495,23 @@ const styles = StyleSheet.create({
   heroDocSpecialty: { fontSize: typography.fontSize.xs, color: '#2563EB', marginTop: 2, fontWeight: typography.fontWeight.semibold },
   heroClinic: { fontSize: typography.fontSize.xs, color: '#334155', marginTop: 4, fontWeight: typography.fontWeight.medium },
   heroArea: { fontSize: typography.fontSize.xxs, color: '#64748B', marginTop: 2 },
+  navigateBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#93C5FD',
+    borderRadius: radius.md,
+    paddingVertical: 9,
+    paddingHorizontal: 12,
+    marginTop: spacing.md,
+  },
+  navigateBtnText: {
+    color: '#1D4ED8',
+    fontSize: 12,
+    fontWeight: '700',
+  },
   sectionCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: radius.lg,

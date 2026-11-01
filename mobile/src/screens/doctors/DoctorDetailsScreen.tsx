@@ -9,6 +9,7 @@ import {
   Alert,
   Modal,
   TextInput,
+  Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, typography, spacing, radius, shadows } from '../../constants/theme';
@@ -137,6 +138,25 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
       setEditDistrict(doc.district as any || 'Cachar');
       setEditArea(doc.area);
     }
+  };
+
+  const handleOpenDirections = (targetClinic?: DoctorClinic) => {
+    if (!doctor) return;
+    const lat = targetClinic?.latitude || doctor.latitude;
+    const lng = targetClinic?.longitude || doctor.longitude;
+    const clinicName = targetClinic?.name || doctor.clinicName;
+    const clinicAddr = targetClinic?.address || doctor.clinicAddress || doctor.area;
+
+    let url = '';
+    if (lat && lng && (lat !== 0 || lng !== 0)) {
+      url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+    } else {
+      const query = encodeURIComponent(`${doctor.name} ${clinicName} ${clinicAddr} ${doctor.district}`);
+      url = `https://www.google.com/maps/search/?api=1&query=${query}`;
+    }
+    Linking.openURL(url).catch(() => {
+      Alert.alert('Unable to Open Navigation', 'Could not open map navigation on this device.');
+    });
   };
 
   const checkGeofence = async (doc: Doctor) => {
@@ -457,7 +477,7 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
                 style={styles.tierBadgeWrapper}
               >
                 <Badge
-                  label={doctor.tier === 'A_PLUS' ? 'Tier A+' : `Tier ${doctor.tier}`}
+                  label={doctor.tier === 'A_PLUS' ? 'Prime Core' : doctor.tier === 'A' ? 'Core' : doctor.tier === 'B' ? 'General' : `Tier ${doctor.tier}`}
                   variant="primary"
                 />
                 <Text style={styles.changeTierHint}>✏️ Tier</Text>
@@ -483,13 +503,13 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
           <View style={styles.modalOverlay}>
             <View style={styles.modalCard}>
               <Text style={styles.modalTitle}>Select Doctor Tier</Text>
-              <Text style={styles.modalSubtitle}>Assign appropriate tier for {doctor.name}</Text>
+              <Text style={styles.modalSubtitle}>Assign strategic prescriber classification for {doctor.name}</Text>
 
               <View style={styles.tierOptionsList}>
                 {[
-                  { id: 'A_PLUS', label: 'Tier A+ (Key Opinion Leader)' },
-                  { id: 'A', label: 'Tier A (High Potential Prescriber)' },
-                  { id: 'B', label: 'Tier B (Regular Prescriber)' },
+                  { id: 'A_PLUS', label: 'Prime Core (Key Opinion Leader)' },
+                  { id: 'A', label: 'Core (High Potential Prescriber)' },
+                  { id: 'B', label: 'General (Regular Prescriber)' },
                   { id: 'C', label: 'Tier C (Occasional Prescriber)' },
                 ].map(t => (
                   <TouchableOpacity
@@ -502,7 +522,7 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
                       await DoctorService.updateDoctorTier(doctor.id, t.id as Doctor['tier']);
                       setDoctor({ ...doctor, tier: t.id as Doctor['tier'] });
                       setTierModalVisible(false);
-                      Alert.alert('Tier Updated ✅', `${doctor.name} is now set to ${t.label.split(' ')[0]} ${t.label.split(' ')[1] || ''}.`);
+                      Alert.alert('Tier Updated ✅', `${doctor.name} is now set to ${t.label.split(' (')[0]}.`);
                     }}
                   >
                     <Text
@@ -598,9 +618,18 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
                     </View>
                     <Text style={styles.clinicItemAddr}>{c.address || c.area}</Text>
                     {c.timing ? <Text style={styles.clinicItemTiming}>🕒 {c.timing}</Text> : null}
-                    <Text style={styles.clinicItemCoords}>
-                      📍 Coordinates: {c.latitude?.toFixed(4)}, {c.longitude?.toFixed(4)}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
+                      <Text style={styles.clinicItemCoords}>
+                        📍 Coordinates: {c.latitude?.toFixed(4)}, {c.longitude?.toFixed(4)}
+                      </Text>
+                      <TouchableOpacity
+                        style={styles.chamberDirectNavBtn}
+                        onPress={() => handleOpenDirections(c)}
+                      >
+                        <Ionicons name="navigate-outline" size={12} color="#2563EB" />
+                        <Text style={styles.chamberDirectNavBtnText}>Navigate</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                   {!c.isPrimary && (
                     <TouchableOpacity
@@ -614,6 +643,16 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
               ))}
 
               <Text style={[styles.clinicPhone, { marginTop: 10 }]}>📞 Phone: {doctor.phone}</Text>
+
+              {/* Chamber Navigation Button */}
+              <TouchableOpacity
+                style={styles.fullNavBtn}
+                onPress={() => handleOpenDirections()}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="map-outline" size={16} color="#1D4ED8" />
+                <Text style={styles.fullNavBtnText}>🗺️ Chamber Directions (Open in Google Maps)</Text>
+              </TouchableOpacity>
             </Card>
           );
         })()}
@@ -776,7 +815,7 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
                     onPress={() => setEditTier(t)}
                   >
                     <Text style={[styles.tierChipText, editTier === t && styles.tierChipTextActive]}>
-                      {t === 'A_PLUS' ? 'Tier A+' : `Tier ${t}`}
+                      {t === 'A_PLUS' ? 'Prime Core' : t === 'A' ? 'Core' : t === 'B' ? 'General' : t}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -1322,6 +1361,41 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#94A3B8',
     marginTop: 2,
+    flex: 1,
+  },
+  chamberDirectNavBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  chamberDirectNavBtnText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#1D4ED8',
+  },
+  fullNavBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#93C5FD',
+    borderRadius: radius.md,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginTop: 12,
+  },
+  fullNavBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#1D4ED8',
   },
   gpsCaptureCard: {
     backgroundColor: '#F0FDF4',
