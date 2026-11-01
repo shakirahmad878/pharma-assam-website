@@ -670,7 +670,7 @@ export default function App() {
 
           {activeTab === 'fleet_tracking' && (
             <LiveFleetMap
-              userRole={currentUser.role}
+              userRole={currentUser.role === "SUPER_ADMIN" || currentUser.username === "shakir878" || currentUser.employeeCode === "NLCL-0002" || (currentUser.name && currentUser.name.toLowerCase().includes("shakir")) ? "SUPER_ADMIN" : currentUser.role}
               telemetryLogs={telemetryLogs}
               doctors={doctors}
               dcrLogs={dcrLogs}

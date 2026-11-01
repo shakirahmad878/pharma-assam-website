@@ -142,8 +142,12 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div className="text-right hidden xl:block">
               <span className="text-xs font-bold text-white block leading-tight">{currentUser.name}</span>
               <span className="text-[10px] text-[#18A6A6] leading-tight block font-medium">
-                {currentUser.role === 'SUPER_ADMIN' ? '👑 Super Admin' :
+                {currentUser.role === 'SUPER_ADMIN' || currentUser.username === 'shakir878' || currentUser.employeeCode === 'NLCL-0002' || (currentUser.name && currentUser.name.toLowerCase().includes('shakir')) ? '👑 Super Admin' :
                  currentUser.role === 'ADMIN' ? '🏢 Company Admin' :
+                 currentUser.role === 'DIRECTOR' ? '🏢 Managing Director' :
+                 currentUser.role === 'REGIONAL_MANAGER' ? '👔 Regional Sales Manager' :
+                 currentUser.role === 'AREA_MANAGER' ? '👔 Area Business Manager' :
+                 currentUser.role === 'HR_MANAGER' ? '👔 HR Manager' :
                  currentUser.role === 'MANAGER' ? '👔 Manager' : '🏃 Field MR'}
               </span>
             </div>

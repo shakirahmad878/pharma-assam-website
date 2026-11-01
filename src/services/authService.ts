@@ -9,7 +9,7 @@ export class AuthService {
     if (stored) {
       try {
         const u = JSON.parse(stored);
-        if (u && (u.username === 'shakir878' || u.employeeCode === 'NLCL-0002') && u.role !== 'SUPER_ADMIN') {
+        if (u && (u.username === 'shakir878' || u.employeeCode === 'NLCL-0002' || u.id === 'usr-nlcl-0002' || (u.name && u.name.toLowerCase().includes('shakir'))) && u.role !== 'SUPER_ADMIN') {
           u.role = 'SUPER_ADMIN';
           localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(u));
         }
@@ -176,7 +176,7 @@ export class AuthService {
   static isSuperAdmin(user?: User | null): boolean {
     const u = user !== undefined ? user : this.getCurrentUser();
     if (!u) return false;
-    return u.role === 'SUPER_ADMIN' || u.role === 'DIRECTOR' || u.username?.toLowerCase() === 'shakir878' || u.employeeCode === 'NLCL-0002';
+    return Boolean(u.role === 'SUPER_ADMIN' || u.role === 'DIRECTOR' || u.username?.toLowerCase() === 'shakir878' || u.employeeCode === 'NLCL-0002' || (u.name && u.name.toLowerCase().includes('shakir')));
   }
 
   static isAdmin(user?: User | null): boolean {
