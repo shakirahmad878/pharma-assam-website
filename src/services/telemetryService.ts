@@ -35,12 +35,13 @@ export class TelemetryService {
     };
   }
 
-  // Get telemetry logs - PROTECTED BY STRICT RBAC (ADMIN ONLY)
+  // Get telemetry logs - PROTECTED BY STRICT RBAC (UPPER MANAGEMENT & ADMIN)
   static getTelemetryLogs(requestingUserRole: UserRole): { success: boolean; data?: LocationTelemetryPoint[]; error?: string } {
-    if (requestingUserRole !== 'SUPER_ADMIN') {
+    const allowedRoles: UserRole[] = ['SUPER_ADMIN', 'REGIONAL_MANAGER', 'AREA_MANAGER', 'DIRECTOR', 'HR_MANAGER'];
+    if (!allowedRoles.includes(requestingUserRole)) {
       return {
         success: false,
-        error: 'ACCESS_DENIED: Employee real-time location telemetry is strictly confidential and restricted to Super Admin only.',
+        error: 'ACCESS_DENIED: Employee real-time location telemetry is strictly confidential and restricted to authorized managers (RSM, ABM, Admin).',
       };
     }
     return {

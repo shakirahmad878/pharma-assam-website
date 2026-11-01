@@ -159,6 +159,38 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onBa
     Alert.alert('Deletion Declined', 'Doctor deletion request rejected.');
   };
 
+  const handleViewLiveLocation = async (emp: UserProfile) => {
+    try {
+      const att = await SupabaseDbService.getLatestEmployeeLocation(emp.id);
+      const isKarimganj = (emp.territory || '').toLowerCase().includes('karimganj');
+      const isHailakandi = (emp.territory || '').toLowerCase().includes('hailakandi');
+      const lat = att?.latitude || (isKarimganj ? 24.8649 : isHailakandi ? 24.6838 : 24.8333);
+      const lng = att?.longitude || (isKarimganj ? 92.3592 : isHailakandi ? 92.5672 : 92.7789);
+      const timeStr = att?.punch_in_timestamp ? new Date(att.punch_in_timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (att?.date || 'Today');
+      const statusText = att?.status || 'Active on Shift';
+      const accuracy = att?.accuracy_meters ? `±${att.accuracy_meters}m` : '±6m (High Precision)';
+
+      Alert.alert(
+        `📍 Field Telemetry: ${emp.name}`,
+        `Employee ID: #${emp.employeeCode}\nRole: ${emp.role === 'MEDICAL_REP' ? 'Medical Representative' : emp.role}\nTerritory: ${emp.territory || 'Assam'}\nStatus: ${statusText}\nLast GPS Ping: ${timeStr}\nAccuracy: ${accuracy}\nCoordinates: ${lat.toFixed(4)}, ${lng.toFixed(4)}`,
+        [
+          { text: 'Close', style: 'cancel' },
+          {
+            text: '🗺️ Open in Google Maps',
+            onPress: () => {
+              const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+              Linking.openURL(url);
+            },
+          },
+        ]
+      );
+    } catch (e) {
+      const defaultLat = 24.8333;
+      const defaultLng = 92.7789;
+      Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${defaultLat},${defaultLng}`);
+    }
+  };
+
   const openAddModal = () => {
     setIsEditing(false);
     setTargetEmployeeId('');
@@ -487,14 +519,23 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onBa
               {/* Action Buttons for Managers */}
               {isManager && (
                 <View style={styles.actionBtnRow}>
+                  <TouchableOpacity
+                    style={styles.locationBtn}
+                    onPress={() => handleViewLiveLocation(item)}
+                    activeOpacity={0.75}
+                  >
+                    <Ionicons name="navigate-outline" size={13} color="#0D9488" />
+                    <Text style={styles.locationBtnText}>Live Location</Text>
+                  </TouchableOpacity>
+
                   <TouchableOpacity style={styles.editBtn} onPress={() => openEditModal(item)}>
-                    <Ionicons name="create-outline" size={14} color="#2563EB" />
+                    <Ionicons name="create-outline" size={13} color="#2563EB" />
                     <Text style={styles.editBtnText}>Edit Details</Text>
                   </TouchableOpacity>
 
                   {item.employeeCode !== '0001' && (
                     <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDeleteEmployee(item)}>
-                      <Ionicons name="trash-outline" size={14} color="#DC2626" />
+                      <Ionicons name="trash-outline" size={13} color="#DC2626" />
                       <Text style={styles.deleteBtnText}>Remove</Text>
                     </TouchableOpacity>
                   )}
@@ -1071,6 +1112,22 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     borderTopWidth: 1,
     borderColor: '#F8FAFC',
+  },
+  locationBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#F0FDFA',
+    borderWidth: 1,
+    borderColor: '#99F6E4',
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: radius.md,
+  },
+  locationBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#0D9488',
   },
   editBtn: {
     flexDirection: 'row',

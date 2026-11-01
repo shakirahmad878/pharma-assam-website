@@ -611,6 +611,24 @@ export class SupabaseDbService {
     }
   }
 
+  public static async getLatestEmployeeLocation(employeeId: string): Promise<any> {
+    if (this.isConnected()) {
+      try {
+        const res = await fetch(
+          `${SUPABASE_CONFIG.url}/rest/v1/attendance?employee_id=eq.${encodeURIComponent(employeeId)}&order=created_at.desc&limit=1`,
+          { method: 'GET', headers: this.getHeaders() }
+        );
+        if (res.ok) {
+          const raw = await res.json();
+          if (raw && raw.length > 0) return raw[0];
+        }
+      } catch (err) {
+        console.warn('[Supabase] getLatestEmployeeLocation error:', err);
+      }
+    }
+    return null;
+  }
+
   // ==========================================
   // 5. VISITS / DCR RECORDS
   // ==========================================
