@@ -114,6 +114,8 @@ export class SyncService {
           await SupabaseDbService.recordVisit(item.payload);
         } else if (item.entityType === 'ATTENDANCE') {
           await SupabaseDbService.recordAttendance(item.payload);
+        } else if (item.entityType === 'POB_ORDER') {
+          await SupabaseDbService.submitOrder(item.payload);
         }
 
         // Mark item as synced

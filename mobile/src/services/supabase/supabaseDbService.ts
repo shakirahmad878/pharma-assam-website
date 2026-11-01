@@ -10,7 +10,7 @@
  */
 
 import { SUPABASE_CONFIG, isSupabaseConfigured } from '../../config/supabase';
-import { Doctor, UserProfile, AttendanceRecord, VisitRecord, LateLoginRequest, TourPlanRescheduleRequest } from '../../types';
+import { Doctor, UserProfile, AttendanceRecord, VisitRecord, LateLoginRequest, TourPlanRescheduleRequest, POBOrder } from '../../types';
 import { StorageService, STORAGE_KEYS } from '../storageService';
 
 export interface FirmRecord {
@@ -23,6 +23,8 @@ export interface FirmRecord {
   area: string;
   district: string;
   address?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface DoctorDeletionRequest {
@@ -1246,5 +1248,84 @@ export class SupabaseDbService {
     current[dateKey] = plan;
     await StorageService.setItem(tourPlansKey, current);
   }
-}
+  // ==========================================
+  // 8. POB ORDERS & PRODUCTS
+  // ==========================================
 
+  public static async submitOrder(order: POBOrder): Promise<void> {
+    const list = await StorageService.getItem<POBOrder[]>(STORAGE_KEYS.ORDERS_LOCAL, []);
+    await StorageService.setItem(STORAGE_KEYS.ORDERS_LOCAL, [order, ...list.filter(o => o.id !== order.id)]);
+
+    if (!this.isConnected()) return;
+
+    try {
+      await fetch(`${SUPABASE_CONFIG.url}/rest/v1/orders`, {
+        method: 'POST',
+        headers: { ...this.getHeaders(), Prefer: 'resolution=merge-duplicates' },
+        body: JSON.stringify({
+          id: order.id,
+          order_number: order.orderNumber,
+          employee_id: order.employeeId,
+          employee_name: order.employeeName,
+          buyer_type: order.buyerType,
+          buyer_id: order.buyerId,
+          buyer_name: order.buyerName,
+          stockist_name: order.stockistName || null,
+          territory: order.territory,
+          order_date: order.orderDate,
+          sub_total: order.subTotal,
+          gst_amount: order.gstAmount,
+          grand_total: order.grandTotal,
+          items: order.items,
+          remarks: order.remarks || null,
+          latitude: order.latitude,
+          longitude: order.longitude,
+          sync_status: 'SYNCED',
+        }),
+      });
+    } catch (err) {
+      console.warn('[Supabase] submitOrder error:', err);
+    }
+  }
+
+  public static async fetchOrders(): Promise<POBOrder[]> {
+    if (!this.isConnected()) {
+      return await StorageService.getItem<POBOrder[]>(STORAGE_KEYS.ORDERS_LOCAL, []);
+    }
+
+    try {
+      const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/orders?order=created_at.desc`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+
+      if (!res.ok) {
+        return await StorageService.getItem<POBOrder[]>(STORAGE_KEYS.ORDERS_LOCAL, []);
+      }
+
+      const raw = await res.json();
+      return raw.map((d: any) => ({
+        id: d.id,
+        orderNumber: d.order_number,
+        employeeId: d.employee_id,
+        employeeName: d.employee_name,
+        buyerType: d.buyer_type,
+        buyerId: d.buyer_id,
+        buyerName: d.buyer_name,
+        stockistName: d.stockist_name || undefined,
+        territory: d.territory,
+        orderDate: d.order_date,
+        subTotal: Number(d.sub_total || 0),
+        gstAmount: Number(d.gst_amount || 0),
+        grandTotal: Number(d.grand_total || 0),
+        items: d.items || [],
+        remarks: d.remarks || undefined,
+        latitude: d.latitude,
+        longitude: d.longitude,
+        syncStatus: 'SYNCED',
+      }));
+    } catch (err) {
+      return await StorageService.getItem<POBOrder[]>(STORAGE_KEYS.ORDERS_LOCAL, []);
+    }
+  }
+}

@@ -3,6 +3,7 @@ import { StorageService, STORAGE_KEYS } from './storageService';
 import { SyncService } from './sync/syncService';
 import { PRODUCTS_MOCK, CURRENT_USER } from '../constants/mockData';
 import { AuthService } from './authService';
+import { SupabaseDbService } from './supabase/supabaseDbService';
 
 export class OrderService {
   public static async getProducts(): Promise<Product[]> {
@@ -15,6 +16,12 @@ export class OrderService {
   }
 
   public static async getOrders(): Promise<POBOrder[]> {
+    if (SupabaseDbService.isConnected()) {
+      try {
+        const cloudOrders = await SupabaseDbService.fetchOrders();
+        if (cloudOrders && cloudOrders.length > 0) return cloudOrders;
+      } catch (e) {}
+    }
     return await StorageService.getItem<POBOrder[]>(STORAGE_KEYS.ORDERS_LOCAL, []);
   }
 

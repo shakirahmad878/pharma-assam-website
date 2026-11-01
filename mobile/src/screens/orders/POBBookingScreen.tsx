@@ -8,6 +8,7 @@ import { Button } from '../../components/common/Button';
 import { OrderService } from '../../services/orderService';
 import { LocationService } from '../../services/location/locationService';
 import { AuthService } from '../../services/authService';
+import { SupabaseDbService } from '../../services/supabase/supabaseDbService';
 import { Product, CartItem, Chemist } from '../../types';
 import { CHEMISTS_MOCK } from '../../constants/mockData';
 
@@ -18,13 +19,31 @@ interface POBBookingScreenProps {
 
 export const POBBookingScreen: React.FC<POBBookingScreenProps> = ({ onBack, onOrderSuccess }) => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [chemists] = useState<Chemist[]>(CHEMISTS_MOCK);
+  const [chemists, setChemists] = useState<Chemist[]>(CHEMISTS_MOCK);
   const [selectedChemist, setSelectedChemist] = useState<Chemist>(CHEMISTS_MOCK[0]);
   const [cart, setCart] = useState<Record<string, CartItem>>({});
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     OrderService.getProducts().then(setProducts);
+    SupabaseDbService.fetchFirms().then(firms => {
+      if (firms && firms.length > 0) {
+        const mapped: Chemist[] = firms.map(f => ({
+          id: f.id,
+          shopName: f.name,
+          contactPerson: f.contactPerson || 'Proprietor',
+          drugLicenseNumber: f.dlNumber || 'AS-DL-ACTIVE',
+          district: f.district,
+          area: f.area,
+          routeId: 'route-cachar-01',
+          phone: f.phone || '',
+          latitude: f.latitude || 24.8333,
+          longitude: f.longitude || 92.7789,
+        }));
+        setChemists(mapped);
+        setSelectedChemist(mapped[0]);
+      }
+    });
   }, []);
 
   const handleUpdateQuantity = (product: Product, delta: number) => {

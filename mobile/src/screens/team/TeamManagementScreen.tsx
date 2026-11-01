@@ -20,6 +20,7 @@ import { DivisionService, DivisionType, DIVISIONS } from '../../services/divisio
 import { UserProfile, UserRole, LateLoginRequest, TourPlanRescheduleRequest } from '../../types';
 import { SupabaseDbService } from '../../services/supabase/supabaseDbService';
 import { DoctorService } from '../../services/doctorService';
+import { LocationService } from '../../services/location/locationService';
 
 interface TeamManagementScreenProps {
   onBack: () => void;
@@ -159,35 +160,93 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onBa
     Alert.alert('Deletion Declined', 'Doctor deletion request rejected.');
   };
 
-  const handleViewLiveLocation = async (emp: UserProfile) => {
+    const handleViewLiveLocation = async (emp: UserProfile) => {
     try {
-      const att = await SupabaseDbService.getLatestEmployeeLocation(emp.id);
-      const isKarimganj = (emp.territory || '').toLowerCase().includes('karimganj');
-      const isHailakandi = (emp.territory || '').toLowerCase().includes('hailakandi');
-      const lat = att?.latitude || (isKarimganj ? 24.8649 : isHailakandi ? 24.6838 : 24.8333);
-      const lng = att?.longitude || (isKarimganj ? 92.3592 : isHailakandi ? 92.5672 : 92.7789);
-      const timeStr = att?.punch_in_timestamp ? new Date(att.punch_in_timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (att?.date || 'Today');
-      const statusText = att?.status || 'Active on Shift';
-      const accuracy = att?.accuracy_meters ? `±${att.accuracy_meters}m` : '±6m (High Precision)';
+      const today = new Date().toISOString().split('T')[0];
+      const isSelf = emp.id === currentUser?.id || emp.employeeCode === currentUser?.employeeCode;
 
-      Alert.alert(
-        `📍 Field Telemetry: ${emp.name}`,
-        `Employee ID: #${emp.employeeCode}\nRole: ${emp.role === 'MEDICAL_REP' ? 'Medical Representative' : emp.role}\nTerritory: ${emp.territory || 'Assam'}\nStatus: ${statusText}\nLast GPS Ping: ${timeStr}\nAccuracy: ${accuracy}\nCoordinates: ${lat.toFixed(4)}, ${lng.toFixed(4)}`,
-        [
-          { text: 'Close', style: 'cancel' },
-          {
-            text: '🗺️ Open in Google Maps',
-            onPress: () => {
-              const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
-              Linking.openURL(url);
+      // If viewing self, read device GPS hardware directly
+      let liveGps: any = null;
+      if (isSelf) {
+        liveGps = await LocationService.getCurrentLocation();
+      }
+
+      const att = await SupabaseDbService.getLatestEmployeeLocation(emp.id);
+      const isPunchedInToday = att && att.date === today && att.status === 'PUNCHED_IN';
+
+      if (isSelf && liveGps && liveGps.latitude && liveGps.longitude) {
+        const lat = liveGps.latitude;
+        const lng = liveGps.longitude;
+        const acc = liveGps.accuracyMeters ? `±${Math.round(liveGps.accuracyMeters)}m` : '±6m (High Precision GPS)';
+        const shiftStatus = isPunchedInToday ? 'Active on Field Duty' : 'Shift Not Punched In (Device GPS Active)';
+        Alert.alert(
+          `📍 Real-Time GPS: ${emp.name}`,
+          `Employee ID: #${emp.employeeCode}
+Role: ${emp.role === 'REGIONAL_MANAGER' ? 'Regional Sales Manager' : emp.role}
+Duty Status: ${shiftStatus}
+Device Coordinates: ${lat.toFixed(5)}, ${lng.toFixed(5)}
+Accuracy: ${acc}
+Hardware GPS Lock: Active 🛰️`,
+          [
+            { text: 'Close', style: 'cancel' },
+            {
+              text: '🗺️ Open in Google Maps',
+              onPress: () => {
+                Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`);
+              },
             },
-          },
+          ]
+        );
+        return;
+      }
+
+      if (isPunchedInToday && att.latitude && att.longitude) {
+        const lat = att.latitude;
+        const lng = att.longitude;
+        const timeStr = att.punch_in_timestamp
+          ? new Date(att.punch_in_timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          : 'Today';
+        const acc = att.accuracy_meters ? `±${Math.round(att.accuracy_meters)}m` : '±6m';
+        Alert.alert(
+          `📍 Field Duty GPS: ${emp.name}`,
+          `Employee ID: #${emp.employeeCode}
+Role: ${emp.role}
+Territory: ${emp.territory || 'Assam'}
+Status: Punched In (Active on Shift)
+Punch-in Time: ${timeStr}
+Route: ${att.route_name || 'Assigned Beat Route'}
+GPS Coordinates: ${lat.toFixed(5)}, ${lng.toFixed(5)}
+Accuracy: ${acc}`,
+          [
+            { text: 'Close', style: 'cancel' },
+            {
+              text: '🗺️ Open in Google Maps',
+              onPress: () => {
+                Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`);
+              },
+            },
+          ]
+        );
+        return;
+      }
+
+      // If no punch in today: DO NOT fake active coordinates!
+      Alert.alert(
+        `⚠️ Shift Not Started: ${emp.name}`,
+        `Employee ID: #${emp.employeeCode}
+Role: ${emp.role}
+Headquarter: ${emp.headquarter || 'HQ'}
+Territory: ${emp.territory || 'Assam'}
+
+Status: No shift punch-in recorded for today (${today}).
+
+Live GPS tracking activates automatically once the employee punches in their morning geotagged selfie and starts duty route.`,
+        [
+          { text: 'OK', style: 'cancel' }
         ]
       );
-    } catch (e) {
-      const defaultLat = 24.8333;
-      const defaultLng = 92.7789;
-      Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${defaultLat},${defaultLng}`);
+    } catch (e: any) {
+      Alert.alert('Telemetry Offline', e?.message || 'Unable to retrieve location telemetry.');
     }
   };
 
