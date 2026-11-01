@@ -92,7 +92,7 @@ export class GeofenceService {
    * Finds the closest chamber and passes if the rep is within radius of ANY registered chamber!
    */
   public static evaluateMultiClinicGeofence(
-    clinics: { id?: string; name: string; latitude: number; longitude: number }[],
+    clinics: { id?: string; name: string; latitude: number; longitude: number; address?: string; area?: string }[],
     currentLat: number,
     currentLng: number,
     currentAccuracyMeters: number,
@@ -107,6 +107,7 @@ export class GeofenceService {
     canStartVisit: boolean;
     statusText: string;
     matchedClinicName: string;
+    matchedClinic?: { id?: string; name: string; latitude: number; longitude: number; address?: string; area?: string };
   } {
     if (!clinics || clinics.length === 0) {
       return {
@@ -125,6 +126,7 @@ export class GeofenceService {
         canStartVisit: false,
         statusText: '🚫 Fake GPS Blocked: Developer mock location detected. Turn off mock apps in settings.',
         matchedClinicName: clinics[0].name,
+        matchedClinic: clinics[0],
       };
     }
 
@@ -156,6 +158,7 @@ export class GeofenceService {
           ? `Within Geofence (${withinClinic.distance}m from ${withinClinic.clinic.name} • GPS ±${Math.round(currentAccuracyMeters)}m). Verification Passed.`
           : `Low GPS Accuracy (±${Math.round(currentAccuracyMeters)}m). Step near window for satellite fix...`,
         matchedClinicName: withinClinic.clinic.name,
+        matchedClinic: withinClinic.clinic,
       };
     }
 
@@ -172,6 +175,7 @@ export class GeofenceService {
       canStartVisit: false,
       statusText: `Outside Clinic Radius (${closest.distance}m from ${closest.clinic.name} / max ${radiusMeters}m)`,
       matchedClinicName: closest.clinic.name,
+      matchedClinic: closest.clinic,
     };
   }
 }

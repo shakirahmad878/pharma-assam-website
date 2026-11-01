@@ -23,6 +23,7 @@ interface VisitExecutionScreenProps {
   doctor: Doctor;
   isGeofenceVerified: boolean;
   distanceMeters: number;
+  matchedChamber?: { id?: string; name: string; latitude: number; longitude: number; address?: string; area?: string };
   onBack: () => void;
   onVisitComplete: () => void;
 }
@@ -31,9 +32,18 @@ export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
   doctor,
   isGeofenceVerified,
   distanceMeters,
+  matchedChamber,
   onBack,
   onVisitComplete,
 }) => {
+  const activeChamber = matchedChamber || {
+    name: doctor.clinicName,
+    latitude: doctor.latitude,
+    longitude: doctor.longitude,
+    address: doctor.clinicAddress,
+    area: doctor.area,
+  };
+
   // Joint Working / Accompanied Personnel
   const [accompaniedBy, setAccompaniedBy] = useState<AccompaniedPerson>('SELF_SOLO');
   
@@ -61,10 +71,10 @@ export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
 
   const handleOpenChamberMap = () => {
     let url = '';
-    if (doctor.latitude && doctor.longitude && (doctor.latitude !== 0 || doctor.longitude !== 0)) {
-      url = `https://www.google.com/maps/dir/?api=1&destination=${doctor.latitude},${doctor.longitude}`;
+    if (activeChamber.latitude && activeChamber.longitude && (activeChamber.latitude !== 0 || activeChamber.longitude !== 0)) {
+      url = `https://www.google.com/maps/dir/?api=1&destination=${activeChamber.latitude},${activeChamber.longitude}`;
     } else {
-      const query = encodeURIComponent(`${doctor.name} ${doctor.clinicName} ${doctor.clinicAddress || doctor.area}`);
+      const query = encodeURIComponent(`${doctor.name} ${activeChamber.name} ${activeChamber.address || activeChamber.area || doctor.area}`);
       url = `https://www.google.com/maps/search/?api=1&query=${query}`;
     }
     Linking.openURL(url).catch(() => {
@@ -110,10 +120,14 @@ export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
   };
 
   const handleSubmitVisit = async () => {
+    const activeChamberName = matchedChamber?.name || doctor.clinicName;
+    const activeChamberLat = matchedChamber?.latitude || doctor.latitude;
+    const activeChamberLng = matchedChamber?.longitude || doctor.longitude;
+
     if (!isGeofenceVerified || distanceMeters > (doctor.geofenceRadiusMeters || 100)) {
       Alert.alert(
         'Visit Blocked - Out of Range 🚫',
-        `Cannot complete DCR call. You are currently ${Math.round(distanceMeters)}m away from ${doctor.clinicName}.\n\nRepPulse requires you to be physically within the 100-meter clinic perimeter to complete this visit.`
+        `Cannot complete DCR call. You are currently ${Math.round(distanceMeters)}m away from ${activeChamberName}.\n\nRepPulse requires you to be physically within the 100-meter perimeter of this chamber to complete this visit.`
       );
       return;
     }
@@ -155,23 +169,23 @@ export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
     await VisitService.recordVisit({
       doctorId: doctor.id,
       doctorName: doctor.name,
-      clinicName: doctor.clinicName,
+      clinicName: activeChamberName,
       employeeId: (AuthService.getCurrentUser() || CURRENT_USER).id,
       employeeName: (AuthService.getCurrentUser() || CURRENT_USER).name,
       accompaniedBy,
       accompaniedName: getAccompaniedName(accompaniedBy),
       routeId: doctor.routeId,
-      routeName: doctor.area,
+      routeName: activeChamber.area || doctor.area,
       date: new Date().toISOString().split('T')[0],
       checkInTimestamp: new Date(Date.now() - durationMinutes * 60000).toISOString(),
-      checkInLatitude: doctor.latitude,
-      checkInLongitude: doctor.longitude,
+      checkInLatitude: activeChamberLat,
+      checkInLongitude: activeChamberLng,
       checkInAccuracyMeters: 14,
       checkInDistanceMeters: distanceMeters,
       isGeofenceVerified,
       checkOutTimestamp: new Date().toISOString(),
-      checkOutLatitude: doctor.latitude,
-      checkOutLongitude: doctor.longitude,
+      checkOutLatitude: activeChamberLat,
+      checkOutLongitude: activeChamberLng,
       visitDurationMinutes: durationMinutes,
       visitPurpose,
       discussionNotes: discussionNotes.trim(),
@@ -191,7 +205,7 @@ export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
     setSubmitting(false);
     Alert.alert(
       'Visit Logged Successfully',
-      'Daily Call Report (DCR) for ' + doctor.name + ' has been saved and queued for sync.',
+      `Daily Call Report (DCR) for ${doctor.name} at ${activeChamberName} has been saved and queued for sync.`,
       [{ text: 'OK', onPress: onVisitComplete }]
     );
   };
@@ -212,8 +226,15 @@ export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
             <View style={{ flex: 1 }}>
               <Text style={styles.heroDocName}>{doctor.name}</Text>
               <Text style={styles.heroDocSpecialty}>{doctor.qualification}</Text>
-              <Text style={styles.heroClinic}>🏥 {doctor.clinicName}</Text>
-              <Text style={styles.heroArea}>📍 {doctor.clinicAddress}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+                <Text style={styles.heroClinic}>🏥 {activeChamber.name}</Text>
+                {matchedChamber && (
+                  <View style={styles.chamberBadge}>
+                    <Text style={styles.chamberBadgeText}>Visited Chamber</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={styles.heroArea}>📍 {activeChamber.address || activeChamber.area || doctor.clinicAddress}</Text>
             </View>
             <Badge
               label={isGeofenceVerified ? '100m Geofence Verified' : 'Within Range'}
@@ -227,7 +248,7 @@ export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
             onPress={handleOpenChamberMap}
             activeOpacity={0.8}
           >
-            <Text style={styles.navigateBtnText}>🗺️ Chamber Directions (Google Maps)</Text>
+            <Text style={styles.navigateBtnText}>🗺️ Directions to {activeChamber.name} (Google Maps)</Text>
           </TouchableOpacity>
         </View>
 
@@ -494,6 +515,17 @@ const styles = StyleSheet.create({
   heroDocName: { fontSize: typography.fontSize.lg, fontWeight: typography.fontWeight.bold, color: '#0F172A' },
   heroDocSpecialty: { fontSize: typography.fontSize.xs, color: '#2563EB', marginTop: 2, fontWeight: typography.fontWeight.semibold },
   heroClinic: { fontSize: typography.fontSize.xs, color: '#334155', marginTop: 4, fontWeight: typography.fontWeight.medium },
+  chamberBadge: {
+    backgroundColor: '#DBEAFE',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: radius.sm,
+  },
+  chamberBadgeText: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#1D4ED8',
+  },
   heroArea: { fontSize: typography.fontSize.xxs, color: '#64748B', marginTop: 2 },
   navigateBtn: {
     flexDirection: 'row',

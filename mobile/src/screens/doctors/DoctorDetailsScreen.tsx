@@ -28,7 +28,12 @@ import { DivisionService } from '../../services/divisionService';
 interface DoctorDetailsScreenProps {
   doctorId: string;
   onBack: () => void;
-  onStartVisit: (doctor: Doctor, isGeofenceOk: boolean, distanceMeters: number) => void;
+  onStartVisit: (
+    doctor: Doctor,
+    isGeofenceOk: boolean,
+    distanceMeters: number,
+    matchedClinic?: any
+  ) => void;
 }
 
 const COMMON_SPECIALTIES = [
@@ -76,12 +81,14 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
     accuracyAcceptable?: boolean;
     canStartVisit?: boolean;
     statusText: string;
+    matchedClinicName?: string;
+    matchedClinic?: any;
   }>({
     status: 'NOT_STARTED',
     distanceMeters: 0,
     isWithinRadius: false,
     canStartVisit: false,
-    statusText: 'Checking satellite distance...',
+    statusText: 'Checking satellite distance to registered chambers...',
   });
   const [checkingLocation, setCheckingLocation] = useState(false);
 
@@ -169,13 +176,24 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
         LocationService.validateAuthenticGps(loc, 'Doctor Clinic Visit');
       }
 
-      const evaluation = GeofenceService.evaluateGeofence(
-        doc.latitude,
-        doc.longitude,
+      const doctorClinics = (doc.clinics && doc.clinics.length > 0)
+        ? doc.clinics
+        : [{
+            id: 'clinic-primary',
+            name: doc.clinicName,
+            address: doc.clinicAddress,
+            area: doc.area,
+            latitude: doc.latitude,
+            longitude: doc.longitude,
+            isPrimary: true,
+          }];
+
+      const evaluation = GeofenceService.evaluateMultiClinicGeofence(
+        doctorClinics,
         loc.latitude,
         loc.longitude,
         loc.accuracyMeters,
-        doc.geofenceRadiusMeters,
+        doc.geofenceRadiusMeters || 100,
         loc.isMockLocation
       );
       setGeofenceEval(evaluation);
@@ -184,6 +202,7 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
         status: 'LOCATION_ACCURACY_LOW',
         distanceMeters: 0,
         isWithinRadius: false,
+        canStartVisit: false,
         statusText: 'GPS fix unavailable. Please check location permissions.',
       });
     }
@@ -222,9 +241,28 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
       Alert.alert('Required Field', 'Please enter Chamber Address / Area.');
       return;
     }
-    const lat = chamberCoords ? chamberCoords.lat : doctor.latitude;
-    const lng = chamberCoords ? chamberCoords.lng : doctor.longitude;
 
+    if (!chamberCoords) {
+      Alert.alert(
+        'GPS Geotagging Required 📍',
+        `You have not captured GPS coordinates for "${newChamberName.trim()}".\n\nIf you are physically at this chamber, tap "Capture GPS Now" to ensure visits at this chamber are verified.\n\nDo you want to save with primary clinic coordinates anyway?`,
+        [
+          { text: 'Capture GPS Now', onPress: handleCaptureChamberGps },
+          {
+            text: 'Save Anyway',
+            onPress: () => doSaveChamber(doctor.latitude, doctor.longitude),
+          },
+          { text: 'Cancel', style: 'cancel' },
+        ]
+      );
+      return;
+    }
+
+    await doSaveChamber(chamberCoords.lat, chamberCoords.lng);
+  };
+
+  const doSaveChamber = async (lat: number, lng: number) => {
+    if (!doctor) return;
     setSavingChamber(true);
     try {
       const updated = await DoctorService.addClinicToDoctor(doctor.id, {
@@ -242,7 +280,7 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
         setNewChamberName('');
         setNewChamberArea('');
         setChamberCoords(null);
-        Alert.alert('Chamber Added ✅', `${newChamberName.trim()} has been registered. Geofence active for all chambers.`);
+        Alert.alert('Chamber Added ✅', `"${newChamberName.trim()}" has been registered. Geofence is active across all registered chambers!`);
         checkGeofence(updated);
       }
     } catch (err) {
@@ -707,7 +745,7 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
               doctor.todayVisitStatus === 'COMPLETED'
                 ? "✔ Visit Completed Today"
                 : geofenceEval.canStartVisit
-                ? "✓ Start Geofence Verified Visit"
+                ? `✓ Start Visit at ${geofenceEval.matchedClinicName || doctor.clinicName}`
                 : !geofenceEval.isWithinRadius
                 ? `🚫 Out of Range (${Math.round(geofenceEval.distanceMeters)}m Away)`
                 : `📡 Weak GPS Signal (±${Math.round(geofenceEval.accuracyMeters || 0)}m)`
@@ -718,16 +756,16 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
                 return;
               }
               if (geofenceEval.canStartVisit) {
-                onStartVisit(doctor, true, geofenceEval.distanceMeters);
+                onStartVisit(doctor, true, geofenceEval.distanceMeters, geofenceEval.matchedClinic);
               } else if (!geofenceEval.isWithinRadius) {
                 Alert.alert(
                   'Visit Blocked - Out of 100m Range 🚫',
-                  `You are currently ${Math.round(geofenceEval.distanceMeters)}m away from ${doctor.clinicName}.\n\nRepPulse requires you to be physically within the 100-meter clinic perimeter to start and complete this visit.`
+                  `You are currently ${Math.round(geofenceEval.distanceMeters)}m away from ${geofenceEval.matchedClinicName || doctor.clinicName}.\n\nRepPulse requires you to be physically within the 100-meter perimeter of any registered chamber of this doctor to start and complete this visit.`
                 );
               } else {
                 Alert.alert(
                   'Weak GPS Satellite Signal 📡',
-                  `You are within the clinic perimeter (${Math.round(geofenceEval.distanceMeters)}m), but phone GPS satellite accuracy is currently ±${Math.round(geofenceEval.accuracyMeters || 0)}m.\n\nPlease step near a window or open door for a few seconds to get a stronger satellite lock.`
+                  `You are within the chamber perimeter (${Math.round(geofenceEval.distanceMeters)}m), but phone GPS satellite accuracy is currently ±${Math.round(geofenceEval.accuracyMeters || 0)}m.\n\nPlease step near a window or open door for a few seconds to get a stronger satellite lock.`
                 );
               }
             }}

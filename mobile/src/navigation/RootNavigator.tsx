@@ -330,8 +330,13 @@ export const RootNavigator: React.FC = () => {
           <DoctorDetailsScreen
             doctorId={currentParams.doctorId}
             onBack={pop}
-            onStartVisit={(doc, ok, dist) =>
-              push('VISIT_EXECUTION', { doctor: doc, isGeofenceOk: ok, distanceMeters: dist })
+            onStartVisit={(doc, ok, dist, chamber) =>
+              push('VISIT_EXECUTION', {
+                doctor: doc,
+                isGeofenceOk: ok,
+                distanceMeters: dist,
+                matchedChamber: chamber,
+              })
             }
           />
         )}
@@ -341,6 +346,7 @@ export const RootNavigator: React.FC = () => {
             doctor={currentParams.doctor}
             isGeofenceVerified={currentParams.isGeofenceOk}
             distanceMeters={currentParams.distanceMeters}
+            matchedChamber={currentParams.matchedChamber}
             onBack={pop}
             onVisitComplete={() => replace('DASHBOARD')}
           />
