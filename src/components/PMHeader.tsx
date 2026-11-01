@@ -85,31 +85,33 @@ export const PMHeader: React.FC<PMHeaderProps> = ({
             </div>
           </div>
 
-          {/* Clean Horizontal Navigation Menu */}
-          <nav className="hidden xl:flex items-center gap-1 font-semibold text-[13.5px] text-[#1E293B] flex-shrink-0">
+          {/* Modern Menu-Styled Navigation Bar */}
+          <nav className="hidden xl:flex items-center gap-1 bg-slate-100/90 p-1.5 rounded-2xl border border-slate-200/80 shadow-2xs backdrop-blur-xs flex-shrink-0">
             
             {/* Home */}
             <button
               onClick={() => handleNavClick('home')}
-              className={`px-3.5 py-2 rounded-lg transition-all whitespace-nowrap ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                 activeSection === 'home'
-                  ? 'text-[#10243A] bg-[#F1F6F8] font-bold border-b-2 border-[#18A6A6]'
-                  : 'hover:text-[#18A6A6] hover:bg-[#F5F8FA]'
+                  ? 'bg-white text-[#10243A] shadow-xs border border-slate-200/80 font-black'
+                  : 'text-slate-600 hover:text-[#10243A] hover:bg-white/60'
               }`}
             >
-              Home
+              <span className={`w-1.5 h-1.5 rounded-full transition-opacity ${activeSection === 'home' ? 'bg-[#18A6A6] opacity-100' : 'opacity-0'}`}></span>
+              <span>Home</span>
             </button>
 
-            {/* About Us */}
+            {/* Corporate Factsheet */}
             <button
               onClick={() => handleNavClick('about')}
-              className={`px-3.5 py-2 rounded-lg transition-all whitespace-nowrap ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                 activeSection === 'about'
-                  ? 'text-[#10243A] bg-[#F1F6F8] font-bold border-b-2 border-[#18A6A6]'
-                  : 'hover:text-[#18A6A6] hover:bg-[#F5F8FA]'
+                  ? 'bg-white text-[#10243A] shadow-xs border border-slate-200/80 font-black'
+                  : 'text-slate-600 hover:text-[#10243A] hover:bg-white/60'
               }`}
             >
-              Corporate Factsheet
+              <span className={`w-1.5 h-1.5 rounded-full transition-opacity ${activeSection === 'about' ? 'bg-[#18A6A6] opacity-100' : 'opacity-0'}`}></span>
+              <span>Corporate Factsheet</span>
             </button>
 
             {/* Products Dropdown */}
@@ -120,14 +122,15 @@ export const PMHeader: React.FC<PMHeaderProps> = ({
             >
               <button
                 onClick={() => handleNavClick('products')}
-                className={`px-3.5 py-2 rounded-lg transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                   activeSection === 'products'
-                    ? 'text-[#10243A] bg-[#F1F6F8] font-bold border-b-2 border-[#18A6A6]'
-                    : 'hover:text-[#18A6A6] hover:bg-[#F5F8FA]'
+                    ? 'bg-white text-[#10243A] shadow-xs border border-slate-200/80 font-black'
+                    : 'text-slate-600 hover:text-[#10243A] hover:bg-white/60'
                 }`}
               >
+                <span className={`w-1.5 h-1.5 rounded-full transition-opacity ${activeSection === 'products' ? 'bg-[#18A6A6] opacity-100' : 'opacity-0'}`}></span>
                 <span>Therapeutic Formulations</span>
-                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isProductsMenuOpen ? 'rotate-180 text-[#18A6A6]' : 'text-[#64748B]'}`} />
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isProductsMenuOpen ? 'rotate-180 text-[#18A6A6]' : 'text-slate-400'}`} />
               </button>
 
               {/* Mega Dropdown Box */}
@@ -244,28 +247,30 @@ export const PMHeader: React.FC<PMHeaderProps> = ({
               )}
             </div>
 
-            {/* Flipbook / Visual Aid */}
+            {/* Visual Aid Monograph */}
             <button
               onClick={() => handleNavClick('flipbook')}
-              className={`px-3.5 py-2 rounded-lg transition-all whitespace-nowrap ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                 activeSection === 'flipbook'
-                  ? 'text-[#10243A] bg-[#F1F6F8] font-bold border-b-2 border-[#18A6A6]'
-                  : 'hover:text-[#18A6A6] hover:bg-[#F5F8FA]'
+                  ? 'bg-white text-[#10243A] shadow-xs border border-slate-200/80 font-black'
+                  : 'text-slate-600 hover:text-[#10243A] hover:bg-white/60'
               }`}
             >
-              Visual Aid Monograph
+              <span className={`w-1.5 h-1.5 rounded-full transition-opacity ${activeSection === 'flipbook' ? 'bg-[#18A6A6] opacity-100' : 'opacity-0'}`}></span>
+              <span>Visual Aid Monograph</span>
             </button>
 
-            {/* Contact Us */}
+            {/* Contact Dossier */}
             <button
               onClick={() => handleNavClick('contact')}
-              className={`px-3.5 py-2 rounded-lg transition-all whitespace-nowrap ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                 activeSection === 'contact'
-                  ? 'text-[#10243A] bg-[#F1F6F8] font-bold border-b-2 border-[#18A6A6]'
-                  : 'hover:text-[#18A6A6] hover:bg-[#F5F8FA]'
+                  ? 'bg-[#10243A] text-white shadow-xs font-black'
+                  : 'text-slate-600 hover:text-[#10243A] hover:bg-white/60'
               }`}
             >
-              Contact Dossier
+              <span className={`w-1.5 h-1.5 rounded-full transition-opacity ${activeSection === 'contact' ? 'bg-[#18A6A6] opacity-100' : 'opacity-0'}`}></span>
+              <span>Contact Dossier</span>
             </button>
           </nav>
 
