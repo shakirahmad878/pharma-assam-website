@@ -202,12 +202,13 @@ export class AuthService {
     return { autoLoggedOut: false };
   }
 
-  public static async getTodayLateApproval(employeeCode = 'NLCL-0004'): Promise<LateLoginApproval | null> {
+  public static async getTodayLateApproval(employeeCode = 'NLCL-0005'): Promise<LateLoginApproval | null> {
     const todayStr = new Date().toISOString().split('T')[0];
+    const cleanCode = (employeeCode || 'NLCL-0005').trim().toUpperCase();
 
     // 1. Check SupabaseDbService for live approval status
     try {
-      const liveApproval = await SupabaseDbService.checkTodayLateLoginApproval(employeeCode, todayStr);
+      const liveApproval = await SupabaseDbService.checkTodayLateLoginApproval(cleanCode, todayStr);
       if (liveApproval && liveApproval.status === 'APPROVED') {
         const approval: LateLoginApproval = {
           date: todayStr,
@@ -242,9 +243,9 @@ export class AuthService {
     const now = new Date();
     const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    const empId = employee?.id || 'usr-nlcl-0004';
-    const empName = employee?.name || 'Pranjal Malakar';
-    const empCode = employee?.employeeCode || 'NLCL-0004';
+    const empCode = (employee?.employeeCode || 'NLCL-0005').trim().toUpperCase();
+    const empName = employee?.name || (empCode === 'NLCL-0005' ? 'Satyam Shil' : 'Pranjal Malakar');
+    const empId = employee?.id || `usr-${empCode.toLowerCase()}`;
 
     const req: LateLoginRequest = {
       id: `late_req_${empCode}_${Date.now()}`,

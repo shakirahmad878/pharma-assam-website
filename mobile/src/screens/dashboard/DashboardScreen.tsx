@@ -16,6 +16,7 @@ import { AuthService } from '../../services/authService';
 import { RouteService } from '../../services/routeService';
 import { SyncService } from '../../services/sync/syncService';
 import { AttendanceService } from '../../services/attendanceService';
+import { SupabaseDbService } from '../../services/supabase/supabaseDbService';
 import { SyncStatusBar } from '../../components/common/SyncStatusBar';
 import { UserProfile, RoutePlan, MTPDayPlan } from '../../types';
 
@@ -34,6 +35,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const [isWorking, setIsWorking] = useState(true);
   const [punchInTime, setPunchInTime] = useState<string | null>('10:14 AM');
   const [refreshing, setRefreshing] = useState(false);
+  const [pendingApprovalsCount, setPendingApprovalsCount] = useState<number>(0);
 
   const loadDashboardData = async () => {
     const usr = AuthService.getCurrentUser();
@@ -47,6 +49,13 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     setIsWorking(att.isPunchedIn);
     if (att.punchInTime) {
       setPunchInTime(att.punchInTime);
+    }
+
+    if (usr?.role === 'REGIONAL_MANAGER' || usr?.role === 'SUPER_ADMIN' || usr?.role === 'AREA_MANAGER') {
+      try {
+        const pending = await SupabaseDbService.getPendingLateLoginRequests();
+        setPendingApprovalsCount(pending.length);
+      } catch (e) {}
     }
   };
 
@@ -292,6 +301,11 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             onPress={() => onNavigate('TEAM_MANAGEMENT')}
             activeOpacity={0.75}
           >
+            {pendingApprovalsCount > 0 && (
+              <View style={styles.tileBadgeContainer}>
+                <Text style={styles.tileBadgeText}>{pendingApprovalsCount}</Text>
+              </View>
+            )}
             <Ionicons name="people-circle-outline" size={32} color="#60A5FA" />
             <Text style={styles.tileTitleCenter}>TEAM &{"\n"}EMPLOYEES</Text>
           </TouchableOpacity>
@@ -420,6 +434,55 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     padding: spacing.sm,
     ...shadows.card,
+  },
+  pendingAlertBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1.5,
+    borderColor: '#F87171',
+    borderRadius: radius.lg,
+    padding: 12,
+    marginBottom: spacing.md,
+    gap: 10,
+    ...shadows.card,
+  },
+  alertIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FEE2E2',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  alertTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#991B1B',
+  },
+  alertSubtitle: {
+    fontSize: 11,
+    color: '#7F1D1D',
+    marginTop: 2,
+    lineHeight: 15,
+  },
+  tileBadgeContainer: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    backgroundColor: '#DC2626',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+    zIndex: 10,
+  },
+  tileBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '900',
   },
   tileTitle: {
     color: '#FFFFFF',

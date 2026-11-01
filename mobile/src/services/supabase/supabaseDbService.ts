@@ -379,7 +379,7 @@ export class SupabaseDbService {
           pin: e.pin || '',
           territory: territory,
           headquarter: e.headquarter,
-          assignedRouteIds: e.assigned_route_ids || [],
+          assignedRouteIds: (e.assigned_route_ids || []).filter((r: string) => typeof r === 'string' && !r.startsWith('LATE_REQ|')),
           activeRouteId: e.active_route_id || 'route-cachar-01',
         };
       });
@@ -667,7 +667,7 @@ export class SupabaseDbService {
             id: req.id,
             employee_id: req.employeeId,
             employee_name: req.employeeName,
-            employee_code: req.employeeCode,
+            employee_code: req.employeeCode.toUpperCase(),
             date: req.date,
             attempted_time: req.attemptedTime,
             reason: req.reason,
@@ -679,14 +679,47 @@ export class SupabaseDbService {
           }),
         });
       } catch (err) {
-        console.warn('[Supabase] submitLateLoginRequest error:', err);
+        console.warn('[Supabase] submitLateLoginRequest table post error:', err);
+      }
+
+      // 3. Resilient cloud fallback: mirror in employees.assigned_route_ids if table is missing or pending
+      try {
+        const empCodeUpper = req.employeeCode.toUpperCase();
+        const empRes = await fetch(
+          `${SUPABASE_CONFIG.url}/rest/v1/employees?employee_code=eq.${encodeURIComponent(empCodeUpper)}`,
+          { method: 'GET', headers: this.getHeaders() }
+        );
+        if (empRes.ok) {
+          const emps = await empRes.json();
+          if (emps && emps.length > 0) {
+            const emp = emps[0];
+            const cleanRoutes = (emp.assigned_route_ids || []).filter(
+              (r: string) => typeof r === 'string' && !r.startsWith('LATE_REQ|')
+            );
+            const token = `LATE_REQ|PENDING|${req.date}|${req.attemptedTime}|${encodeURIComponent(req.reason)}|${req.id}|${encodeURIComponent(req.employeeName)}`;
+            cleanRoutes.push(token);
+
+            await fetch(`${SUPABASE_CONFIG.url}/rest/v1/employees?id=eq.${encodeURIComponent(emp.id)}`, {
+              method: 'PATCH',
+              headers: this.getHeaders(),
+              body: JSON.stringify({
+                assigned_route_ids: cleanRoutes,
+                updated_at: new Date().toISOString(),
+              }),
+            });
+          }
+        }
+      } catch (fallbackErr) {
+        console.warn('[Supabase] submitLateLoginRequest fallback mirror error:', fallbackErr);
       }
     }
     return req;
   }
 
   public static async getPendingLateLoginRequests(): Promise<LateLoginRequest[]> {
-    let requests: LateLoginRequest[] = [];
+    const mergedMap = new Map<string, LateLoginRequest>();
+
+    // 1. Try dedicated Supabase table
     if (this.isConnected()) {
       try {
         const res = await fetch(
@@ -698,75 +731,84 @@ export class SupabaseDbService {
         );
         if (res.ok) {
           const raw = await res.json();
-          requests = raw.map((r: any) => ({
-            id: r.id,
-            employeeId: r.employee_id,
-            employeeName: r.employee_name,
-            employeeCode: r.employee_code,
-            date: r.date,
-            attemptedTime: r.attempted_time,
-            reason: r.reason,
-            status: r.status,
-            reviewedBy: r.reviewed_by,
-            reviewedAt: r.reviewed_at,
-            createdAt: r.created_at,
-            updatedAt: r.updated_at,
-          }));
+          raw.forEach((r: any) => {
+            mergedMap.set(r.id, {
+              id: r.id,
+              employeeId: r.employee_id,
+              employeeName: r.employee_name,
+              employeeCode: r.employee_code,
+              date: r.date,
+              attemptedTime: r.attempted_time,
+              reason: r.reason,
+              status: r.status,
+              reviewedBy: r.reviewed_by,
+              reviewedAt: r.reviewed_at,
+              createdAt: r.created_at,
+              updatedAt: r.updated_at,
+            });
+          });
         }
       } catch (err) {
-        console.warn('[Supabase] getPendingLateLoginRequests error:', err);
+        console.warn('[Supabase] getPendingLateLoginRequests table error:', err);
+      }
+
+      // 2. Resilient cloud fallback: inspect employees.assigned_route_ids
+      try {
+        const empRes = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/employees?select=*`, {
+          method: 'GET',
+          headers: this.getHeaders(),
+        });
+        if (empRes.ok) {
+          const allEmps = await empRes.json();
+          allEmps.forEach((emp: any) => {
+            const routes = emp.assigned_route_ids || [];
+            routes.forEach((r: string) => {
+              if (typeof r === 'string' && r.startsWith('LATE_REQ|PENDING|')) {
+                const parts = r.split('|');
+                const date = parts[2] || '';
+                const time = parts[3] || '';
+                const reason = decodeURIComponent(parts[4] || '');
+                const id = parts[5] || `late_${emp.employee_code}_${date}`;
+                const name = decodeURIComponent(parts[6] || emp.name);
+
+                if (!mergedMap.has(id)) {
+                  mergedMap.set(id, {
+                    id,
+                    employeeId: emp.id,
+                    employeeName: name,
+                    employeeCode: emp.employee_code,
+                    date,
+                    attemptedTime: time,
+                    reason,
+                    status: 'PENDING',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                  });
+                }
+              }
+            });
+          });
+        }
+      } catch (fallbackErr) {
+        console.warn('[Supabase] getPendingLateLoginRequests fallback read error:', fallbackErr);
       }
     }
 
+    // 3. Merge local storage
     const localList = await StorageService.getItem<LateLoginRequest[]>(STORAGE_KEYS.LATE_LOGIN_REQUESTS, []);
-    const mergedMap = new Map<string, LateLoginRequest>();
-    localList.forEach(r => mergedMap.set(r.id, r));
-    requests.forEach(r => mergedMap.set(r.id, r));
+    localList.forEach(r => {
+      if (r.status === 'PENDING' && !mergedMap.has(r.id)) {
+        mergedMap.set(r.id, r);
+      }
+    });
+
     const all = Array.from(mergedMap.values());
     await StorageService.setItem(STORAGE_KEYS.LATE_LOGIN_REQUESTS, all);
     return all.filter(r => r.status === 'PENDING');
   }
 
   public static async getAllLateLoginRequests(): Promise<LateLoginRequest[]> {
-    let requests: LateLoginRequest[] = [];
-    if (this.isConnected()) {
-      try {
-        const res = await fetch(
-          `${SUPABASE_CONFIG.url}/rest/v1/late_login_requests?order=created_at.desc`,
-          {
-            method: 'GET',
-            headers: this.getHeaders(),
-          }
-        );
-        if (res.ok) {
-          const raw = await res.json();
-          requests = raw.map((r: any) => ({
-            id: r.id,
-            employeeId: r.employee_id,
-            employeeName: r.employee_name,
-            employeeCode: r.employee_code,
-            date: r.date,
-            attemptedTime: r.attempted_time,
-            reason: r.reason,
-            status: r.status,
-            reviewedBy: r.reviewed_by,
-            reviewedAt: r.reviewed_at,
-            createdAt: r.created_at,
-            updatedAt: r.updated_at,
-          }));
-        }
-      } catch (err) {
-        console.warn('[Supabase] getAllLateLoginRequests error:', err);
-      }
-    }
-
-    const localList = await StorageService.getItem<LateLoginRequest[]>(STORAGE_KEYS.LATE_LOGIN_REQUESTS, []);
-    const mergedMap = new Map<string, LateLoginRequest>();
-    localList.forEach(r => mergedMap.set(r.id, r));
-    requests.forEach(r => mergedMap.set(r.id, r));
-    const all = Array.from(mergedMap.values());
-    await StorageService.setItem(STORAGE_KEYS.LATE_LOGIN_REQUESTS, all);
-    return all;
+    return await this.getPendingLateLoginRequests();
   }
 
   public static async updateLateLoginStatus(
@@ -775,6 +817,8 @@ export class SupabaseDbService {
     reviewerName = 'Bodrud Jaman Sadiol (RSM)'
   ): Promise<boolean> {
     const reviewedAt = new Date().toISOString();
+    const todayStr = reviewedAt.split('T')[0];
+
     // 1. Update local cache
     const localList = await StorageService.getItem<LateLoginRequest[]>(STORAGE_KEYS.LATE_LOGIN_REQUESTS, []);
     let updatedReq: LateLoginRequest | undefined;
@@ -798,7 +842,7 @@ export class SupabaseDbService {
       });
     }
 
-    // 2. Supabase
+    // 2. Supabase Table Patch
     if (this.isConnected()) {
       try {
         await fetch(`${SUPABASE_CONFIG.url}/rest/v1/late_login_requests?id=eq.${encodeURIComponent(requestId)}`, {
@@ -812,7 +856,42 @@ export class SupabaseDbService {
           }),
         });
       } catch (err) {
-        console.warn('[Supabase] updateLateLoginStatus error:', err);
+        console.warn('[Supabase] updateLateLoginStatus table patch error:', err);
+      }
+
+      // 3. Resilient cloud fallback: update employees.assigned_route_ids
+      try {
+        const empRes = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/employees?select=*`, {
+          method: 'GET',
+          headers: this.getHeaders(),
+        });
+        if (empRes.ok) {
+          const emps = await empRes.json();
+          for (const emp of emps) {
+            const routes: string[] = emp.assigned_route_ids || [];
+            let hasToken = false;
+            const updatedRoutes = routes.map((r: string) => {
+              if (typeof r === 'string' && r.startsWith('LATE_REQ|') && (r.includes(requestId) || (updatedReq && r.includes(updatedReq.employeeCode)))) {
+                hasToken = true;
+                return `LATE_REQ|${status}|${todayStr}|${encodeURIComponent(reviewerName)}|${requestId}`;
+              }
+              return r;
+            });
+
+            if (hasToken) {
+              await fetch(`${SUPABASE_CONFIG.url}/rest/v1/employees?id=eq.${encodeURIComponent(emp.id)}`, {
+                method: 'PATCH',
+                headers: this.getHeaders(),
+                body: JSON.stringify({
+                  assigned_route_ids: updatedRoutes,
+                  updated_at: new Date().toISOString(),
+                }),
+              });
+            }
+          }
+        }
+      } catch (fallbackErr) {
+        console.warn('[Supabase] updateLateLoginStatus fallback update error:', fallbackErr);
       }
     }
     return true;
@@ -822,13 +901,13 @@ export class SupabaseDbService {
     employeeCode: string,
     dateStr: string
   ): Promise<LateLoginRequest | null> {
-    const cleanCode = (employeeCode || '').trim().toLowerCase();
+    const cleanCode = (employeeCode || '').trim().toUpperCase();
 
-    // Check Supabase first if online
+    // 1. Check Supabase table first if online
     if (this.isConnected()) {
       try {
         const res = await fetch(
-          `${SUPABASE_CONFIG.url}/rest/v1/late_login_requests?employee_code=eq.${encodeURIComponent(cleanCode)}&date=eq.${encodeURIComponent(dateStr)}&status=eq.APPROVED&limit=1`,
+          `${SUPABASE_CONFIG.url}/rest/v1/late_login_requests?employee_code=ilike.${encodeURIComponent(cleanCode)}&date=eq.${encodeURIComponent(dateStr)}&status=eq.APPROVED&limit=1`,
           {
             method: 'GET',
             headers: this.getHeaders(),
@@ -838,7 +917,7 @@ export class SupabaseDbService {
           const raw = await res.json();
           if (raw && raw.length > 0) {
             const r = raw[0];
-            const found: LateLoginRequest = {
+            return {
               id: r.id,
               employeeId: r.employee_id,
               employeeName: r.employee_name,
@@ -852,18 +931,59 @@ export class SupabaseDbService {
               createdAt: r.created_at,
               updatedAt: r.updated_at,
             };
-            return found;
           }
         }
       } catch (err) {
-        console.warn('[Supabase] checkTodayLateLoginApproval error:', err);
+        console.warn('[Supabase] checkTodayLateLoginApproval table error:', err);
+      }
+
+      // 2. Resilient cloud fallback: check employees.assigned_route_ids
+      try {
+        const empRes = await fetch(
+          `${SUPABASE_CONFIG.url}/rest/v1/employees?employee_code=eq.${encodeURIComponent(cleanCode)}`,
+          {
+            method: 'GET',
+            headers: this.getHeaders(),
+          }
+        );
+        if (empRes.ok) {
+          const emps = await empRes.json();
+          if (emps && emps.length > 0) {
+            const emp = emps[0];
+            const routes = emp.assigned_route_ids || [];
+            const approvedToken = routes.find(
+              (r: string) => typeof r === 'string' && r.startsWith(`LATE_REQ|APPROVED|${dateStr}`)
+            );
+            if (approvedToken) {
+              const parts = approvedToken.split('|');
+              const reviewer = decodeURIComponent(parts[3] || 'Bodrud Jaman Sadiol (RSM)');
+              const reqId = parts[4] || `appr_${cleanCode}_${dateStr}`;
+              return {
+                id: reqId,
+                employeeId: emp.id,
+                employeeName: emp.name,
+                employeeCode: cleanCode,
+                date: dateStr,
+                attemptedTime: '',
+                reason: 'Manager Authorized Shift Entry',
+                status: 'APPROVED',
+                reviewedBy: reviewer,
+                reviewedAt: new Date().toISOString(),
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              };
+            }
+          }
+        }
+      } catch (fallbackErr) {
+        console.warn('[Supabase] checkTodayLateLoginApproval fallback error:', fallbackErr);
       }
     }
 
-    // Fallback to local storage
+    // 3. Fallback to local storage
     const localList = await StorageService.getItem<LateLoginRequest[]>(STORAGE_KEYS.LATE_LOGIN_REQUESTS, []);
     const match = localList.find(
-      r => r.employeeCode.toLowerCase() === cleanCode && r.date === dateStr && r.status === 'APPROVED'
+      r => r.employeeCode.toUpperCase() === cleanCode && r.date === dateStr && r.status === 'APPROVED'
     );
     return match || null;
   }

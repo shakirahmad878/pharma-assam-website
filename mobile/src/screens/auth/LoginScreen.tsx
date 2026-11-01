@@ -17,6 +17,7 @@ import { colors, typography, spacing, radius, shadows } from '../../constants/th
 import { Input } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
 import { AuthService } from '../../services/authService';
+import { EmployeeService } from '../../services/employeeService';
 
 interface LoginScreenProps {
   onLoginSuccess: () => void;
@@ -221,7 +222,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
     let interval: any = null;
     if (lateModalVisible && isWaitingForApproval) {
       interval = setInterval(async () => {
-        const empCode = employeeId.trim() || 'NLCL-0004';
+        const inputIdentifier = employeeId.trim() || email.trim() || targetEmployeeForPin || 'NLCL-0005';
+        const empCode = inputIdentifier.toUpperCase().startsWith('NLCL') ? inputIdentifier.toUpperCase() : 'NLCL-0005';
         const approval = await AuthService.getTodayLateApproval(empCode);
         if (approval && approval.isApproved) {
           setIsWaitingForApproval(false);
@@ -241,7 +243,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [lateModalVisible, isWaitingForApproval, employeeId, authMode]);
+  }, [lateModalVisible, isWaitingForApproval, employeeId, email, targetEmployeeForPin, authMode]);
 
   const handleRequestApproval = async () => {
     if (!lateReason.trim()) {
@@ -250,16 +252,30 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
     }
     setRequestingApproval(true);
     try {
-      const code = employeeId.trim() || 'NLCL-0004';
+      const inputIdentifier = employeeId.trim() || email.trim() || targetEmployeeForPin || '';
+      let matchedEmp = null;
+      try {
+        const allEmps = await EmployeeService.getEmployees();
+        matchedEmp = allEmps.find(e => 
+          e.employeeCode.toUpperCase() === inputIdentifier.toUpperCase() ||
+          (e.email && e.email.toLowerCase() === inputIdentifier.toLowerCase()) ||
+          e.phone.includes(inputIdentifier)
+        );
+      } catch (e) {}
+
+      const code = matchedEmp?.employeeCode || (inputIdentifier.toUpperCase().startsWith('NLCL') ? inputIdentifier.toUpperCase() : 'NLCL-0005');
+      const name = matchedEmp?.name || (code === 'NLCL-0005' ? 'Satyam Shil' : `Employee ${code}`);
+      const id = matchedEmp?.id || `usr-${code.toLowerCase()}`;
+
       await AuthService.requestLateApproval(lateReason, {
-        id: code,
-        name: code === 'NLCL-0004' ? 'Pranjal Malakar' : `Employee ${code}`,
+        id,
+        name,
         employeeCode: code,
       });
       setIsWaitingForApproval(true);
       Alert.alert(
         'Request Sent to RSM 📨',
-        `Your late login request has been submitted to Regional Sales Manager Bodrud Jaman Sadiol with reason: "${lateReason}".\n\nPlease wait for RSM approval.`
+        `Your late login request for ${name} (${code}) has been submitted to Regional Sales Manager Bodrud Jaman Sadiol with reason: "${lateReason}".\n\nPlease wait for RSM approval.`
       );
     } catch (err) {
       Alert.alert('Submission Error', 'Failed to submit late request. Please try again.');
@@ -270,7 +286,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
 
   const handleCheckApprovalStatus = async () => {
     setRequestingApproval(true);
-    const empCode = employeeId.trim() || 'NLCL-0004';
+    const inputIdentifier = employeeId.trim() || email.trim() || targetEmployeeForPin || 'NLCL-0005';
+    const empCode = inputIdentifier.toUpperCase().startsWith('NLCL') ? inputIdentifier.toUpperCase() : 'NLCL-0005';
     const approval = await AuthService.getTodayLateApproval(empCode);
     setRequestingApproval(false);
 
@@ -296,14 +313,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
 
   const handleVerifyManagerPin = async () => {
     if (!managerPin.trim()) {
-      Alert.alert('PIN Required', 'Please enter Regional Sales Manager PIN.');
+      Alert.alert('PIN Required', 'Please enter Regional Sales Manager PIN (Default: 1234).');
       return;
     }
     setRequestingApproval(true);
-    const code = employeeId.trim() || 'NLCL-0004';
+    const inputIdentifier = employeeId.trim() || email.trim() || targetEmployeeForPin || 'NLCL-0005';
+    const code = inputIdentifier.toUpperCase().startsWith('NLCL') ? inputIdentifier.toUpperCase() : 'NLCL-0005';
     const res = await AuthService.verifyManagerPin(managerPin, 'Manager In-Person Sign-off', {
-      id: code,
-      name: code === 'NLCL-0004' ? 'Pranjal Malakar' : `Employee ${code}`,
+      id: `usr-${code.toLowerCase()}`,
+      name: code === 'NLCL-0005' ? 'Satyam Shil' : `Employee ${code}`,
       employeeCode: code,
     });
     setRequestingApproval(false);

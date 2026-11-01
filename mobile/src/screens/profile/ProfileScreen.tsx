@@ -16,7 +16,9 @@ import { Header } from '../../components/common/Header';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { AuthService } from '../../services/authService';
-import { UserProfile } from '../../types';
+import { UserProfile, LateLoginRequest } from '../../types';
+import { Badge } from '../../components/common/Badge';
+import { SupabaseDbService } from '../../services/supabase/supabaseDbService';
 
 interface ProfileScreenProps {
   onBack: () => void;
@@ -29,6 +31,52 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBack, onLogout }
   const [phoneInput, setPhoneInput] = useState(user.phone || '');
   const [emailInput, setEmailInput] = useState(user.email || '');
   const [hqInput, setHqInput] = useState(user.headquarter || 'Silchar HQ');
+
+  const isManager =
+    user.role === 'REGIONAL_MANAGER' ||
+    user.role === 'SUPER_ADMIN' ||
+    user.role === 'AREA_MANAGER';
+
+  const [pendingApprovals, setPendingApprovals] = useState<LateLoginRequest[]>([]);
+  const [loadingApprovals, setLoadingApprovals] = useState(false);
+
+  React.useEffect(() => {
+    if (isManager) {
+      loadPendingApprovals();
+    }
+  }, [isManager]);
+
+  const loadPendingApprovals = async () => {
+    setLoadingApprovals(true);
+    try {
+      const list = await SupabaseDbService.getPendingLateLoginRequests();
+      setPendingApprovals(list || []);
+    } catch (err) {
+      console.warn('[ProfileScreen] error loading approvals:', err);
+    } finally {
+      setLoadingApprovals(false);
+    }
+  };
+
+  const handleApproveLateLogin = async (req: LateLoginRequest) => {
+    const managerName = user.name || 'Bodrud Jaman Sadiol (RSM)';
+    await SupabaseDbService.updateLateLoginStatus(req.id, 'APPROVED', managerName);
+    await loadPendingApprovals();
+    Alert.alert(
+      'Late Login Authorized ✅',
+      `Authorized ${req.employeeName} (#${req.employeeCode}) to start field duty shift.`
+    );
+  };
+
+  const handleRejectLateLogin = async (req: LateLoginRequest) => {
+    const managerName = user.name || 'Bodrud Jaman Sadiol (RSM)';
+    await SupabaseDbService.updateLateLoginStatus(req.id, 'REJECTED', managerName);
+    await loadPendingApprovals();
+    Alert.alert(
+      'Request Rejected ❌',
+      `Late duty entry rejected for ${req.employeeName}.`
+    );
+  };
 
   const handleSaveContact = async () => {
     const cleanedPhone = phoneInput.trim().replace(/\D/g, '');
@@ -98,6 +146,76 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBack, onLogout }
             </View>
           </View>
         </Card>
+
+        {/* Manager Field Duty Approvals Card (RSM / Admin View) */}
+        {isManager && (
+          <Card style={styles.approvalSectionCard}>
+            <View style={styles.cardHeaderWithAction}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Ionicons name="shield-checkmark" size={18} color="#2563EB" />
+                <Text style={styles.sectionTitle}>Field Duty Approvals</Text>
+                {pendingApprovals.length > 0 && (
+                  <Badge label={`${pendingApprovals.length} Pending`} variant="danger" />
+                )}
+              </View>
+              <TouchableOpacity
+                style={styles.refreshApprovalsPill}
+                onPress={loadPendingApprovals}
+                disabled={loadingApprovals}
+              >
+                <Ionicons name="refresh-outline" size={14} color="#2563EB" />
+                <Text style={styles.refreshApprovalsPillText}>
+                  {loadingApprovals ? 'Refreshing...' : 'Refresh'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {pendingApprovals.length === 0 ? (
+              <View style={styles.allClearBox}>
+                <Ionicons name="checkmark-circle" size={18} color="#16A34A" />
+                <Text style={styles.allClearText}>
+                  All Clear — No pending late login or reschedule requests from field MRs.
+                </Text>
+              </View>
+            ) : (
+              <View style={{ marginTop: 4 }}>
+                {pendingApprovals.map(req => (
+                  <View key={req.id} style={styles.approvalItemCard}>
+                    <View style={styles.approvalItemHeader}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.approvalEmpName}>{req.employeeName}</Text>
+                        <Text style={styles.approvalEmpCode}>ID: #{req.employeeCode} • {req.attemptedTime || 'Late Entry'}</Text>
+                      </View>
+                      <Badge label="Late Entry" variant="warning" />
+                    </View>
+                    <View style={styles.approvalReasonBox}>
+                      <Text style={styles.approvalReasonLabel}>Reason:</Text>
+                      <Text style={styles.approvalReasonText}>"{req.reason}"</Text>
+                    </View>
+                    <View style={styles.approvalActionsRow}>
+                      <TouchableOpacity
+                        style={styles.approveBtn}
+                        onPress={() => handleApproveLateLogin(req)}
+                        activeOpacity={0.75}
+                      >
+                        <Ionicons name="checkmark-circle" size={16} color="#FFFFFF" />
+                        <Text style={styles.approveBtnText}>Authorize Shift</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.rejectBtn}
+                        onPress={() => handleRejectLateLogin(req)}
+                        activeOpacity={0.75}
+                      >
+                        <Ionicons name="close-circle" size={16} color="#EF4444" />
+                        <Text style={styles.rejectBtnText}>Reject</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+          </Card>
+        )}
 
         {/* Contact Info Card */}
         <Card>
@@ -291,6 +409,125 @@ const styles = StyleSheet.create({
   infoLabel: { fontSize: 12, color: '#64748B', fontWeight: '500' },
   infoVal: { fontSize: 12, color: colors.textPrimary, fontWeight: '700', maxWidth: '60%', textAlign: 'right' },
   unsetText: { color: '#DC2626', fontStyle: 'italic', fontWeight: '600' },
+
+  approvalSectionCard: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#2563EB',
+    backgroundColor: '#FFFFFF',
+  },
+  refreshApprovalsPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+  },
+  refreshApprovalsPillText: {
+    color: '#2563EB',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  allClearBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#F0FDF4',
+    padding: 10,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+  },
+  allClearText: {
+    fontSize: 12,
+    color: '#166534',
+    fontWeight: '600',
+    flex: 1,
+  },
+  approvalItemCard: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: radius.md,
+    padding: 10,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  approvalItemHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  approvalEmpName: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: colors.textPrimary,
+  },
+  approvalEmpCode: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    fontWeight: '600',
+    marginTop: 1,
+  },
+  approvalReasonBox: {
+    backgroundColor: '#FFFFFF',
+    padding: 8,
+    borderRadius: radius.sm,
+    marginTop: 6,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  approvalReasonLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#64748B',
+    textTransform: 'uppercase',
+  },
+  approvalReasonText: {
+    fontSize: 12,
+    color: colors.textPrimary,
+    fontStyle: 'italic',
+    marginTop: 2,
+  },
+  approvalActionsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 8,
+  },
+  approveBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    backgroundColor: '#16A34A',
+    paddingVertical: 8,
+    borderRadius: radius.md,
+  },
+  approveBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  rejectBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radius.md,
+  },
+  rejectBtnText: {
+    color: '#EF4444',
+    fontSize: 12,
+    fontWeight: '700',
+  },
 
   privacyDesc: { color: colors.textSecondary, fontSize: typography.fontSize.xs, lineHeight: 18, marginVertical: 2 },
   infoText: { color: colors.textSecondary, fontSize: typography.fontSize.xs, marginVertical: 2 },
