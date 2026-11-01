@@ -185,13 +185,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  setIdentifier('0002');
-                  setPassword('1234');
+                  setIdentifier('pranjal');
+                  setPassword('password123');
                   if (errorMessage) setErrorMessage('');
                 }}
                 className="bg-[#F5F8FA] hover:bg-[#E8EEF4] text-[#10243A] border border-[#DCE4EB] px-2.5 py-1 rounded-lg text-[10px] font-medium transition-colors cursor-pointer"
               >
-                Field Rep (0002)
+                Field MR (pranjal)
               </button>
             </div>
           </div>
