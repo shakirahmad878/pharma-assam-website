@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PMTopBar } from './components/PMTopBar';
 import { PMHeader } from './components/PMHeader';
 import { PMHeroSlider } from './components/PMHeroSlider';
@@ -18,6 +18,14 @@ import { Product, ProductCategory } from './types';
 const SFA_PORTAL_URL = 'https://reppulse.nlcl.in/';
 
 export default function AppWebsite() {
+  useEffect(() => {
+    document.title = 'New Life Care Laboratories Pvt. Ltd. | Quality Pharmaceutical Formulations & Distribution (Assam)';
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) {
+      metaDesc.setAttribute('content', 'New Life Care Laboratories Pvt. Ltd. is an established pharmaceutical manufacturer and distributor supplying WHO-GMP compliant formulations across Assam and the North-East.');
+    }
+  }, []);
+
   const [activePublicSection, setActivePublicSection] = useState<string>('home');
   const [selectedPublicProduct, setSelectedPublicProduct] = useState<Product | null>(null);
   const [isEnquiryModalOpen, setIsEnquiryModalOpen] = useState<boolean>(false);

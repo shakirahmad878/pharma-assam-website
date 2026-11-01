@@ -23,11 +23,11 @@ export const PMTopBar: React.FC<PMTopBarProps> = ({ onOpenEnquiry, onOpenPortal 
 
           <div className="flex items-center gap-1.5 text-slate-300 font-medium hidden sm:flex">
             <MapPin className="w-3.5 h-3.5 text-teal-400 flex-shrink-0" />
-            <span>Guwahati, Assam [CENTRAL WAREHOUSE & DEPOT]</span>
+            <span>Silchar HQ & Guwahati Central Depot, Assam</span>
           </div>
         </div>
 
-        {/* Right: Quick Actions & Field Force Portal */}
+        {/* Right: Quick Actions & Field Force / HRMS Portals */}
         <div className="flex items-center gap-2.5 flex-wrap">
           <button
             onClick={onOpenEnquiry}
@@ -38,7 +38,7 @@ export const PMTopBar: React.FC<PMTopBarProps> = ({ onOpenEnquiry, onOpenPortal 
           </button>
 
           <a
-            href="https://wa.me/?text=Hello,%20I%20would%20like%20to%20inquire%20about%20your%20pharmaceutical%20product%20MOQ."
+            href="https://wa.me/916900700102?text=Hello%20New%20Life%20Care%20Laboratories,%20I%20would%20like%20to%20inquire%20about%20pharmaceutical%20distribution%20and%20product%20MOQ."
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-2.5 py-1 rounded shadow-sm transition-colors text-xs"
@@ -47,13 +47,22 @@ export const PMTopBar: React.FC<PMTopBarProps> = ({ onOpenEnquiry, onOpenPortal 
             <span className="hidden sm:inline">WhatsApp Desk</span>
           </a>
 
+          <a
+            href="https://hrms.nlcl.in/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 bg-sky-700/80 hover:bg-sky-600 text-white font-semibold px-2.5 py-1 rounded text-xs transition-colors"
+          >
+            <span>HRMS Login</span>
+          </a>
+
           {onOpenPortal && (
             <button
               onClick={onOpenPortal}
               className="flex items-center gap-1.5 bg-[#182F49] hover:bg-[#203D5E] border border-slate-700 text-slate-200 font-semibold px-2.5 py-1 rounded text-xs transition-colors cursor-pointer"
             >
               <Lock className="w-3 h-3 text-[#18A6A6]" />
-              <span>SFA Field Force Portal</span>
+              <span>RepPulse SFA</span>
             </button>
           )}
         </div>

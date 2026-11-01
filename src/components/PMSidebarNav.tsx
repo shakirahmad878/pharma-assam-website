@@ -200,7 +200,7 @@ export const PMSidebarNav: React.FC<PMSidebarNavProps> = ({
             </span>
             <div className="flex items-center gap-2">
               <a
-                href="https://wa.me/?text=Hello,%20I%20would%20like%20to%20inquire%20about%20your%20pharmaceutical%20formulations%20and%20MOQ."
+                href="https://wa.me/916900700102?text=Hello%20New%20Life%20Care%20Laboratories,%20I%20would%20like%20to%20inquire%20about%20your%20pharmaceutical%20formulations%20and%20MOQ."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer"
@@ -250,7 +250,7 @@ export const PMSidebarNav: React.FC<PMSidebarNavProps> = ({
               </p>
               <div className="pt-2 flex items-center gap-2 text-[11px] text-teal-300 font-medium">
                 <span className="w-2 h-2 rounded-full bg-[#18A6A6]"></span>
-                <span>Guwahati Regional Distribution Hub</span>
+                <span>Silchar HQ & Guwahati Central Depot, Assam</span>
               </div>
             </div>
           </div>

@@ -141,6 +141,28 @@ export const PMFooter: React.FC<PMFooterProps> = ({
                   <span>Contact Dossier</span>
                 </button>
               </li>
+              <li className="pt-2 border-t border-slate-700/60">
+                <a 
+                  href="https://reppulse.nlcl.in/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:text-teal-300 text-teal-400 font-semibold transition-colors flex items-center gap-1"
+                >
+                  <ChevronRight className="w-3 h-3 text-teal-400" />
+                  <span>RepPulse SFA Portal ↗</span>
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="https://hrms.nlcl.in/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:text-sky-300 text-sky-400 font-semibold transition-colors flex items-center gap-1"
+                >
+                  <ChevronRight className="w-3 h-3 text-sky-400" />
+                  <span>Apex HRMS Portal ↗</span>
+                </a>
+              </li>
             </ul>
           </div>
 
