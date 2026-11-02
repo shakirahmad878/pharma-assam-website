@@ -1,3 +1,4 @@
+import { LiveLocationMapScreen } from './LiveLocationMapScreen';
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -50,6 +51,7 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onBa
   const [employees, setEmployees] = useState<UserProfile[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDivision, setSelectedDivision] = useState<DivisionType>('ALL');
+  const [selectedLiveEmployee, setSelectedLiveEmployee] = useState<UserProfile | null>(null);
 
   // Modal State for Add / Edit
   const [modalVisible, setModalVisible] = useState(false);

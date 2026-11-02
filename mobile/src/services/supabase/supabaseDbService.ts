@@ -10,7 +10,8 @@
  */
 
 import { SUPABASE_CONFIG, isSupabaseConfigured } from '../../config/supabase';
-import { Doctor, UserProfile, AttendanceRecord, VisitRecord, LateLoginRequest, TourPlanRescheduleRequest, POBOrder } from '../../types';
+import { Doctor, UserProfile, AttendanceRecord, VisitRecord, LateLoginRequest, TourPlanRescheduleRequest, POBOrder, LocationTelemetryRecord, LocationRequestRecord } from '../../types';
+import { getBusinessDateStr } from '../../utils/dateUtils';
 import { StorageService, STORAGE_KEYS } from '../storageService';
 
 export interface FirmRecord {
@@ -641,6 +642,328 @@ export class SupabaseDbService {
       }
     }
     return null;
+  }
+
+  // ==========================================
+  // 4B. PRODUCTION TELEMETRY & ON-DEMAND GPS REQUESTS
+  // ==========================================
+
+  public static async recordLocationTelemetry(
+    record: LocationTelemetryRecord
+  ): Promise<boolean> {
+    if (!this.isConnected()) return false;
+    try {
+      const payload = {
+        employee_id: record.employee_id,
+        user_id: record.user_id || null,
+        tracking_session_id: record.tracking_session_id || null,
+        latitude: record.latitude,
+        longitude: record.longitude,
+        accuracy_meters: record.accuracy_meters || 0,
+        altitude_meters: record.altitude_meters || null,
+        speed_mps: record.speed_mps || null,
+        bearing_degrees: record.bearing_degrees || null,
+        battery_percentage: record.battery_percentage || null,
+        provider: record.provider || 'fused',
+        source: record.source || 'SCHEDULED',
+        recorded_at: record.recorded_at,
+        sync_status: 'SYNCED',
+      };
+
+      // 1. Append to location_telemetry table
+      fetch(`${SUPABASE_CONFIG.url}/rest/v1/location_telemetry`, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify(payload),
+      }).catch(err => console.warn('[Supabase] location_telemetry append error:', err));
+
+      // 2. Update latest coordinates on attendance cache
+      await this.updateEmployeeLiveLocation(
+        record.employee_id,
+        record.latitude,
+        record.longitude,
+        record.accuracy_meters
+      );
+
+      return true;
+    } catch (err) {
+      console.warn('[Supabase] recordLocationTelemetry error:', err);
+      return false;
+    }
+  }
+
+  public static async getLatestEmployeeTelemetry(
+    employeeIdOrCode: string
+  ): Promise<LocationTelemetryRecord | null> {
+    if (!this.isConnected()) return null;
+    try {
+      const clean = encodeURIComponent(employeeIdOrCode.trim());
+      const codeClean = clean.startsWith('usr-') ? clean.replace('usr-', '').toUpperCase() : clean;
+      const idClean = clean.startsWith('usr-') ? clean : `usr-${clean.toLowerCase()}`;
+      const queryFilter = `or=(employee_id.eq.${clean},employee_id.eq.${codeClean},employee_id.eq.${idClean})`;
+
+      // 1. Try location_telemetry first
+      const telRes = await fetch(
+        `${SUPABASE_CONFIG.url}/rest/v1/location_telemetry?${queryFilter}&order=recorded_at.desc&limit=1`,
+        { method: 'GET', headers: this.getHeaders() }
+      );
+      if (telRes.ok) {
+        const raw = await telRes.json();
+        if (raw && raw.length > 0) return raw[0];
+      }
+
+      // 2. Fall back to attendance table
+      const att = await this.getLatestEmployeeLocation(employeeIdOrCode);
+      if (att && att.latitude && att.longitude) {
+        return {
+          employee_id: att.employee_id,
+          latitude: att.latitude,
+          longitude: att.longitude,
+          accuracy_meters: att.accuracy_meters || 6,
+          battery_percentage: att.battery_percentage,
+          source: 'SCHEDULED',
+          recorded_at: att.punch_in_timestamp || new Date().toISOString(),
+          sync_status: att.sync_status || 'SYNCED',
+        };
+      }
+    } catch (err) {
+      console.warn('[Supabase] getLatestEmployeeTelemetry error:', err);
+    }
+    return null;
+  }
+
+  public static async getEmployeeTelemetryHistory(
+    employeeIdOrCode: string,
+    limit = 50
+  ): Promise<LocationTelemetryRecord[]> {
+    if (!this.isConnected()) return [];
+    try {
+      const clean = encodeURIComponent(employeeIdOrCode.trim());
+      const codeClean = clean.startsWith('usr-') ? clean.replace('usr-', '').toUpperCase() : clean;
+      const idClean = clean.startsWith('usr-') ? clean : `usr-${clean.toLowerCase()}`;
+      const queryFilter = `or=(employee_id.eq.${clean},employee_id.eq.${codeClean},employee_id.eq.${idClean})`;
+
+      const res = await fetch(
+        `${SUPABASE_CONFIG.url}/rest/v1/location_telemetry?${queryFilter}&order=recorded_at.desc&limit=${limit}`,
+        { method: 'GET', headers: this.getHeaders() }
+      );
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (err) {
+      console.warn('[Supabase] getEmployeeTelemetryHistory error:', err);
+    }
+    return [];
+  }
+
+  public static async createLocationRequest(
+    employeeIdOrCode: string,
+    requestedBy: string
+  ): Promise<LocationRequestRecord | null> {
+    if (!this.isConnected()) return null;
+    try {
+      const payload = {
+        employee_id: employeeIdOrCode,
+        requested_by: requestedBy,
+        requested_at: new Date().toISOString(),
+        status: 'PENDING',
+        expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+      };
+      const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/location_requests`, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return Array.isArray(data) ? data[0] : data;
+      }
+    } catch (err) {
+      console.warn('[Supabase] createLocationRequest error:', err);
+    }
+    return null;
+  }
+
+  public static async pollLocationRequest(
+    requestId: string
+  ): Promise<LocationRequestRecord | null> {
+    if (!this.isConnected()) return null;
+    try {
+      const res = await fetch(
+        `${SUPABASE_CONFIG.url}/rest/v1/location_requests?id=eq.${encodeURIComponent(requestId)}&limit=1`,
+        { method: 'GET', headers: this.getHeaders() }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.length > 0) return data[0];
+      }
+    } catch (err) {
+      console.warn('[Supabase] pollLocationRequest error:', err);
+    }
+    return null;
+  }
+
+  public static async getPendingLocationRequests(
+    employeeIdOrCode: string
+  ): Promise<LocationRequestRecord[]> {
+    if (!this.isConnected()) return [];
+    try {
+      const clean = encodeURIComponent(employeeIdOrCode.trim());
+      const codeClean = clean.startsWith('usr-') ? clean.replace('usr-', '').toUpperCase() : clean;
+      const idClean = clean.startsWith('usr-') ? clean : `usr-${clean.toLowerCase()}`;
+      const queryFilter = `or=(employee_id.eq.${clean},employee_id.eq.${codeClean},employee_id.eq.${idClean})`;
+
+      const now = new Date().toISOString();
+      const res = await fetch(
+        `${SUPABASE_CONFIG.url}/rest/v1/location_requests?${queryFilter}&status=eq.PENDING&expires_at=gt.${encodeURIComponent(now)}&order=requested_at.desc`,
+        { method: 'GET', headers: this.getHeaders() }
+      );
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (err) {
+      console.warn('[Supabase] getPendingLocationRequests error:', err);
+    }
+    return [];
+  }
+
+  public static async respondToLocationRequest(
+    requestId: string,
+    locationId?: string,
+    errorMessage?: string
+  ): Promise<boolean> {
+    if (!this.isConnected()) return false;
+    try {
+      const payload = {
+        status: errorMessage ? 'FAILED' : 'COMPLETED',
+        response_location_id: locationId || null,
+        responded_at: new Date().toISOString(),
+        error_message: errorMessage || null,
+      };
+      const res = await fetch(
+        `${SUPABASE_CONFIG.url}/rest/v1/location_requests?id=eq.${encodeURIComponent(requestId)}`,
+        {
+          method: 'PATCH',
+          headers: this.getHeaders(),
+          body: JSON.stringify(payload),
+        }
+      );
+      return res.ok;
+    } catch (err) {
+      console.warn('[Supabase] respondToLocationRequest error:', err);
+      return false;
+    }
+  }
+
+  public static async getAuthoritativeShiftStatus(
+    employeeIdOrCode: string,
+    businessDateStr: string = getBusinessDateStr()
+  ): Promise<{
+    shiftStatus: 'SHIFT_NOT_STARTED' | 'SHIFT_ACTIVE' | 'SHIFT_ENDED' | 'PENDING_SYNC';
+    locationStatus: 'FRESH' | 'AGING' | 'STALE' | 'LOCATION_UNAVAILABLE';
+    attendanceRecord: any | null;
+    latestTelemetry: LocationTelemetryRecord | null;
+    lastRecordedAt: string | null;
+    rawLatitude: number | null;
+    rawLongitude: number | null;
+    accuracyMeters: number | null;
+    batteryPercentage: number | null;
+  }> {
+    let shiftStatus: 'SHIFT_NOT_STARTED' | 'SHIFT_ACTIVE' | 'SHIFT_ENDED' | 'PENDING_SYNC' = 'SHIFT_NOT_STARTED';
+    let locationStatus: 'FRESH' | 'AGING' | 'STALE' | 'LOCATION_UNAVAILABLE' = 'LOCATION_UNAVAILABLE';
+    let attRecord: any = null;
+    let telemetry: LocationTelemetryRecord | null = null;
+    let lat: number | null = null;
+    let lng: number | null = null;
+    let accuracy: number | null = null;
+    let battery: number | null = null;
+    let lastTime: string | null = null;
+
+    try {
+      const clean = encodeURIComponent(employeeIdOrCode.trim());
+      const codeClean = clean.startsWith('usr-') ? clean.replace('usr-', '').toUpperCase() : clean;
+      const idClean = clean.startsWith('usr-') ? clean : `usr-${clean.toLowerCase()}`;
+      const queryFilter = `or=(employee_id.eq.${clean},employee_id.eq.${codeClean},employee_id.eq.${idClean})`;
+
+      // 1. Authoritative attendance check for business date
+      if (this.isConnected()) {
+        const attRes = await fetch(
+          `${SUPABASE_CONFIG.url}/rest/v1/attendance?${queryFilter}&date=eq.${businessDateStr}&order=created_at.desc&limit=1`,
+          { method: 'GET', headers: this.getHeaders() }
+        );
+        if (attRes.ok) {
+          const rows = await attRes.json();
+          if (rows && rows.length > 0) {
+            attRecord = rows[0];
+            if (attRecord.status === 'PUNCHED_OUT' || attRecord.punch_out_timestamp) {
+              shiftStatus = 'SHIFT_ENDED';
+            } else if (attRecord.status === 'PUNCHED_IN') {
+              shiftStatus = 'SHIFT_ACTIVE';
+            }
+          }
+        }
+      }
+
+      // Check local offline queue if no server punch-in found
+      if (shiftStatus === 'SHIFT_NOT_STARTED') {
+        const offlineQueue = await StorageService.getItem<any[]>('@REPPULSE_SYNC_QUEUE_V2', []);
+        const pendingAtt = offlineQueue.find(
+          item => item.entityType === 'ATTENDANCE' &&
+                  (item.payload?.employeeId === employeeIdOrCode || item.payload?.employeeCode === employeeIdOrCode) &&
+                  item.payload?.date === businessDateStr &&
+                  item.status !== 'SYNCED'
+        );
+        if (pendingAtt) {
+          shiftStatus = 'PENDING_SYNC';
+          attRecord = pendingAtt.payload;
+        }
+      }
+
+      // 2. Fetch latest telemetry
+      telemetry = await this.getLatestEmployeeTelemetry(employeeIdOrCode);
+      if (telemetry && telemetry.latitude && telemetry.longitude) {
+        lat = telemetry.latitude;
+        lng = telemetry.longitude;
+        accuracy = telemetry.accuracy_meters || null;
+        battery = telemetry.battery_percentage ?? null;
+        lastTime = telemetry.recorded_at || null;
+      } else if (attRecord && attRecord.latitude && attRecord.longitude) {
+        lat = attRecord.latitude;
+        lng = attRecord.longitude;
+        accuracy = attRecord.accuracy_meters || null;
+        battery = attRecord.battery_percentage ?? null;
+        lastTime = attRecord.punch_in_timestamp || null;
+      }
+
+      // 3. Location Freshness Rating (INDEPENDENT of Shift Status)
+      if (lat !== null && lng !== null && lastTime) {
+        const diffMs = Date.now() - new Date(lastTime).getTime();
+        const diffMins = diffMs / (1000 * 60);
+        if (diffMins <= 5) {
+          locationStatus = 'FRESH';
+        } else if (diffMins <= 15) {
+          locationStatus = 'AGING';
+        } else {
+          locationStatus = 'STALE';
+        }
+      } else {
+        locationStatus = 'LOCATION_UNAVAILABLE';
+      }
+    } catch (err) {
+      console.warn('[Supabase] getAuthoritativeShiftStatus error:', err);
+    }
+
+    return {
+      shiftStatus,
+      locationStatus,
+      attendanceRecord: attRecord,
+      latestTelemetry: telemetry,
+      lastRecordedAt: lastTime,
+      rawLatitude: lat,
+      rawLongitude: lng,
+      accuracyMeters: accuracy,
+      batteryPercentage: battery,
+    };
   }
 
   public static async updateEmployeeLiveLocation(

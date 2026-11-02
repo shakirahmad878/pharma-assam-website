@@ -395,6 +395,37 @@ export interface TelemetryLogPoint {
   syncStatus: 'PENDING' | 'SYNCING' | 'SYNCED' | 'FAILED';
 }
 
+export interface LocationTelemetryRecord {
+  id?: string;
+  employee_id: string;
+  user_id?: string;
+  tracking_session_id?: string;
+  latitude: number;
+  longitude: number;
+  accuracy_meters: number;
+  altitude_meters?: number;
+  speed_mps?: number;
+  bearing_degrees?: number;
+  battery_percentage?: number;
+  provider?: string;
+  source: 'SCHEDULED' | 'MANAGER_REQUEST' | 'MANUAL';
+  recorded_at: string;
+  received_at?: string;
+  sync_status?: string;
+}
+
+export interface LocationRequestRecord {
+  id?: string;
+  employee_id: string;
+  requested_by: string;
+  requested_at: string;
+  status: 'PENDING' | 'DELIVERED' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'EXPIRED';
+  response_location_id?: string;
+  responded_at?: string;
+  error_message?: string;
+  expires_at?: string;
+}
+
 export type SyncEntityType = 'ATTENDANCE' | 'VISIT' | 'POB_ORDER' | 'TELEMETRY' | 'ROUTE_REQUEST' | 'TOUR_PLAN' | 'EXPENSE' | 'DOCTOR_UPDATE';
 
 export interface SyncQueueItem {
