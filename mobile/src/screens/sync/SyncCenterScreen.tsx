@@ -99,7 +99,9 @@ export const SyncCenterScreen: React.FC<SyncCenterScreenProps> = ({ onBack }) =>
       case 'POB_ORDER':
         return item.payload?.firmName ? `POB: ${item.payload.firmName} (₹${item.payload.grandTotal || 0})` : 'Chemist POB Order';
       case 'ATTENDANCE':
-        return `Attendance Punch-In (${item.payload?.date || 'Today'})`;
+        return item.payload?.status === 'PUNCHED_OUT'
+          ? `Attendance Punch-Out (${item.payload?.date || 'Today'})`
+          : `Attendance Punch-In (${item.payload?.date || 'Today'})`;
       case 'TELEMETRY':
         return 'GPS Telemetry Ping';
       case 'TOUR_PLAN':

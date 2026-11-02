@@ -25,6 +25,7 @@ import { AuthService } from '../../services/authService';
 import { RouteService } from '../../services/routeService';
 import { RoutePlan, AttendanceRecord } from '../../types';
 import { SupabaseDbService } from '../../services/supabase/supabaseDbService';
+import { getBusinessDateStr, getBusinessTimeStr, isPastBusinessCutoff } from '../../utils/dateUtils';
 
 interface AttendanceScreenProps {
   onBack: () => void;
@@ -170,12 +171,9 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack, isMa
       return;
     }
 
-    const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-    const isPastCutoff = currentHour > 10 || (currentHour === 10 && currentMinute > 30);
+    const isPastCutoff = isPastBusinessCutoff(10, 30);
 
-        if (isPastCutoff && !lateApproved) {
+    if (isPastCutoff && !lateApproved) {
       const currentUser = AuthService.getCurrentUser();
       if (currentUser && ['SUPER_ADMIN', 'REGIONAL_MANAGER', 'AREA_MANAGER', 'HR_MANAGER'].includes(currentUser.role)) {
         setLateApproved(true);
@@ -509,8 +507,8 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack, isMa
                       setLateSubmitting(true);
                       try {
                         const currentUser = AuthService.getCurrentUser();
-                        const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                        const todayStr = new Date().toISOString().split('T')[0];
+                        const nowStr = getBusinessTimeStr();
+                        const todayStr = getBusinessDateStr();
                         await SupabaseDbService.submitLateLoginRequest({
                           id: `late_req_${currentUser?.employeeCode || 'MR'}_${Date.now()}`,
                           employeeId: currentUser?.id || 'usr-nlcl-0005',

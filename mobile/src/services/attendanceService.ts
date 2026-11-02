@@ -5,23 +5,30 @@ import { BackgroundTelemetryManager } from './location/backgroundTelemetry';
 import { AuthService } from './authService';
 import { RouteService } from './routeService';
 import { SupabaseDbService } from './supabase/supabaseDbService';
+import { getBusinessDateStr } from '../utils/dateUtils';
 
 export class AttendanceService {
   public static async getTodayAttendance(): Promise<{ isPunchedIn: boolean; record: AttendanceRecord | null; punchInTime: string | null }> {
+    const today = getBusinessDateStr();
+    const user = AuthService.getCurrentUser();
+    const currentEmpId = user?.id || '';
+    const currentEmpCode = user?.employeeCode || '';
+
+    // 1. Check local device storage
     const records = await StorageService.getItem<AttendanceRecord[]>(STORAGE_KEYS.ATTENDANCE_LOCAL, []);
-    const today = new Date().toISOString().split('T')[0];
-    const todayRecord = records.find(r => r.date === today && r.status === 'PUNCHED_IN');
+    const todayRecord = records.find(
+      r => r.date === today && (r.employeeId === currentEmpId || r.employeeId === currentEmpCode) && r.status === 'PUNCHED_IN'
+    );
     
     if (todayRecord) {
       const time = new Date(todayRecord.punchInTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       return { isPunchedIn: true, record: todayRecord, punchInTime: time };
     }
 
-    // Cloud Fallback: check Supabase if local cache was cleared or freshly installed
-    const user = AuthService.getCurrentUser();
-    if (user?.id && SupabaseDbService.isConnected()) {
+    // 2. Cloud Fallback: Check authoritative Supabase database
+    if (user && (currentEmpId || currentEmpCode) && SupabaseDbService.isConnected()) {
       try {
-        const cloudAtt = await SupabaseDbService.getLatestEmployeeLocation(user.id);
+        const cloudAtt = await SupabaseDbService.getLatestEmployeeLocation(currentEmpId || currentEmpCode);
         if (cloudAtt && cloudAtt.date === today && cloudAtt.status === 'PUNCHED_IN') {
           const restoredRecord: AttendanceRecord = {
             id: cloudAtt.id,
@@ -31,8 +38,6 @@ export class AttendanceService {
             punchInTimestamp: cloudAtt.punch_in_timestamp,
             punchOutTimestamp: cloudAtt.punch_out_timestamp || undefined,
             status: 'PUNCHED_IN',
-            routeId: cloudAtt.route_id || undefined,
-            routeName: cloudAtt.route_name || undefined,
             latitude: cloudAtt.latitude,
             longitude: cloudAtt.longitude,
             accuracyMeters: cloudAtt.accuracy_meters || 6,
@@ -42,8 +47,8 @@ export class AttendanceService {
             syncStatus: 'SYNCED',
             serverId: cloudAtt.server_id || cloudAtt.id
           };
-          records.unshift(restoredRecord);
-          await StorageService.setItem(STORAGE_KEYS.ATTENDANCE_LOCAL, records);
+          const filtered = records.filter(r => r.id !== restoredRecord.id && !(r.date === today && r.employeeId === currentEmpId));
+          await StorageService.setItem(STORAGE_KEYS.ATTENDANCE_LOCAL, [restoredRecord, ...filtered]);
           const time = new Date(restoredRecord.punchInTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
           return { isPunchedIn: true, record: restoredRecord, punchInTime: time };
         }
@@ -66,17 +71,26 @@ export class AttendanceService {
   }): Promise<AttendanceRecord> {
     const user = AuthService.getCurrentUser();
     const now = new Date();
-    const today = now.toISOString().split('T')[0];
+    const today = getBusinessDateStr(now);
 
     // If route was selected, set it active across the app & user session
     if (params.routeId) {
       await RouteService.setActiveRoute(params.routeId);
       await AuthService.updateUserProfile({ activeRouteId: params.routeId });
+      if (user?.id && SupabaseDbService.isConnected()) {
+        try {
+          await SupabaseDbService.updateEmployee(user.id, { activeRouteId: params.routeId });
+        } catch (e) {}
+      }
     }
 
+    const cleanCode = (user?.employeeCode || user?.id || 'MR').replace(/[^a-zA-Z0-9_-]/g, '_');
+    // Deterministic collision-resistant ID per employee per business date
+    const deterministicId = `att_in_${cleanCode}_${today}`;
+
     const newRecord: AttendanceRecord = {
-      id: 'att_' + Date.now().toString(),
-      employeeId: user?.id || 'usr-mr-barak-01',
+      id: deterministicId,
+      employeeId: user?.id || `usr-${cleanCode.toLowerCase()}`,
       employeeName: user?.name || 'Field Representative',
       date: today,
       punchInTimestamp: now.toISOString(),
@@ -92,35 +106,42 @@ export class AttendanceService {
       syncStatus: 'PENDING'
     };
 
+    // Update local storage without duplicates
     const records = await StorageService.getItem<AttendanceRecord[]>(STORAGE_KEYS.ATTENDANCE_LOCAL, []);
-    records.unshift(newRecord);
-    await StorageService.setItem(STORAGE_KEYS.ATTENDANCE_LOCAL, records);
+    const deduped = [newRecord, ...records.filter(r => r.id !== deterministicId && !(r.date === today && r.employeeId === newRecord.employeeId))];
+    await StorageService.setItem(STORAGE_KEYS.ATTENDANCE_LOCAL, deduped);
 
     // Direct real-time persistence to Supabase
     if (SupabaseDbService.isConnected()) {
       try {
         await SupabaseDbService.recordAttendance(newRecord);
         newRecord.syncStatus = 'SYNCED';
+        // Update local status as well
+        deduped[0].syncStatus = 'SYNCED';
+        await StorageService.setItem(STORAGE_KEYS.ATTENDANCE_LOCAL, deduped);
       } catch (e) {
         console.warn('[AttendanceService] Direct Supabase push failed, falling back to sync queue:', e);
+        newRecord.syncStatus = 'PENDING';
       }
     }
 
     // Start background telemetry
     await BackgroundTelemetryManager.startTracking();
 
-    // Enqueue in cloud sync queue for idempotency & offline resilience
+    // Enqueue in cloud sync queue with idempotency
     await SyncService.enqueue('ATTENDANCE', newRecord);
 
     return newRecord;
   }
 
   public static async punchOut(): Promise<void> {
+    const today = getBusinessDateStr();
+    const user = AuthService.getCurrentUser();
+    const currentEmpId = user?.id || '';
     const records = await StorageService.getItem<AttendanceRecord[]>(STORAGE_KEYS.ATTENDANCE_LOCAL, []);
-    const today = new Date().toISOString().split('T')[0];
     
     for (const r of records) {
-      if (r.date === today && r.status === 'PUNCHED_IN') {
+      if (r.date === today && (r.employeeId === currentEmpId || !currentEmpId) && r.status === 'PUNCHED_IN') {
         r.status = 'PUNCHED_OUT';
         r.punchOutTimestamp = new Date().toISOString();
         r.syncStatus = 'PENDING';

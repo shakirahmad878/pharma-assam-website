@@ -20,6 +20,7 @@ import { DivisionService, DivisionType, DIVISIONS } from '../../services/divisio
 import { UserProfile, UserRole, LateLoginRequest, TourPlanRescheduleRequest } from '../../types';
 import { SupabaseDbService } from '../../services/supabase/supabaseDbService';
 import { DoctorService } from '../../services/doctorService';
+import { getBusinessDateStr } from '../../utils/dateUtils';
 import { LocationService } from '../../services/location/locationService';
 
 interface TeamManagementScreenProps {
@@ -162,7 +163,7 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onBa
 
     const handleViewLiveLocation = async (emp: UserProfile) => {
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getBusinessDateStr();
       const isSelf = emp.id === currentUser?.id || emp.employeeCode === currentUser?.employeeCode;
 
       // If viewing self, read device GPS hardware directly
@@ -171,8 +172,11 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onBa
         liveGps = await LocationService.getCurrentLocation();
       }
 
-      const att = await SupabaseDbService.getLatestEmployeeLocation(emp.id);
-      const isPunchedInToday = att && att.date === today && att.status === 'PUNCHED_IN';
+      // Query authoritative location using canonical id or employee code
+      const att = await SupabaseDbService.getLatestEmployeeLocation(emp.id || emp.employeeCode);
+      const isRecordToday = att && att.date === today;
+      const isPunchedInToday = isRecordToday && att.status === 'PUNCHED_IN';
+      const isPunchedOutToday = isRecordToday && att.status === 'PUNCHED_OUT';
 
       if (isSelf && liveGps && liveGps.latitude && liveGps.longitude) {
         const lat = liveGps.latitude;

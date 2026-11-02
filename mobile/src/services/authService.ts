@@ -12,6 +12,7 @@ import {
 } from '../constants/mockData';
 import { EmployeeService } from './employeeService';
 import { SupabaseDbService } from './supabase/supabaseDbService';
+import { getBusinessDateStr } from '../utils/dateUtils';
 
 export interface LateLoginApproval {
   date: string;
@@ -352,7 +353,7 @@ export class AuthService {
   }
 
   public static getCurrentUser(): UserProfile {
-    return this.currentUser || USER_PRANJAL_MR;
+    return this.currentUser || CURRENT_USER_MOCK;
   }
 
   public static async updateUserProfile(updated: Partial<UserProfile>): Promise<UserProfile> {

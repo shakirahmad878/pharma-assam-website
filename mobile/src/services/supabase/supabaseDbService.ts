@@ -584,40 +584,52 @@ export class SupabaseDbService {
 
     if (!this.isConnected()) return;
 
-    try {
-      await fetch(`${SUPABASE_CONFIG.url}/rest/v1/attendance`, {
-        method: 'POST',
-        headers: { ...this.getHeaders(), Prefer: 'resolution=merge-duplicates' },
-        body: JSON.stringify({
-          id: att.id,
-          employee_id: att.employeeId,
-          employee_name: att.employeeName,
-          date: att.date,
-          punch_in_timestamp: att.punchInTimestamp,
-          punch_out_timestamp: att.punchOutTimestamp || null,
-          status: att.status || 'PUNCHED_IN',
-          route_id: att.routeId || null,
-          route_name: att.routeName || null,
-          latitude: att.latitude,
-          longitude: att.longitude,
-          accuracy_meters: att.accuracyMeters,
-          is_mock_location: att.isMockLocation || false,
-          battery_percentage: att.batteryPercentage || null,
-          selfie_url: att.selfieBase64OrUri || null,
-          sync_status: 'SYNCED',
-          server_id: att.serverId || null,
-        }),
-      });
-    } catch (err) {
-      console.warn('[Supabase] recordAttendance error:', err);
+    // Use only verified columns present in Supabase attendance table
+    const payload: any = {
+      id: att.id,
+      employee_id: att.employeeId,
+      employee_name: att.employeeName,
+      date: att.date,
+      punch_in_timestamp: att.punchInTimestamp,
+      punch_out_timestamp: att.punchOutTimestamp || null,
+      status: att.status || 'PUNCHED_IN',
+      latitude: att.latitude,
+      longitude: att.longitude,
+      accuracy_meters: att.accuracyMeters,
+      is_mock_location: att.isMockLocation || false,
+      battery_percentage: att.batteryPercentage || null,
+      selfie_url: att.selfieBase64OrUri || null,
+      sync_status: 'SYNCED',
+      server_id: att.serverId || att.id,
+    };
+
+    const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/attendance`, {
+      method: 'POST',
+      headers: {
+        ...this.getHeaders(),
+        Prefer: 'resolution=merge-duplicates,return=representation',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error('[Supabase recordAttendance] FAILED:', res.status, errText);
+      throw new Error(`[Supabase recordAttendance] HTTP ${res.status}: ${errText}`);
     }
   }
 
-  public static async getLatestEmployeeLocation(employeeId: string): Promise<any> {
+  public static async getLatestEmployeeLocation(employeeIdOrCode: string): Promise<any> {
     if (this.isConnected()) {
       try {
+        const clean = encodeURIComponent(employeeIdOrCode.trim());
+        // Match either canonical employee_id ('usr-nlcl-0004') or employee_code ('NLCL-0004')
+        const codeClean = clean.startsWith('usr-') ? clean.replace('usr-', '').toUpperCase() : clean;
+        const idClean = clean.startsWith('usr-') ? clean : `usr-${clean.toLowerCase()}`;
+        const queryFilter = `or=(employee_id.eq.${clean},employee_id.eq.${codeClean},employee_id.eq.${idClean})`;
+
         const res = await fetch(
-          `${SUPABASE_CONFIG.url}/rest/v1/attendance?employee_id=eq.${encodeURIComponent(employeeId)}&order=created_at.desc&limit=1`,
+          `${SUPABASE_CONFIG.url}/rest/v1/attendance?${queryFilter}&order=created_at.desc&limit=1`,
           { method: 'GET', headers: this.getHeaders() }
         );
         if (res.ok) {
@@ -629,6 +641,41 @@ export class SupabaseDbService {
       }
     }
     return null;
+  }
+
+  public static async updateEmployeeLiveLocation(
+    employeeIdOrCode: string,
+    latitude: number,
+    longitude: number,
+    accuracyMeters = 6
+  ): Promise<boolean> {
+    if (!this.isConnected()) return false;
+    try {
+      const clean = encodeURIComponent(employeeIdOrCode.trim());
+      const codeClean = clean.startsWith('usr-') ? clean.replace('usr-', '').toUpperCase() : clean;
+      const idClean = clean.startsWith('usr-') ? clean : `usr-${clean.toLowerCase()}`;
+      const queryFilter = `or=(employee_id.eq.${clean},employee_id.eq.${codeClean},employee_id.eq.${idClean})`;
+
+      const res = await fetch(
+        `${SUPABASE_CONFIG.url}/rest/v1/attendance?${queryFilter}&order=created_at.desc&limit=1`,
+        {
+          method: 'PATCH',
+          headers: {
+            ...this.getHeaders(),
+            Prefer: 'return=representation',
+          },
+          body: JSON.stringify({
+            latitude,
+            longitude,
+            accuracy_meters: accuracyMeters,
+          }),
+        }
+      );
+      return res.ok;
+    } catch (err) {
+      console.warn('[Supabase] updateEmployeeLiveLocation error:', err);
+      return false;
+    }
   }
 
   // ==========================================

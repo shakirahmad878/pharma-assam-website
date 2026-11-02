@@ -22,9 +22,28 @@ export class SyncService {
   public static async enqueue(entityType: SyncEntityType, payload: any): Promise<string> {
     const queue = await StorageService.getItem<SyncQueueItem[]>(STORAGE_KEYS.OFFLINE_SYNC_QUEUE, []);
     
-    // Idempotency: Prevent duplicate pending records for same local ID
+    // True Idempotency: Check if an item with this payload ID already exists
     const localId = payload.id || `loc_${Date.now()}`;
-    const existingIndex = queue.findIndex(item => item.payload?.id === localId && item.status !== 'SYNCED');
+    const existingIndex = queue.findIndex(item => item.payload?.id === localId);
+
+    if (existingIndex >= 0) {
+      const existing = queue[existingIndex];
+      // If already synced and payload has not changed, do not duplicate
+      if (existing.status === 'SYNCED' && existing.payload?.status === payload.status) {
+        return existing.id;
+      }
+      // If payload updated (e.g. status transitioned to PUNCHED_OUT or new sync attempted), update in place
+      queue[existingIndex] = {
+        ...existing,
+        payload,
+        status: payload.syncStatus === 'SYNCED' ? 'SYNCED' : 'PENDING',
+        retryCount: 0,
+        createdAt: new Date().toISOString()
+      };
+      await StorageService.setItem(STORAGE_KEYS.OFFLINE_SYNC_QUEUE, queue);
+      this.notifyListeners();
+      return queue[existingIndex].id;
+    }
 
     const queueItem: SyncQueueItem = {
       id: `sync_${Date.now()}_${Math.random().toString(36).substring(7)}`,
@@ -33,15 +52,10 @@ export class SyncService {
       createdAt: new Date().toISOString(),
       retryCount: 0,
       maxRetries: 3,
-      status: 'PENDING'
+      status: payload.syncStatus === 'SYNCED' ? 'SYNCED' : 'PENDING'
     };
 
-    if (existingIndex >= 0) {
-      queue[existingIndex] = queueItem;
-    } else {
-      queue.unshift(queueItem);
-    }
-
+    queue.unshift(queueItem);
     await StorageService.setItem(STORAGE_KEYS.OFFLINE_SYNC_QUEUE, queue);
     this.notifyListeners();
     return queueItem.id;
