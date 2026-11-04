@@ -48,6 +48,25 @@ export class DivisionService {
     return 'Cachar';
   }
 
+  public static getUserAllowedDivisions(user: UserProfile | null): DivisionType[] {
+    if (!user) return ['Cachar'];
+    if (this.isManager(user)) return ['ALL'];
+
+    const territory = (user.territory || '').toLowerCase();
+    const hq = (user.headquarter || '').toLowerCase();
+    const combined = `${territory} ${hq}`;
+
+    const divs: DivisionType[] = [];
+    if (combined.includes('silchar') || combined.includes('cachar')) divs.push('Cachar');
+    if (combined.includes('hailakandi')) divs.push('Hailakandi');
+    if (combined.includes('aizawl') || combined.includes('mizoram')) divs.push('Aizawl');
+    if (combined.includes('karimganj') || combined.includes('shribhumi')) divs.push('Karimganj');
+    if (combined.includes('dharmanagar') || combined.includes('north tripura')) divs.push('Dharmanagar');
+    if (combined.includes('agartala') || combined.includes('west tripura')) divs.push('Agartala');
+
+    return divs.length > 0 ? divs : ['Cachar'];
+  }
+
   public static getDivisionLabel(div: DivisionType): string {
     const found = DIVISIONS.find((d) => d.id === div);
     return found ? found.label : div;
@@ -60,10 +79,10 @@ export class DivisionService {
   ): Doctor[] {
     if (!doctors) return [];
 
-    // If user is MR, they are strictly restricted to their own division
+    // If user is MR, they are authorized across all their assigned divisions
     if (!this.isManager(user)) {
-      const userDiv = this.getUserDivision(user);
-      return doctors.filter((doc) => this.matchesDivision(doc.district, doc.area, userDiv));
+      const allowedDivs = this.getUserAllowedDivisions(user);
+      return doctors.filter((doc) => allowedDivs.some((d) => this.matchesDivision(doc.district, doc.area, d)));
     }
 
     // For Managers, filter by the selected division
@@ -78,10 +97,10 @@ export class DivisionService {
   ): T[] {
     if (!firms) return [];
 
-    // If user is MR, strictly restricted to their own division
+    // If user is MR, authorized across all their assigned divisions
     if (!this.isManager(user)) {
-      const userDiv = this.getUserDivision(user);
-      return firms.filter((f) => this.matchesDivision(f.district, f.area || f.address, userDiv));
+      const allowedDivs = this.getUserAllowedDivisions(user);
+      return firms.filter((f) => allowedDivs.some((d) => this.matchesDivision(f.district, f.area || f.address, d)));
     }
 
     if (selectedDivision === 'ALL') return firms;

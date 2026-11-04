@@ -72,12 +72,13 @@ export const USER_PRANJAL_MR: UserProfile = {
   email: 'pranjal.mr@pappudacompany.com',
   role: 'MEDICAL_REP',
   employeeCode: 'NLCL-0004',
-  territory: 'Karimganj Division (Shribhumi)',
-  headquarter: 'Karimganj HQ',
+  territory: 'Karimganj & Dharmanagar Divisions (Shribhumi & North Tripura)',
+  headquarter: 'Karimganj HQ & Dharmanagar HQ',
   phone: '9864378424',
   assignedRouteIds: [
     'route-karimganj-01',
     'route-karimganj-02',
+    'route-tripura-01',
   ],
   activeRouteId: 'route-karimganj-01',
 };
@@ -88,12 +89,15 @@ export const USER_SATYAM_MR: UserProfile = {
   email: 'satyam.mr@pappudacompany.com',
   role: 'MEDICAL_REP',
   employeeCode: 'NLCL-0005',
-  territory: 'Silchar Division (Cachar)',
-  headquarter: 'Silchar HQ',
+  territory: 'Silchar, Hailakandi & Aizawl Divisions (Cachar, Hailakandi, Mizoram)',
+  headquarter: 'Silchar HQ, Aizawl HQ & Hailakandi HQ',
   phone: '9394831412',
   assignedRouteIds: [
     'route-cachar-01',
     'route-cachar-02',
+    'route-cachar-03',
+    'route-hailakandi-01',
+    'route-aizawl-01',
   ],
   activeRouteId: 'route-cachar-01',
 };
