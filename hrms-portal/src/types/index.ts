@@ -88,6 +88,8 @@ export type AttendanceStatusCode = 'P' | 'A' | 'WO' | 'HD' | 'MPO' | 'H' | 'L';
 
 export interface AttendanceRosterRow {
   id: string;
+  employeeId?: string;
+  employeeName?: string;
   date: string;
   shift: string; // e.g. "General" or "Weekly Off"
   expectedInTime: string; // "10:00"

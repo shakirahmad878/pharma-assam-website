@@ -498,7 +498,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
       {/* RBAC MATRIX TAB */}
       {activeAdminTab === 'matrix' && (
-        <RolePermissionsMatrix />
+        <RolePermissionsMatrix currentUser={currentUser} />
       )}
 
       {/* AUDIT LOGS TAB */}

@@ -19,9 +19,15 @@ export const ChemistDirectory: React.FC<ChemistDirectoryProps> = ({
   onDeleteChemist
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number>(24);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingChemist, setEditingChemist] = useState<Chemist | null>(null);
   const [deletingChemist, setDeletingChemist] = useState<Chemist | null>(null);
+
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -47,6 +53,11 @@ export const ChemistDirectory: React.FC<ChemistDirectoryProps> = ({
       (c.contactPerson || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
+
+  const totalPages = Math.max(1, Math.ceil(filteredChemists.length / pageSize));
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, filteredChemists.length);
+  const paginatedChemists = filteredChemists.slice(startIndex, endIndex);
 
   const handleOpenAdd = () => {
     setFormData({
@@ -187,7 +198,7 @@ export const ChemistDirectory: React.FC<ChemistDirectoryProps> = ({
 
       {/* Cards List */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {filteredChemists.map((chem) => (
+        {paginatedChemists.map((chem) => (
           <div
             key={chem.id}
             className="neu-card p-5 flex flex-col justify-between hover:border-[#18A6A6] transition-all duration-200"
@@ -260,6 +271,60 @@ export const ChemistDirectory: React.FC<ChemistDirectoryProps> = ({
           </div>
         ))}
       </div>
+
+      {/* Pagination Controls */}
+      {filteredChemists.length > 0 && (
+        <div className="neu-card p-4 flex flex-col sm:flex-row items-center justify-between gap-4 border border-[#DCE4EB] bg-white shadow-xs">
+          <div className="flex items-center gap-2 text-xs text-[#64748B]">
+            <span>Showing</span>
+            <span className="font-bold text-[#10243A]">
+              {startIndex + 1} - {endIndex}
+            </span>
+            <span>of</span>
+            <span className="font-bold text-[#10243A]">{filteredChemists.length}</span>
+            <span>pharmacies</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-[#64748B]">Show:</span>
+            <select
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="px-2.5 py-1 text-xs bg-white border border-[#DCE4EB] rounded-lg font-medium text-[#10243A] cursor-pointer"
+            >
+              <option value={12}>12 per page</option>
+              <option value={24}>24 per page</option>
+              <option value={48}>48 per page</option>
+              <option value={96}>96 per page</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage <= 1}
+              className="px-3 py-1.5 rounded-lg border border-[#DCE4EB] text-xs font-semibold text-[#10243A] hover:bg-[#F8FAFC] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            >
+              Previous
+            </button>
+            <span className="px-3 py-1.5 bg-[#F1F6F8] rounded-lg text-xs font-mono font-bold text-[#137F83]">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              type="button"
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage >= totalPages}
+              className="px-3 py-1.5 rounded-lg border border-[#DCE4EB] text-xs font-semibold text-[#10243A] hover:bg-[#F8FAFC] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Add Chemist Modal */}
       {isAddModalOpen && (

@@ -49,6 +49,12 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState<string>('ALL');
   const [selectedTier, setSelectedTier] = useState<string>('ALL');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number>(24);
+
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedSpecialty, selectedTier]);
   
   // Selection state for batch "Add to Visit"
   const [selectedDoctorIds, setSelectedDoctorIds] = useState<string[]>([]);
@@ -116,6 +122,11 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
 
     return matchesSearch && matchesSpecialty && matchesTier;
   });
+
+  const totalPages = Math.max(1, Math.ceil(filteredDoctors.length / pageSize));
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, filteredDoctors.length);
+  const paginatedDoctors = filteredDoctors.slice(startIndex, endIndex);
 
   const handleOpenAdd = () => {
     setNewDocName('');
@@ -384,7 +395,7 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
 
       {/* Doctor Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {filteredDoctors.map((doc) => {
+        {paginatedDoctors.map((doc) => {
           const tierVariant = doc.tier === 'A_PLUS' ? 'purple' : doc.tier === 'A' ? 'primary' : 'neutral';
           const isPlanned = plannedVisitDoctorIds.includes(doc.id);
           const isSelected = selectedDoctorIds.includes(doc.id);
@@ -529,6 +540,60 @@ export const DoctorDirectory: React.FC<DoctorDirectoryProps> = ({
           );
         })}
       </div>
+
+      {/* Pagination Controls */}
+      {filteredDoctors.length > 0 && (
+        <div className="neu-card p-4 flex flex-col sm:flex-row items-center justify-between gap-4 border border-[#DCE4EB] bg-white shadow-xs">
+          <div className="flex items-center gap-2 text-xs text-[#64748B]">
+            <span>Showing</span>
+            <span className="font-bold text-[#10243A]">
+              {startIndex + 1} - {endIndex}
+            </span>
+            <span>of</span>
+            <span className="font-bold text-[#10243A]">{filteredDoctors.length}</span>
+            <span>doctors</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-[#64748B]">Show:</span>
+            <select
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="px-2.5 py-1 text-xs bg-white border border-[#DCE4EB] rounded-lg font-medium text-[#10243A] cursor-pointer"
+            >
+              <option value={12}>12 per page</option>
+              <option value={24}>24 per page</option>
+              <option value={48}>48 per page</option>
+              <option value={96}>96 per page</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage <= 1}
+              className="px-3 py-1.5 rounded-lg border border-[#DCE4EB] text-xs font-semibold text-[#10243A] hover:bg-[#F8FAFC] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            >
+              Previous
+            </button>
+            <span className="px-3 py-1.5 bg-[#F1F6F8] rounded-lg text-xs font-mono font-bold text-[#137F83]">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              type="button"
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage >= totalPages}
+              className="px-3 py-1.5 rounded-lg border border-[#DCE4EB] text-xs font-semibold text-[#10243A] hover:bg-[#F8FAFC] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Add Doctor Modal */}
       {isAddModalOpen && (

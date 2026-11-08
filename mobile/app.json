@@ -67,6 +67,13 @@
           "cameraPermission": "Allow RepPulse to capture geotagged selfie attendance punch-ins."
         }
       ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow RepPulse to access photos for attendance verification.",
+          "cameraPermission": "Allow RepPulse to capture geotagged selfie attendance punch-ins."
+        }
+      ],
       "expo-font"
     ],
     "extra": {

@@ -186,6 +186,8 @@ export class HrmsService {
 
           return {
             id: a.id,
+            employeeId: a.employee_id,
+            employeeName: a.employee_name,
             date: dateStr,
             shift: 'Field Territory (GPS)',
             expectedInTime: '10:00',
@@ -211,6 +213,11 @@ export class HrmsService {
 
         const merged = Array.from(mergedMap.values());
         setItem(KEYS.ATTENDANCE_ROSTER, merged);
+
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('attendance-updated'));
+        }
+
         return merged;
       }
     } catch (err) {

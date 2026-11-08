@@ -1698,4 +1698,20 @@ export class SupabaseDbService {
       return await StorageService.getItem<POBOrder[]>(STORAGE_KEYS.ORDERS_LOCAL, []);
     }
   }
+
+  public static async fetchRolePermissions(): Promise<any[]> {
+    if (!this.isConnected()) return [];
+    try {
+      const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/role_permissions?order=created_at.asc`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (err) {
+      console.warn('[SupabaseDbService] fetchRolePermissions error:', err);
+    }
+    return [];
+  }
 }

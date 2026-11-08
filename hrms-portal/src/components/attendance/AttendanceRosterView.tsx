@@ -14,7 +14,8 @@ import {
   MapPin, 
   Send,
   Eye,
-  ArrowUpDown
+  ArrowUpDown,
+  RefreshCw
 } from 'lucide-react';
 
 interface AttendanceRosterViewProps {
@@ -29,14 +30,24 @@ export const AttendanceRosterView: React.FC<AttendanceRosterViewProps> = ({
   onOpenGeoSelfie 
 }) => {
   const [roster, setRoster] = useState<AttendanceRosterRow[]>(() => HrmsService.getAttendanceRoster());
+  const [syncingCloud, setSyncingCloud] = useState(false);
   
   useEffect(() => {
+    // Initial fetch of live Supabase punches
+    HrmsService.syncAttendanceFromSupabase();
+
     const handleSync = () => {
       setRoster(HrmsService.getAttendanceRoster());
     };
     window.addEventListener('attendance-updated', handleSync);
     return () => window.removeEventListener('attendance-updated', handleSync);
   }, []);
+
+  const handleManualSync = async () => {
+    setSyncingCloud(true);
+    await HrmsService.syncAttendanceFromSupabase();
+    setSyncingCloud(false);
+  };
   const [activeFilter, setActiveFilter] = useState<FilterPill>('ALL');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [sortAsc, setSortAsc] = useState(false);
@@ -178,6 +189,16 @@ export const AttendanceRosterView: React.FC<AttendanceRosterViewProps> = ({
         {/* Action Controls */}
         <div className="flex items-center gap-2.5 flex-wrap">
           <button
+            onClick={handleManualSync}
+            disabled={syncingCloud}
+            className="px-3.5 py-2 rounded-xl text-xs font-bold border border-teal-200 bg-teal-50 text-[#137F83] hover:bg-teal-100 transition-all cursor-pointer shadow-2xs hover:scale-102 flex items-center gap-1.5"
+            title="Fetch the latest geotagged punches directly from Supabase"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${syncingCloud ? 'animate-spin' : ''}`} />
+            <span>{syncingCloud ? 'Syncing Cloud...' : 'Sync Cloud Punches'}</span>
+          </button>
+
+          <button
             onClick={() => {
               if (selectedIds.length > 0) {
                 const row = roster.find(r => r.id === selectedIds[0]);
@@ -290,7 +311,14 @@ export const AttendanceRosterView: React.FC<AttendanceRosterViewProps> = ({
                         className="rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
                       />
                     </td>
-                    <td className="py-3.5 px-4 font-bold text-slate-900">{row.date}</td>
+                    <td className="py-3.5 px-4 font-bold text-slate-900">
+                      <div>{row.date}</div>
+                      {row.employeeName && (
+                        <div className="text-[10px] font-normal text-slate-500 mt-0.5">
+                          {row.employeeName}
+                        </div>
+                      )}
+                    </td>
                     <td className="py-3.5 px-4 font-medium text-slate-600">
                       <span className={`px-2 py-0.5 rounded text-[11px] ${
                         row.shift === 'Weekly Off' ? 'bg-slate-100 text-slate-500' : 'bg-slate-50 text-slate-700 border border-slate-200'

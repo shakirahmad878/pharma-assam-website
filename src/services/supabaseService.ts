@@ -212,6 +212,58 @@ export class SupabaseService {
     }
   }
 
+  public static async fetchDoctorsPaginated(options: {
+    page?: number;
+    pageSize?: number;
+    search?: string;
+    district?: string;
+  }): Promise<{ doctors: Doctor[]; totalCount: number }> {
+    if (!this.isConnected()) return { doctors: [], totalCount: 0 };
+    try {
+      const page = options.page || 1;
+      const pageSize = options.pageSize || 50;
+      const offset = (page - 1) * pageSize;
+
+      let query = `${SUPABASE_CONFIG.url}/rest/v1/doctors?order=name.asc&limit=${pageSize}&offset=${offset}`;
+      if (options.district && options.district !== 'ALL') {
+        query += `&district=eq.${encodeURIComponent(options.district)}`;
+      }
+      if (options.search) {
+        query += `&or=(name.ilike.*${encodeURIComponent(options.search)}*,clinic_name.ilike.*${encodeURIComponent(options.search)}*,area.ilike.*${encodeURIComponent(options.search)}*)`;
+      }
+
+      const res = await fetch(query, {
+        method: 'GET',
+        headers: {
+          ...this.getHeaders(),
+          Prefer: 'count=exact',
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error(`Supabase error: ${res.status}`);
+      }
+
+      const contentRange = res.headers.get('content-range');
+      let totalCount = 0;
+      if (contentRange) {
+        const parts = contentRange.split('/');
+        if (parts.length > 1) {
+          totalCount = parseInt(parts[1], 10) || 0;
+        }
+      }
+
+      const raw = await res.json();
+      const doctors = raw.map((d: any) => normalizeDoctor(d));
+      if (!totalCount) totalCount = doctors.length;
+
+      return { doctors, totalCount };
+    } catch (err) {
+      console.warn('[SupabaseService] fetchDoctorsPaginated error:', err);
+      return { doctors: [], totalCount: 0 };
+    }
+  }
+
   public static subscribeDoctors(onUpdate: (doctors: Doctor[]) => void): () => void {
     if (!this.isConnected()) return () => {};
     // Initial fetch
@@ -325,6 +377,58 @@ export class SupabaseService {
     } catch (err) {
       console.warn('[SupabaseService] fetchChemists error:', err);
       return [];
+    }
+  }
+
+  public static async fetchChemistsPaginated(options: {
+    page?: number;
+    pageSize?: number;
+    search?: string;
+    district?: string;
+  }): Promise<{ chemists: Chemist[]; totalCount: number }> {
+    if (!this.isConnected()) return { chemists: [], totalCount: 0 };
+    try {
+      const page = options.page || 1;
+      const pageSize = options.pageSize || 50;
+      const offset = (page - 1) * pageSize;
+
+      let query = `${SUPABASE_CONFIG.url}/rest/v1/firms?order=name.asc&limit=${pageSize}&offset=${offset}`;
+      if (options.district && options.district !== 'ALL') {
+        query += `&district=eq.${encodeURIComponent(options.district)}`;
+      }
+      if (options.search) {
+        query += `&or=(name.ilike.*${encodeURIComponent(options.search)}*,contact_person.ilike.*${encodeURIComponent(options.search)}*,area.ilike.*${encodeURIComponent(options.search)}*)`;
+      }
+
+      const res = await fetch(query, {
+        method: 'GET',
+        headers: {
+          ...this.getHeaders(),
+          Prefer: 'count=exact',
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error(`Supabase error: ${res.status}`);
+      }
+
+      const contentRange = res.headers.get('content-range');
+      let totalCount = 0;
+      if (contentRange) {
+        const parts = contentRange.split('/');
+        if (parts.length > 1) {
+          totalCount = parseInt(parts[1], 10) || 0;
+        }
+      }
+
+      const raw = await res.json();
+      const chemists = raw.map((f: any) => normalizeChemist(f));
+      if (!totalCount) totalCount = chemists.length;
+
+      return { chemists, totalCount };
+    } catch (err) {
+      console.warn('[SupabaseService] fetchChemistsPaginated error:', err);
+      return { chemists: [], totalCount: 0 };
     }
   }
 
@@ -786,6 +890,77 @@ export class SupabaseService {
         message: `Supabase sync error: ${err?.message || 'Failed to upload records'}`,
       };
     }
+  }
+
+  // ==========================================
+  // 9. ROLE PERMISSIONS & AUDIT LOGS
+  // ==========================================
+
+  public static async fetchRolePermissions(): Promise<any[]> {
+    if (!this.isConnected()) return [];
+    try {
+      const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/role_permissions?order=created_at.asc`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (err) {
+      console.warn('[SupabaseService] fetchRolePermissions error:', err);
+    }
+    return [];
+  }
+
+  public static async saveRolePermission(perm: {
+    id: string;
+    role: string;
+    can_punch_attendance: boolean;
+    can_view_all_telemetry: boolean;
+    can_request_live_location: boolean;
+    can_approve_late_login: boolean;
+    can_approve_tour_reschedule: boolean;
+    can_delete_doctors: boolean;
+    can_approve_doctor_deletion: boolean;
+    can_book_pob: boolean;
+    can_view_mis_reports: boolean;
+    can_manage_territories: boolean;
+    description?: string;
+  }): Promise<boolean> {
+    if (!this.isConnected()) return false;
+    try {
+      const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/role_permissions`, {
+        method: 'POST',
+        headers: {
+          ...this.getHeaders(),
+          Prefer: 'resolution=merge-duplicates',
+        },
+        body: JSON.stringify({
+          ...perm,
+          updated_at: new Date().toISOString(),
+        }),
+      });
+      return res.ok;
+    } catch (err) {
+      console.warn('[SupabaseService] saveRolePermission error:', err);
+      return false;
+    }
+  }
+
+  public static async fetchSystemAuditLogs(limit: number = 100): Promise<any[]> {
+    if (!this.isConnected()) return [];
+    try {
+      const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/system_audit_logs?order=recorded_at.desc&limit=${limit}`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (err) {
+      console.warn('[SupabaseService] fetchSystemAuditLogs error:', err);
+    }
+    return [];
   }
 }
 

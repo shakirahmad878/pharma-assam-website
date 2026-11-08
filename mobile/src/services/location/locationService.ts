@@ -12,6 +12,19 @@ export interface LocationResult {
 
 export class LocationService {
   /**
+   * Checks whether device-level location services / GPS is enabled.
+   */
+  public static async isLocationServicesEnabled(): Promise<boolean> {
+    try {
+      const status = await (Location as any).getProviderStatusAsync();
+      return Boolean(status.locationServicesEnabled);
+    } catch (err) {
+      console.warn('[LocationService] Provider status check failed:', err);
+      return true;
+    }
+  }
+
+  /**
    * Requests foreground location permission from Android OS.
    */
   public static async requestForegroundPermission(): Promise<boolean> {
@@ -25,17 +38,60 @@ export class LocationService {
   }
 
   /**
-   * Gets single high-accuracy GPS fix with timeout, accuracy validation,
-   * and strict Anti-Mock / Fake GPS hardware verification.
+   * Gets single GPS fix with timeout, accuracy validation,
+   * modern Android fallback, and strict Anti-Mock / Fake GPS hardware verification.
    */
-  public static async getCurrentLocation(): Promise<LocationResult | null> {
+  public static async getCurrentLocation(options?: { timeoutMs?: number }): Promise<LocationResult | null> {
     try {
+      console.log('[LOCATION_REQUEST_STARTED] Checking permissions & services...');
       const hasPermission = await this.requestForegroundPermission();
+      console.log('[LOCATION_PERMISSION_STATUS]', hasPermission ? 'GRANTED' : 'DENIED');
       if (!hasPermission) return null;
 
-      const loc = await Location.getCurrentPositionAsync({
+      const servicesEnabled = await this.isLocationServicesEnabled();
+      console.log('[LOCATION_SERVICES_STATUS]', servicesEnabled ? 'ENABLED' : 'DISABLED');
+      if (!servicesEnabled) {
+        console.warn('[LocationService] Device location services are turned off.');
+        return null;
+      }
+
+      const timeoutMs = options?.timeoutMs || 8000;
+
+      // Wrap getCurrentPositionAsync with a timeout
+      const getHighAccuracyPos = Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
       });
+
+      const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), timeoutMs));
+
+      let loc: Location.LocationObject | null = await Promise.race([getHighAccuracyPos, timeoutPromise]);
+
+      if (!loc) {
+        console.warn(`[LocationService] High accuracy position timed out after ${timeoutMs}ms, attempting fallback...`);
+        // Fallback 1: Last known position within recent 2 minutes
+        try {
+          loc = await (Location as any).getLastKnownPositionAsync({ maxAge: 120000 });
+        } catch (e) {
+          console.warn('[LocationService] getLastKnownPositionAsync failed:', e);
+        }
+
+        // Fallback 2: Balanced accuracy
+        if (!loc) {
+          try {
+            console.log('[LocationService] Attempting Balanced accuracy fallback...');
+            loc = await Location.getCurrentPositionAsync({
+              accuracy: Location.Accuracy.Balanced,
+            });
+          } catch (e) {
+            console.warn('[LocationService] Balanced accuracy fallback failed:', e);
+          }
+        }
+      }
+
+      if (!loc) {
+        console.error('[LOCATION_RESULT] Failed: No location fix available.');
+        return null;
+      }
 
       // Detect if the location was supplied by a mock provider (Developer Options / Fake GPS)
       const isMocked = Boolean(
@@ -45,7 +101,7 @@ export class LocationService {
         (loc.coords && (loc.coords as any).isMock)
       );
 
-      return {
+      const result: LocationResult = {
         latitude: loc.coords.latitude,
         longitude: loc.coords.longitude,
         accuracyMeters: loc.coords.accuracy || 10,
@@ -53,8 +109,18 @@ export class LocationService {
         isMockLocation: isMocked,
         timestamp: new Date(loc.timestamp).toISOString()
       };
+
+      console.log('[LOCATION_RESULT] SUCCESS:', {
+        lat: result.latitude,
+        lng: result.longitude,
+        accuracy: result.accuracyMeters,
+        isMock: result.isMockLocation
+      });
+      console.log('[LOCATION_ACCURACY]', `±${result.accuracyMeters}m`);
+
+      return result;
     } catch (err) {
-      console.error('[LocationService] Failed to acquire current GPS fix:', err);
+      console.error('[LOCATION_RESULT] Failed to acquire current GPS fix:', err);
       return null;
     }
   }

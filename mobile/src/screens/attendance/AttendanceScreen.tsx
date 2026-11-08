@@ -35,6 +35,7 @@ interface AttendanceScreenProps {
 export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack, isMandatoryStart = false }) => {
   const [location, setLocation] = useState<LocationResult | null>(null);
   const [loadingLoc, setLoadingLoc] = useState(false);
+  const [locError, setLocError] = useState<string | null>(null);
   const [isPunchedIn, setIsPunchedIn] = useState(false);
   const [punchInTime, setPunchInTime] = useState<string | null>(null);
   const [selfieUri, setSelfieUri] = useState<string | null>(null);
@@ -50,6 +51,19 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack, isMa
   const [lateAuthMode, setLateAuthMode] = useState<'REQUEST' | 'PIN'>('REQUEST');
 
   useEffect(() => {
+    // Android 14/15/16/17 Activity recreation recovery for camera result
+    ImagePicker.getPendingResultAsync().then((results: any) => {
+      if (Array.isArray(results) && results.length > 0) {
+        const res = results[0];
+        if (res && !res.canceled && res.assets && res.assets.length > 0) {
+          console.log('[SELFIE_CAPTURE_RESULT] Recovered pending camera result from Activity recreation');
+          setSelfieUri(res.assets[0].uri);
+        }
+      }
+    }).catch((err) => {
+      console.warn('[AttendanceScreen] getPendingResultAsync check:', err);
+    });
+
     fetchLocation();
     checkTodayStatus();
     loadRoutes();
@@ -101,15 +115,35 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack, isMa
 
   const fetchLocation = async () => {
     setLoadingLoc(true);
-    const loc = await LocationService.getCurrentLocation();
-    setLocation(loc);
-    setLoadingLoc(false);
+    setLocError(null);
+    try {
+      const isEnabled = await LocationService.isLocationServicesEnabled();
+      if (!isEnabled) {
+        setLocError('Device Location (GPS) is turned off. Please enable GPS in Android Quick Settings and tap Retry.');
+        setLoadingLoc(false);
+        return;
+      }
+
+      const loc = await LocationService.getCurrentLocation({ timeoutMs: 8000 });
+      if (loc) {
+        setLocation(loc);
+      } else {
+        setLocError('Could not acquire authentic GPS coordinates. Please ensure you have location permissions enabled and tap Retry.');
+      }
+    } catch (err: any) {
+      console.warn('[AttendanceScreen] fetchLocation error:', err);
+      setLocError(err?.message || 'Failed to acquire GPS location.');
+    } finally {
+      setLoadingLoc(false);
+    }
   };
 
   const handleCaptureSelfie = async () => {
     try {
+      console.log('[CAMERA_INITIALIZED] Requesting camera permission...');
       setCapturing(true);
       const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+      console.log('[CAMERA_PERMISSION_STATUS]', permissionResult.granted ? 'GRANTED' : 'DENIED');
 
       if (!permissionResult.granted) {
         Alert.alert(
@@ -120,33 +154,35 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack, isMa
         return;
       }
 
+      // Android 14/15/16/17 compatibility: allowsEditing must be false to avoid external crop sub-intent crashes
       const result = await ImagePicker.launchCameraAsync({
         cameraType: ImagePicker.CameraType.front,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.5,
+        allowsEditing: false,
+        quality: 0.6,
       });
 
       setCapturing(false);
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
+        console.log('[SELFIE_CAPTURE_RESULT] SUCCESS');
         setSelfieUri(result.assets[0].uri);
+      } else {
+        console.log('[SELFIE_CAPTURE_RESULT] CANCELED');
       }
-    } catch (err) {
+    } catch (err: any) {
+      console.error('[SELFIE_CAPTURE_RESULT] FAILED:', err);
       setCapturing(false);
-      // Fallback to image library if camera not available (e.g. simulator)
       Alert.alert(
-        'Take Selfie',
-        'Camera not opened. Would you like to select a photo from gallery for demo?',
+        'Camera Error',
+        'Could not initialize the camera. If your device was recently updated to Android 14/15/16/17, please check Camera permissions in Android App Info or choose from photo gallery.',
         [
           { text: 'Cancel', style: 'cancel' },
           {
             text: 'Choose Photo',
             onPress: async () => {
               const pickRes = await ImagePicker.launchImageLibraryAsync({
-                allowsEditing: true,
-                aspect: [1, 1],
-                quality: 0.5,
+                allowsEditing: false,
+                quality: 0.6,
               });
               if (!pickRes.canceled && pickRes.assets && pickRes.assets.length > 0) {
                 setSelfieUri(pickRes.assets[0].uri);
@@ -161,6 +197,10 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack, isMa
   const [lateApproved, setLateApproved] = useState(false);
 
   const handlePunchIn = async () => {
+    console.log('[START_WORK_INITIATED] Starting attendance check...');
+    const currentUser = AuthService.getCurrentUser();
+    console.log('[AUTH_STATUS]', currentUser ? `Authenticated as ${currentUser.role} (${currentUser.employeeCode})` : 'UNAUTHENTICATED');
+
     if (!selfieUri) {
       Alert.alert('Selfie Required', 'Please take an attendance selfie with front camera before punching in.');
       return;
@@ -201,15 +241,25 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack, isMa
 
     const chosenRoute = routes.find(r => r.id === selectedRouteId);
     setSubmitting(true);
-    const newRecord = await AttendanceService.punchIn({
-      latitude: currentLoc.latitude,
-      longitude: currentLoc.longitude,
-      accuracyMeters: currentLoc.accuracyMeters,
-      selfieUri,
-      isMockLocation: currentLoc.isMockLocation,
-      routeId: selectedRouteId,
-      routeName: chosenRoute?.name || 'Assigned Beat Route',
-    });
+    let newRecord: AttendanceRecord;
+    try {
+      newRecord = await AttendanceService.punchIn({
+        latitude: currentLoc.latitude,
+        longitude: currentLoc.longitude,
+        accuracyMeters: currentLoc.accuracyMeters,
+        selfieUri,
+        isMockLocation: currentLoc.isMockLocation,
+        routeId: selectedRouteId,
+        routeName: chosenRoute?.name || 'Assigned Beat Route',
+      });
+      console.log('[ATTENDANCE_INSERT_RESULT] SUCCESS:', newRecord.id);
+      console.log('[START_WORK_COMPLETED] Shift started successfully.');
+    } catch (err) {
+      console.error('[ATTENDANCE_INSERT_RESULT] FAILED:', err);
+      setSubmitting(false);
+      Alert.alert('Attendance Submission Failed', 'Unable to record attendance. Please check network connection and try again.');
+      return;
+    }
     setSubmitting(false);
 
     setIsPunchedIn(true);
@@ -310,10 +360,27 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack, isMa
                 <Text style={styles.mockWarn}>⚠️ Warning: Mock GPS detected</Text>
               )}
             </View>
-          ) : (
+          ) : loadingLoc ? (
             <View style={styles.locWaitRow}>
               <ActivityIndicator size="small" color={colors.primary} />
               <Text style={styles.locWait}>Acquiring high-accuracy GPS coordinates...</Text>
+            </View>
+          ) : (
+            <View style={{ backgroundColor: '#FEF2F2', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#FCA5A5' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                <Ionicons name="warning-outline" size={16} color="#DC2626" />
+                <Text style={{ fontSize: 13, fontWeight: 'bold', color: '#B91C1C' }}>GPS Signal Unavailable</Text>
+              </View>
+              <Text style={{ fontSize: 12, color: '#7F1D1D', marginBottom: 10 }}>
+                {locError || 'Could not acquire GPS coordinates. Please ensure Location is enabled in Android Settings.'}
+              </Text>
+              <TouchableOpacity
+                onPress={fetchLocation}
+                style={{ backgroundColor: '#DC2626', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 6, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6 }}
+              >
+                <Ionicons name="refresh" size={14} color="#FFFFFF" />
+                <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: 'bold' }}>Retry GPS Lock</Text>
+              </TouchableOpacity>
             </View>
           )}
         </Card>

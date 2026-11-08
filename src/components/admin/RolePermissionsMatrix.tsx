@@ -1,92 +1,188 @@
-import React from 'react';
-import { Shield, Check, X, Lock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { 
+  Shield, 
+  Check, 
+  X, 
+  Lock, 
+  RefreshCw, 
+  CheckCircle2, 
+  AlertCircle,
+  Users,
+  MapPin,
+  Calendar,
+  FileText,
+  ShoppingBag,
+  Sliders
+} from 'lucide-react';
+import { SupabaseService } from '../../services/supabaseService';
+import { User } from '../../types';
 
-export const RolePermissionsMatrix: React.FC = () => {
-  const permissionsList = [
-    {
-      module: 'Platform & Multi-Tenancy',
-      feature: 'Create & Manage Pharma Companies',
-      superAdmin: 'Full Access (All Companies)',
-      admin: 'Restricted (Own Company Only)',
-      manager: 'No Access',
-      rep: 'No Access',
-    },
-    {
-      module: 'User & Staff Management',
-      feature: 'Add / Edit / Remove Staff & Admins',
-      superAdmin: 'Full Access (All Companies)',
-      admin: 'Full Access (Own Company)',
-      manager: 'Delegated / View Team Only',
-      rep: 'No Access',
-    },
-    {
-      module: 'Access Control & Permissions',
-      feature: 'Grant / Revoke Granular Permissions',
-      superAdmin: 'Full Access (Global)',
-      admin: 'Full Access (For Managers & Reps)',
-      manager: 'No Access',
-      rep: 'No Access',
-    },
-    {
-      module: 'Master Database Management',
-      feature: 'Doctor, Chemist & Product Master CRUD',
-      superAdmin: 'Full Database Access (All)',
-      admin: 'Full Database Access (Own Company)',
-      manager: 'Add/Edit Allowed if Granted',
-      rep: 'View Only (Assigned Beats)',
-    },
-    {
-      module: 'Territory & HQ Alignment',
-      feature: 'Create Territories & Assign Beats',
-      superAdmin: 'Full Access (All Zones)',
-      admin: 'Full Access (Company Zones)',
-      manager: 'View Assigned Territories',
-      rep: 'View Assigned Beat Only',
-    },
-    {
-      module: 'Live GPS Telemetry & Tracking',
-      feature: '15-Min Live GPS Breadcrumbs & Replays',
-      superAdmin: 'Full Access (All Staff)',
-      admin: 'Full Access (Company Staff)',
-      manager: 'Restricted by Privacy Gate',
-      rep: 'Self-Telemetry Only',
-    },
-    {
-      module: 'Field Reporting (DCR & TP)',
-      feature: 'Daily Call Report & Tour Plan Approvals',
-      superAdmin: 'Global View & Override',
-      admin: 'Company-wide Approvals',
-      manager: 'Assigned Team Approvals',
-      rep: 'Create & Submit Own Reports',
-    },
-    {
-      module: 'Orders & RCPA Audits',
-      feature: 'Product Order Booking & Audit Analytics',
-      superAdmin: 'Global Analytics & Export',
-      admin: 'Company Orders & Exports',
-      manager: 'Team Orders & Territory Audit',
-      rep: 'Book POB & Log RCPA in Field',
-    },
-    {
-      module: 'HRMS & Expenses',
-      feature: 'Geo-Attendance & Travel Mileage Approval',
-      superAdmin: 'Global Payroll Audit',
-      admin: 'Company Expense Approvals',
-      manager: 'Team Mileage Verification',
-      rep: 'Punch In & Submit Claims',
-    },
-    {
-      module: 'Security & Audit Trail',
-      feature: 'View System Audit Logs & DB Backups',
-      superAdmin: 'Full Global Audit Logs',
-      admin: 'Company Activity Logs',
-      manager: 'View Team Activity Logs',
-      rep: 'No Access',
-    },
-  ];
+interface RolePermissionRecord {
+  id: string;
+  role: 'MEDICAL_REP' | 'REGIONAL_MANAGER' | 'AREA_MANAGER' | 'HR_MANAGER' | 'SUPER_ADMIN';
+  can_punch_attendance: boolean;
+  can_view_all_telemetry: boolean;
+  can_request_live_location: boolean;
+  can_approve_late_login: boolean;
+  can_approve_tour_reschedule: boolean;
+  can_delete_doctors: boolean;
+  can_approve_doctor_deletion: boolean;
+  can_book_pob: boolean;
+  can_view_mis_reports: boolean;
+  can_manage_territories: boolean;
+  description?: string;
+}
+
+interface RolePermissionsMatrixProps {
+  currentUser?: User;
+}
+
+const PERMISSION_DEFINITIONS = [
+  {
+    key: 'can_punch_attendance' as const,
+    label: 'Field Attendance Punch-In',
+    category: 'Attendance & HR',
+    description: 'Allow geotagged selfie and daily duty start/end punch.',
+  },
+  {
+    key: 'can_view_all_telemetry' as const,
+    label: 'Live Fleet GPS Telemetry',
+    category: 'Tracking & Telemetry',
+    description: 'View 15-minute periodic GPS breadcrumbs and MR live shifts.',
+  },
+  {
+    key: 'can_request_live_location' as const,
+    label: 'On-Demand Location Ping',
+    category: 'Tracking & Telemetry',
+    description: 'Trigger immediate satellite telemetry ping to field devices.',
+  },
+  {
+    key: 'can_approve_late_login' as const,
+    label: 'Late Login Approval (10:30 AM Cutoff)',
+    category: 'Attendance & HR',
+    description: 'Approve late start exceptions or bypass 10:30 AM deadline.',
+  },
+  {
+    key: 'can_approve_tour_reschedule' as const,
+    label: 'Tour Plan (MTP) Rescheduling',
+    category: 'Field Operations',
+    description: 'Approve beat route changes and monthly tour adjustments.',
+  },
+  {
+    key: 'can_delete_doctors' as const,
+    label: 'Delete Doctor / Chemist Master',
+    category: 'Master Data',
+    description: 'Directly delete HCPs and retail firms from directory.',
+  },
+  {
+    key: 'can_approve_doctor_deletion' as const,
+    label: 'Approve Doctor Deletion Requests',
+    category: 'Master Data',
+    description: 'Review and approve field deletion requests from MRs.',
+  },
+  {
+    key: 'can_book_pob' as const,
+    label: 'Product Order Booking (POB)',
+    category: 'Commercial',
+    description: 'Book retail chemist orders with PTS/PTR formulas in field.',
+  },
+  {
+    key: 'can_view_mis_reports' as const,
+    label: 'Executive MIS & Sales Analytics',
+    category: 'Reporting',
+    description: 'Access division performance, DCR summaries, and POB totals.',
+  },
+  {
+    key: 'can_manage_territories' as const,
+    label: 'Territory & Staff Alignment',
+    category: 'Administration',
+    description: 'Assign headquarters (Silchar, Hailakandi, Karimganj, Aizawl) and routes.',
+  },
+];
+
+const CANONICAL_ROLES: ('SUPER_ADMIN' | 'REGIONAL_MANAGER' | 'AREA_MANAGER' | 'HR_MANAGER' | 'MEDICAL_REP')[] = [
+  'SUPER_ADMIN',
+  'REGIONAL_MANAGER',
+  'AREA_MANAGER',
+  'HR_MANAGER',
+  'MEDICAL_REP',
+];
+
+export const RolePermissionsMatrix: React.FC<RolePermissionsMatrixProps> = ({ currentUser }) => {
+  const isSuperAdmin = currentUser?.role === 'SUPER_ADMIN' || currentUser?.role === 'REGIONAL_MANAGER';
+  const [roles, setRoles] = useState<RolePermissionRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [savingKey, setSavingKey] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
+
+  const loadPermissions = async () => {
+    setLoading(true);
+    try {
+      const data = await SupabaseService.fetchRolePermissions();
+      if (Array.isArray(data) && data.length > 0) {
+        setRoles(data);
+      } else {
+        // Fallback default structure if cloud is loading
+        setRoles(
+          CANONICAL_ROLES.map((role) => ({
+            id: `perm_${role.toLowerCase()}`,
+            role,
+            can_punch_attendance: role === 'MEDICAL_REP' || role.includes('MANAGER'),
+            can_view_all_telemetry: role !== 'MEDICAL_REP',
+            can_request_live_location: role === 'SUPER_ADMIN' || role.includes('MANAGER'),
+            can_approve_late_login: role === 'SUPER_ADMIN' || role.includes('MANAGER'),
+            can_approve_tour_reschedule: role === 'SUPER_ADMIN' || role === 'REGIONAL_MANAGER',
+            can_delete_doctors: role === 'SUPER_ADMIN',
+            can_approve_doctor_deletion: role === 'SUPER_ADMIN' || role === 'REGIONAL_MANAGER',
+            can_book_pob: role === 'MEDICAL_REP' || role === 'SUPER_ADMIN',
+            can_view_mis_reports: role !== 'MEDICAL_REP',
+            can_manage_territories: role === 'SUPER_ADMIN' || role === 'REGIONAL_MANAGER',
+          }))
+        );
+      }
+    } catch (err) {
+      console.warn('Failed to load role permissions:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadPermissions();
+  }, []);
+
+  const handleToggle = async (roleName: string, permKey: keyof RolePermissionRecord) => {
+    if (!isSuperAdmin) return;
+
+    const currentRole = roles.find((r) => r.role === roleName);
+    if (!currentRole) return;
+
+    const updatedValue = !Boolean(currentRole[permKey]);
+    const updatedRole: RolePermissionRecord = {
+      ...currentRole,
+      [permKey]: updatedValue,
+    };
+
+    // Optimistic UI update
+    setRoles((prev) => prev.map((r) => (r.role === roleName ? updatedRole : r)));
+
+    setSavingKey(`${roleName}-${String(permKey)}`);
+    try {
+      const success = await SupabaseService.saveRolePermission(updatedRole);
+      if (success) {
+        setSaveSuccess(`Updated ${roleName} ${String(permKey)}`);
+        setTimeout(() => setSaveSuccess(null), 2500);
+      }
+    } catch (e) {
+      console.error('Failed to save role permission:', e);
+    } finally {
+      setSavingKey(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
+      {/* Header Banner */}
       <div className="neu-card p-6 border border-[#DCE4EB] bg-white shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -97,62 +193,52 @@ export const RolePermissionsMatrix: React.FC = () => {
               <h2 className="text-xl font-bold text-[#10243A]">Role-Based Access Control (RBAC) Matrix</h2>
             </div>
             <p className="text-xs text-[#64748B] mt-1.5">
-              Deterministic multi-tenant authorization rules governing data ownership and database operations in RepPulse.
+              Live database governance enforcing role permissions and capabilities across Mobile and Web.
             </p>
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl bg-teal-50 text-[#137F83] border border-teal-200 font-medium">
-              <Check className="w-3.5 h-3.5 text-[#137F83]" /> Enforced by Backend & Client Gate
-            </span>
+            {saveSuccess && (
+              <span className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> {saveSuccess}
+              </span>
+            )}
+            <button
+              onClick={loadPermissions}
+              disabled={loading}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl bg-teal-50 text-[#137F83] border border-teal-200 font-medium hover:bg-teal-100 transition-colors"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+              {loading ? 'Syncing...' : 'Reload from Cloud'}
+            </button>
           </div>
         </div>
 
         {/* Roles Breakdown Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-          <div className="p-4 rounded-xl bg-[#F8FAFC] border border-[#DCE4EB]">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-[#10243A] uppercase tracking-wider">Super Admin</span>
-              <span className="text-[10px] bg-white text-[#137F83] px-2 py-0.5 rounded-full border border-[#DCE4EB] font-bold shadow-xs">Global Root</span>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mt-6">
+          {CANONICAL_ROLES.map((roleName) => (
+            <div key={roleName} className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#DCE4EB]">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-[#10243A] uppercase tracking-wider">
+                  {roleName.replace('_', ' ')}
+                </span>
+                <span className="text-[9px] bg-white text-[#137F83] px-2 py-0.5 rounded-full border border-[#DCE4EB] font-bold">
+                  Active
+                </span>
+              </div>
+              <p className="text-[11px] text-[#64748B] mt-1.5 leading-relaxed line-clamp-2">
+                {roleName === 'SUPER_ADMIN'
+                  ? 'Master Administrator with unrestricted governance.'
+                  : roleName === 'REGIONAL_MANAGER'
+                  ? 'Oversees Barak Valley, Tripura & Mizoram field operations.'
+                  : roleName === 'AREA_MANAGER'
+                  ? 'Supervises assigned territory beats and field MRs.'
+                  : roleName === 'HR_MANAGER'
+                  ? 'Manages attendance compliance and payroll rosters.'
+                  : 'Conducts doctor visits, chemist calls, and POB booking.'}
+              </p>
             </div>
-            <h3 className="text-sm font-bold text-[#10243A] mt-1.5">Platform Administrator</h3>
-            <p className="text-[11px] text-[#64748B] mt-1 leading-relaxed">
-              Unrestricted access to all companies, master databases, system licenses, telemetry, and platform configurations.
-            </p>
-          </div>
-
-          <div className="p-4 rounded-xl bg-[#F8FAFC] border border-[#DCE4EB]">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-[#10243A] uppercase tracking-wider">Admin</span>
-              <span className="text-[10px] bg-white text-[#137F83] px-2 py-0.5 rounded-full border border-[#DCE4EB] font-bold shadow-xs">Company Scope</span>
-            </div>
-            <h3 className="text-sm font-bold text-[#10243A] mt-1.5">Pharma Company Admin</h3>
-            <p className="text-[11px] text-[#64748B] mt-1 leading-relaxed">
-              Full control over company database: add, edit, remove doctors, chemists, products, territories, and manage Managers/MRs.
-            </p>
-          </div>
-
-          <div className="p-4 rounded-xl bg-[#F8FAFC] border border-[#DCE4EB]">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-[#10243A] uppercase tracking-wider">Manager</span>
-              <span className="text-[10px] bg-white text-[#137F83] px-2 py-0.5 rounded-full border border-[#DCE4EB] font-bold shadow-xs">Territory Scope</span>
-            </div>
-            <h3 className="text-sm font-bold text-[#10243A] mt-1.5">Area / Regional Manager</h3>
-            <p className="text-[11px] text-[#64748B] mt-1 leading-relaxed">
-              Operates within company data permitted by Admin. Approves DCRs, Tour Plans, Expenses, and manages team operations.
-            </p>
-          </div>
-
-          <div className="p-4 rounded-xl bg-[#F8FAFC] border border-[#DCE4EB]">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider">Medical Rep</span>
-              <span className="text-[10px] bg-white text-[#64748B] px-2 py-0.5 rounded-full border border-[#DCE4EB] font-bold shadow-xs">Beat Scope</span>
-            </div>
-            <h3 className="text-sm font-bold text-[#10243A] mt-1.5">Field Representative</h3>
-            <p className="text-[11px] text-[#64748B] mt-1 leading-relaxed">
-              Executes field calls, books POB orders, conducts RCPA, punches attendance, and submits daily reports.
-            </p>
-          </div>
+          ))}
         </div>
       </div>
 
@@ -161,10 +247,12 @@ export const RolePermissionsMatrix: React.FC = () => {
         <div className="p-5 border-b border-[#DCE4EB] flex items-center justify-between">
           <div>
             <h3 className="text-base font-bold text-[#10243A]">Enterprise Access Control Matrix</h3>
-            <p className="text-xs text-[#64748B] mt-0.5">Detailed mapping of permissions across all RepPulse modules</p>
+            <p className="text-xs text-[#64748B] mt-0.5">
+              Click any toggle to update authorization directly in Supabase PostgreSQL
+            </p>
           </div>
           <span className="text-xs font-semibold px-2.5 py-1 rounded-xl bg-teal-50 text-[#137F83] border border-teal-200">
-            10 Active Core Modules
+            {PERMISSION_DEFINITIONS.length} Managed Capabilities
           </span>
         </div>
 
@@ -172,57 +260,55 @@ export const RolePermissionsMatrix: React.FC = () => {
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-[#F1F6F8] border-b border-[#DCE4EB] text-[#10243A] font-semibold uppercase tracking-wider text-[11px]">
-                <th className="py-3.5 px-4">Module & Scope</th>
-                <th className="py-3.5 px-4">Feature / Action</th>
-                <th className="py-3.5 px-4 text-[#10243A]">Super Admin</th>
-                <th className="py-3.5 px-4 text-[#10243A]">Company Admin</th>
-                <th className="py-3.5 px-4 text-[#10243A]">Manager</th>
-                <th className="py-3.5 px-4 text-[#64748B]">Medical Rep (Field)</th>
+                <th className="py-3.5 px-4 w-64">Permission & Description</th>
+                <th className="py-3.5 px-4 text-center">Super Admin</th>
+                <th className="py-3.5 px-4 text-center">Regional Mgr</th>
+                <th className="py-3.5 px-4 text-center">Area Mgr</th>
+                <th className="py-3.5 px-4 text-center">HR Mgr</th>
+                <th className="py-3.5 px-4 text-center">Medical Rep</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#DCE4EB] font-medium text-[#10243A]">
-              {permissionsList.map((row, idx) => (
-                <tr key={idx} className="hover:bg-[#F8FAFC] transition-colors">
-                  <td className="py-3 px-4 font-bold text-[#10243A]">{row.module}</td>
-                  <td className="py-3 px-4 text-[#64748B]">{row.feature}</td>
+              {PERMISSION_DEFINITIONS.map((def) => (
+                <tr key={def.key} className="hover:bg-[#F8FAFC] transition-colors">
                   <td className="py-3 px-4">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[#137F83] font-semibold bg-teal-50 border border-teal-200">
-                      <Check className="w-3.5 h-3.5 text-[#137F83]" />
-                      {row.superAdmin}
-                    </span>
+                    <span className="font-bold text-[#10243A] block">{def.label}</span>
+                    <span className="text-[11px] text-[#64748B]">{def.description}</span>
                   </td>
-                  <td className="py-3 px-4">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[#137F83] font-semibold bg-teal-50 border border-teal-200">
-                      <Check className="w-3.5 h-3.5 text-[#137F83]" />
-                      {row.admin}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4">
-                    {row.manager.includes('No Access') ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[#94A3B8] font-normal bg-[#F1F6F8] border border-[#DCE4EB]">
-                        <Lock className="w-3 h-3 text-[#94A3B8]" />
-                        {row.manager}
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[#137F83] font-semibold bg-teal-50 border border-teal-200">
-                        <Check className="w-3.5 h-3.5 text-[#137F83]" />
-                        {row.manager}
-                      </span>
-                    )}
-                  </td>
-                  <td className="py-3 px-4">
-                    {row.rep.includes('No Access') ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[#94A3B8] bg-[#F1F6F8] border border-[#DCE4EB]">
-                        <X className="w-3 h-3 text-[#94A3B8]" />
-                        {row.rep}
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[#10243A] bg-teal-50 border border-teal-200 font-semibold">
-                        <Check className="w-3.5 h-3.5 text-[#137F83]" />
-                        {row.rep}
-                      </span>
-                    )}
-                  </td>
+
+                  {CANONICAL_ROLES.map((roleName) => {
+                    const r = roles.find((item) => item.role === roleName);
+                    const isGranted = Boolean(r && r[def.key]);
+                    const isSavingThis = savingKey === `${roleName}-${String(def.key)}`;
+
+                    return (
+                      <td key={roleName} className="py-3 px-4 text-center">
+                        <button
+                          onClick={() => handleToggle(roleName, def.key)}
+                          disabled={!isSuperAdmin || isSavingThis}
+                          className={`inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all ${
+                            isGranted
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100'
+                              : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
+                          } ${!isSuperAdmin ? 'opacity-85 cursor-default' : 'cursor-pointer'}`}
+                        >
+                          {isSavingThis ? (
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin text-teal-600" />
+                          ) : isGranted ? (
+                            <>
+                              <Check className="w-3.5 h-3.5 text-emerald-600" />
+                              <span>Granted</span>
+                            </>
+                          ) : (
+                            <>
+                              <X className="w-3.5 h-3.5 text-rose-500" />
+                              <span>Denied</span>
+                            </>
+                          )}
+                        </button>
+                      </td>
+                    );
+                  })}
                 </tr>
               ))}
             </tbody>
