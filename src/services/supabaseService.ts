@@ -584,6 +584,73 @@ export class SupabaseService {
     }
   }
 
+  public static async fetchAttendancePaginated(options: {
+    page?: number;
+    pageSize?: number;
+    search?: string;
+    role?: string;
+    status?: string;
+    startDate?: string;
+    endDate?: string;
+    selfieFilter?: 'ALL' | 'HAS_SELFIE' | 'NO_SELFIE';
+  }): Promise<{ records: any[]; totalCount: number }> {
+    if (!this.isConnected()) return { records: [], totalCount: 0 };
+    try {
+      const page = options.page || 1;
+      const pageSize = options.pageSize || 20;
+      const offset = (page - 1) * pageSize;
+
+      let query = `${SUPABASE_CONFIG.url}/rest/v1/attendance?order=date.desc,created_at.desc&limit=${pageSize}&offset=${offset}`;
+
+      if (options.status && options.status !== 'ALL') {
+        query += `&status=eq.${encodeURIComponent(options.status)}`;
+      }
+      if (options.startDate) {
+        query += `&date=gte.${encodeURIComponent(options.startDate)}`;
+      }
+      if (options.endDate) {
+        query += `&date=lte.${encodeURIComponent(options.endDate)}`;
+      }
+      if (options.selfieFilter === 'HAS_SELFIE') {
+        query += `&not.selfie_url.is.null`;
+      } else if (options.selfieFilter === 'NO_SELFIE') {
+        query += `&selfie_url.is.null`;
+      }
+      if (options.search) {
+        query += `&or=(employee_name.ilike.*${encodeURIComponent(options.search)}*,employee_id.ilike.*${encodeURIComponent(options.search)}*)`;
+      }
+
+      const res = await fetch(query, {
+        method: 'GET',
+        headers: {
+          ...this.getHeaders(),
+          Prefer: 'count=exact',
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error(`Supabase error: ${res.status}`);
+      }
+
+      const contentRange = res.headers.get('content-range');
+      let totalCount = 0;
+      if (contentRange) {
+        const parts = contentRange.split('/');
+        if (parts.length > 1) {
+          totalCount = parseInt(parts[1], 10) || 0;
+        }
+      }
+
+      const raw = await res.json();
+      if (!totalCount) totalCount = raw.length;
+
+      return { records: raw, totalCount };
+    } catch (err) {
+      console.warn('[SupabaseService] fetchAttendancePaginated error:', err);
+      return { records: [], totalCount: 0 };
+    }
+  }
+
   public static async fetchVisits(): Promise<any[]> {
     if (!this.isConnected()) return [];
     try {

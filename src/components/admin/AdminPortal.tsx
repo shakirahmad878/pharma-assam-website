@@ -15,6 +15,7 @@ import { CompanyManager } from './CompanyManager';
 import { DatabaseStudio } from './DatabaseStudio';
 import { RolePermissionsMatrix } from './RolePermissionsMatrix';
 import { AuditLogsView } from './AuditLogsView';
+import { GeoAttendanceView } from '../hrms/GeoAttendanceView';
 import { 
   Shield, 
   ShieldCheck, 
@@ -32,10 +33,11 @@ import {
   AlertCircle,
   Sparkles,
   Layers,
-  FileCheck
+  FileCheck,
+  Camera
 } from 'lucide-react';
 
-export type AdminTab = 'overview' | 'users' | 'companies' | 'database' | 'matrix' | 'audit';
+export type AdminTab = 'overview' | 'users' | 'companies' | 'database' | 'matrix' | 'audit' | 'attendance';
 
 interface AdminPortalProps {
   currentUser: User;
@@ -248,6 +250,23 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               activeAdminTab === 'audit' ? 'bg-white/20 text-white' : 'bg-[#DCE4EB] text-[#10243A]'
             }`}>
               {auditLogs.length}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveAdminTab('attendance')}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+              activeAdminTab === 'attendance'
+                ? 'bg-[#10243A] text-white shadow-xs'
+                : 'bg-[#F1F6F8] hover:bg-[#E8EEF4] text-[#64748B] hover:text-[#10243A] border border-[#DCE4EB]'
+            }`}
+          >
+            <Camera className="w-4 h-4" />
+            <span>Attendance & Selfies</span>
+            <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold ${
+              activeAdminTab === 'attendance' ? 'bg-white/20 text-white' : 'bg-teal-50 text-[#137F83] border border-teal-200'
+            }`}>
+              Selfie Audit
             </span>
           </button>
         </div>
@@ -505,6 +524,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {activeAdminTab === 'audit' && (
         <AuditLogsView
           auditLogs={auditLogs}
+          currentUser={currentUser}
+        />
+      )}
+
+      {/* ATTENDANCE & SELFIES TAB */}
+      {activeAdminTab === 'attendance' && (
+        <GeoAttendanceView
           currentUser={currentUser}
         />
       )}

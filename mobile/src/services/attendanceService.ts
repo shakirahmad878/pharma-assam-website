@@ -5,6 +5,7 @@ import { BackgroundTelemetryManager } from './location/backgroundTelemetry';
 import { AuthService } from './authService';
 import { RouteService } from './routeService';
 import { SupabaseDbService } from './supabase/supabaseDbService';
+import { SupabaseStorageService } from './supabase/supabaseStorageService';
 import { getBusinessDateStr } from '../utils/dateUtils';
 
 export class AttendanceService {
@@ -88,6 +89,23 @@ export class AttendanceService {
     // Deterministic collision-resistant ID per employee per business date
     const deterministicId = `att_in_${cleanCode}_${today}`;
 
+    // Upload front selfie to Supabase Cloud Storage if online
+    let resolvedSelfieUrl = params.selfieUri;
+    try {
+      if (SupabaseDbService.isConnected() && params.selfieUri && !params.selfieUri.startsWith('http')) {
+        const uploadRes = await SupabaseStorageService.uploadAttendanceSelfie({
+          localUri: params.selfieUri,
+          employeeCode: cleanCode,
+          date: today,
+        });
+        if (uploadRes.success && uploadRes.publicUrl) {
+          resolvedSelfieUrl = uploadRes.publicUrl;
+        }
+      }
+    } catch (uploadErr) {
+      console.warn('[AttendanceService] Cloud selfie upload deferred to sync queue:', uploadErr);
+    }
+
     const newRecord: AttendanceRecord = {
       id: deterministicId,
       employeeId: user?.id || `usr-${cleanCode.toLowerCase()}`,
@@ -99,7 +117,7 @@ export class AttendanceService {
       latitude: params.latitude,
       longitude: params.longitude,
       accuracyMeters: params.accuracyMeters,
-      selfieBase64OrUri: params.selfieUri,
+      selfieBase64OrUri: resolvedSelfieUrl,
       isMockLocation: params.isMockLocation,
       batteryPercentage: 94,
       status: 'PUNCHED_IN',

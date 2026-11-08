@@ -1,6 +1,7 @@
 import { SyncQueueItem, SyncEntityType, VisitRecord, POBOrder, AttendanceRecord } from '../../types';
 import { StorageService, STORAGE_KEYS } from '../storageService';
 import { SupabaseDbService } from '../supabase/supabaseDbService';
+import { SupabaseStorageService } from '../supabase/supabaseStorageService';
 
 export interface SyncStats {
   pending: number;
@@ -127,6 +128,20 @@ export class SyncService {
         if (item.entityType === 'VISIT') {
           await SupabaseDbService.recordVisit(item.payload);
         } else if (item.entityType === 'ATTENDANCE') {
+          if (item.payload?.selfieBase64OrUri && typeof item.payload.selfieBase64OrUri === 'string' && item.payload.selfieBase64OrUri.startsWith('file://')) {
+            try {
+              const uploadRes = await SupabaseStorageService.uploadAttendanceSelfie({
+                localUri: item.payload.selfieBase64OrUri,
+                employeeCode: item.payload.employeeId || 'MR',
+                date: item.payload.date || new Date().toISOString().split('T')[0],
+              });
+              if (uploadRes.success && uploadRes.publicUrl) {
+                item.payload.selfieBase64OrUri = uploadRes.publicUrl;
+              }
+            } catch (uErr) {
+              console.warn('[SyncService] Background selfie upload deferred:', uErr);
+            }
+          }
           await SupabaseDbService.recordAttendance(item.payload);
         } else if (item.entityType === 'POB_ORDER') {
           await SupabaseDbService.submitOrder(item.payload);
