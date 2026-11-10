@@ -23,9 +23,44 @@ import { LocationService, LocationResult } from '../../services/location/locatio
 import { AttendanceService } from '../../services/attendanceService';
 import { AuthService } from '../../services/authService';
 import { RouteService } from '../../services/routeService';
-import { RoutePlan, AttendanceRecord } from '../../types';
+import { RoutePlan, AttendanceRecord, WorkingRouteCategory } from '../../types';
 import { SupabaseDbService } from '../../services/supabase/supabaseDbService';
 import { getBusinessDateStr, getBusinessTimeStr, isPastBusinessCutoff } from '../../utils/dateUtils';
+
+const ALL_HQ_OPTIONS = [
+  'Silchar',
+  'Karimganj',
+  'Hailakandi',
+  'Agartala',
+  'Dharmanagar',
+  'Aizawl',
+  'Guwahati',
+  'Shillong',
+];
+
+interface SubRouteOption {
+  id: string;
+  name: string;
+  parentHq: string;
+}
+
+const EXTENSION_OPTIONS: SubRouteOption[] = [
+  { id: 'ext-badarpur', name: 'Badarpur Junction & Nilambazar', parentHq: 'Karimganj' },
+  { id: 'ext-lala', name: 'Lala Bazar & Katlicherra Belt', parentHq: 'Hailakandi' },
+  { id: 'ext-lakhipur', name: 'Lakhipur, Sonai & Dhalai', parentHq: 'Silchar' },
+  { id: 'ext-rknagar', name: 'Ramkrishna Nagar & Anipur', parentHq: 'Karimganj' },
+  { id: 'ext-udaipur', name: 'Udaipur & Bishramganj', parentHq: 'Agartala' },
+  { id: 'ext-kailashahar', name: 'Kailashahar & Kumarghat', parentHq: 'Dharmanagar' },
+  { id: 'ext-champhai', name: 'Champhai & Kolasib', parentHq: 'Aizawl' },
+];
+
+const OUTSTATION_OPTIONS: SubRouteOption[] = [
+  { id: 'out-aizawl', name: 'Silchar ↔ Aizawl Inter-State Corridor', parentHq: 'Aizawl' },
+  { id: 'out-tripura', name: 'Barak Valley ↔ Tripura Corridor (Agartala/Dharmanagar)', parentHq: 'Agartala' },
+  { id: 'out-guwahati', name: 'Silchar ↔ Guwahati Regional Supply Depot', parentHq: 'Guwahati' },
+  { id: 'out-shillong', name: 'Meghalaya & Shillong Hills Circuit', parentHq: 'Shillong' },
+  { id: 'out-joint-tour', name: 'Inter-Division Joint Working Tour (RSM Accomp)', parentHq: 'Regional' },
+];
 
 interface AttendanceScreenProps {
   onBack: () => void;
@@ -43,6 +78,11 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack, isMa
   const [submitting, setSubmitting] = useState(false);
   const [routes, setRoutes] = useState<RoutePlan[]>([]);
   const [selectedRouteId, setSelectedRouteId] = useState<string>('');
+  const [workingCategory, setWorkingCategory] = useState<WorkingRouteCategory>('HQ');
+  const [selectedHq, setSelectedHq] = useState<string>('Silchar');
+  const [selectedExtensionId, setSelectedExtensionId] = useState<string>('ext-badarpur');
+  const [selectedOutstationId, setSelectedOutstationId] = useState<string>('out-aizawl');
+  const [otherRemarks, setOtherRemarks] = useState<string>('');
   const [todayRecord, setTodayRecord] = useState<AttendanceRecord | null>(null);
   const [lateModalVisible, setLateModalVisible] = useState(false);
   const [lateReason, setLateReason] = useState('');
@@ -269,7 +309,7 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack, isMa
 
     Alert.alert(
       'Punch In Successful ✅',
-      `Duty started at ${nowTime} on "${chosenRoute?.name || 'Assigned Beat Route'}". Geotagged selfie recorded and 15-minute background telemetry is active.`,
+      `Duty started at ${nowTime} (${finalRouteName}). Geotagged selfie recorded and 15-minute background telemetry is active.`,
       [{ text: 'Proceed to Field Duty', onPress: onBack }]
     );
   };
@@ -423,56 +463,150 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack, isMa
           </TouchableOpacity>
         </Card>
 
-        {/* Working Route / Beat Selection (Mandatory for Field Operations) */}
+        {/* Route Plan Selection: HQ | Extension | Outstation | Other */}
         {!isPunchedIn ? (
           <Card>
             <View style={styles.sectionHeaderRow}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <Ionicons name="map-outline" size={18} color={colors.primary} />
-                <Text style={styles.sectionHeader}>Working Route / Beat</Text>
+                <Text style={styles.sectionHeader}>Route Plan Selection</Text>
               </View>
               <Badge label="Required *" variant="warning" />
             </View>
             <Text style={styles.cameraDesc}>
-              Select the designated field beat you are visiting today. 15-minute background telemetry and doctor calls will sync directly to this route.
+              Select your operational working route plan for today. Field calls, attendance, and background telemetry will be linked to this selection.
             </Text>
 
-            {routes.length === 0 ? (
-              <View style={{ paddingVertical: 14, alignItems: 'center' }}>
-                <ActivityIndicator size="small" color={colors.primary} />
-                <Text style={{ fontSize: 12, color: '#94A3B8', marginTop: 6 }}>Loading designated beat routes...</Text>
-              </View>
-            ) : (
-              <View style={styles.routeListWrap}>
-                {routes.map((r) => {
-                  const isSelected = selectedRouteId === r.id;
-                  return (
-                    <TouchableOpacity
-                      key={r.id}
-                      style={[styles.routeSelectCard, isSelected && styles.routeSelectCardActive]}
-                      onPress={() => setSelectedRouteId(r.id)}
-                      activeOpacity={0.85}
-                    >
-                      <View style={[styles.routeRadioCircle, isSelected && styles.routeRadioCircleActive]}>
-                        {isSelected ? <View style={styles.routeRadioInner} /> : null}
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <Text style={[styles.routeNameText, isSelected && styles.routeNameTextActive]}>
-                            {r.name}
-                          </Text>
-                          <Text style={styles.routeCodeBadge}>{r.code}</Text>
+            {/* 4 Category Selection Buttons: HQ | Extension | Outstation | Other */}
+            <View style={styles.categoryGrid}>
+              {[
+                { id: 'HQ', label: 'HQ', icon: 'business' },
+                { id: 'EXTENSION', label: 'Extension', icon: 'car-outline' },
+                { id: 'OUTSTATION', label: 'Outstation', icon: 'airplane-outline' },
+                { id: 'OTHER', label: 'Other', icon: 'ellipsis-horizontal-circle-outline' },
+              ].map(cat => {
+                const isCatActive = workingCategory === cat.id;
+                return (
+                  <TouchableOpacity
+                    key={cat.id}
+                    style={[styles.categoryBtn, isCatActive && styles.categoryBtnActive]}
+                    onPress={() => setWorkingCategory(cat.id as WorkingRouteCategory)}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons
+                      name={cat.icon as any}
+                      size={18}
+                      color={isCatActive ? '#FFFFFF' : '#475569'}
+                    />
+                    <Text style={[styles.categoryBtnText, isCatActive && styles.categoryBtnTextActive]}>
+                      {cat.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {/* Sub-Selection: HQ */}
+            {workingCategory === 'HQ' && (
+              <View style={styles.subSelectionWrap}>
+                <Text style={styles.subSelectionHeader}>Select Headquarter (HQ):</Text>
+                <View style={styles.hqGrid}>
+                  {ALL_HQ_OPTIONS.map(hq => {
+                    const isHqSelected = selectedHq === hq;
+                    return (
+                      <TouchableOpacity
+                        key={hq}
+                        style={[styles.hqPill, isHqSelected && styles.hqPillActive]}
+                        onPress={() => setSelectedHq(hq)}
+                        activeOpacity={0.8}
+                      >
+                        <View style={[styles.hqRadioCircle, isHqSelected && styles.hqRadioCircleActive]}>
+                          {isHqSelected ? <View style={styles.hqRadioInner} /> : null}
                         </View>
-                        <Text style={styles.routeAreaText}>
-                          📍 {(r.areas && r.areas.length > 0) ? r.areas.join(', ') : r.description || r.district}
+                        <Text style={[styles.hqPillText, isHqSelected && styles.hqPillTextActive]}>
+                          {hq}
                         </Text>
-                        <Text style={styles.routeMetaText}>
-                          {r.totalDoctors} Doctors • {r.totalChemists} Chemists • {r.totalHospitals} Hospitals
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  );
-                })}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            )}
+
+            {/* Sub-Selection: Extension */}
+            {workingCategory === 'EXTENSION' && (
+              <View style={styles.subSelectionWrap}>
+                <Text style={styles.subSelectionHeader}>Select Extension Destination:</Text>
+                <View style={styles.extensionList}>
+                  {EXTENSION_OPTIONS.map(ext => {
+                    const isExtSelected = selectedExtensionId === ext.id;
+                    return (
+                      <TouchableOpacity
+                        key={ext.id}
+                        style={[styles.extCard, isExtSelected && styles.extCardActive]}
+                        onPress={() => setSelectedExtensionId(ext.id)}
+                        activeOpacity={0.8}
+                      >
+                        <View style={[styles.hqRadioCircle, isExtSelected && styles.hqRadioCircleActive]}>
+                          {isExtSelected ? <View style={styles.hqRadioInner} /> : null}
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={[styles.extName, isExtSelected && styles.extNameActive]}>
+                            {ext.name}
+                          </Text>
+                          <Text style={styles.extParent}>Parent HQ: {ext.parentHq}</Text>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            )}
+
+            {/* Sub-Selection: Outstation */}
+            {workingCategory === 'OUTSTATION' && (
+              <View style={styles.subSelectionWrap}>
+                <Text style={styles.subSelectionHeader}>Select Outstation Route:</Text>
+                <View style={styles.extensionList}>
+                  {OUTSTATION_OPTIONS.map(out => {
+                    const isOutSelected = selectedOutstationId === out.id;
+                    return (
+                      <TouchableOpacity
+                        key={out.id}
+                        style={[styles.extCard, isOutSelected && styles.extCardActive]}
+                        onPress={() => setSelectedOutstationId(out.id)}
+                        activeOpacity={0.8}
+                      >
+                        <View style={[styles.hqRadioCircle, isOutSelected && styles.hqRadioCircleActive]}>
+                          {isOutSelected ? <View style={styles.hqRadioInner} /> : null}
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={[styles.extName, isOutSelected && styles.extNameActive]}>
+                            {out.name}
+                          </Text>
+                          <Text style={styles.extParent}>Transit Corridor: {out.parentHq}</Text>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            )}
+
+            {/* Sub-Selection: Other */}
+            {workingCategory === 'OTHER' && (
+              <View style={styles.subSelectionWrap}>
+                <Text style={styles.subSelectionHeader}>Specify Duty Details / Purpose *:</Text>
+                <TextInput
+                  style={styles.otherInput}
+                  placeholder="e.g. Transit to Guwahati / Annual Conference / Admin Day"
+                  placeholderTextColor="#94A3B8"
+                  value={otherRemarks}
+                  onChangeText={setOtherRemarks}
+                />
+                <Text style={styles.otherHint}>
+                  Provide a brief explanation for this non-standard field working session.
+                </Text>
               </View>
             )}
           </Card>
@@ -491,8 +625,8 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack, isMa
               title={
                 !selfieUri
                   ? '📷 1. Capture Selfie to Continue'
-                  : !selectedRouteId
-                  ? '🗺️ 2. Select Route to Start'
+                  : !(workingCategory === 'OTHER' ? otherRemarks.trim() : (workingCategory === 'HQ' ? selectedHq : (workingCategory === 'EXTENSION' ? selectedExtensionId : selectedOutstationId)))
+                  ? '🗺️ 2. Select Route Plan to Start'
                   : 'Confirm Punch In & Start Shift'
               }
               onPress={handlePunchIn}
@@ -867,5 +1001,142 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     marginTop: 2,
     fontWeight: '600',
+  },
+  categoryGrid: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  categoryBtn: {
+    flex: 1,
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+    borderRadius: radius.md,
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    gap: 4,
+  },
+  categoryBtnActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  categoryBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#475569',
+  },
+  categoryBtnTextActive: {
+    color: '#FFFFFF',
+  },
+  subSelectionWrap: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: radius.md,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    marginTop: 4,
+  },
+  subSelectionHeader: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginBottom: 8,
+  },
+  hqGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  hqPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
+    gap: 6,
+  },
+  hqPillActive: {
+    borderColor: colors.primary,
+    backgroundColor: '#EFF6FF',
+  },
+  hqRadioCircle: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: 1.5,
+    borderColor: '#94A3B8',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  hqRadioCircleActive: {
+    borderColor: colors.primary,
+  },
+  hqRadioInner: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.primary,
+  },
+  hqPillText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#334155',
+  },
+  hqPillTextActive: {
+    color: '#1E40AF',
+    fontWeight: '700',
+  },
+  extensionList: {
+    gap: 6,
+  },
+  extCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    gap: 8,
+  },
+  extCardActive: {
+    borderColor: colors.primary,
+    backgroundColor: '#EFF6FF',
+  },
+  extName: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#1E293B',
+  },
+  extNameActive: {
+    color: '#1E40AF',
+  },
+  extParent: {
+    fontSize: 10,
+    color: '#64748B',
+    marginTop: 1,
+  },
+  otherInput: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: radius.md,
+    padding: spacing.md,
+    fontSize: typography.fontSize.xs,
+    color: '#0F172A',
+    minHeight: 46,
+  },
+  otherHint: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 6,
   },
 });

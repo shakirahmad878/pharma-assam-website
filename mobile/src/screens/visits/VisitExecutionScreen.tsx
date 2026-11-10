@@ -17,51 +17,74 @@ import { VisitService } from '../../services/visitService';
 import { DoctorService } from '../../services/doctorService';
 import { AuthService } from '../../services/authService';
 import { MOCK_PRODUCTS, CURRENT_USER } from '../../constants/mockData';
-import { Doctor, AccompaniedPerson, VisitRecord } from '../../types';
+import { Doctor, AccompaniedPerson, VisitRecord, VisitObjective } from '../../types';
 
 interface VisitExecutionScreenProps {
-  doctor: Doctor;
-  isGeofenceVerified: boolean;
-  distanceMeters: number;
+  doctor?: Doctor;
+  chemist?: any;
+  customerType?: 'DOCTOR' | 'CHEMIST';
+  isGeofenceVerified?: boolean;
+  distanceMeters?: number;
   matchedChamber?: { id?: string; name: string; latitude: number; longitude: number; address?: string; area?: string };
   onBack: () => void;
   onVisitComplete: () => void;
 }
 
+const VISIT_OBJECTIVES: { id: VisitObjective; label: string }[] = [
+  { id: 'PRODUCT_PROMOTION', label: 'Product Promotion' },
+  { id: 'NEW_LAUNCH', label: 'New Launch Detailing' },
+  { id: 'ORDER_BOOKING', label: 'POB Order Booking' },
+  { id: 'PRESCRIPTION_FEEDBACK', label: 'Prescription Feedback' },
+  { id: 'FOLLOW_UP', label: 'Follow-up Call' },
+  { id: 'PAYMENT_COLLECTION', label: 'Payment / Ledger Check' },
+  { id: 'RELATIONSHIP_MANAGEMENT', label: 'Relationship Management' },
+];
+
 export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
   doctor,
-  isGeofenceVerified,
-  distanceMeters,
+  chemist,
+  customerType = doctor ? 'DOCTOR' : 'CHEMIST',
+  isGeofenceVerified = true,
+  distanceMeters = 0,
   matchedChamber,
   onBack,
   onVisitComplete,
 }) => {
+  const isDoctor = customerType === 'DOCTOR' && !!doctor;
+
+  const customerName = isDoctor ? doctor!.name : (chemist?.name || chemist?.shopName || 'Chemist Shop');
+  const customerSubtitle = isDoctor
+    ? `${doctor!.qualification || 'MBBS'} • ${doctor!.specialty || 'General Practitioner'}`
+    : `${chemist?.type || 'Retail Pharmacy'} • Contact: ${chemist?.contactPerson || 'Proprietor'}`;
+
   const activeChamber = matchedChamber || {
-    name: doctor.clinicName,
-    latitude: doctor.latitude,
-    longitude: doctor.longitude,
-    address: doctor.clinicAddress,
-    area: doctor.area,
+    name: isDoctor ? doctor!.clinicName : (chemist?.name || chemist?.shopName || 'Shop Location'),
+    latitude: isDoctor ? doctor!.latitude : (chemist?.latitude || 24.8333),
+    longitude: isDoctor ? doctor!.longitude : (chemist?.longitude || 92.7789),
+    address: isDoctor ? doctor!.clinicAddress : (chemist?.address || 'Market Area'),
+    area: isDoctor ? doctor!.area : (chemist?.area || 'Cachar'),
   };
 
   // Joint Working / Accompanied Personnel
   const [accompaniedBy, setAccompaniedBy] = useState<AccompaniedPerson>('SELF_SOLO');
   
-  // Call Purpose & Feedback
-  const [visitPurpose, setVisitPurpose] = useState<VisitRecord['visitPurpose']>('ROUTINE_CALL');
+  // Visit Objective
+  const [visitObjective, setVisitObjective] = useState<VisitObjective>(
+    isDoctor ? 'PRODUCT_PROMOTION' : 'ORDER_BOOKING'
+  );
   const [prescribingHabit, setPrescribingHabit] = useState<VisitRecord['doctorPrescribingHabit']>('CORE_PRESCRIBER');
   
-  // Products Detailed (Multi-select) - starts empty until MR details products
+  // Products Detailed (Multi-select)
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
   const [productReactions, setProductReactions] = useState<{ [id: string]: 'HIGH_INTEREST' | 'MODERATE' | 'NEUTRAL' }>({});
 
-  // Samples & Inputs - starts empty until MR distributes
+  // Samples & Inputs
   const [sampleQuantities, setSampleQuantities] = useState<{ [id: string]: number }>({});
   const [selectedInputs, setSelectedInputs] = useState<string[]>([]);
   
-  // Discussion Notes & Mandatory Doctor Feedback
+  // Discussion Notes & Feedback
   const [discussionNotes, setDiscussionNotes] = useState('');
-  const [doctorFeedback, setDoctorFeedback] = useState('');
+  const [customerFeedback, setCustomerFeedback] = useState('');
   const [pobAmount, setPobAmount] = useState('');
   const [nextVisitDate, setNextVisitDate] = useState('');
 
@@ -69,14 +92,18 @@ export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
   const [durationMinutes, setDurationMinutes] = useState(8);
   const [submitting, setSubmitting] = useState(false);
 
-  const handleOpenChamberMap = () => {
-    let url = '';
-    if (activeChamber.latitude && activeChamber.longitude && (activeChamber.latitude !== 0 || activeChamber.longitude !== 0)) {
-      url = `https://www.google.com/maps/dir/?api=1&destination=${activeChamber.latitude},${activeChamber.longitude}`;
-    } else {
-      const query = encodeURIComponent(`${doctor.name} ${activeChamber.name} ${activeChamber.address || activeChamber.area || doctor.area}`);
-      url = `https://www.google.com/maps/search/?api=1&query=${query}`;
-    }
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setDurationMinutes(prev => prev + 1);
+    }, 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const openInGoogleMaps = () => {
+    const lat = activeChamber.latitude;
+    const lng = activeChamber.longitude;
+    const label = encodeURIComponent(activeChamber.name);
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&destination_place_id=${label}`;
     Linking.openURL(url).catch(() => {
       Alert.alert('Unable to Open Navigation', 'Could not open Google Maps navigation on this device.');
     });
@@ -120,27 +147,27 @@ export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
   };
 
   const handleSubmitVisit = async () => {
-    const activeChamberName = matchedChamber?.name || doctor.clinicName;
-    const activeChamberLat = matchedChamber?.latitude || doctor.latitude;
-    const activeChamberLng = matchedChamber?.longitude || doctor.longitude;
+    const activeChamberName = activeChamber.name;
+    const activeChamberLat = activeChamber.latitude;
+    const activeChamberLng = activeChamber.longitude;
 
-    if (!isGeofenceVerified || distanceMeters > (doctor.geofenceRadiusMeters || 100)) {
+    if (isDoctor && (!isGeofenceVerified || distanceMeters > (doctor!.geofenceRadiusMeters || 100))) {
       Alert.alert(
         'Visit Blocked - Out of Range 🚫',
-        `Cannot complete DCR call. You are currently ${Math.round(distanceMeters)}m away from ${activeChamberName}.\n\nRepPulse requires you to be physically within the 100-meter perimeter of this chamber to complete this visit.`
+        `Cannot complete DCR call. You are currently ${Math.round(distanceMeters)}m away from ${activeChamberName}.\n\nRepPulse requires you to be physically within the perimeter to complete this visit.`
       );
       return;
     }
 
-    if (selectedProductIds.length === 0) {
+    if (isDoctor && selectedProductIds.length === 0) {
       Alert.alert('Selection Required', 'Please select at least 1 product detailed to the doctor.');
       return;
     }
 
-    if (!doctorFeedback.trim()) {
+    if (!customerFeedback.trim() && !discussionNotes.trim()) {
       Alert.alert(
-        'Doctor Feedback Mandatory 📝',
-        'Please enter the Doctor Feedback / Response before completing this DCR call.'
+        'Feedback / Remarks Mandatory 📝',
+        'Please enter discussion notes or customer feedback before completing this call.'
       );
       return;
     }
@@ -166,16 +193,21 @@ export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
         };
       });
 
+    const user = AuthService.getCurrentUser() || CURRENT_USER;
+
     await VisitService.recordVisit({
-      doctorId: doctor.id,
-      doctorName: doctor.name,
+      customerType,
+      doctorId: isDoctor ? doctor!.id : undefined,
+      doctorName: isDoctor ? doctor!.name : undefined,
       clinicName: activeChamberName,
-      employeeId: (AuthService.getCurrentUser() || CURRENT_USER).id,
-      employeeName: (AuthService.getCurrentUser() || CURRENT_USER).name,
+      chemistId: !isDoctor ? (chemist?.id || `chem_${chemist?.name}`) : undefined,
+      chemistName: !isDoctor ? customerName : undefined,
+      employeeId: user.id,
+      employeeName: user.name,
       accompaniedBy,
       accompaniedName: getAccompaniedName(accompaniedBy),
-      routeId: doctor.routeId,
-      routeName: activeChamber.area || doctor.area,
+      routeId: isDoctor ? doctor!.routeId : chemist?.routeId,
+      routeName: activeChamber.area,
       date: new Date().toISOString().split('T')[0],
       checkInTimestamp: new Date(Date.now() - durationMinutes * 60000).toISOString(),
       checkInLatitude: activeChamberLat,
@@ -187,25 +219,28 @@ export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
       checkOutLatitude: activeChamberLat,
       checkOutLongitude: activeChamberLng,
       visitDurationMinutes: durationMinutes,
-      visitPurpose,
+      visitPurpose: 'ROUTINE_CALL',
+      visitObjective,
       discussionNotes: discussionNotes.trim(),
       productsDiscussed: detailedProducts.map(p => p.brandName),
       productReactions: reactions,
       samplesDistributed: samples,
       promotionalInputsGiven: selectedInputs,
-      doctorPrescribingHabit: prescribingHabit,
-      doctorFeedback: doctorFeedback.trim(),
+      doctorPrescribingHabit: isDoctor ? prescribingHabit : undefined,
+      doctorFeedback: customerFeedback.trim(),
       nextFollowUpDate: nextVisitDate || undefined,
       pobAmount: pobAmount ? parseFloat(pobAmount) : undefined,
       status: 'COMPLETED',
     });
 
-    await DoctorService.updateDoctorTodayStatus(doctor.id, 'COMPLETED');
+    if (isDoctor) {
+      await DoctorService.updateDoctorTodayStatus(doctor!.id, 'COMPLETED');
+    }
 
     setSubmitting(false);
     Alert.alert(
-      'Visit Logged Successfully',
-      `Daily Call Report (DCR) for ${doctor.name} at ${activeChamberName} has been saved and queued for sync.`,
+      'Call Logged Successfully ✅',
+      `Daily Call Report (DCR) for ${customerName} has been saved and queued for sync.`,
       [{ text: 'OK', onPress: onVisitComplete }]
     );
   };
@@ -213,138 +248,126 @@ export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
   return (
     <SafeAreaView style={styles.container}>
       <Header
-        title="DCR Call Execution"
-        subtitle={doctor.name + ' • ' + doctor.specialty}
-        showBack
+        title={isDoctor ? "Doctor Detailing Call" : "Chemist & POB Call"}
+        subtitle={customerName}
         onBack={onBack}
       />
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
-        {/* Doctor & Geofence Status Card */}
-        <View style={styles.heroCard}>
-          <View style={styles.heroHeaderRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.heroDocName}>{doctor.name}</Text>
-              <Text style={styles.heroDocSpecialty}>{doctor.qualification}</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
-                <Text style={styles.heroClinic}>🏥 {activeChamber.name}</Text>
-                {matchedChamber && (
-                  <View style={styles.chamberBadge}>
-                    <Text style={styles.chamberBadgeText}>Visited Chamber</Text>
-                  </View>
-                )}
-              </View>
-              <Text style={styles.heroArea}>📍 {activeChamber.address || activeChamber.area || doctor.clinicAddress}</Text>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Verification Status Card */}
+        <View style={styles.verificationCard}>
+          <View style={styles.vHeader}>
+            <View>
+              <Text style={styles.vTitle}>{customerName}</Text>
+              <Text style={styles.vSubtitle}>{customerSubtitle}</Text>
             </View>
             <Badge
-              label={isGeofenceVerified ? '100m Geofence Verified' : 'Within Range'}
-              variant={isGeofenceVerified ? 'success' : 'primary'}
+              label={isGeofenceVerified ? 'In Range (Verified)' : `${Math.round(distanceMeters)}m Out of Range`}
+              variant={isGeofenceVerified ? 'success' : 'danger'}
+              size="small"
             />
           </View>
 
-          {/* Chamber Map Navigation Button */}
-          <TouchableOpacity
-            style={styles.navigateBtn}
-            onPress={handleOpenChamberMap}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.navigateBtnText}>🗺️ Directions to {activeChamber.name} (Google Maps)</Text>
-          </TouchableOpacity>
-        </View>
+          <View style={styles.vDetails}>
+            <Text style={styles.chamberLabel}>Location / Chamber</Text>
+            <Text style={styles.chamberName}>{activeChamber.name}</Text>
+            {activeChamber.address ? (
+              <Text style={styles.chamberAddress}>{activeChamber.address}</Text>
+            ) : null}
 
-        {/* 1. Accompanied By / Joint Working Section */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>👥 Accompanied By (Joint Working)</Text>
-          <Text style={styles.sectionSubtitle}>Select if manager or colleague is accompanying this call</Text>
-
-          <View style={styles.optionsWrap}>
-            {([
-              { key: 'SELF_SOLO', label: '👤 Self (Solo Working)' },
-              { key: 'ABM_G_SOLANKI', label: '👔 ABM - G Solanki' },
-              { key: 'RBM_RAJESH_SHARMA', label: '⭐ RBM - Rajesh Sharma' },
-              { key: 'COLLEAGUE_AMIT_PAUL', label: '🤝 Co-MR - Amit Paul' },
-              { key: 'PRODUCT_SPECIALIST', label: '🩺 Medical Advisor' },
-            ] as const).map(item => (
-              <TouchableOpacity
-                key={item.key}
-                style={[styles.chipButton, accompaniedBy === item.key && styles.chipButtonActive]}
-                onPress={() => setAccompaniedBy(item.key)}
-                activeOpacity={0.8}
-              >
-                <Text style={[styles.chipText, accompaniedBy === item.key && styles.chipTextActive]}>
-                  {item.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            <TouchableOpacity style={styles.navRow} onPress={openInGoogleMaps}>
+              <Text style={styles.navText}>Get Driving Directions in Google Maps</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
-        {/* 2. Call Purpose Section */}
+        {/* Visit Objective Selector */}
         <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>🎯 Call Objective & Type</Text>
-          <View style={styles.optionsWrap}>
-            {([
-              { key: 'ROUTINE_CALL', label: 'Routine Detailing Call' },
-              { key: 'JOINT_STRATEGIC_CALL', label: 'Joint Strategic Call' },
-              { key: 'NEW_LAUNCH_DETAILED', label: 'New Product Launch (NPL)' },
-              { key: 'CME_ENGAGEMENT', label: 'CME / Doctor Invitation' },
-              { key: 'SAMPLE_DELIVERY', label: 'Sample & Literature Delivery' },
-              { key: 'PAYMENT_FOLLOWUP', label: 'POB / Payment Follow-up' },
-            ] as const).map(item => (
-              <TouchableOpacity
-                key={item.key}
-                style={[styles.chipButton, visitPurpose === item.key && styles.chipButtonActive]}
-                onPress={() => setVisitPurpose(item.key)}
-                activeOpacity={0.8}
-              >
-                <Text style={[styles.chipText, visitPurpose === item.key && styles.chipTextActive]}>
-                  {item.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* 3. Products Detailed & Doctor Reaction */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>💊 Products Detailed (Multi-Select)</Text>
-          <Text style={styles.sectionSubtitle}>Select products presented during detailing and record doctor reaction</Text>
-
-          {MOCK_PRODUCTS.map(prod => {
-            const isSelected = selectedProductIds.includes(prod.id);
-            const reaction = productReactions[prod.id] || 'HIGH_INTEREST';
-            return (
-              <View key={prod.id} style={[styles.productRowCard, isSelected && styles.productRowCardActive]}>
+          <Text style={styles.sectionTitle}>Visit Objective & Strategy</Text>
+          <Text style={styles.sectionSubtitle}>Select primary purpose of this field call</Text>
+          <View style={styles.objectiveGrid}>
+            {VISIT_OBJECTIVES.map(obj => {
+              const active = visitObjective === obj.id;
+              return (
                 <TouchableOpacity
-                  style={styles.productCheckRow}
+                  key={obj.id}
+                  style={[styles.objectiveChip, active && styles.activeObjectiveChip]}
+                  onPress={() => setVisitObjective(obj.id)}
+                >
+                  <Text style={[styles.objectiveChipText, active && styles.activeObjectiveChipText]}>
+                    {obj.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Joint Working Accompaniment */}
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Joint Field Working</Text>
+          <Text style={styles.sectionSubtitle}>Who accompanied you on this visit?</Text>
+          <View style={styles.pillsRow}>
+            {[
+              { id: 'SELF_SOLO', label: 'Solo Working' },
+              { id: 'ABM_G_SOLANKI', label: 'ABM (G. Solanki)' },
+              { id: 'RBM_RAJESH_SHARMA', label: 'RBM (R. Sharma)' },
+              { id: 'COLLEAGUE_AMIT_PAUL', label: 'Co-MR (A. Paul)' },
+            ].map(p => {
+              const active = accompaniedBy === p.id;
+              return (
+                <TouchableOpacity
+                  key={p.id}
+                  style={[styles.pill, active && styles.pillActive]}
+                  onPress={() => setAccompaniedBy(p.id as AccompaniedPerson)}
+                >
+                  <Text style={[styles.pillText, active && styles.pillTextActive]}>{p.label}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Product Detailing Section */}
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Product Detailing & Reactions</Text>
+          <Text style={styles.sectionSubtitle}>Tap products presented during this call</Text>
+
+          {MOCK_PRODUCTS.slice(0, 6).map(prod => {
+            const isSelected = selectedProductIds.includes(prod.id);
+            const currentReaction = productReactions[prod.id] || 'HIGH_INTEREST';
+
+            return (
+              <View key={prod.id} style={styles.productItem}>
+                <TouchableOpacity
+                  style={[styles.productCheckRow, isSelected && styles.productCheckRowActive]}
                   onPress={() => toggleProduct(prod.id)}
-                  activeOpacity={0.8}
                 >
                   <View style={[styles.checkbox, isSelected && styles.checkboxActive]}>
-                    <Text style={styles.checkIcon}>{isSelected ? '✓' : ''}</Text>
+                    {isSelected && <Text style={styles.checkmark}>✓</Text>}
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.prodBrand}>{prod.brandName}</Text>
+                    <Text style={styles.prodName}>{prod.brandName}</Text>
                     <Text style={styles.prodGeneric}>{prod.genericName} • {prod.category}</Text>
                   </View>
                 </TouchableOpacity>
 
                 {isSelected && (
-                  <View style={styles.reactionContainer}>
-                    <Text style={styles.reactionLabel}>Doctor Reaction:</Text>
-                    <View style={styles.reactionRow}>
-                      {(['HIGH_INTEREST', 'MODERATE', 'NEUTRAL'] as const).map(r => (
+                  <View style={styles.reactionsRow}>
+                    {(['HIGH_INTEREST', 'MODERATE', 'NEUTRAL'] as const).map(reaction => {
+                      const active = currentReaction === reaction;
+                      return (
                         <TouchableOpacity
-                          key={r}
-                          style={[styles.reactionBtn, reaction === r && styles.reactionBtnActive]}
-                          onPress={() => setReaction(prod.id, r)}
+                          key={reaction}
+                          style={[styles.reactionBtn, active && styles.reactionBtnActive]}
+                          onPress={() => setReaction(prod.id, reaction)}
                         >
-                          <Text style={[styles.reactionText, reaction === r && styles.reactionTextActive]}>
-                            {r === 'HIGH_INTEREST' ? '🔥 High Interest' : r === 'MODERATE' ? '👍 Moderate' : '🤔 Neutral'}
+                          <Text style={[styles.reactionText, active && styles.reactionTextActive]}>
+                            {reaction.replace('_', ' ')}
                           </Text>
                         </TouchableOpacity>
-                      ))}
-                    </View>
+                      );
+                    })}
                   </View>
                 )}
               </View>
@@ -352,10 +375,10 @@ export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
           })}
         </View>
 
-        {/* 4. Samples Distributed */}
+        {/* Samples & Promotional Inputs */}
         <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>🧪 Samples Distributed</Text>
-          <Text style={styles.sectionSubtitle}>Enter physician sample unit quantities given</Text>
+          <Text style={styles.sectionTitle}>Physician Samples Handover</Text>
+          <Text style={styles.sectionSubtitle}>Track sample quantities given</Text>
 
           {MOCK_PRODUCTS.slice(0, 4).map(prod => {
             const qty = sampleQuantities[prod.id] || 0;
@@ -363,17 +386,11 @@ export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
               <View key={prod.id} style={styles.sampleRow}>
                 <Text style={styles.sampleName}>{prod.brandName}</Text>
                 <View style={styles.stepperContainer}>
-                  <TouchableOpacity
-                    style={styles.stepBtn}
-                    onPress={() => updateSampleQty(prod.id, -1)}
-                  >
+                  <TouchableOpacity style={styles.stepBtn} onPress={() => updateSampleQty(prod.id, -1)}>
                     <Text style={styles.stepBtnText}>-</Text>
                   </TouchableOpacity>
                   <Text style={styles.stepVal}>{qty}</Text>
-                  <TouchableOpacity
-                    style={styles.stepBtn}
-                    onPress={() => updateSampleQty(prod.id, 1)}
-                  >
+                  <TouchableOpacity style={styles.stepBtn} onPress={() => updateSampleQty(prod.id, 1)}>
                     <Text style={styles.stepBtnText}>+</Text>
                   </TouchableOpacity>
                 </View>
@@ -382,111 +399,59 @@ export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
           })}
         </View>
 
-        {/* 5. Promotional Inputs & LBLs */}
+        {/* Discussion Notes & Feedback */}
         <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>🎁 Promotional Inputs / LBL Given</Text>
-          <View style={styles.optionsWrap}>
-            {[
-              'Visual Aid Flipchart',
-              'Prescription Pad',
-              'Clinical Study Monograph',
-              'Medical Pen & Notepad',
-              'Brand Reminder LBL',
-              'Patient Education Leaflet',
-            ].map(inputItem => {
-              const isGiven = selectedInputs.includes(inputItem);
-              return (
-                <TouchableOpacity
-                  key={inputItem}
-                  style={[styles.chipButton, isGiven && styles.chipButtonActive]}
-                  onPress={() => toggleInput(inputItem)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={[styles.chipText, isGiven && styles.chipTextActive]}>
-                    {isGiven ? '✓ ' + inputItem : inputItem}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
-
-        {/* 6. Doctor Prescribing Habit & Commitment */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>⭐ Doctor Prescribing Status</Text>
-          <View style={styles.optionsWrap}>
-            {([
-              { key: 'CORE_PRESCRIBER', label: '⭐ Core Regular Prescriber' },
-              { key: 'COMPETITOR_SWITCHED', label: '🔄 Switched from Competitor' },
-              { key: 'NEW_TRIAL_PROMISED', label: '🧪 New Trial Rx Promised' },
-              { key: 'FOLLOWUP_REQUIRED', label: '⚠️ Follow-up Required' },
-            ] as const).map(item => (
-              <TouchableOpacity
-                key={item.key}
-                style={[styles.chipButton, prescribingHabit === item.key && styles.chipButtonActive]}
-                onPress={() => setPrescribingHabit(item.key)}
-                activeOpacity={0.8}
-              >
-                <Text style={[styles.chipText, prescribingHabit === item.key && styles.chipTextActive]}>
-                  {item.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* 7. Mandatory Doctor Feedback & Discussion Notes */}
-        <View style={styles.sectionCard}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-            <Text style={styles.sectionTitle}>📝 Doctor Visit Feedback</Text>
-            <View style={{ backgroundColor: '#FEE2E2', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
-              <Text style={{ color: '#DC2626', fontSize: 10, fontWeight: '700' }}>* MANDATORY</Text>
-            </View>
-          </View>
-          <Text style={styles.sectionSubtitle}>Record doctor's reaction, prescription commitments, or product objections</Text>
+          <Text style={styles.sectionTitle}>Discussion Notes & Feedback</Text>
           
-          <Text style={styles.inputLbl}>Doctor's Feedback / Response * :</Text>
-          <TextInput
-            style={[styles.textInputArea, !doctorFeedback.trim() && { borderColor: '#FCA5A5' }]}
-            placeholder="e.g. Doctor agreed to initiate CardioPulse-AM for 10 hypertensive patients; asked for clinical literature on CefoPulse-CV."
-            placeholderTextColor="#94A3B8"
-            multiline
-            numberOfLines={3}
-            value={doctorFeedback}
-            onChangeText={setDoctorFeedback}
-          />
-
-          <Text style={[styles.inputLbl, { marginTop: 12 }]}>Clinical Discussion Summary (Optional):</Text>
+          <Text style={styles.inputLbl}>Key Discussion Topics</Text>
           <TextInput
             style={styles.textInputArea}
-            placeholder="Key detailing points covered, indications discussed..."
+            placeholder="Clinical topics discussed, patient profiles, competitor comparisons..."
             placeholderTextColor="#94A3B8"
             multiline
-            numberOfLines={2}
             value={discussionNotes}
             onChangeText={setDiscussionNotes}
           />
 
-          <Text style={[styles.inputLbl, { marginTop: 12 }]}>Secondary POB Order Value (if booked during call):</Text>
+          <Text style={styles.inputLbl}>Customer Feedback / Commitment *</Text>
+          <TextInput
+            style={styles.textInputArea}
+            placeholder="Doctor or Chemist's verbal feedback, prescription commitment..."
+            placeholderTextColor="#94A3B8"
+            multiline
+            value={customerFeedback}
+            onChangeText={setCustomerFeedback}
+          />
+
+          <Text style={styles.inputLbl}>POB Order Booked (₹ Amount, if taken)</Text>
           <TextInput
             style={styles.textInputSingle}
-            placeholder="e.g. 3500.00"
+            placeholder="e.g. 4500"
             placeholderTextColor="#94A3B8"
             keyboardType="numeric"
             value={pobAmount}
             onChangeText={setPobAmount}
           />
+
+          <Text style={styles.inputLbl}>Next Follow-up Date (Optional)</Text>
+          <TextInput
+            style={styles.textInputSingle}
+            placeholder="YYYY-MM-DD (e.g. 2026-11-24)"
+            placeholderTextColor="#94A3B8"
+            value={nextVisitDate}
+            onChangeText={setNextVisitDate}
+          />
         </View>
 
-        {/* Submit DCR Visit Button */}
+        {/* Submit Call CTA */}
         <TouchableOpacity
           style={[styles.submitButton, submitting && styles.submitButtonDisabled]}
           onPress={handleSubmitVisit}
           disabled={submitting}
-          activeOpacity={0.85}
+          activeOpacity={0.8}
         >
           <Text style={styles.submitButtonText}>
-            {submitting ? 'Saving Call Record...' : '✓ Complete & Log DCR Call'}
+            {submitting ? 'Submitting DCR Call...' : `Complete Call (${durationMinutes} mins)`}
           </Text>
         </TouchableOpacity>
       </ScrollView>
@@ -495,129 +460,199 @@ export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8FAFC' },
-  scroll: { flex: 1 },
-  scrollContent: { padding: spacing.lg, paddingBottom: spacing.xxxl },
-  heroCard: {
+  container: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+  },
+  scrollContent: {
+    padding: spacing.md,
+    gap: spacing.md,
+  },
+  verificationCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: radius.xl,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
+    borderRadius: radius.lg,
+    padding: spacing.md,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     ...shadows.card,
   },
-  heroHeaderRow: {
+  vHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+    marginBottom: spacing.sm,
   },
-  heroDocName: { fontSize: typography.fontSize.lg, fontWeight: typography.fontWeight.bold, color: '#0F172A' },
-  heroDocSpecialty: { fontSize: typography.fontSize.xs, color: '#2563EB', marginTop: 2, fontWeight: typography.fontWeight.semibold },
-  heroClinic: { fontSize: typography.fontSize.xs, color: '#334155', marginTop: 4, fontWeight: typography.fontWeight.medium },
-  chamberBadge: {
-    backgroundColor: '#DBEAFE',
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    borderRadius: radius.sm,
+  vTitle: {
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.bold,
+    color: '#0F172A',
   },
-  chamberBadgeText: {
-    fontSize: 9,
+  vSubtitle: {
+    fontSize: typography.fontSize.xs,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  vDetails: {
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+    paddingTop: spacing.sm,
+  },
+  chamberLabel: {
+    fontSize: 10,
     fontWeight: '700',
-    color: '#1D4ED8',
+    color: '#94A3B8',
+    textTransform: 'uppercase',
   },
-  heroArea: { fontSize: typography.fontSize.xxs, color: '#64748B', marginTop: 2 },
-  navigateBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#EFF6FF',
-    borderWidth: 1,
-    borderColor: '#93C5FD',
-    borderRadius: radius.md,
-    paddingVertical: 9,
-    paddingHorizontal: 12,
-    marginTop: spacing.md,
+  chamberName: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.bold,
+    color: '#1E293B',
+    marginTop: 2,
   },
-  navigateBtnText: {
-    color: '#1D4ED8',
+  chamberAddress: {
+    fontSize: typography.fontSize.xs,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  navRow: {
+    marginTop: 8,
+    paddingVertical: 4,
+  },
+  navText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '600',
+    color: colors.primary,
   },
   sectionCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: radius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    ...shadows.subtle,
-  },
-  sectionTitle: { fontSize: typography.fontSize.sm + 1, fontWeight: typography.fontWeight.bold, color: '#0F172A', marginBottom: 2 },
-  sectionSubtitle: { fontSize: typography.fontSize.xs, color: '#64748B', marginBottom: spacing.md },
-  optionsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs + 2 },
-  chipButton: {
-    backgroundColor: '#F1F5F9',
-    borderRadius: radius.full,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs + 3,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  chipButtonActive: {
-    backgroundColor: '#3B82F6',
-    borderColor: '#2563EB',
-  },
-  chipText: { fontSize: typography.fontSize.xs, color: '#334155', fontWeight: typography.fontWeight.semibold },
-  chipTextActive: { color: '#FFFFFF', fontWeight: typography.fontWeight.bold },
-  productRowCard: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: radius.md,
     padding: spacing.md,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    ...shadows.card,
+  },
+  sectionTitle: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.bold,
+    color: '#0F172A',
+  },
+  sectionSubtitle: {
+    fontSize: typography.fontSize.xs,
+    color: '#64748B',
     marginBottom: spacing.sm,
+  },
+  objectiveGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  objectiveChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 8,
+    backgroundColor: '#F1F5F9',
     borderWidth: 1,
     borderColor: '#E2E8F0',
   },
-  productRowCardActive: {
-    borderColor: '#93C5FD',
-    backgroundColor: '#EFF6FF',
+  activeObjectiveChip: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
-  productCheckRow: { flexDirection: 'row', alignItems: 'center' },
+  objectiveChipText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#475569',
+  },
+  activeObjectiveChipText: {
+    color: '#FFFFFF',
+  },
+  pillsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  pill: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: '#F1F5F9',
+  },
+  pillActive: {
+    backgroundColor: '#0F172A',
+  },
+  pillText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#475569',
+  },
+  pillTextActive: {
+    color: '#FFFFFF',
+  },
+  productItem: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+    paddingVertical: spacing.sm,
+  },
+  productCheckRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  productCheckRowActive: {
+    backgroundColor: '#F0F9FF',
+    borderRadius: 8,
+    padding: 6,
+  },
   checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: radius.xs,
-    borderWidth: 2,
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 1.5,
     borderColor: '#94A3B8',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: spacing.md,
   },
   checkboxActive: {
-    backgroundColor: '#3B82F6',
-    borderColor: '#3B82F6',
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
-  checkIcon: { color: '#FFFFFF', fontSize: 14, fontWeight: 'bold' },
-  prodBrand: { fontSize: typography.fontSize.sm, fontWeight: typography.fontWeight.bold, color: '#0F172A' },
-  prodGeneric: { fontSize: typography.fontSize.xxs, color: '#64748B', marginTop: 2 },
-  reactionContainer: { marginTop: spacing.sm, paddingTop: spacing.xs, borderTopWidth: 1, borderTopColor: '#DBEAFE' },
-  reactionLabel: { fontSize: typography.fontSize.xxs, color: '#64748B', fontWeight: typography.fontWeight.semibold, marginBottom: 4 },
-  reactionRow: { flexDirection: 'row', gap: spacing.xs },
+  checkmark: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  prodName: {
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.bold,
+    color: '#0F172A',
+  },
+  prodGeneric: {
+    fontSize: 10,
+    color: '#64748B',
+  },
+  reactionsRow: {
+    flexDirection: 'row',
+    gap: 6,
+    marginTop: 8,
+    marginLeft: 30,
+  },
   reactionBtn: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 5,
-    borderRadius: radius.sm,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: '#F1F5F9',
   },
   reactionBtnActive: {
-    backgroundColor: '#1D4ED8',
-    borderColor: '#1D4ED8',
+    backgroundColor: colors.primary,
   },
-  reactionText: { fontSize: typography.fontSize.xxs, color: '#334155', fontWeight: typography.fontWeight.bold },
-  reactionTextActive: { color: '#FFFFFF' },
+  reactionText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#475569',
+  },
+  reactionTextActive: {
+    color: '#FFFFFF',
+  },
   sampleRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -626,12 +661,45 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
   },
-  sampleName: { fontSize: typography.fontSize.xs, fontWeight: typography.fontWeight.bold, color: '#1E3A8A' },
-  stepperContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F1F5F9', borderRadius: radius.md, padding: 2 },
-  stepBtn: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF', borderRadius: radius.sm },
-  stepBtnText: { fontSize: 16, fontWeight: 'bold', color: '#1D4ED8' },
-  stepVal: { width: 36, textAlign: 'center', fontWeight: 'bold', fontSize: typography.fontSize.sm, color: '#0F172A' },
-  inputLbl: { fontSize: typography.fontSize.xs, fontWeight: typography.fontWeight.semibold, color: '#475569', marginTop: spacing.sm, marginBottom: 4 },
+  sampleName: {
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.bold,
+    color: '#1E3A8A',
+  },
+  stepperContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F1F5F9',
+    borderRadius: radius.md,
+    padding: 2,
+  },
+  stepBtn: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: radius.sm,
+  },
+  stepBtnText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1D4ED8',
+  },
+  stepVal: {
+    width: 36,
+    textAlign: 'center',
+    fontWeight: 'bold',
+    fontSize: typography.fontSize.sm,
+    color: '#0F172A',
+  },
+  inputLbl: {
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.semibold,
+    color: '#475569',
+    marginTop: spacing.sm,
+    marginBottom: 4,
+  },
   textInputArea: {
     backgroundColor: '#F8FAFC',
     borderWidth: 1,
@@ -653,13 +721,20 @@ const styles = StyleSheet.create({
     color: '#0F172A',
   },
   submitButton: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: colors.primary,
     borderRadius: radius.lg,
-    paddingVertical: spacing.lg,
+    paddingVertical: spacing.md,
     alignItems: 'center',
-    marginTop: spacing.md,
-    ...shadows.floating,
+    marginTop: spacing.sm,
+    marginBottom: spacing.xl,
+    ...shadows.card,
   },
-  submitButtonDisabled: { backgroundColor: '#94A3B8' },
-  submitButtonText: { color: '#FFFFFF', fontSize: typography.fontSize.base, fontWeight: typography.fontWeight.bold },
+  submitButtonDisabled: {
+    backgroundColor: '#94A3B8',
+  },
+  submitButtonText: {
+    color: '#FFFFFF',
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.bold,
+  },
 });

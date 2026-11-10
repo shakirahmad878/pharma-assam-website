@@ -18,10 +18,11 @@ import { Card } from '../../components/common/Card';
 import { Badge } from '../../components/common/Badge';
 import { Button } from '../../components/common/Button';
 import { DoctorService } from '../../services/doctorService';
+import { VisitService } from '../../services/visitService';
 import { LocationService } from '../../services/location/locationService';
 import { GeofenceService } from '../../services/location/geofenceService';
 import { AuthService } from '../../services/authService';
-import { Doctor, DoctorClinic, GeofenceStatus, UserProfile } from '../../types';
+import { Doctor, DoctorClinic, GeofenceStatus, UserProfile, VisitRecord } from '../../types';
 import { EmployeeService } from '../../services/employeeService';
 import { DivisionService } from '../../services/divisionService';
 
@@ -108,6 +109,7 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
   const [mrDivisionFilter, setMrDivisionFilter] = useState<string>('ALL');
   const [assignMode, setAssignMode] = useState<'PERMANENT' | 'TODAY_ONLY'>('PERMANENT');
   const [assigningLoading, setAssigningLoading] = useState(false);
+  const [pastVisits, setPastVisits] = useState<VisitRecord[]>([]);
 
   const isManager = DivisionService.isManager(currentUser);
 
@@ -117,6 +119,7 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
     EmployeeService.getEmployees().then(emps => {
       if (emps && emps.length > 0) setEmployeesList(emps);
     }).catch(() => {});
+    VisitService.getVisitsForCustomer(doctorId).then(v => setPastVisits(v || [])).catch(() => {});
   }, [doctorId]);
 
   const handleOpenAssignModal = async () => {
@@ -701,6 +704,38 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
           <Text style={styles.historyText}>Monthly Target: {doctor.monthlyVisitTarget} calls</Text>
           <Text style={styles.historyText}>Completed This Month: {doctor.completedVisitsThisMonth} calls</Text>
           <Text style={styles.historyText}>Last Visit Logged: {doctor.lastVisitDate || 'No visits this month'}</Text>
+
+          {/* Past Calls Timeline */}
+          {pastVisits.length > 0 && (
+            <View style={{ marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#E2E8F0' }}>
+              <Text style={[styles.sectionTitle, { fontSize: 13, marginBottom: 8 }]}>Past Call Logs ({pastVisits.length})</Text>
+              {pastVisits.slice(0, 5).map((pv) => (
+                <View key={pv.id} style={{ backgroundColor: '#F8FAFC', borderRadius: 8, padding: 8, marginBottom: 6, borderWidth: 1, borderColor: '#E2E8F0' }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Text style={{ fontSize: 11, fontWeight: '700', color: '#0F172A' }}>
+                      {pv.date || pv.checkInTimestamp?.split('T')[0]}
+                    </Text>
+                    <Badge label={pv.status || 'COMPLETED'} variant="success" size="small" />
+                  </View>
+                  {pv.visitObjective ? (
+                    <Text style={{ fontSize: 10, color: colors.primary, fontWeight: '600', marginTop: 2 }}>
+                      {pv.visitObjective.replace(/_/g, ' ')}
+                    </Text>
+                  ) : null}
+                  {pv.productsDiscussed && pv.productsDiscussed.length > 0 ? (
+                    <Text style={{ fontSize: 10, color: '#475569', marginTop: 2 }}>
+                      Products: {pv.productsDiscussed.join(', ')}
+                    </Text>
+                  ) : null}
+                  {pv.doctorFeedback ? (
+                    <Text style={{ fontSize: 10, fontStyle: 'italic', color: '#64748B', marginTop: 2 }}>
+                      "{pv.doctorFeedback}"
+                    </Text>
+                  ) : null}
+                </View>
+              ))}
+            </View>
+          )}
         </Card>
 
         {/* Add to Today's Visit Plan Quick Button */}

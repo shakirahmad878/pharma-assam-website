@@ -666,6 +666,86 @@ export class SupabaseService {
     }
   }
 
+  public static async fetchVisitsPaginated(options: {
+    page?: number;
+    pageSize?: number;
+    employeeId?: string;
+    customerType?: string;
+    status?: string;
+    startDate?: string;
+    endDate?: string;
+    search?: string;
+  } = {}): Promise<{ records: any[]; totalCount: number }> {
+    if (!this.isConnected()) return { records: [], totalCount: 0 };
+    try {
+      const {
+        page = 1,
+        pageSize = 25,
+        employeeId,
+        customerType,
+        status,
+        startDate,
+        endDate,
+        search,
+      } = options;
+
+      const offset = (page - 1) * pageSize;
+      const queryParts: string[] = [
+        'order=timestamp.desc',
+        `limit=${pageSize}`,
+        `offset=${offset}`,
+      ];
+
+      if (employeeId && employeeId !== 'ALL') {
+        queryParts.push(`employee_id=eq.${encodeURIComponent(employeeId)}`);
+      }
+      if (customerType && customerType !== 'ALL') {
+        queryParts.push(`customer_type=eq.${encodeURIComponent(customerType)}`);
+      }
+      if (status && status !== 'ALL') {
+        queryParts.push(`status=eq.${encodeURIComponent(status)}`);
+      }
+      if (startDate) {
+        queryParts.push(`visit_date=gte.${startDate}`);
+      }
+      if (endDate) {
+        queryParts.push(`visit_date=lte.${endDate}`);
+      }
+      if (search && search.trim()) {
+        const s = encodeURIComponent(`*${search.trim()}*`);
+        queryParts.push(`or=(doctor_name.ilike.${s},chemist_name.ilike.${s},employee_name.ilike.${s})`);
+      }
+
+      const queryString = queryParts.join('&');
+      const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/visits?${queryString}`, {
+        method: 'GET',
+        headers: {
+          ...this.getHeaders(),
+          Prefer: 'count=exact',
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error(`Visits fetch error: ${res.status}`);
+      }
+
+      const contentRange = res.headers.get('content-range');
+      let totalCount = 0;
+      if (contentRange) {
+        const parts = contentRange.split('/');
+        if (parts[1]) totalCount = parseInt(parts[1], 10) || 0;
+      }
+
+      const raw = await res.json();
+      if (!totalCount) totalCount = raw.length;
+
+      return { records: raw, totalCount };
+    } catch (err) {
+      console.warn('[SupabaseService] fetchVisitsPaginated error:', err);
+      return { records: [], totalCount: 0 };
+    }
+  }
+
   // 4. USERS & EMPLOYEES
   // ==========================================
 

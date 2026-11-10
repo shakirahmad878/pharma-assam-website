@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { DCRRecord, Doctor, Product, User } from '../../types';
 import { Badge } from '../common/Badge';
 import { DCREntryModal } from './DCREntryModal';
-import { FileText, CheckCircle2, Plus, CalendarCheck, MapPin, Stethoscope, ChevronRight, X, AlertCircle } from 'lucide-react';
+import { VisitManagementView } from '../visits/VisitManagementView';
+import { FileText, CheckCircle2, Plus, CalendarCheck, MapPin, Stethoscope, ChevronRight, X, AlertCircle, Activity } from 'lucide-react';
 
 interface DCRViewProps {
   dcrLogs: DCRRecord[];
@@ -25,6 +26,7 @@ export const DCRView: React.FC<DCRViewProps> = ({
   onClearPlannedDoctors,
   onAddDCR,
 }) => {
+  const [subTab, setSubTab] = useState<'LIVE_AUDIT' | 'MANUAL_QUEUE'>('LIVE_AUDIT');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedInitialDocId, setSelectedInitialDocId] = useState<string | undefined>(undefined);
   const [feedbackToast, setFeedbackToast] = useState<string | null>(null);
@@ -75,30 +77,66 @@ export const DCRView: React.FC<DCRViewProps> = ({
         </div>
       )}
 
-      {/* Header */}
-      <div className="bg-white rounded-xl border border-[#DCE4EB] p-5 shadow-2xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-bold text-[#10243A] flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-teal-50 border border-teal-200 text-[#137F83] flex items-center justify-center font-bold shadow-2xs">
-                <FileText className="w-4 h-4 text-[#18A6A6]" />
-              </div>
-              Daily Call Reports (DCR) Audit & Visits
-            </h2>
-            <p className="text-xs text-[#64748B] mt-1">
-              Execute planned calls, verify GPS geofences, log sample drops, and track chemist POB orders.
-            </p>
-          </div>
+      {/* Subtab Navigation Switcher */}
+      <div className="flex items-center gap-2 border-b border-[#DCE4EB] pb-2">
+        <button
+          onClick={() => setSubTab('LIVE_AUDIT')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            subTab === 'LIVE_AUDIT'
+              ? 'bg-[#10243A] text-white shadow-xs'
+              : 'bg-white hover:bg-[#F1F6F8] text-[#64748B] hover:text-[#10243A] border border-[#DCE4EB]'
+          }`}
+        >
+          <Activity className="w-4 h-4" />
+          <span>Live Cloud Field Visits (Supabase)</span>
+        </button>
 
-          <button
-            onClick={handleGenericLogVisit}
-            className="bg-[#10243A] hover:bg-[#182F49] text-white flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer"
-          >
-            <Plus className="w-4 h-4 text-[#18A6A6]" />
-            Log Doctor DCR Visit
-          </button>
-        </div>
+        <button
+          onClick={() => setSubTab('MANUAL_QUEUE')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            subTab === 'MANUAL_QUEUE'
+              ? 'bg-[#10243A] text-white shadow-xs'
+              : 'bg-white hover:bg-[#F1F6F8] text-[#64748B] hover:text-[#10243A] border border-[#DCE4EB]'
+          }`}
+        >
+          <FileText className="w-4 h-4" />
+          <span>Manual Entry & Planned Queue</span>
+          {plannedDoctors.length > 0 && (
+            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-teal-50 border border-teal-200 text-[#137F83] font-bold">
+              {plannedDoctors.length}
+            </span>
+          )}
+        </button>
       </div>
+
+      {subTab === 'LIVE_AUDIT' ? (
+        <VisitManagementView currentUser={currentUser} />
+      ) : (
+        <>
+          {/* Header */}
+          <div className="bg-white rounded-xl border border-[#DCE4EB] p-5 shadow-2xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-[#10243A] flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-teal-50 border border-teal-200 text-[#137F83] flex items-center justify-center font-bold shadow-2xs">
+                    <FileText className="w-4 h-4 text-[#18A6A6]" />
+                  </div>
+                  Daily Call Reports (DCR) Audit & Visits
+                </h2>
+                <p className="text-xs text-[#64748B] mt-1">
+                  Execute planned calls, verify GPS geofences, log sample drops, and track chemist POB orders.
+                </p>
+              </div>
+
+              <button
+                onClick={handleGenericLogVisit}
+                className="bg-[#10243A] hover:bg-[#182F49] text-white flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+              >
+                <Plus className="w-4 h-4 text-[#18A6A6]" />
+                Log Doctor DCR Visit
+              </button>
+            </div>
+          </div>
 
       {/* Planned Visits Queue Banner */}
       {plannedDoctors.length > 0 && (
@@ -267,6 +305,8 @@ export const DCRView: React.FC<DCRViewProps> = ({
           ))
         )}
       </div>
+        </>
+      )}
 
       {isModalOpen && (
         <DCREntryModal

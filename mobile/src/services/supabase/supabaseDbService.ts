@@ -594,6 +594,11 @@ export class SupabaseDbService {
       punch_in_timestamp: att.punchInTimestamp,
       punch_out_timestamp: att.punchOutTimestamp || null,
       status: att.status || 'PUNCHED_IN',
+      route_category: att.routeCategory || null,
+      route_id: att.routeId || null,
+      route_name: att.routeName || null,
+      hq_name: att.hqName || null,
+      route_remarks: att.routeRemarks || null,
       latitude: att.latitude,
       longitude: att.longitude,
       accuracy_meters: att.accuracyMeters,
@@ -1015,8 +1020,11 @@ export class SupabaseDbService {
         headers: { ...this.getHeaders(), Prefer: 'resolution=merge-duplicates' },
         body: JSON.stringify({
           id: v.id,
-          doctor_id: v.doctorId,
-          doctor_name: v.doctorName,
+          customer_type: v.customerType || (v.chemistId ? 'CHEMIST' : 'DOCTOR'),
+          doctor_id: v.doctorId || null,
+          doctor_name: v.doctorName || v.chemistName || 'Customer',
+          chemist_id: v.chemistId || null,
+          chemist_name: v.chemistName || null,
           employee_id: v.employeeId || 'usr-nlcl-0004',
           employee_name: v.employeeName || 'Pranjal Malakar',
           district: 'Cachar',
@@ -1030,10 +1038,38 @@ export class SupabaseDbService {
           notes: v.doctorFeedback || v.discussionNotes || '',
           products_discussed: v.productsDiscussed || [],
           samples_given: v.samplesDistributed || [],
+          visit_objective: v.visitObjective || v.visitPurpose || null,
+          start_time: v.checkInTimestamp || null,
+          end_time: v.checkOutTimestamp || null,
+          duration_minutes: v.visitDurationMinutes || 0,
+          pob_amount: v.pobAmount || 0,
+          accompanied_by: v.accompaniedBy || null,
+          feedback: v.doctorFeedback || null,
+          next_visit_date: v.nextFollowUpDate || null,
+          is_unplanned: v.isUnplanned ?? false,
         }),
       });
     } catch (err) {
       console.warn('[Supabase] recordVisit error:', err);
+    }
+  }
+
+  public static async fetchVisits(employeeId?: string, limit: number = 100): Promise<any[]> {
+    if (!this.isConnected()) return [];
+    try {
+      let url = `${SUPABASE_CONFIG.url}/rest/v1/visits?order=timestamp.desc&limit=${limit}`;
+      if (employeeId) {
+        url += `&employee_id=eq.${encodeURIComponent(employeeId)}`;
+      }
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+      if (!res.ok) return [];
+      return await res.json();
+    } catch (err) {
+      console.warn('[Supabase] fetchVisits error:', err);
+      return [];
     }
   }
 

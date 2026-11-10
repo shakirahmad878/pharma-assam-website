@@ -1,4 +1,4 @@
-import { AttendanceRecord } from '../types';
+import { AttendanceRecord, WorkingRouteCategory } from '../types';
 import { StorageService, STORAGE_KEYS } from './storageService';
 import { SyncService } from './sync/syncService';
 import { BackgroundTelemetryManager } from './location/backgroundTelemetry';
@@ -67,8 +67,11 @@ export class AttendanceService {
     accuracyMeters: number;
     selfieUri: string;
     isMockLocation: boolean;
+    routeCategory?: WorkingRouteCategory;
     routeId?: string;
     routeName?: string;
+    hqName?: string;
+    routeRemarks?: string;
   }): Promise<AttendanceRecord> {
     const user = AuthService.getCurrentUser();
     const now = new Date();
@@ -112,8 +115,11 @@ export class AttendanceService {
       employeeName: user?.name || 'Field Representative',
       date: today,
       punchInTimestamp: now.toISOString(),
+      routeCategory: params.routeCategory,
       routeId: params.routeId,
       routeName: params.routeName,
+      hqName: params.hqName,
+      routeRemarks: params.routeRemarks,
       latitude: params.latitude,
       longitude: params.longitude,
       accuracyMeters: params.accuracyMeters,

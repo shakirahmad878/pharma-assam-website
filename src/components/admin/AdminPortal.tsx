@@ -16,6 +16,7 @@ import { DatabaseStudio } from './DatabaseStudio';
 import { RolePermissionsMatrix } from './RolePermissionsMatrix';
 import { AuditLogsView } from './AuditLogsView';
 import { GeoAttendanceView } from '../hrms/GeoAttendanceView';
+import { VisitManagementView } from '../visits/VisitManagementView';
 import { 
   Shield, 
   ShieldCheck, 
@@ -34,10 +35,11 @@ import {
   Sparkles,
   Layers,
   FileCheck,
-  Camera
+  Camera,
+  CalendarCheck
 } from 'lucide-react';
 
-export type AdminTab = 'overview' | 'users' | 'companies' | 'database' | 'matrix' | 'audit' | 'attendance';
+export type AdminTab = 'overview' | 'users' | 'companies' | 'database' | 'matrix' | 'audit' | 'attendance' | 'visits';
 
 interface AdminPortalProps {
   currentUser: User;
@@ -267,6 +269,23 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               activeAdminTab === 'attendance' ? 'bg-white/20 text-white' : 'bg-teal-50 text-[#137F83] border border-teal-200'
             }`}>
               Selfie Audit
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveAdminTab('visits')}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+              activeAdminTab === 'visits'
+                ? 'bg-[#10243A] text-white shadow-xs'
+                : 'bg-[#F1F6F8] hover:bg-[#E8EEF4] text-[#64748B] hover:text-[#10243A] border border-[#DCE4EB]'
+            }`}
+          >
+            <CalendarCheck className="w-4 h-4" />
+            <span>Field Visits & Calls</span>
+            <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold ${
+              activeAdminTab === 'visits' ? 'bg-white/20 text-white' : 'bg-blue-50 text-blue-700 border border-blue-200'
+            }`}>
+              Live Audit
             </span>
           </button>
         </div>
@@ -531,6 +550,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {/* ATTENDANCE & SELFIES TAB */}
       {activeAdminTab === 'attendance' && (
         <GeoAttendanceView
+          currentUser={currentUser}
+        />
+      )}
+
+      {/* FIELD VISITS & CALLS AUDIT TAB */}
+      {activeAdminTab === 'visits' && (
+        <VisitManagementView
           currentUser={currentUser}
         />
       )}

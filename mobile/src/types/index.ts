@@ -253,6 +253,8 @@ export interface Product {
   availableStock?: number;
 }
 
+export type CustomerType = 'DOCTOR' | 'CHEMIST' | 'STOCKIST';
+
 export type VisitStatus =
   | 'PLANNED'
   | 'EN_ROUTE'
@@ -260,8 +262,21 @@ export type VisitStatus =
   | 'IN_PROGRESS'
   | 'COMPLETED'
   | 'CANCELLED'
+  | 'SKIPPED'
+  | 'MISSED'
   | 'SYNC_PENDING'
   | 'SYNCED';
+
+export type VisitObjective =
+  | 'PRODUCT_PROMOTION'
+  | 'NEW_LAUNCH'
+  | 'PRESCRIPTION_FEEDBACK'
+  | 'FOLLOW_UP'
+  | 'ORDER_BOOKING'
+  | 'PAYMENT_COLLECTION'
+  | 'RELATIONSHIP_MANAGEMENT'
+  | 'COMPLAINT_RESOLUTION'
+  | 'CME_ENGAGEMENT';
 
 export type VisitPurpose =
   | 'ROUTINE_CALL'
@@ -292,9 +307,12 @@ export type ProductReaction =
 export interface VisitRecord {
   id: string;
   serverId?: string;
-  doctorId: string;
-  doctorName: string;
-  clinicName: string;
+  customerType?: CustomerType;
+  doctorId?: string;
+  doctorName?: string;
+  clinicName?: string;
+  chemistId?: string;
+  chemistName?: string;
   employeeId: string;
   employeeName: string;
   routeId?: string;
@@ -310,7 +328,9 @@ export interface VisitRecord {
   checkOutLatitude?: number;
   checkOutLongitude?: number;
   visitDurationMinutes?: number;
-  visitPurpose: VisitPurpose;
+  visitPurpose?: VisitPurpose;
+  visitObjective?: VisitObjective | string;
+  isUnplanned?: boolean;
   accompaniedBy?: AccompaniedPerson;
   accompaniedName?: string;
   discussionNotes: string;
@@ -361,13 +381,18 @@ export interface POBOrder {
   errorMessage?: string;
 }
 
+export type WorkingRouteCategory = 'HQ' | 'EXTENSION' | 'OUTSTATION' | 'OTHER';
+
 export interface AttendanceRecord {
   id: string;
   serverId?: string;
   employeeId: string;
   employeeName: string;
+  routeCategory?: WorkingRouteCategory;
   routeId?: string;
   routeName?: string;
+  hqName?: string;
+  routeRemarks?: string;
   date: string;
   punchInTimestamp: string;
   punchOutTimestamp?: string;

@@ -25,6 +25,7 @@ import { DashboardScreen } from '../screens/dashboard/DashboardScreen';
 import { AttendanceScreen } from '../screens/attendance/AttendanceScreen';
 import { DoctorListScreen } from '../screens/doctors/DoctorListScreen';
 import { DoctorDetailsScreen } from '../screens/doctors/DoctorDetailsScreen';
+import { VisitListScreen } from '../screens/visits/VisitListScreen';
 import { VisitExecutionScreen } from '../screens/visits/VisitExecutionScreen';
 import { POBBookingScreen } from '../screens/orders/POBBookingScreen';
 import { SyncCenterScreen } from '../screens/sync/SyncCenterScreen';
@@ -344,8 +345,10 @@ export const RootNavigator: React.FC = () => {
         {currentScreen === 'VISIT_EXECUTION' && currentParams && (
           <VisitExecutionScreen
             doctor={currentParams.doctor}
-            isGeofenceVerified={currentParams.isGeofenceOk}
-            distanceMeters={currentParams.distanceMeters}
+            chemist={currentParams.chemist}
+            customerType={currentParams.customerType}
+            isGeofenceVerified={currentParams.isGeofenceOk ?? true}
+            distanceMeters={currentParams.distanceMeters ?? 0}
             matchedChamber={currentParams.matchedChamber}
             onBack={pop}
             onVisitComplete={() => replace('DASHBOARD')}
@@ -353,12 +356,16 @@ export const RootNavigator: React.FC = () => {
         )}
 
         {currentScreen === 'VISIT_EXECUTION_LIST' && (
-          <DoctorListScreen
-            mode="VISITS"
+          <VisitListScreen
             onBack={pop}
             onOpenDrawer={() => setDrawerVisible(true)}
-            onNavigateToFirms={() => push('FIRMS')}
             onSelectDoctor={docId => push('DOCTOR_DETAILS', { doctorId: docId })}
+            onStartChemistVisit={chem => push('VISIT_EXECUTION', {
+              chemist: chem,
+              customerType: 'CHEMIST',
+              isGeofenceOk: true,
+              distanceMeters: 0,
+            })}
           />
         )}
 
