@@ -26,10 +26,19 @@ export class LocationService {
 
   /**
    * Requests foreground location permission from Android OS.
+   * Checks status first to prevent Android 15/16/17 ActivityResultLauncher deadlock.
    */
   public static async requestForegroundPermission(): Promise<boolean> {
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
+      const existing = await Location.getForegroundPermissionsAsync();
+      if (existing && existing.status === 'granted') {
+        return true;
+      }
+      const reqPromise = Location.requestForegroundPermissionsAsync();
+      const timeoutPromise = new Promise<{ status: string }>((res) =>
+        setTimeout(() => res({ status: 'denied' }), 6000)
+      );
+      const { status } = await Promise.race([reqPromise, timeoutPromise]);
       return status === 'granted';
     } catch (err) {
       console.warn('[LocationService] Permission request failed:', err);

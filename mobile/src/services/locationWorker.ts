@@ -40,14 +40,24 @@ TaskManager.defineTask(BACKGROUND_LOCATION_TASK, async ({ data, error }) => {
 
 export class MobileLocationManager {
   public static async startBackgroundTracking(): Promise<boolean> {
-    const { status: foregroundStatus } = await Location.requestForegroundPermissionsAsync();
-    if (foregroundStatus !== 'granted') {
+    const existingFg = await Location.getForegroundPermissionsAsync();
+    let foregroundGranted = existingFg && existingFg.status === 'granted';
+    if (!foregroundGranted) {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      foregroundGranted = status === 'granted';
+    }
+    if (!foregroundGranted) {
       console.warn('Foreground location permission denied');
       return false;
     }
 
-    const { status: backgroundStatus } = await Location.requestBackgroundPermissionsAsync();
-    if (backgroundStatus !== 'granted') {
+    const existingBg = await Location.getBackgroundPermissionsAsync();
+    let backgroundGranted = existingBg && existingBg.status === 'granted';
+    if (!backgroundGranted) {
+      const { status } = await Location.requestBackgroundPermissionsAsync();
+      backgroundGranted = status === 'granted';
+    }
+    if (!backgroundGranted) {
       console.warn('Background location permission denied');
       return false;
     }

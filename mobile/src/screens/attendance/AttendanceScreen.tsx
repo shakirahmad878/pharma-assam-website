@@ -79,6 +79,17 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack, isMa
   const cameraRef = useRef<CameraView>(null);
   const [cameraModalVisible, setCameraModalVisible] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
+
+  useEffect(() => {
+    if (cameraModalVisible) {
+      const timer = setTimeout(() => {
+        setCameraReady(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else {
+      setCameraReady(false);
+    }
+  }, [cameraModalVisible]);
   const [submitting, setSubmitting] = useState(false);
   const [routes, setRoutes] = useState<RoutePlan[]>([]);
   const [selectedRouteId, setSelectedRouteId] = useState<string>('');
@@ -182,16 +193,56 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack, isMa
     }
   };
 
+  const getEffectiveRoute = (): { id: string; name: string } => {
+    if (workingCategory === 'HQ') {
+      const hq = selectedHq || 'Silchar';
+      return { id: `hq-${hq.toLowerCase()}`, name: `HQ - ${hq}` };
+    }
+    if (workingCategory === 'EXTENSION') {
+      const ext = EXTENSION_OPTIONS.find(e => e.id === selectedExtensionId) || EXTENSION_OPTIONS[0];
+      return { id: ext.id, name: `Extension - ${ext.name}` };
+    }
+    if (workingCategory === 'OUTSTATION') {
+      const out = OUTSTATION_OPTIONS.find(o => o.id === selectedOutstationId) || OUTSTATION_OPTIONS[0];
+      return { id: out.id, name: `Outstation - ${out.name}` };
+    }
+    if (workingCategory === 'OTHER') {
+      const desc = otherRemarks.trim() || 'General Duty';
+      return { id: 'other-duty', name: `Other - ${desc}` };
+    }
+    return { id: 'default-route', name: 'Field Operational Beat' };
+  };
+
   const handleCaptureSelfie = async () => {
     try {
-      console.log('[CAMERA_INITIALIZED] Requesting camera permission...');
-      const perm = await Camera.requestCameraPermissionsAsync();
-      console.log('[CAMERA_PERMISSION_STATUS]', perm.granted ? 'GRANTED' : 'DENIED');
+      console.log('[CAMERA_INITIALIZED] Checking camera permission...');
+      // 1. Fast path: check if permission already granted (crucial for Android 15/16/17 to avoid ActivityResultLauncher deadlock)
+      let hasPermission = false;
+      try {
+        const existing = await Camera.getCameraPermissionsAsync();
+        if (existing && existing.granted) {
+          hasPermission = true;
+        }
+      } catch (checkErr) {
+        console.warn('[CAMERA_PERMISSION_CHECK_ERR]', checkErr);
+      }
 
-      if (!perm.granted) {
+      if (!hasPermission) {
+        console.log('[CAMERA_REQUEST] Requesting camera permission from OS...');
+        const reqPromise = Camera.requestCameraPermissionsAsync();
+        const timeoutPromise = new Promise<{ granted: boolean }>((res) =>
+          setTimeout(() => res({ granted: false }), 4000)
+        );
+        const perm = await Promise.race([reqPromise, timeoutPromise]);
+        hasPermission = Boolean(perm?.granted);
+      }
+
+      console.log('[CAMERA_PERMISSION_STATUS]', hasPermission ? 'GRANTED' : 'DENIED');
+
+      if (!hasPermission) {
         Alert.alert(
           'Camera Permission Required',
-          'RepPulse requires front-camera access to verify attendance selfies in the field.'
+          'RepPulse requires front-camera access to verify attendance selfies in the field. Please grant camera permission in Android Settings.'
         );
         return;
       }
@@ -252,10 +303,12 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack, isMa
       return;
     }
 
-    if (!selectedRouteId) {
-      Alert.alert('Working Route Required', 'Please select your assigned working beat/route for today before starting duty.');
+    if (workingCategory === 'OTHER' && !otherRemarks.trim()) {
+      Alert.alert('Route Detail Required', 'Please specify your operational duty purpose under Other before starting duty.');
       return;
     }
+
+    const effectiveRoute = getEffectiveRoute();
 
     const isPastCutoff = isPastBusinessCutoff(10, 30);
 
@@ -285,7 +338,6 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack, isMa
     }
     if (!currentLoc) return;
 
-    const chosenRoute = routes.find(r => r.id === selectedRouteId);
     setSubmitting(true);
     let newRecord: AttendanceRecord;
     try {
@@ -295,8 +347,8 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack, isMa
         accuracyMeters: currentLoc.accuracyMeters,
         selfieUri,
         isMockLocation: currentLoc.isMockLocation,
-        routeId: selectedRouteId,
-        routeName: chosenRoute?.name || 'Assigned Beat Route',
+        routeId: effectiveRoute.id,
+        routeName: effectiveRoute.name,
       });
       console.log('[ATTENDANCE_INSERT_RESULT] SUCCESS:', newRecord.id);
       console.log('[START_WORK_COMPLETED] Shift started successfully.');
@@ -315,7 +367,7 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack, isMa
 
     Alert.alert(
       'Punch In Successful ✅',
-      `Duty started at ${nowTime} (${finalRouteName}). Geotagged selfie recorded and 15-minute background telemetry is active.`,
+      `Duty started at ${nowTime} (${effectiveRoute.name}). Geotagged selfie recorded and 15-minute background telemetry is active.`,
       [{ text: 'Proceed to Field Duty', onPress: onBack }]
     );
   };
@@ -649,6 +701,8 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack, isMa
         animationType="slide"
         transparent={false}
         onRequestClose={() => setCameraModalVisible(false)}
+        statusBarTranslucent={true}
+        hardwareAccelerated={true}
       >
         <SafeAreaView style={styles.cameraScreenContainer}>
           <View style={styles.cameraHeader}>
