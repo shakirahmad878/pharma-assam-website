@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Camera, CameraView } from 'expo-camera';
 import {
   View,
   Text,
@@ -75,6 +76,9 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack, isMa
   const [punchInTime, setPunchInTime] = useState<string | null>(null);
   const [selfieUri, setSelfieUri] = useState<string | null>(null);
   const [capturing, setCapturing] = useState(false);
+  const cameraRef = useRef<CameraView>(null);
+  const [cameraModalVisible, setCameraModalVisible] = useState(false);
+  const [cameraReady, setCameraReady] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [routes, setRoutes] = useState<RoutePlan[]>([]);
   const [selectedRouteId, setSelectedRouteId] = useState<string>('');
@@ -181,56 +185,58 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack, isMa
   const handleCaptureSelfie = async () => {
     try {
       console.log('[CAMERA_INITIALIZED] Requesting camera permission...');
-      setCapturing(true);
-      const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
-      console.log('[CAMERA_PERMISSION_STATUS]', permissionResult.granted ? 'GRANTED' : 'DENIED');
+      const perm = await Camera.requestCameraPermissionsAsync();
+      console.log('[CAMERA_PERMISSION_STATUS]', perm.granted ? 'GRANTED' : 'DENIED');
 
-      if (!permissionResult.granted) {
+      if (!perm.granted) {
         Alert.alert(
           'Camera Permission Required',
           'RepPulse requires front-camera access to verify attendance selfies in the field.'
         );
-        setCapturing(false);
         return;
       }
 
-      // Android 14/15/16/17 compatibility: allowsEditing must be false to avoid external crop sub-intent crashes
-      const result = await ImagePicker.launchCameraAsync({
-        cameraType: ImagePicker.CameraType.front,
+      setCameraReady(false);
+      setCameraModalVisible(true);
+    } catch (err: any) {
+      console.warn('[CAMERA_INIT_ERROR]', err);
+      handlePickFromGallery();
+    }
+  };
+
+  const handleTakeSelfiePhoto = async () => {
+    if (!cameraRef.current || !cameraReady || capturing) return;
+    try {
+      setCapturing(true);
+      const photo = await cameraRef.current.takePictureAsync({
+        quality: 0.6,
+        skipProcessing: false,
+      });
+      setCapturing(false);
+      if (photo && photo.uri) {
+        console.log('[SELFIE_CAPTURE_SUCCESS]', photo.uri);
+        setSelfieUri(photo.uri);
+        setCameraModalVisible(false);
+      }
+    } catch (err: any) {
+      console.error('[SELFIE_CAPTURE_FAILED]', err);
+      setCapturing(false);
+      Alert.alert('Capture Error', 'Unable to capture selfie. Please try again or select from gallery.');
+    }
+  };
+
+  const handlePickFromGallery = async () => {
+    try {
+      const pickRes = await ImagePicker.launchImageLibraryAsync({
         allowsEditing: false,
         quality: 0.6,
       });
-
-      setCapturing(false);
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        console.log('[SELFIE_CAPTURE_RESULT] SUCCESS');
-        setSelfieUri(result.assets[0].uri);
-      } else {
-        console.log('[SELFIE_CAPTURE_RESULT] CANCELED');
+      if (!pickRes.canceled && pickRes.assets && pickRes.assets.length > 0) {
+        setSelfieUri(pickRes.assets[0].uri);
+        setCameraModalVisible(false);
       }
-    } catch (err: any) {
-      console.error('[SELFIE_CAPTURE_RESULT] FAILED:', err);
-      setCapturing(false);
-      Alert.alert(
-        'Camera Error',
-        'Could not initialize the camera. If your device was recently updated to Android 14/15/16/17, please check Camera permissions in Android App Info or choose from photo gallery.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Choose Photo',
-            onPress: async () => {
-              const pickRes = await ImagePicker.launchImageLibraryAsync({
-                allowsEditing: false,
-                quality: 0.6,
-              });
-              if (!pickRes.canceled && pickRes.assets && pickRes.assets.length > 0) {
-                setSelfieUri(pickRes.assets[0].uri);
-              }
-            },
-          },
-        ]
-      );
+    } catch (e) {
+      console.warn('Gallery pick error:', e);
     }
   };
 
@@ -636,6 +642,76 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack, isMa
           )}
         </View>
       </ScrollView>
+
+      {/* In-App Front Camera Selfie Modal (100% Foreground - Zero External Intent Crash) */}
+      <Modal
+        visible={cameraModalVisible}
+        animationType="slide"
+        transparent={false}
+        onRequestClose={() => setCameraModalVisible(false)}
+      >
+        <SafeAreaView style={styles.cameraScreenContainer}>
+          <View style={styles.cameraHeader}>
+            <TouchableOpacity
+              onPress={() => setCameraModalVisible(false)}
+              style={styles.cameraCloseBtn}
+            >
+              <Ionicons name="close" size={26} color="#FFFFFF" />
+            </TouchableOpacity>
+            <View style={{ flex: 1, alignItems: 'center', marginRight: 40 }}>
+              <Text style={styles.cameraHeaderTitle}>Attendance Selfie</Text>
+              <Text style={styles.cameraHeaderSubtitle}>Align your face inside the oval guide</Text>
+            </View>
+          </View>
+
+          <View style={styles.viewfinderContainer}>
+            <CameraView
+              ref={cameraRef}
+              facing="front"
+              style={StyleSheet.absoluteFillObject}
+              onCameraReady={() => setCameraReady(true)}
+              mirror={true}
+            />
+
+            <View style={styles.faceOvalOverlay}>
+              <View style={styles.faceOval} />
+              <Text style={styles.faceGuideText}>
+                {cameraReady ? 'Position face inside the oval frame' : 'Initializing front camera...'}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.cameraControlsContainer}>
+            <TouchableOpacity
+              style={styles.cameraAuxBtn}
+              onPress={handlePickFromGallery}
+            >
+              <Ionicons name="images-outline" size={24} color="#FFFFFF" />
+              <Text style={styles.cameraAuxBtnText}>Gallery</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.shutterOuter,
+                (!cameraReady || capturing) && styles.shutterDisabled,
+              ]}
+              onPress={handleTakeSelfiePhoto}
+              disabled={!cameraReady || capturing}
+              activeOpacity={0.8}
+            >
+              <View style={styles.shutterInner}>
+                {capturing ? (
+                  <ActivityIndicator size="small" color="#0F172A" />
+                ) : (
+                  <Ionicons name="camera" size={30} color="#0F172A" />
+                )}
+              </View>
+            </TouchableOpacity>
+
+            <View style={{ width: 60 }} />
+          </View>
+        </SafeAreaView>
+      </Modal>
 
       {/* Late Attendance Authorization Modal (Unified Cloud Dispatch & PIN Override) */}
       <Modal
@@ -1138,5 +1214,100 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#64748B',
     marginTop: 6,
+  },
+  cameraScreenContainer: {
+    flex: 1,
+    backgroundColor: '#000000',
+  },
+  cameraHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    zIndex: 10,
+  },
+  cameraCloseBtn: {
+    padding: 6,
+  },
+  cameraHeaderTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  cameraHeaderSubtitle: {
+    fontSize: 11,
+    color: '#94A3B8',
+    marginTop: 2,
+  },
+  viewfinderContainer: {
+    flex: 1,
+    overflow: 'hidden',
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  faceOvalOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  faceOval: {
+    width: 250,
+    height: 330,
+    borderRadius: 125,
+    borderWidth: 2.5,
+    borderColor: '#38BDF8',
+    backgroundColor: 'transparent',
+  },
+  faceGuideText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginTop: 16,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  cameraControlsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    paddingVertical: 24,
+    backgroundColor: '#000000',
+  },
+  shutterOuter: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    borderWidth: 4,
+    borderColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
+  },
+  shutterInner: {
+    width: 62,
+    height: 62,
+    borderRadius: 31,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  shutterDisabled: {
+    opacity: 0.5,
+  },
+  cameraAuxBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 60,
+    gap: 4,
+  },
+  cameraAuxBtnText: {
+    fontSize: 11,
+    color: '#94A3B8',
+    fontWeight: '600',
   },
 });
