@@ -2,7 +2,7 @@
   "expo": {
     "name": "RepPulse",
     "slug": "sefmed-pharma-sfa",
-    "owner": "shakir878",
+    "owner": "shakirahmad878s-team",
     "version": "1.7.4",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -78,7 +78,7 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "657a385d-4882-4c2c-8d20-16f04456dc70"
+        "projectId": "ceeda8f0-8b03-44ea-ad71-dc3cdce494e9"
       }
     }
   }
