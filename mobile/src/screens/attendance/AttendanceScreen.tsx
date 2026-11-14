@@ -24,7 +24,7 @@ import { LocationService, LocationResult } from '../../services/location/locatio
 import { AttendanceService } from '../../services/attendanceService';
 import { AuthService } from '../../services/authService';
 import { RouteService } from '../../services/routeService';
-import { RoutePlan, AttendanceRecord, WorkingRouteCategory } from '../../types';
+import { RoutePlan, AttendanceRecord, WorkingRouteCategory, UserProfile } from '../../types';
 import { SupabaseDbService } from '../../services/supabase/supabaseDbService';
 import { getBusinessDateStr, getBusinessTimeStr, isPastBusinessCutoff } from '../../utils/dateUtils';
 
@@ -139,6 +139,29 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack, isMa
     }
   };
 
+  const verifyLateStatus = async (user: UserProfile): Promise<boolean> => {
+    if (['SUPER_ADMIN', 'REGIONAL_MANAGER', 'AREA_MANAGER', 'HR_MANAGER'].includes(user.role)) {
+      return true;
+    }
+    const todayStr = getBusinessDateStr();
+    const cleanCode = user.employeeCode || 'NLCL-0005';
+    try {
+      // 1. Check local / live approval via AuthService
+      const localOrLive = await AuthService.getTodayLateApproval(cleanCode);
+      if (localOrLive && localOrLive.isApproved) {
+        return true;
+      }
+      // 2. Check authoritative Supabase with correct arguments (cleanCode, todayStr)
+      const cloudApproval = await SupabaseDbService.checkTodayLateLoginApproval(cleanCode, todayStr);
+      if (cloudApproval && cloudApproval.status === 'APPROVED') {
+        return true;
+      }
+    } catch (e) {
+      console.warn('[AttendanceScreen] Approval check failed:', e);
+    }
+    return false;
+  };
+
   const checkTodayStatus = async () => {
     const today = await AttendanceService.getTodayAttendance();
     setIsPunchedIn(today.isPunchedIn);
@@ -153,17 +176,9 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack, isMa
 
     const currentUser = AuthService.getCurrentUser();
     if (currentUser) {
-      if (['SUPER_ADMIN', 'REGIONAL_MANAGER', 'AREA_MANAGER', 'HR_MANAGER'].includes(currentUser.role)) {
+      const isApproved = await verifyLateStatus(currentUser);
+      if (isApproved) {
         setLateApproved(true);
-      } else {
-        try {
-          const isApproved = await SupabaseDbService.checkTodayLateLoginApproval(currentUser.id, currentUser.employeeCode);
-          if (isApproved) {
-            setLateApproved(true);
-          }
-        } catch (e) {
-          console.warn('[AttendanceScreen] Approval check failed:', e);
-        }
       }
     }
   };
@@ -314,21 +329,12 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack, isMa
 
     if (isPastCutoff && !lateApproved) {
       const currentUser = AuthService.getCurrentUser();
-      if (currentUser && ['SUPER_ADMIN', 'REGIONAL_MANAGER', 'AREA_MANAGER', 'HR_MANAGER'].includes(currentUser.role)) {
+      const isApproved = currentUser ? await verifyLateStatus(currentUser) : false;
+      if (isApproved) {
         setLateApproved(true);
       } else {
-        try {
-          const isApproved = currentUser ? await SupabaseDbService.checkTodayLateLoginApproval(currentUser.id, currentUser.employeeCode) : false;
-          if (isApproved) {
-            setLateApproved(true);
-          } else {
-            setLateModalVisible(true);
-            return;
-          }
-        } catch (err) {
-          setLateModalVisible(true);
-          return;
-        }
+        setLateModalVisible(true);
+        return;
       }
     }
 
