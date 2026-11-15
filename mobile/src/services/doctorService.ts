@@ -64,10 +64,12 @@ export class DoctorService {
       longitude: newDoc.longitude || 92.7970,
       geofenceRadiusMeters: 100,
       phone: newDoc.phone || '+91 9435000000',
-      monthlyVisitTarget: 8,
+      monthlyVisitTarget: newDoc.monthlyVisitTarget || (newDoc.tier === 'A_PLUS' ? 12 : newDoc.tier === 'A' ? 8 : 4),
       completedVisitsThisMonth: 0,
       todayVisitStatus: 'NOT_SCHEDULED',
       isAssignedToMe: true,
+      assignedToEmployeeId: newDoc.assignedToEmployeeId,
+      assignedToEmployeeName: newDoc.assignedToEmployeeName,
     };
     await SupabaseDbService.addDoctor(doc);
     return doc;

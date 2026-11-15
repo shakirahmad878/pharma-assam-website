@@ -31,19 +31,62 @@ export class DivisionService {
     );
   }
 
+  /**
+   * Intelligently detects operational pharma division from real GPS coordinates.
+   */
+  public static detectDistrictFromGps(lat: number, lng: number): 'Cachar' | 'Karimganj' | 'Hailakandi' | 'Aizawl' | 'Agartala' | 'Dharmanagar' {
+    if (!lat || !lng) return 'Cachar';
+
+    // Tripura Corridor (West of 92.1° E)
+    if (lng < 92.1) {
+      return lat < 24.0 ? 'Agartala' : 'Dharmanagar';
+    }
+
+    // Mizoram Corridor (South of 24.15° N, e.g. Aizawl is ~23.73° N)
+    if (lat < 24.15) {
+      return 'Aizawl';
+    }
+
+    // Karimganj / Shribhumi District (West of 92.52° E, e.g. Nilmoni Rd is ~92.35° E, Badarpur is ~92.50° E)
+    if (lng < 92.52) {
+      return 'Karimganj';
+    }
+
+    // Hailakandi District (Lat 24.45 - 24.75, Lng 92.52 - 92.70)
+    if (lat >= 24.45 && lat <= 24.75 && lng >= 92.52 && lng <= 92.70) {
+      return 'Hailakandi';
+    }
+
+    // Default to Cachar / Silchar HQ (Silchar is ~24.82° N, 92.80° E, Bagha is ~24.55° N, 92.84° E)
+    return 'Cachar';
+  }
+
   public static getUserDivision(user: UserProfile | null): DivisionType {
     if (!user) return 'Cachar';
     if (this.isManager(user)) return 'ALL';
 
-    const territory = (user.territory || '').toLowerCase();
-    const hq = (user.headquarter || '').toLowerCase();
+    const empCode = (user.employeeCode || '').toUpperCase();
+    if (empCode === 'NLCL-0005') return 'Cachar'; // Satyam Shil: Primary HQ is Silchar (Cachar)
+    if (empCode === 'NLCL-0004') return 'Karimganj'; // Pranjal Malakar: Primary HQ is Karimganj
 
-    if (territory.includes('agartala') || hq.includes('agartala')) return 'Agartala';
-    if (territory.includes('dharmanagar') || hq.includes('dharmanagar') || territory.includes('tripura') || hq.includes('tripura')) return 'Dharmanagar';
-    if (territory.includes('aizawl') || hq.includes('aizawl') || territory.includes('mizoram')) return 'Aizawl';
-    if (territory.includes('hailakandi') || hq.includes('hailakandi')) return 'Hailakandi';
-    if (territory.includes('karimganj') || hq.includes('karimganj') || territory.includes('shribhumi')) return 'Karimganj';
-    if (territory.includes('silchar') || territory.includes('cachar') || hq.includes('silchar') || hq.includes('cachar')) return 'Cachar';
+    const hq = (user.headquarter || '').toLowerCase();
+    const territory = (user.territory || '').toLowerCase();
+
+    // 1. Check primary HQ first
+    if (hq.includes('silchar') || hq.includes('cachar')) return 'Cachar';
+    if (hq.includes('karimganj') || hq.includes('shribhumi')) return 'Karimganj';
+    if (hq.includes('hailakandi')) return 'Hailakandi';
+    if (hq.includes('aizawl') || hq.includes('mizoram')) return 'Aizawl';
+    if (hq.includes('agartala') || hq.includes('west tripura')) return 'Agartala';
+    if (hq.includes('dharmanagar') || hq.includes('north tripura')) return 'Dharmanagar';
+
+    // 2. Check base territory (Prioritize Silchar/Cachar for Barak base)
+    if (territory.includes('silchar') || territory.includes('cachar')) return 'Cachar';
+    if (territory.includes('karimganj') || territory.includes('shribhumi')) return 'Karimganj';
+    if (territory.includes('hailakandi')) return 'Hailakandi';
+    if (territory.includes('aizawl') || territory.includes('mizoram')) return 'Aizawl';
+    if (territory.includes('agartala')) return 'Agartala';
+    if (territory.includes('dharmanagar')) return 'Dharmanagar';
 
     return 'Cachar';
   }
@@ -51,6 +94,16 @@ export class DivisionService {
   public static getUserAllowedDivisions(user: UserProfile | null): DivisionType[] {
     if (!user) return ['Cachar'];
     if (this.isManager(user)) return ['ALL'];
+
+    const empCode = (user.employeeCode || '').toUpperCase();
+    if (empCode === 'NLCL-0005') {
+      // Satyam Shil: Primary HQ Silchar, Extended fields Hailakandi & Aizawl
+      return ['Cachar', 'Hailakandi', 'Aizawl'];
+    }
+    if (empCode === 'NLCL-0004') {
+      // Pranjal Malakar: Primary HQ Karimganj, Extended field Dharmanagar
+      return ['Karimganj', 'Dharmanagar'];
+    }
 
     const territory = (user.territory || '').toLowerCase();
     const hq = (user.headquarter || '').toLowerCase();
@@ -79,9 +132,14 @@ export class DivisionService {
   ): Doctor[] {
     if (!doctors) return [];
 
-    // If user is MR, they are authorized across all their assigned divisions
+    // If user is MR, they are authorized across their assigned divisions
     if (!this.isManager(user)) {
       const allowedDivs = this.getUserAllowedDivisions(user);
+      // If user selected a specific allowed division, strictly filter to that division
+      if (selectedDivision !== 'ALL' && allowedDivs.includes(selectedDivision)) {
+        return doctors.filter((doc) => this.matchesDivision(doc.district, doc.area, selectedDivision));
+      }
+      // Otherwise fallback to their primary HQ or allowed set
       return doctors.filter((doc) => allowedDivs.some((d) => this.matchesDivision(doc.district, doc.area, d)));
     }
 

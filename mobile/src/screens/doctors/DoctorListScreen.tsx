@@ -108,6 +108,10 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
       const loc = await LocationService.getCurrentLocation();
       if (loc) {
         setCapturedCoords({ lat: loc.latitude, lng: loc.longitude });
+        const detectedDist = DivisionService.detectDistrictFromGps(loc.latitude, loc.longitude);
+        if (detectedDist) {
+          setNewDocDistrict(detectedDist as any);
+        }
         const autoArea = await LocationService.reverseGeocodeArea(loc.latitude, loc.longitude);
         if (autoArea) setNewDocArea(autoArea);
       }
@@ -142,6 +146,10 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
           LocationService.validateAuthenticGps(loc, 'Doctor Clinic Geotagging');
         } else {
           setCapturedCoords({ lat: loc.latitude, lng: loc.longitude });
+          const detectedDist = DivisionService.detectDistrictFromGps(loc.latitude, loc.longitude);
+          if (detectedDist) {
+            setNewDocDistrict(detectedDist as any);
+          }
           const detectedArea = await LocationService.reverseGeocodeArea(loc.latitude, loc.longitude);
           if (detectedArea) {
             setNewDocArea(detectedArea);
@@ -238,10 +246,8 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
       ? newDocName.trim()
       : `Dr. ${newDocName.trim()}`;
 
-    // Target District
-    const targetDist = !isManager
-      ? (userDivision === 'Hailakandi' ? 'Hailakandi' : userDivision === 'Karimganj' ? 'Karimganj' : userDivision === 'Aizawl' ? 'Aizawl' : userDivision === 'Agartala' ? 'Agartala' : userDivision === 'Dharmanagar' ? 'Dharmanagar' : 'Cachar')
-      : newDocDistrict;
+    // Target District: Respect user selected or GPS auto-detected district
+    const targetDist = newDocDistrict || 'Cachar';
 
     const tierDisplayName = newDocTier === 'A_PLUS' ? 'Prime Core' : newDocTier === 'A' ? 'Core' : 'General';
 
@@ -258,9 +264,14 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
       latitude: capturedCoords.lat,
       longitude: capturedCoords.lng,
       monthlyVisitTarget: newDocTier === 'A_PLUS' ? 12 : newDocTier === 'A' ? 8 : 4,
+      assignedToEmployeeId: currentUser?.employeeCode || currentUser?.id,
+      assignedToEmployeeName: currentUser?.name,
+      isAssignedToMe: true,
     });
 
     setAddModalVisible(false);
+    setSubTab('ALL');
+    setSearchQuery(formattedName);
     await loadData();
 
     Alert.alert(
@@ -307,8 +318,9 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
 
   // 2. Search & Tab Filter
   const filteredDoctors = divisionScopedDocs.filter((doc) => {
-    const query = searchQuery.toLowerCase();
+    const query = searchQuery.trim().toLowerCase();
     const matchesSearch =
+      !query ||
       doc.name.toLowerCase().includes(query) ||
       doc.specialty.toLowerCase().includes(query) ||
       doc.clinicName.toLowerCase().includes(query) ||
@@ -316,7 +328,25 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
       doc.area.toLowerCase().includes(query) ||
       doc.district.toLowerCase().includes(query);
 
+    // When user types a search query, search all matching doctors regardless of TODAY vs ALL subTab
+    if (query.length > 0) {
+      return matchesSearch;
+    }
+
     if (mode === 'VISITS') {
+      if (!isManager && currentUser) {
+        const empCode = (currentUser.employeeCode || '').toLowerCase();
+        const empId = (currentUser.id || '').toLowerCase();
+        const empName = (currentUser.name || '').toLowerCase();
+        const isMyDoc = Boolean(
+          (doc.assignedToEmployeeId && (doc.assignedToEmployeeId.toLowerCase() === empCode || doc.assignedToEmployeeId.toLowerCase() === empId)) ||
+          (doc.assignedToEmployeeName && doc.assignedToEmployeeName.toLowerCase().includes(empName.split(' ')[0])) ||
+          doc.isAssignedToMe
+        );
+        if (!isMyDoc) {
+          return false;
+        }
+      }
       if (subTab === 'TODAY') {
         return matchesSearch && (doc.todayVisitStatus === 'PENDING' || doc.todayVisitStatus === 'COMPLETED');
       }
@@ -389,48 +419,38 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
       </View>
 
       {/* Division Isolation Banner & Controls */}
-      {isManager ? (
-        <View style={styles.divisionSelectorContainer}>
-          <View style={styles.divisionHeaderRow}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <Ionicons name="business" size={14} color="#1D4ED8" />
-              <Text style={styles.divisionHeaderTitle}>
-                SELECT DIVISION ({currentUser?.role === 'DIRECTOR' ? 'DIRECTOR' : currentUser?.role === 'HR_MANAGER' ? 'HR MANAGER' : 'MANAGEMENT'} ACCESS):
-              </Text>
-            </View>
-            <Text style={styles.divisionCountBadge}>{filteredDoctors.length} Doctors</Text>
-          </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.divisionPillScroll}>
-            {DIVISIONS.map((div) => {
-              const isActive = selectedDivision === div.id;
-              return (
-                <TouchableOpacity
-                  key={div.id}
-                  style={[styles.divisionPill, isActive && styles.divisionPillActive]}
-                  onPress={() => setSelectedDivision(div.id)}
-                >
-                  <Text style={[styles.divisionPillText, isActive && styles.divisionPillTextActive]}>
-                    {div.id === 'ALL' ? '🌐 ' : '📍 '}
-                    {div.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
-      ) : (
-        <View style={styles.mrDivisionLockedBanner}>
-          <View style={styles.mrDivisionHeader}>
-            <Ionicons name="shield-checkmark" size={15} color="#15803D" />
-            <Text style={styles.mrDivisionTitle}>
-              ASSIGNED DIVISION: {DivisionService.getDivisionLabel(userDivision).toUpperCase()}
+      <View style={styles.divisionSelectorContainer}>
+        <View style={styles.divisionHeaderRow}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <Ionicons name="business" size={14} color="#1D4ED8" />
+            <Text style={styles.divisionHeaderTitle}>
+              {isManager
+                ? `SELECT DIVISION (${currentUser?.role === 'DIRECTOR' ? 'DIRECTOR' : currentUser?.role === 'HR_MANAGER' ? 'HR MANAGER' : 'MANAGEMENT'} ACCESS):`
+                : `ASSIGNED BEATS (${currentUser?.name || 'MR'} - ${DivisionService.getDivisionLabel(userDivision)} HQ):`}
             </Text>
           </View>
-          <Text style={styles.mrDivisionNotice}>
-            🔒 MR Restricted View: Strictly limited to your assigned beat ({DivisionService.getDivisionLabel(userDivision)}). Data from other divisions is isolated by company policy.
-          </Text>
+          <Text style={styles.divisionCountBadge}>{filteredDoctors.length} Doctors</Text>
         </View>
-      )}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.divisionPillScroll}>
+          {(isManager ? DIVISIONS : DIVISIONS.filter((d) => DivisionService.getUserAllowedDivisions(currentUser).includes(d.id))).map((div) => {
+            const isActive = selectedDivision === div.id;
+            const isPrimary = div.id === userDivision;
+            return (
+              <TouchableOpacity
+                key={div.id}
+                style={[styles.divisionPill, isActive && styles.divisionPillActive]}
+                onPress={() => setSelectedDivision(div.id)}
+              >
+                <Text style={[styles.divisionPillText, isActive && styles.divisionPillTextActive]}>
+                  {div.id === 'ALL' ? '🌐 ' : '📍 '}
+                  {div.label}
+                  {!isManager && isPrimary ? ' (Primary HQ)' : !isManager ? ' (Extended)' : ''}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
 
       {/* Filters Bar: Year | Month | Status */}
       <View style={styles.filterDropdownsRow}>
@@ -755,6 +775,29 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
                   keyboardType="phone-pad"
                   maxLength={10}
                 />
+              </View>
+
+              {/* Operational Division / HQ Selector */}
+              <Text style={styles.inputLabel}>Operational Division / HQ *</Text>
+              <View style={styles.chipRow}>
+                {[
+                  { id: 'Cachar', label: 'Silchar (Cachar)' },
+                  { id: 'Karimganj', label: 'Karimganj' },
+                  { id: 'Hailakandi', label: 'Hailakandi' },
+                  { id: 'Aizawl', label: 'Aizawl' },
+                  { id: 'Agartala', label: 'Agartala' },
+                  { id: 'Dharmanagar', label: 'Dharmanagar' },
+                ].map((div) => (
+                  <TouchableOpacity
+                    key={div.id}
+                    style={[styles.chipItem, newDocDistrict === div.id && styles.chipItemActive]}
+                    onPress={() => setNewDocDistrict(div.id as any)}
+                  >
+                    <Text style={[styles.chipText, newDocDistrict === div.id && styles.chipTextActive]}>
+                      {div.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
               </View>
 
               {/* Tier Selection */}
