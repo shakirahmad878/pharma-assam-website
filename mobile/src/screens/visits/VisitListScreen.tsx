@@ -5,6 +5,7 @@ import {
   StyleSheet,
   SafeAreaView,
   FlatList,
+  ScrollView,
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
@@ -21,6 +22,7 @@ import { VisitService } from '../../services/visitService';
 import { StorageService, STORAGE_KEYS } from '../../services/storageService';
 import { SupabaseDbService } from '../../services/supabase/supabaseDbService';
 import { AuthService } from '../../services/authService';
+import { DivisionService, DivisionType, DIVISIONS } from '../../services/divisionService';
 import { Doctor, VisitRecord, Chemist } from '../../types';
 
 type CategoryFilter = 'ALL' | 'DOCTORS' | 'CHEMISTS';
@@ -72,6 +74,20 @@ export const VisitListScreen: React.FC<VisitListScreenProps> = ({
   } | null>(null);
 
   const currentUser = AuthService.getCurrentUser();
+  const isManager = DivisionService.isManager(currentUser);
+  const userDivision = DivisionService.getUserDivision(currentUser);
+  const [selectedDivision, setSelectedDivision] = useState<DivisionType>(
+    isManager ? 'ALL' : userDivision
+  );
+
+  useEffect(() => {
+    const user = AuthService.getCurrentUser();
+    if (DivisionService.isManager(user)) {
+      setSelectedDivision('ALL');
+    } else {
+      setSelectedDivision(DivisionService.getUserDivision(user));
+    }
+  }, []);
 
   useEffect(() => {
     loadData();
@@ -134,10 +150,36 @@ export const VisitListScreen: React.FC<VisitListScreenProps> = ({
       }
     });
 
+    // 1. Division Filter (Strict for MR, Selectable for Manager)
+    const divisionScopedDocs = DivisionService.filterDoctorsByDivision(
+      doctors,
+      selectedDivision,
+      currentUser
+    );
+
+    const divisionScopedChemists = DivisionService.filterFirmsByDivision(
+      chemists,
+      selectedDivision,
+      currentUser
+    );
+
+    // 2. For MR, strictly filter to doctors added by or assigned to this MR
+    const authorizedDocs = divisionScopedDocs.filter((doc) => {
+      if (isManager || !currentUser) return true;
+      const empCode = (currentUser.employeeCode || '').toLowerCase();
+      const empId = (currentUser.id || '').toLowerCase();
+      const empName = (currentUser.name || '').toLowerCase();
+      return Boolean(
+        (doc.assignedToEmployeeId && (doc.assignedToEmployeeId.toLowerCase() === empCode || doc.assignedToEmployeeId.toLowerCase() === empId)) ||
+        (doc.assignedToEmployeeName && doc.assignedToEmployeeName.toLowerCase().includes(empName.split(' ')[0])) ||
+        doc.isAssignedToMe
+      );
+    });
+
     const items: UnifiedCustomerItem[] = [];
 
     // Map Doctors
-    doctors.forEach(doc => {
+    authorizedDocs.forEach(doc => {
       const todayVisit = todayVisitMap.get(doc.id);
       let calculatedStatus: UnifiedCustomerItem['todayStatus'] = doc.todayVisitStatus || 'PENDING';
       if (todayVisit) {
@@ -160,7 +202,7 @@ export const VisitListScreen: React.FC<VisitListScreenProps> = ({
     });
 
     // Map Chemists
-    chemists.forEach(chem => {
+    divisionScopedChemists.forEach(chem => {
       const chemId = chem.id || `chem_${chem.name}`;
       const todayVisit = todayVisitMap.get(chemId);
       const calculatedStatus: UnifiedCustomerItem['todayStatus'] = todayVisit
@@ -182,7 +224,7 @@ export const VisitListScreen: React.FC<VisitListScreenProps> = ({
     });
 
     return items;
-  }, [doctors, chemists, visits]);
+  }, [doctors, chemists, visits, selectedDivision, currentUser, isManager]);
 
   // Status Counts
   const counts = useMemo(() => {
@@ -345,6 +387,40 @@ export const VisitListScreen: React.FC<VisitListScreenProps> = ({
         rightIcon="refresh"
         onRightPress={handleRefresh}
       />
+
+      {/* Division Selector Section: Full for Manager, Assigned Beats for MR */}
+      <View style={styles.divisionSelectorContainer}>
+        <View style={styles.divisionHeaderRow}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <Ionicons name="business" size={14} color="#1D4ED8" />
+            <Text style={styles.divisionHeaderTitle}>
+              {isManager
+                ? `SELECT DIVISION (${currentUser?.role === 'DIRECTOR' ? 'DIRECTOR' : currentUser?.role === 'HR_MANAGER' ? 'HR MANAGER' : 'MANAGEMENT'} ACCESS):`
+                : `ASSIGNED BEATS (${currentUser?.name || 'MR'} - ${DivisionService.getDivisionLabel(userDivision)} HQ):`}
+            </Text>
+          </View>
+          <Text style={styles.divisionCountBadge}>{filteredItems.length} Calls</Text>
+        </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.divisionPillScroll}>
+          {(isManager ? DIVISIONS : DIVISIONS.filter((d) => DivisionService.getUserAllowedDivisions(currentUser).includes(d.id))).map((div) => {
+            const isActive = selectedDivision === div.id;
+            const isPrimary = div.id === userDivision;
+            return (
+              <TouchableOpacity
+                key={div.id}
+                style={[styles.divisionPill, isActive && styles.divisionPillActive]}
+                onPress={() => setSelectedDivision(div.id)}
+              >
+                <Text style={[styles.divisionPillText, isActive && styles.divisionPillTextActive]}>
+                  {div.id === 'ALL' ? '🌐 ' : '📍 '}
+                  {div.label}
+                  {!isManager && isPrimary ? ' (Primary HQ)' : !isManager ? ' (Extended)' : ''}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
 
       {/* Category Tabs: ALL | DOCTORS | CHEMISTS */}
       <View style={styles.categoryTabContainer}>
@@ -872,5 +948,58 @@ const styles = StyleSheet.create({
   emptyHistoryText: {
     fontSize: 13,
     color: '#94A3B8',
+  },
+  // Division Controls
+  divisionSelectorContainer: {
+    backgroundColor: '#EFF6FF',
+    borderBottomWidth: 1,
+    borderColor: '#BFDBFE',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  divisionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  divisionHeaderTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#1E40AF',
+    letterSpacing: 0.5,
+  },
+  divisionCountBadge: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#2563EB',
+    backgroundColor: '#DBEAFE',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  divisionPillScroll: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  divisionPill: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
+  divisionPillActive: {
+    backgroundColor: '#2563EB',
+    borderColor: '#1D4ED8',
+  },
+  divisionPillText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#475569',
+  },
+  divisionPillTextActive: {
+    color: '#FFFFFF',
   },
 });
