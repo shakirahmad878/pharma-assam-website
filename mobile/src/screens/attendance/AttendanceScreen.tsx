@@ -46,9 +46,14 @@ interface SubRouteOption {
 }
 
 const EXTENSION_OPTIONS: SubRouteOption[] = [
+  { id: 'ext-kalain', name: 'Silchar to Kalain Ex-station', parentHq: 'Silchar' },
+  { id: 'ext-bagha', name: 'Silchar to Bagha & Natunbazar', parentHq: 'Silchar' },
+  { id: 'ext-sil-badarpur', name: 'Silchar to Badarpur Ex-station', parentHq: 'Silchar' },
+  { id: 'ext-sonai-nayabazar', name: 'Silchar to Sonai, Sonabarighat & Nayabazar', parentHq: 'Silchar' },
+  { id: 'ext-lakhipur', name: 'Silchar to Lakhipur & Dhalai', parentHq: 'Silchar' },
   { id: 'ext-badarpur', name: 'Badarpur Junction & Nilambazar', parentHq: 'Karimganj' },
+  { id: 'ext-patharkandi', name: 'Karimganj to Patharkandi', parentHq: 'Karimganj' },
   { id: 'ext-lala', name: 'Lala Bazar & Katlicherra Belt', parentHq: 'Hailakandi' },
-  { id: 'ext-lakhipur', name: 'Lakhipur, Sonai & Dhalai', parentHq: 'Silchar' },
   { id: 'ext-rknagar', name: 'Ramkrishna Nagar & Anipur', parentHq: 'Karimganj' },
   { id: 'ext-udaipur', name: 'Udaipur & Bishramganj', parentHq: 'Agartala' },
   { id: 'ext-kailashahar', name: 'Kailashahar & Kumarghat', parentHq: 'Dharmanagar' },
@@ -56,8 +61,10 @@ const EXTENSION_OPTIONS: SubRouteOption[] = [
 ];
 
 const OUTSTATION_OPTIONS: SubRouteOption[] = [
+  { id: 'out-halflong', name: 'Silchar ↔ Halflong Outstation', parentHq: 'Silchar' },
   { id: 'out-aizawl', name: 'Silchar ↔ Aizawl Inter-State Corridor', parentHq: 'Aizawl' },
   { id: 'out-tripura', name: 'Barak Valley ↔ Tripura Corridor (Agartala/Dharmanagar)', parentHq: 'Agartala' },
+  { id: 'out-makunda', name: 'Karimganj ↔ Makunda Christian Hospital', parentHq: 'Karimganj' },
   { id: 'out-guwahati', name: 'Silchar ↔ Guwahati Regional Supply Depot', parentHq: 'Guwahati' },
   { id: 'out-shillong', name: 'Meghalaya & Shillong Hills Circuit', parentHq: 'Shillong' },
   { id: 'out-joint-tour', name: 'Inter-Division Joint Working Tour (RSM Accomp)', parentHq: 'Regional' },

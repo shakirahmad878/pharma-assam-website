@@ -117,8 +117,8 @@ export const TourPlanScreen: React.FC<{ onBack: () => void; onNavigate?: (s: str
   // Load custom plans and pending reschedules
   const loadTourData = async () => {
     try {
-      const empCode = currentUser?.employeeCode || '0002';
-      const plans = await SupabaseDbService.getCustomTourPlans(empCode);
+      const empCode = currentUser?.employeeCode || 'NLCL-0005';
+      const plans = await SupabaseDbService.fetchTourPlans(empCode, month + 1, year);
       const reqs = await SupabaseDbService.getEmployeeRescheduleRequests(empCode);
       setCustomPlans(plans || {});
       setRescheduleRequests(reqs || []);
@@ -1026,11 +1026,18 @@ export const LeavesScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
    4. ASSAM REGIONAL HOLIDAY CALENDAR (Image 24)
    ========================================================================================= */
 export const HolidaysScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+  const [holidays, setHolidays] = useState<any[]>(MOCK_ASSAM_HOLIDAYS);
+  useEffect(() => {
+    SupabaseDbService.fetchHolidays().then(res => {
+      if (res && res.length > 0) setHolidays(res);
+    });
+  }, []);
+
   return (
     <SafeAreaView style={styles.container}>
       <Header title="Holiday List" subtitle="Assam Regional Calendar 2026" showBack onBack={onBack} />
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {MOCK_ASSAM_HOLIDAYS.map(h => (
+        {holidays.map(h => (
           <View key={h.id} style={styles.holidayCard}>
             <View style={styles.holidayDateBadge}>
               <Text style={styles.holidayDateNum}>{h.date.split(' ')[0]}</Text>

@@ -1,3 +1,4 @@
+import { SupabaseDbService } from './supabase/supabaseDbService';
 import { StorageService, STORAGE_KEYS } from './storageService';
 import { SyncService } from './sync/syncService';
 import { RoutePlan, RouteChangeRequest, MonthlyTourProgramme, MTPDayPlan } from '../types';
@@ -10,6 +11,35 @@ const MTP_STORAGE_KEY = 'REPPULSE_MTP_SEPTEMBER_2026';
 
 export class RouteService {
   public static async getRoutes(): Promise<RoutePlan[]> {
+    if (SupabaseDbService.isConnected()) {
+      try {
+        const cloudRoutes = await SupabaseDbService.fetchRoutes();
+        if (cloudRoutes && cloudRoutes.length > 0) {
+          const mapped: RoutePlan[] = cloudRoutes.map((r: any) => ({
+            id: r.id,
+            code: r.code,
+            name: r.name,
+            district: r.district,
+            areas: r.areas || [],
+            totalDoctors: 10,
+            totalHospitals: 3,
+            totalChemists: 10,
+            isAssigned: true,
+            isActiveToday: false,
+            description: `${r.route_type}: ${r.name} (${r.distance_km} km, TA: ₹${r.standard_fare}, DA: ₹${r.da_allowed})`,
+          }));
+          await StorageService.setItem(ROUTE_STORAGE_KEY, mapped);
+          const activeRouteId = await this.getActiveRouteId();
+          return mapped.map(r => ({
+            ...r,
+            isActiveToday: r.id === activeRouteId,
+          }));
+        }
+      } catch (e) {
+        console.warn('[RouteService] Supabase routes fetch error:', e);
+      }
+    }
+
     let routes = await StorageService.getItem<RoutePlan[]>(ROUTE_STORAGE_KEY, []);
     if (!routes || routes.length === 0) {
       routes = BARAK_ROUTES;

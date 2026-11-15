@@ -7,11 +7,19 @@ import { SupabaseDbService } from './supabase/supabaseDbService';
 
 export class OrderService {
   public static async getProducts(): Promise<Product[]> {
+    if (SupabaseDbService.isConnected()) {
+      try {
+        const cloudProducts = await SupabaseDbService.fetchProducts();
+        if (cloudProducts && cloudProducts.length > 0) {
+          await StorageService.setItem(STORAGE_KEYS.PRODUCTS_CACHE, cloudProducts);
+          return cloudProducts;
+        }
+      } catch (e) {
+        console.warn('[OrderService] fetchProducts from Supabase error:', e);
+      }
+    }
     const cached = await StorageService.getItem<Product[]>(STORAGE_KEYS.PRODUCTS_CACHE, []);
-    const isLegacy = cached && cached.length > 0 && cached.some(p => p.id === 'prod-01' || p.brandName.includes('CardioPulse'));
-    if (cached && cached.length > 0 && !isLegacy) return cached;
-
-    await StorageService.setItem(STORAGE_KEYS.PRODUCTS_CACHE, PRODUCTS_MOCK);
+    if (cached && cached.length > 0) return cached;
     return PRODUCTS_MOCK;
   }
 

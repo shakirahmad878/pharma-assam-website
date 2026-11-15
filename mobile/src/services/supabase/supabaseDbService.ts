@@ -1750,4 +1750,289 @@ export class SupabaseDbService {
     }
     return [];
   }
+
+  // ==========================================
+  // 9. CENTRAL DATABASE MODULES (ZERO MOCK DATA)
+  // ==========================================
+
+  public static async fetchRoutes(): Promise<any[]> {
+    if (!this.isConnected()) return [];
+    try {
+      const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/routes?is_active=eq.true&order=parent_hq.asc,name.asc`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (err) {
+      console.warn('[Supabase] fetchRoutes error:', err);
+    }
+    return [];
+  }
+
+  public static async fetchTourPlans(employeeCode: string, month?: number, year?: number): Promise<Record<string, any>> {
+    const cleanCode = (employeeCode || 'NLCL-0005').trim().toUpperCase();
+    const tourPlansKey = `${STORAGE_KEYS.TOUR_PLANS_CACHE}_${cleanCode.toLowerCase()}`;
+    
+    if (this.isConnected()) {
+      try {
+        let url = `${SUPABASE_CONFIG.url}/rest/v1/tour_plans?employee_code=eq.${encodeURIComponent(cleanCode)}&order=date.asc`;
+        if (month) url += `&month=eq.${month}`;
+        if (year) url += `&year=eq.${year}`;
+
+        const res = await fetch(url, {
+          method: 'GET',
+          headers: this.getHeaders(),
+        });
+        if (res.ok) {
+          const list = await res.json();
+          if (list && list.length > 0) {
+            const planMap: Record<string, any> = {};
+            list.forEach((tp: any) => {
+              planMap[tp.date] = {
+                city: tp.city,
+                type: tp.type,
+                status: tp.status,
+                routeId: tp.route_id,
+                routeType: tp.route_type,
+                notes: tp.notes,
+              };
+            });
+            await StorageService.setItem(tourPlansKey, planMap);
+            return planMap;
+          }
+        }
+      } catch (err) {
+        console.warn('[Supabase] fetchTourPlans error:', err);
+      }
+    }
+    return await StorageService.getItem<Record<string, any>>(tourPlansKey, {});
+  }
+
+  public static async saveTourDayPlan(plan: {
+    employeeId: string;
+    employeeCode: string;
+    employeeName: string;
+    date: string;
+    city: string;
+    type?: string;
+    routeId?: string;
+    routeType?: string;
+    notes?: string;
+  }): Promise<boolean> {
+    const cleanCode = (plan.employeeCode || 'NLCL-0005').trim().toUpperCase();
+    const tourPlansKey = `${STORAGE_KEYS.TOUR_PLANS_CACHE}_${cleanCode.toLowerCase()}`;
+    
+    // 1. Cache locally
+    const current = await StorageService.getItem<Record<string, any>>(tourPlansKey, {});
+    current[plan.date] = {
+      city: plan.city,
+      type: plan.type || 'TOUR',
+      routeId: plan.routeId,
+      routeType: plan.routeType || 'HQ',
+      notes: plan.notes,
+    };
+    await StorageService.setItem(tourPlansKey, current);
+
+    // 2. Persist to Supabase
+    if (this.isConnected()) {
+      try {
+        const d = new Date(plan.date);
+        const dayNum = d.getDate();
+        const monthNum = d.getMonth() + 1;
+        const yearNum = d.getFullYear();
+        const dayOfWeek = d.toLocaleDateString('en-US', { weekday: 'short' });
+
+        await fetch(`${SUPABASE_CONFIG.url}/rest/v1/tour_plans`, {
+          method: 'POST',
+          headers: { ...this.getHeaders(), Prefer: 'resolution=merge-duplicates' },
+          body: JSON.stringify({
+            id: `tp_${cleanCode}_${plan.date}`,
+            employee_id: plan.employeeId,
+            employee_code: cleanCode,
+            employee_name: plan.employeeName,
+            date: plan.date,
+            year: yearNum,
+            month: monthNum,
+            day_number: dayNum,
+            day_of_week: dayOfWeek,
+            city: plan.city,
+            route_id: plan.routeId || null,
+            route_type: plan.routeType || 'HQ',
+            target_doctor_calls: 10,
+            target_chemist_calls: 4,
+            status: 'APPROVED',
+            type: plan.type || 'TOUR',
+            notes: plan.notes || null,
+            updated_at: new Date().toISOString(),
+          }),
+        });
+      } catch (err) {
+        console.warn('[Supabase] saveTourDayPlan error:', err);
+      }
+    }
+    return true;
+  }
+
+  public static async fetchProducts(): Promise<any[]> {
+    if (!this.isConnected()) return [];
+    try {
+      const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?is_active=eq.true&order=name.asc`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+      if (res.ok) {
+        const raw = await res.json();
+        return raw.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          brandName: p.brand_name,
+          genericName: p.generic_name,
+          category: p.category,
+          division: p.division,
+          formulation: p.formulation,
+          packSize: p.pack_size,
+          mrp: Number(p.mrp),
+          ptr: Number(p.ptr),
+          pts: Number(p.pts),
+          gstRate: Number(p.gst_rate || 12),
+          indications: p.indications,
+          keyUsp: p.key_usp,
+        }));
+      }
+    } catch (err) {
+      console.warn('[Supabase] fetchProducts error:', err);
+    }
+    return [];
+  }
+
+  public static async fetchExpenses(employeeCode: string): Promise<any[]> {
+    if (!this.isConnected()) return [];
+    try {
+      const clean = (employeeCode || '').trim().toUpperCase();
+      const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/expenses?employee_code=eq.${encodeURIComponent(clean)}&order=date.desc`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+      if (res.ok) {
+        const raw = await res.json();
+        return raw.map((e: any) => ({
+          id: e.id,
+          date: e.date,
+          route: e.route,
+          distanceKm: e.distance_km,
+          taAmount: Number(e.ta_amount),
+          daAmount: Number(e.da_amount),
+          hotelAmount: Number(e.hotel_amount),
+          miscAmount: Number(e.misc_amount),
+          totalAmount: Number(e.total_amount),
+          status: e.status,
+          adminRemark: e.admin_remark,
+        }));
+      }
+    } catch (err) {
+      console.warn('[Supabase] fetchExpenses error:', err);
+    }
+    return [];
+  }
+
+  public static async submitExpense(claim: any): Promise<boolean> {
+    if (!this.isConnected()) return false;
+    try {
+      const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/expenses`, {
+        method: 'POST',
+        headers: { ...this.getHeaders(), Prefer: 'resolution=merge-duplicates' },
+        body: JSON.stringify({
+          id: claim.id || `exp_${Date.now()}`,
+          employee_id: claim.employeeId,
+          employee_code: claim.employeeCode,
+          employee_name: claim.employeeName,
+          date: claim.date,
+          route: claim.route,
+          route_id: claim.routeId || null,
+          distance_km: claim.distanceKm || 0,
+          ta_amount: claim.taAmount || 0,
+          da_amount: claim.daAmount || 0,
+          hotel_amount: claim.hotelAmount || 0,
+          misc_amount: claim.miscAmount || 0,
+          total_amount: claim.totalAmount || 0,
+          status: claim.status || 'Pending',
+          admin_remark: claim.adminRemark || null,
+          created_at: new Date().toISOString(),
+        }),
+      });
+      return res.ok;
+    } catch (err) {
+      console.warn('[Supabase] submitExpense error:', err);
+      return false;
+    }
+  }
+
+  public static async fetchSFCRoutes(): Promise<any[]> {
+    if (!this.isConnected()) return [];
+    try {
+      const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/sfc_routes?order=from_location.asc,distance_km.asc`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+      if (res.ok) {
+        const raw = await res.json();
+        return raw.map((s: any) => ({
+          id: s.id,
+          fromLocation: s.from_location,
+          toLocation: s.to_location,
+          distanceKm: s.distance_km,
+          ratePerKm: Number(s.rate_per_km),
+          standardFare: s.standard_fare,
+          daAllowed: s.da_allowed,
+          routeType: s.route_type,
+        }));
+      }
+    } catch (err) {
+      console.warn('[Supabase] fetchSFCRoutes error:', err);
+    }
+    return [];
+  }
+
+  public static async fetchHolidays(): Promise<any[]> {
+    if (!this.isConnected()) return [];
+    try {
+      const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/holidays?order=date.asc`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (err) {
+      console.warn('[Supabase] fetchHolidays error:', err);
+    }
+    return [];
+  }
+
+  public static async fetchLeaveBalances(employeeCode: string): Promise<any> {
+    if (!this.isConnected()) return null;
+    try {
+      const clean = (employeeCode || '').trim().toUpperCase();
+      const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/leave_balances?employee_code=eq.${encodeURIComponent(clean)}&limit=1`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+      if (res.ok) {
+        const list = await res.json();
+        if (list && list.length > 0) {
+          const lb = list[0];
+          return [
+            { type: 'Casual Leave(CL)', code: 'CL', available: lb.casual_leave_available, total: lb.casual_leave_total },
+            { type: 'Earn Leave(EL)', code: 'EL', available: lb.earned_leave_available, total: lb.earned_leave_total },
+            { type: 'Sick Leave(SL)', code: 'SL', available: lb.sick_leave_available, total: lb.sick_leave_total },
+          ];
+        }
+      }
+    } catch (err) {
+      console.warn('[Supabase] fetchLeaveBalances error:', err);
+    }
+    return null;
+  }
 }
