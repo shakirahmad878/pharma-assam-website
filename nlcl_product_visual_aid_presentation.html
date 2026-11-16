@@ -1,0 +1,1595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>NextLife Care Life Sciences (NLCL) — Official Product Visual Aid</title>
+  <style>
+    /* ==========================================================================
+       NextLife Care Life Sciences (NLCL) - Pharmaceutical Visual Aid Theme
+       Color Palette: Clinical Slate Navy, Deep Cyan, Emerald, Electric Blue, Amber
+       ========================================================================== */
+    :root {
+      --bg-dark: #080d1a;
+      --bg-surface: #0f172a;
+      --bg-card: rgba(15, 23, 42, 0.85);
+      --bg-card-border: rgba(56, 189, 248, 0.22);
+      --primary: #0284c7;
+      --accent-cyan: #38bdf8;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --accent-purple: #a855f7;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-family);
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Deck Container */
+    .deck-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Top Reference Navigation Bar */
+    .brand-nav-bar {
+      height: clamp(48px, 6.5vh, 60px);
+      background: rgba(10, 15, 29, 0.95);
+      border-bottom: 1px solid rgba(56, 189, 248, 0.25);
+      backdrop-filter: blur(16px);
+      display: flex;
+      align-items: center;
+      padding: 0 clamp(8px, 1.5vw, 20px);
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      flex-shrink: 0;
+      z-index: 50;
+    }
+
+    .brand-nav-bar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .nlcl-corp-tag {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding-right: 12px;
+      border-right: 1px solid rgba(255, 255, 255, 0.15);
+      flex-shrink: 0;
+    }
+
+    .nlcl-logo {
+      background: linear-gradient(135deg, #0284c7, #10b981);
+      color: #ffffff;
+      font-weight: 900;
+      font-size: clamp(0.72rem, 1vw, 0.85rem);
+      padding: 4px 8px;
+      border-radius: 5px;
+      letter-spacing: 0.5px;
+    }
+
+    .nav-tabs {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex: 1;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .nav-tab-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      font-size: clamp(0.68rem, 0.9vw, 0.82rem);
+      font-weight: 700;
+      padding: clamp(4px, 0.8vh, 6px) clamp(8px, 1vw, 12px);
+      border-radius: 6px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      letter-spacing: 0.3px;
+    }
+
+    .nav-tab-btn:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .nav-tab-btn.active {
+      color: #ffffff;
+      background: linear-gradient(135deg, rgba(2, 132, 199, 0.35), rgba(16, 185, 129, 0.25));
+      border: 1px solid var(--accent-cyan);
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding-left: 10px;
+      border-left: 1px solid rgba(255, 255, 255, 0.15);
+      flex-shrink: 0;
+    }
+
+    .btn-action {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-main);
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-action:hover {
+      background: var(--primary);
+      border-color: var(--accent-cyan);
+    }
+
+    /* Slide Frame */
+    .slide-viewport {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: clamp(14px, 2.5vh, 26px) clamp(18px, 3.5vw, 42px);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(16px) scale(0.99);
+      transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.35s;
+      background: radial-gradient(circle at 85% 15%, rgba(14, 165, 233, 0.08) 0%, transparent 55%),
+                  radial-gradient(circle at 10% 85%, rgba(16, 185, 129, 0.06) 0%, transparent 50%),
+                  var(--bg-dark);
+      overflow: hidden;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0) scale(1);
+      z-index: 10;
+    }
+
+    /* Product Header Block */
+    .product-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: clamp(6px, 1.2vh, 12px);
+      flex-shrink: 0;
+    }
+
+    .brand-title-wrap {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .brand-name {
+      font-size: clamp(1.8rem, 3.6vw, 3rem);
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      line-height: 1;
+      background: linear-gradient(135deg, #ffffff 40%, var(--accent-cyan) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-formulation {
+      font-size: clamp(0.85rem, 1.2vw, 1.05rem);
+      color: #38bdf8;
+      font-weight: 600;
+    }
+
+    .brand-category-badge {
+      font-size: clamp(0.7rem, 0.95vw, 0.85rem);
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 1px;
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .brand-pack {
+      font-size: clamp(0.75rem, 1vw, 0.9rem);
+      color: var(--text-muted);
+      font-family: monospace;
+    }
+
+    /* Slide Content Core Grids */
+    .product-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: clamp(8px, 1.5vh, 18px) 0;
+      overflow: hidden;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr 1fr;
+      gap: clamp(10px, 1.6vw, 20px);
+      height: 100%;
+      max-height: calc(100vh - 165px);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: clamp(12px, 2vw, 24px);
+      height: 100%;
+      max-height: calc(100vh - 165px);
+    }
+
+    .grid-home {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: clamp(8px, 1.2vw, 14px);
+      height: 100%;
+      max-height: calc(100vh - 165px);
+    }
+
+    /* Cards */
+    .detail-card {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 12px;
+      padding: clamp(10px, 1.6vh, 18px) clamp(12px, 1.6vw, 20px);
+      backdrop-filter: blur(12px);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    .detail-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent-cyan), transparent);
+    }
+
+    .card-emerald::before {
+      background: linear-gradient(90deg, var(--accent-emerald), transparent);
+    }
+
+    .card-amber::before {
+      background: linear-gradient(90deg, var(--accent-amber), transparent);
+    }
+
+    .card-purple::before {
+      background: linear-gradient(90deg, var(--accent-purple), transparent);
+    }
+
+    .card-heading {
+      font-size: clamp(0.85rem, 1.15vw, 1.05rem);
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: clamp(6px, 1vh, 10px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 6px;
+    }
+
+    .card-icon {
+      font-size: 1.1em;
+    }
+
+    .card-text {
+      font-size: clamp(0.78rem, 1.05vw, 0.92rem);
+      color: var(--text-muted);
+      line-height: 1.45;
+      flex: 1;
+    }
+
+    .card-text ul {
+      list-style-type: none;
+      padding-left: 0;
+    }
+
+    .card-text li {
+      margin-bottom: clamp(4px, 0.8vh, 8px);
+      position: relative;
+      padding-left: 16px;
+      color: #e2e8f0;
+    }
+
+    .card-text li::before {
+      content: '✔';
+      position: absolute;
+      left: 0;
+      color: var(--accent-cyan);
+      font-size: 0.85em;
+    }
+
+    .bullet-emerald li::before {
+      color: var(--accent-emerald);
+    }
+
+    .bullet-amber li::before {
+      color: var(--accent-amber);
+    }
+
+    /* Highlight Badges */
+    .tag {
+      display: inline-block;
+      background: rgba(56, 189, 248, 0.12);
+      color: var(--accent-cyan);
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 0.82em;
+      border: 1px solid rgba(56, 189, 248, 0.25);
+    }
+
+    .tag-green {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    .tag-amber {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    /* Product Footer Strip */
+    .product-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: clamp(6px, 1vh, 10px) clamp(12px, 1.8vw, 20px);
+      font-size: clamp(0.72rem, 0.95vw, 0.85rem);
+      flex-shrink: 0;
+    }
+
+    .dosage-box {
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dosage-highlight {
+      font-weight: 700;
+      color: #38bdf8;
+    }
+
+    .usp-tagline {
+      color: #34d399;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    .nlcl-cert {
+      color: var(--text-muted);
+      font-size: 0.75em;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    /* HOME CATALOG CARDS */
+    .catalog-card {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 10px;
+      padding: 12px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .catalog-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent-cyan), var(--accent-emerald));
+    }
+
+    .catalog-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--accent-cyan);
+      box-shadow: 0 10px 24px rgba(56, 189, 248, 0.25);
+      background: rgba(15, 23, 42, 0.95);
+    }
+
+    .catalog-brand {
+      font-size: clamp(1rem, 1.4vw, 1.25rem);
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    .catalog-salt {
+      font-size: clamp(0.7rem, 0.9vw, 0.8rem);
+      color: var(--accent-cyan);
+      margin-top: 3px;
+      line-height: 1.25;
+    }
+
+    .catalog-ind {
+      font-size: clamp(0.68rem, 0.85vw, 0.75rem);
+      color: var(--text-muted);
+      margin-top: 6px;
+      line-height: 1.25;
+    }
+
+    .catalog-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 0.7rem;
+    }
+
+    .catalog-category {
+      color: #34d399;
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.65rem;
+    }
+
+    .catalog-arrow {
+      color: var(--accent-cyan);
+      font-weight: 800;
+    }
+
+    /* INTRO SLIDE SPECIAL */
+    .intro-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: clamp(14px, 2.5vw, 32px);
+      height: 100%;
+      max-height: calc(100vh - 165px);
+      align-items: stretch;
+    }
+
+    .intro-hero {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .intro-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 4px 12px;
+      border-radius: 20px;
+      color: var(--accent-cyan);
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+      width: fit-content;
+    }
+
+    .intro-title {
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      font-weight: 900;
+      line-height: 1.1;
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+    }
+
+    .intro-desc {
+      font-size: clamp(0.85rem, 1.2vw, 1.05rem);
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 18px;
+    }
+
+    .pillar-box {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .pillar-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 10px 14px;
+    }
+
+    .pillar-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #38bdf8;
+      margin-bottom: 2px;
+    }
+
+    .pillar-desc {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="deck-container">
+
+    <!-- Top Persistent Reference Navigation Tabs -->
+    <header class="brand-nav-bar" id="brandNavBar">
+      <div class="nlcl-corp-tag">
+        <span class="nlcl-logo">NLCL</span>
+      </div>
+      <nav class="nav-tabs" id="navTabsContainer">
+        <button class="nav-tab-btn active" onclick="Deck.jumpTo(0)">INTRO</button>
+        <button class="nav-tab-btn" onclick="Deck.jumpTo(1)">HOME</button>
+        <button class="nav-tab-btn" onclick="Deck.jumpTo(2)">U-CURE</button>
+        <button class="nav-tab-btn" onclick="Deck.jumpTo(3)">P-GOLD</button>
+        <button class="nav-tab-btn" onclick="Deck.jumpTo(4)">R-DSR</button>
+        <button class="nav-tab-btn" onclick="Deck.jumpTo(5)">RAV-IV</button>
+        <button class="nav-tab-btn" onclick="Deck.jumpTo(6)">ENDOVAM-Q-10</button>
+        <button class="nav-tab-btn" onclick="Deck.jumpTo(7)">PROCALD3</button>
+        <button class="nav-tab-btn" onclick="Deck.jumpTo(8)">PRO-Q1</button>
+        <button class="nav-tab-btn" onclick="Deck.jumpTo(9)">LICO</button>
+        <button class="nav-tab-btn" onclick="Deck.jumpTo(10)">Filo-cap</button>
+        <button class="nav-tab-btn" onclick="Deck.jumpTo(11)">Filo-syr</button>
+      </nav>
+      <div class="nav-actions">
+        <button class="btn-action" onclick="Deck.prev()">❮</button>
+        <button class="btn-action" onclick="Deck.next()">❯</button>
+        <button class="btn-action" onclick="toggleFullScreen()" title="Full Screen (F11)">⛶</button>
+      </div>
+    </header>
+
+    <!-- Slide Viewport -->
+    <main class="slide-viewport">
+
+      <!-- ====================================================================
+           SLIDE 1: INTRO (Corporate Overview)
+           ==================================================================== -->
+      <section class="slide active" id="slide-intro">
+        <div class="product-header">
+          <div class="brand-title-wrap">
+            <h1 class="brand-name">NextLife Care Life Sciences</h1>
+            <span class="brand-formulation">Pioneering Healthcare Excellence</span>
+          </div>
+          <span class="brand-category-badge">Corporate Profile</span>
+        </div>
+
+        <div class="product-body">
+          <div class="intro-grid">
+            <div class="intro-hero">
+              <div class="intro-badge">NLCL Excellence</div>
+              <h2 class="intro-title">Science-Driven Therapeutics for Modern Clinical Practice</h2>
+              <p class="intro-desc">NextLife Care Life Sciences (NLCL) delivers high-potency, bioavailability-enhanced pharmaceuticals adhering strictly to WHO-GMP manufacturing standards across the Barak Valley, Assam, and North-East India.</p>
+
+              <div class="pillar-box">
+                <div class="pillar-card">
+                  <div class="pillar-title">WHO-GMP Certified</div>
+                  <div class="pillar-desc">State-of-the-art automated manufacturing with 100% batch assay certification.</div>
+                </div>
+                <div class="pillar-card">
+                  <div class="pillar-title">Bioavailability Focus</div>
+                  <div class="pillar-desc">Advanced enteric-coating, micronization & dual-release delivery matrices.</div>
+                </div>
+                <div class="pillar-card">
+                  <div class="pillar-title">Patient-First Pricing</div>
+                  <div class="pillar-desc">Affordable prescription access with uncompromising therapeutic efficacy.</div>
+                </div>
+                <div class="pillar-card">
+                  <div class="pillar-title">Cold-Chain Distribution</div>
+                  <div class="pillar-desc">Protected distribution corridors across Silchar, Karimganj & Dharmanagar.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-card card-emerald">
+              <div class="card-heading">
+                <span class="card-icon">🏛️</span> Key Therapeutic Focus Areas
+              </div>
+              <div class="card-text bullet-emerald">
+                <ul>
+                  <li><strong>Gastroenterology:</strong> R-DSR & RAV-IV (Rapid-acting acid suppression).</li>
+                  <li><strong>Urology & Nephrology:</strong> U-CURE (Advanced urinary alkalizer & anti-adhesion).</li>
+                  <li><strong>Fertility & Mitochondria:</strong> ENDOVAM-Q-10 (Cellular vitality & reproductive wellness).</li>
+                  <li><strong>Bone & Joint Health:</strong> PROCALD3 (Active Calcitriol & bone mineral matrix).</li>
+                  <li><strong>Cardiovascular Care:</strong> PRO-Q1 (Ubiquinone & Omega-3 cardiac shield).</li>
+                  <li><strong>Nutritional Hematinics:</strong> Filo-cap & Filo-syr (Ascorbate iron without GI distress).</li>
+                  <li><strong>Antioxidant Wellness:</strong> P-GOLD & LICO (Cellular immunity & convalescence).</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="product-footer">
+          <div class="dosage-box">📍 Headquarters: <span class="dosage-highlight">Silchar & Regional Hubs</span></div>
+          <div class="usp-tagline">Committed to Health, Dedicated to Life</div>
+          <div class="nlcl-cert">ISO 9001:2015 & WHO-GMP Certified Quality</div>
+        </footer>
+      </section>
+
+
+      <!-- ====================================================================
+           SLIDE 2: HOME (Product Index Dashboard)
+           ==================================================================== -->
+      <section class="slide" id="slide-home">
+        <div class="product-header">
+          <div class="brand-title-wrap">
+            <h2 class="brand-name">NLCL Prescription Portfolio</h2>
+            <span class="brand-formulation">10 Core Strategic Formulations</span>
+          </div>
+          <span class="brand-category-badge">Quick Detailing Menu</span>
+        </div>
+
+        <div class="product-body">
+          <div class="grid-home">
+            <!-- 1. U-CURE -->
+            <div class="catalog-card" onclick="Deck.jumpTo(2)">
+              <div>
+                <div class="catalog-brand">U-CURE</div>
+                <div class="catalog-salt">Cranberry + D-Mannose + Citrate</div>
+                <div class="catalog-ind">Urinary Alkalizer & UTI Defense</div>
+              </div>
+              <div class="catalog-footer">
+                <span class="catalog-category">UROLOGY</span>
+                <span class="catalog-arrow">➔</span>
+              </div>
+            </div>
+
+            <!-- 2. P-GOLD -->
+            <div class="catalog-card" onclick="Deck.jumpTo(3)">
+              <div>
+                <div class="catalog-brand">P-GOLD</div>
+                <div class="catalog-salt">Ginseng + Lycopene + Zinc + Vit</div>
+                <div class="catalog-ind">Premium Vitality & Immunity</div>
+              </div>
+              <div class="catalog-footer">
+                <span class="catalog-category">NUTRITION</span>
+                <span class="catalog-arrow">➔</span>
+              </div>
+            </div>
+
+            <!-- 3. R-DSR -->
+            <div class="catalog-card" onclick="Deck.jumpTo(4)">
+              <div>
+                <div class="catalog-brand">R-DSR</div>
+                <div class="catalog-salt">Rabeprazole 20mg + Domperidone 30mg SR</div>
+                <div class="catalog-ind">GERD, Reflux & Dyspepsia</div>
+              </div>
+              <div class="catalog-footer">
+                <span class="catalog-category">GASTRO</span>
+                <span class="catalog-arrow">➔</span>
+              </div>
+            </div>
+
+            <!-- 4. RAV-IV -->
+            <div class="catalog-card" onclick="Deck.jumpTo(5)">
+              <div>
+                <div class="catalog-brand">RAV-IV</div>
+                <div class="catalog-salt">Rabeprazole Sodium 20mg Injection</div>
+                <div class="catalog-ind">Critical Care & Stress Ulcers</div>
+              </div>
+              <div class="catalog-footer">
+                <span class="catalog-category">CRITICAL CARE</span>
+                <span class="catalog-arrow">➔</span>
+              </div>
+            </div>
+
+            <!-- 5. ENDOVAM-Q-10 -->
+            <div class="catalog-card" onclick="Deck.jumpTo(6)">
+              <div>
+                <div class="catalog-brand">ENDOVAM-Q-10</div>
+                <div class="catalog-salt">CoQ10 + L-Carnitine + Astaxanthin</div>
+                <div class="catalog-ind">Infertility & Mitochondrial Vitality</div>
+              </div>
+              <div class="catalog-footer">
+                <span class="catalog-category">FERTILITY</span>
+                <span class="catalog-arrow">➔</span>
+              </div>
+            </div>
+
+            <!-- 6. PROCALD3 -->
+            <div class="catalog-card" onclick="Deck.jumpTo(7)">
+              <div>
+                <div class="catalog-brand">PROCALD3</div>
+                <div class="catalog-salt">Calcium Citrate + Calcitriol + K2-7</div>
+                <div class="catalog-ind">Osteoporosis & Bone Architecture</div>
+              </div>
+              <div class="catalog-footer">
+                <span class="catalog-category">ORTHO / OBGYN</span>
+                <span class="catalog-arrow">➔</span>
+              </div>
+            </div>
+
+            <!-- 7. PRO-Q1 -->
+            <div class="catalog-card" onclick="Deck.jumpTo(8)">
+              <div>
+                <div class="catalog-brand">PRO-Q1</div>
+                <div class="catalog-salt">CoQ10 + Omega-3 (EPA/DHA)</div>
+                <div class="catalog-ind">Cardiovascular & Endothelial Shield</div>
+              </div>
+              <div class="catalog-footer">
+                <span class="catalog-category">CARDIOLOGY</span>
+                <span class="catalog-arrow">➔</span>
+              </div>
+            </div>
+
+            <!-- 8. LICO -->
+            <div class="catalog-card" onclick="Deck.jumpTo(9)">
+              <div>
+                <div class="catalog-brand">LICO</div>
+                <div class="catalog-salt">Lycopene + Antioxidants + Minerals</div>
+                <div class="catalog-ind">Oxidative Stress & Convalescence</div>
+              </div>
+              <div class="catalog-footer">
+                <span class="catalog-category">ANTIOXIDANT</span>
+                <span class="catalog-arrow">➔</span>
+              </div>
+            </div>
+
+            <!-- 9. Filo-cap -->
+            <div class="catalog-card" onclick="Deck.jumpTo(10)">
+              <div>
+                <div class="catalog-brand">Filo-cap</div>
+                <div class="catalog-salt">Ferrous Ascorbate + Folic + Zinc</div>
+                <div class="catalog-ind">High-Potency Non-Constipating Iron</div>
+              </div>
+              <div class="catalog-footer">
+                <span class="catalog-category">HEMATINIC</span>
+                <span class="catalog-arrow">➔</span>
+              </div>
+            </div>
+
+            <!-- 10. Filo-syr -->
+            <div class="catalog-card" onclick="Deck.jumpTo(11)">
+              <div>
+                <div class="catalog-brand">Filo-syr</div>
+                <div class="catalog-salt">Ferrous Ascorbate + Folic Acid Syrup</div>
+                <div class="catalog-ind">Delicious Liquid Iron (No Teeth Stain)</div>
+              </div>
+              <div class="catalog-footer">
+                <span class="catalog-category">PEDIATRIC / ADULT</span>
+                <span class="catalog-arrow">➔</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="product-footer">
+          <div class="dosage-box">💡 Click or tap any product card to begin immediate doctor detailing</div>
+          <div class="usp-tagline">10 Fast-Moving Therapeutic Anchors</div>
+          <div class="nlcl-cert">NLCL SFA Visual Aid System</div>
+        </footer>
+      </section>
+
+
+      <!-- ====================================================================
+           SLIDE 3: U-CURE
+           ==================================================================== -->
+      <section class="slide" id="slide-ucure">
+        <div class="product-header">
+          <div class="brand-title-wrap">
+            <h2 class="brand-name">U-CURE</h2>
+            <span class="brand-formulation">Potassium Magnesium Citrate + D-Mannose + Cranberry Extract</span>
+          </div>
+          <span class="brand-category-badge">Urological Care</span>
+          <span class="brand-pack">Syrup / Sachet</span>
+        </div>
+
+        <div class="product-body">
+          <div class="grid-3">
+            <div class="detail-card">
+              <div class="card-heading">
+                <span class="card-icon">🧪</span> Active Scientific Composition
+              </div>
+              <div class="card-text">
+                <ul>
+                  <li><strong>Potassium Magnesium Citrate:</strong> Potent systemic & urinary alkalizer, elevates urinary pH to dissolve uric acid crystals.</li>
+                  <li><strong>D-Mannose:</strong> High-affinity decoy sugar binding to type-1 pili of uropathogenic <em>E. coli</em>, causing rapid urinary flush-out.</li>
+                  <li><strong>Cranberry Extract (Std. Proanthocyanidins):</strong> Anti-adherence factor preventing bacterial colonization on bladder urothelium.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="detail-card card-emerald">
+              <div class="card-heading">
+                <span class="card-icon">🎯</span> Target Clinical Indications
+              </div>
+              <div class="card-text bullet-emerald">
+                <ul>
+                  <li><strong>Recurrent Urinary Tract Infections (UTIs):</strong> Reduces frequency by up to 75%.</li>
+                  <li><strong>Burning Micturition & Dysuria:</strong> Delivers rapid symptomatic relief within 24 hours.</li>
+                  <li><strong>Urolithiasis / Renal Calculi:</strong> Inhibits calcium oxalate crystal nucleation.</li>
+                  <li><strong>Post-Catheterization UTI Prophylaxis:</strong> Protects bladder lining during hospitalization.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="detail-card card-amber">
+              <div class="card-heading">
+                <span class="card-icon">⭐</span> Competitive Clinical USPs
+              </div>
+              <div class="card-text bullet-amber">
+                <ul>
+                  <li><span class="tag tag-green">Zero Antibiotic Resistance:</span> Mechanical flushing mechanism without microbial resistance.</li>
+                  <li><span class="tag tag-amber">Dual Action:</span> Combines chemical alkalization with physical bacterial anti-adhesion.</li>
+                  <li><span class="tag">Superior Palatability:</span> Refreshing pleasant flavor ensures high female patient compliance.</li>
+                  <li>Safe for long-term maintenance in recurring geriatric & diabetic UTIs.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="product-footer">
+          <div class="dosage-box">📋 Recommended Dosage: <span class="dosage-highlight">15ml diluted in glass of water TID, or 1 Sachet BID</span></div>
+          <div class="usp-tagline">Flushes Pathogens Naturally • Restores Urinary Comfort</div>
+          <div class="nlcl-cert">NLCL Urology Division</div>
+        </footer>
+      </section>
+
+
+      <!-- ====================================================================
+           SLIDE 4: P-GOLD
+           ==================================================================== -->
+      <section class="slide" id="slide-pgold">
+        <div class="product-header">
+          <div class="brand-title-wrap">
+            <h2 class="brand-name">P-GOLD</h2>
+            <span class="brand-formulation">Korean Red Ginseng + Lycopene + Multivitamins + Zinc & Minerals</span>
+          </div>
+          <span class="brand-category-badge">Premium Vitalizer</span>
+          <span class="brand-pack">10 x 10 Blister Pack</span>
+        </div>
+
+        <div class="product-body">
+          <div class="grid-3">
+            <div class="detail-card">
+              <div class="card-heading">
+                <span class="card-icon">🧪</span> Comprehensive Gold Synergy
+              </div>
+              <div class="card-text">
+                <ul>
+                  <li><strong>Korean Red Ginseng Extract:</strong> Premium adaptogen enhancing physical stamina, mental alertness, and adrenal reserve.</li>
+                  <li><strong>Lycopene 10% (5000mcg):</strong> Powerful singlet oxygen quencher protecting cell membranes.</li>
+                  <li><strong>Zinc Sulfate + Selenium:</strong> Immune-enhancing trace minerals stimulating T-lymphocyte activity.</li>
+                  <li><strong>Complete B-Complex Matrix:</strong> Drives Krebs cycle energy synthesis.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="detail-card card-emerald">
+              <div class="card-heading">
+                <span class="card-icon">🎯</span> Target Clinical Indications
+              </div>
+              <div class="card-text bullet-emerald">
+                <ul>
+                  <li><strong>Chronic Fatigue Syndrome:</strong> Relieves morning lethargy and day-long exhaustion.</li>
+                  <li><strong>Post-Viral & Post-Op Convalescence:</strong> Accelerates recovery after severe infections.</li>
+                  <li><strong>General Debility & Malnutrition:</strong> Restores vital micronutrient balance.</li>
+                  <li><strong>Stress-Induced Immunity Drop:</strong> Rebuilds natural cellular defenses in working adults.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="detail-card card-amber">
+              <div class="card-heading">
+                <span class="card-icon">⭐</span> Competitive Clinical USPs
+              </div>
+              <div class="card-text bullet-amber">
+                <ul>
+                  <li><span class="tag tag-green">Real Ginseng:</span> Standardized ginsenosides for genuine adaptogenic stamina.</li>
+                  <li><span class="tag tag-amber">Superior Bioavailability:</span> Chelated minerals ensure maximum intestinal absorption.</li>
+                  <li><span class="tag">Zero Sugar:</span> Completely safe for diabetic and hypertensive patients.</li>
+                  <li>Overcomes afternoon burnout without caffeine spikes or crashes.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="product-footer">
+          <div class="dosage-box">📋 Recommended Dosage: <span class="dosage-highlight">1 Capsule Once Daily after breakfast with water</span></div>
+          <div class="usp-tagline">Recharge Cellular Vitality • Everyday Gold Standard</div>
+          <div class="nlcl-cert">NLCL Wellness Division</div>
+        </footer>
+      </section>
+
+
+      <!-- ====================================================================
+           SLIDE 5: R-DSR
+           ==================================================================== -->
+      <section class="slide" id="slide-rdsr">
+        <div class="product-header">
+          <div class="brand-title-wrap">
+            <h2 class="brand-name">R-DSR</h2>
+            <span class="brand-formulation">Rabeprazole Sodium 20mg (EC) + Domperidone 30mg (SR)</span>
+          </div>
+          <span class="brand-category-badge">Gastroenterology</span>
+          <span class="brand-pack">10 x 10 ALU-ALU</span>
+        </div>
+
+        <div class="product-body">
+          <div class="grid-3">
+            <div class="detail-card">
+              <div class="card-heading">
+                <span class="card-icon">🧪</span> Dual-Action Antireflux Matrix
+              </div>
+              <div class="card-text">
+                <ul>
+                  <li><strong>Rabeprazole Sodium (20mg EC Pellets):</strong> The fastest acting PPI. Dissociates rapidly at acidic pH (pKa ~5.0), inhibiting $H^+/K^+$ ATPase pumps in under 60 minutes.</li>
+                  <li><strong>Domperidone (10mg Immediate + 20mg Sustained Release):</strong> Peripheral dopamine $D_2$ antagonist increasing Lower Esophageal Sphincter (LES) pressure and accelerating gastric emptying.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="detail-card card-emerald">
+              <div class="card-heading">
+                <span class="card-icon">🎯</span> Target Clinical Indications
+              </div>
+              <div class="card-text bullet-emerald">
+                <ul>
+                  <li><strong>Gastroesophageal Reflux Disease (GERD):</strong> Overnight & daytime heartburn suppression.</li>
+                  <li><strong>Erosive & Refractory Esophagitis:</strong> Rapid mucosal healing within 4 weeks.</li>
+                  <li><strong>Non-Ulcer Dyspepsia (NUD):</strong> Relieves epigastric burning, bloating, and early satiety.</li>
+                  <li><strong>NSAID-Induced Gastritis:</strong> Shields gastric mucosa during chronic pain management.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="detail-card card-amber">
+              <div class="card-heading">
+                <span class="card-icon">⭐</span> Competitive Clinical USPs
+              </div>
+              <div class="card-text bullet-amber">
+                <ul>
+                  <li><span class="tag tag-green">Fastest Acid Relief:</span> Achieves significant acid control within day 1 (faster than Pantoprazole/Omeprazole).</li>
+                  <li><span class="tag tag-amber">Dual Bead Technology:</span> Immediate anti-nausea surge followed by 24-hr steady prokinetic coverage.</li>
+                  <li><span class="tag">CYP2C19 Insensitive:</span> Non-enzymatic clearance ensures consistent response across all genetic metabolizers.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="product-footer">
+          <div class="dosage-box">📋 Recommended Dosage: <span class="dosage-highlight">1 Capsule Once Daily in the morning, 30 mins before breakfast</span></div>
+          <div class="usp-tagline">Targeted Acid Clearance • Total 24-Hour Reflux Control</div>
+          <div class="nlcl-cert">NLCL Gastroenterology Core</div>
+        </footer>
+      </section>
+
+
+      <!-- ====================================================================
+           SLIDE 6: RAV-IV
+           ==================================================================== -->
+      <section class="slide" id="slide-raviv">
+        <div class="product-header">
+          <div class="brand-title-wrap">
+            <h2 class="brand-name">RAV-IV</h2>
+            <span class="brand-formulation">Rabeprazole Sodium 20mg Sterile Lyophilized Powder for Injection</span>
+          </div>
+          <span class="brand-category-badge">Critical Care GI</span>
+          <span class="brand-pack">Vial + 10ml WFI Solvent</span>
+        </div>
+
+        <div class="product-body">
+          <div class="grid-3">
+            <div class="detail-card">
+              <div class="card-heading">
+                <span class="card-icon">🧪</span> Intravenous Acid Blocker
+              </div>
+              <div class="card-text">
+                <ul>
+                  <li><strong>Rabeprazole Sodium 20mg IV:</strong> High-solubility lyophilized formulation designed for instant systemic bioavailability.</li>
+                  <li><strong>Intravenous Onset:</strong> Achieves near-complete acid pump inhibition within minutes of slow IV push or infusion.</li>
+                  <li><strong>pH Stabilization:</strong> Elevates intra-gastric pH above 6.0, stabilizing clot formation at bleeding ulcer beds.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="detail-card card-emerald">
+              <div class="card-heading">
+                <span class="card-icon">🎯</span> Target Clinical Indications
+              </div>
+              <div class="card-text bullet-emerald">
+                <ul>
+                  <li><strong>Upper Gastrointestinal Bleeding:</strong> Prevents clot lysis post-endoscopic hemostasis.</li>
+                  <li><strong>ICU Stress Ulcer Prophylaxis:</strong> Critical for mechanically ventilated and sepsis patients.</li>
+                  <li><strong>Pre- & Post-Operative Aspiration:</strong> Lowers gastric volume and increases pH before surgery.</li>
+                  <li><strong>NPO Patients with Severe GERD:</strong> Continuous acid suppression when oral route is compromised.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="detail-card card-amber">
+              <div class="card-heading">
+                <span class="card-icon">⭐</span> Competitive Clinical USPs
+              </div>
+              <div class="card-text bullet-amber">
+                <ul>
+                  <li><span class="tag tag-green">Rapid Solubilization:</span> Reconstitutes crystal-clear in under 15 seconds with WFI.</li>
+                  <li><span class="tag tag-amber">Minimal Drug Interactions:</span> Safe in ICU polypharmacy regimens (cardiac & renal safety).</li>
+                  <li><span class="tag">Superior Potency:</span> 20mg Rabeprazole IV delivers equal or greater acid suppression than 40mg Pantoprazole IV.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="product-footer">
+          <div class="dosage-box">📋 Recommended Dosage: <span class="dosage-highlight">20mg IV slowly over 5 minutes or infusion every 12 to 24 hours</span></div>
+          <div class="usp-tagline">Immediate Intravenous Clot Stabilization • Critical Care GI Defense</div>
+          <div class="nlcl-cert">NLCL Hospital Care Division</div>
+        </footer>
+      </section>
+
+
+      <!-- ====================================================================
+           SLIDE 7: ENDOVAM-Q-10
+           ==================================================================== -->
+      <section class="slide" id="slide-endovam">
+        <div class="product-header">
+          <div class="brand-title-wrap">
+            <h2 class="brand-name">ENDOVAM-Q-10</h2>
+            <span class="brand-formulation">Coenzyme Q10 + L-Carnitine + Astaxanthin + Lycopene + Zinc & Folic Acid</span>
+          </div>
+          <span class="brand-category-badge">Reproductive Wellness</span>
+          <span class="brand-pack">10 x 10 Softgel Blister</span>
+        </div>
+
+        <div class="product-body">
+          <div class="grid-3">
+            <div class="detail-card">
+              <div class="card-heading">
+                <span class="card-icon">🧪</span> Mitochondrial Synergy Matrix
+              </div>
+              <div class="card-text">
+                <ul>
+                  <li><strong>Coenzyme Q10 (100mg/300mg):</strong> Fundamental cofactor in mitochondrial Electron Transport Chain (Complex I-III), boosting ATP production in germ cells.</li>
+                  <li><strong>L-Carnitine (500mg):</strong> Transports long-chain fatty acids into mitochondria for beta-oxidation energy.</li>
+                  <li><strong>Astaxanthin + Lycopene:</strong> Synergistic carotenoid shields preventing lipid peroxidation of sperm & oocyte membranes.</li>
+                  <li><strong>Zinc + Folic Acid:</strong> Crucial for DNA methylation and chromatin compaction.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="detail-card card-emerald">
+              <div class="card-heading">
+                <span class="card-icon">🎯</span> Target Clinical Indications
+              </div>
+              <div class="card-text bullet-emerald">
+                <ul>
+                  <li><strong>Male Infertility (OAT Syndrome):</strong> Improves sperm count, forward motility, and normal morphology.</li>
+                  <li><strong>Female Subfertility / PCOS:</strong> Rejuvenates oocyte quality and mitochondrial competence in mature eggs.</li>
+                  <li><strong>IVF / IUI Cycle Preparation:</strong> Enhances embryo cleavage rates and implantation success.</li>
+                  <li><strong>Unexplained Infertility:</strong> Lowers reactive oxygen species (ROS) in seminal and follicular fluid.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="detail-card card-amber">
+              <div class="card-heading">
+                <span class="card-icon">⭐</span> Competitive Clinical USPs
+              </div>
+              <div class="card-text bullet-amber">
+                <ul>
+                  <li><span class="tag tag-green">Clinical Evidence:</span> Documented 35%+ increase in sperm motility and oocyte maturation.</li>
+                  <li><span class="tag tag-amber">Lipid Softgel Matrix:</span> Ensures 3.5x higher absorption of lipophilic CoQ10.</li>
+                  <li><span class="tag">Dual Fertility Support:</span> Prescribed with equal confidence to both male and female partners.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="product-footer">
+          <div class="dosage-box">📋 Recommended Dosage: <span class="dosage-highlight">1 Softgel Capsule Twice Daily with meals for 90 days</span></div>
+          <div class="usp-tagline">Powering Cellular Conception • Mitochondrial Energy for Life</div>
+          <div class="nlcl-cert">NLCL Fertility & IVF Care</div>
+        </footer>
+      </section>
+
+
+      <!-- ====================================================================
+           SLIDE 8: PROCALD3
+           ==================================================================== -->
+      <section class="slide" id="slide-procald3">
+        <div class="product-header">
+          <div class="brand-title-wrap">
+            <h2 class="brand-name">PROCALD3</h2>
+            <span class="brand-formulation">Calcium Citrate Malate + Calcitriol (Active Vit D3) + Vitamin K2-7 + Zinc & Magnesium</span>
+          </div>
+          <span class="brand-category-badge">Bone Mineral Matrix</span>
+          <span class="brand-pack">10 x 10 ALU-ALU</span>
+        </div>
+
+        <div class="product-body">
+          <div class="grid-3">
+            <div class="detail-card">
+              <div class="card-heading">
+                <span class="card-icon">🧪</span> Quadruple Bone Synergy
+              </div>
+              <div class="card-text">
+                <ul>
+                  <li><strong>Calcium Citrate Malate (CCM):</strong> Highly soluble calcium salt with superior fractional absorption (42%), independent of gastric acid levels.</li>
+                  <li><strong>Calcitriol (Active Vitamin D3 0.25mcg):</strong> Directly stimulates active intestinal calcium transport without relying on renal hydroxylation.</li>
+                  <li><strong>Vitamin K2-7 (Menaquinone-7):</strong> Carboxylates Osteocalcin, locking calcium into bone hydroxyapatite while preventing vascular calcification.</li>
+                  <li><strong>Magnesium & Zinc:</strong> Essential cofactors for osteoblastic bone formation.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="detail-card card-emerald">
+              <div class="card-heading">
+                <span class="card-icon">🎯</span> Target Clinical Indications
+              </div>
+              <div class="card-text bullet-emerald">
+                <ul>
+                  <li><strong>Postmenopausal & Senile Osteoporosis:</strong> Increases Bone Mineral Density (BMD) and reduces fracture risk.</li>
+                  <li><strong>Pregnancy & Lactation:</strong> Supports fetal skeletal growth without causing maternal constipation or bloating.</li>
+                  <li><strong>Orthopedic Fracture Healing:</strong> Accelerates callus formation and structural remodeling.</li>
+                  <li><strong>Osteopenia in Chronic Steroid Users:</strong> Prevents secondary bone demineralization.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="detail-card card-amber">
+              <div class="card-heading">
+                <span class="card-icon">⭐</span> Competitive Clinical USPs
+              </div>
+              <div class="card-text bullet-amber">
+                <ul>
+                  <li><span class="tag tag-green">Zero Kidney Stone Risk:</span> CCM reduces urinary oxalate excretion, lowering stone potential.</li>
+                  <li><span class="tag tag-amber">Non-Constipating:</span> Highest gastrointestinal tolerability among all calcium salts.</li>
+                  <li><span class="tag">Cardio-Protected Bone Building:</span> Vitamin K2-7 ensures calcium goes into bones, not into coronary arteries.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="product-footer">
+          <div class="dosage-box">📋 Recommended Dosage: <span class="dosage-highlight">1 Tablet Once or Twice Daily after meals with water</span></div>
+          <div class="usp-tagline">Architect of Strong Bones • Safe Calcium Without Constipation</div>
+          <div class="nlcl-cert">NLCL Ortho & Gynec Division</div>
+        </footer>
+      </section>
+
+
+      <!-- ====================================================================
+           SLIDE 9: PRO-Q1
+           ==================================================================== -->
+      <section class="slide" id="slide-proq1">
+        <div class="product-header">
+          <div class="brand-title-wrap">
+            <h2 class="brand-name">PRO-Q1</h2>
+            <span class="brand-formulation">Ubiquinol / Co-Q10 + Omega-3 Fatty Acids (EPA & DHA) + Vitamin E</span>
+          </div>
+          <span class="brand-category-badge">Cardiovascular Shield</span>
+          <span class="brand-pack">10 x 10 Softgel Blister</span>
+        </div>
+
+        <div class="product-body">
+          <div class="grid-3">
+            <div class="detail-card">
+              <div class="card-heading">
+                <span class="card-icon">🧪</span> Cardio-Metabolic Synergy
+              </div>
+              <div class="card-text">
+                <ul>
+                  <li><strong>Coenzyme Q10 (Ubiquinone 100mg):</strong> High-density myocardial energy cofactor, sustaining high ATP demand in cardiac myocytes.</li>
+                  <li><strong>Omega-3 Marine Triglycerides (EPA 180mg + DHA 120mg):</strong> Lowers serum triglycerides, stabilizes vascular endothelium, and exerts anti-arrhythmic effects.</li>
+                  <li><strong>Mixed Tocopherols (Vitamin E):</strong> Prevents lipid peroxidation of LDL particles, preventing atherosclerotic plaque formation.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="detail-card card-emerald">
+              <div class="card-heading">
+                <span class="card-icon">🎯</span> Target Clinical Indications
+              </div>
+              <div class="card-text bullet-emerald">
+                <ul>
+                  <li><strong>Statin-Induced Myopathy (SAMS):</strong> Replenishes depleted intramuscular CoQ10, relieving muscle cramps.</li>
+                  <li><strong>Congestive Heart Failure (CHF):</strong> Improves left ventricular ejection fraction and exercise tolerance.</li>
+                  <li><strong>Hypertension & Endothelial Dysfunction:</strong> Enhances nitric oxide-mediated vasodilation.</li>
+                  <li><strong>Dyslipidemia & Atherosclerosis Prophylaxis:</strong> Modulates lipid profile and vascular inflammation.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="detail-card card-amber">
+              <div class="card-heading">
+                <span class="card-icon">⭐</span> Competitive Clinical USPs
+              </div>
+              <div class="card-text bullet-amber">
+                <ul>
+                  <li><span class="tag tag-green">Statin Companion:</span> Essential co-prescription for every patient on Atorvastatin or Rosuvastatin.</li>
+                  <li><span class="tag tag-amber">Molecularly Distilled Omega-3:</span> Ultra-purified marine oil free from heavy metals or fishy burps.</li>
+                  <li><span class="tag">Proven Myocardial Benefit:</span> Documented improvement in NYHA functional heart failure class.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="product-footer">
+          <div class="dosage-box">📋 Recommended Dosage: <span class="dosage-highlight">1 Softgel Capsule Once or Twice Daily after meals</span></div>
+          <div class="usp-tagline">Myocardial Fuel • Uncompromised Endothelial Protection</div>
+          <div class="nlcl-cert">NLCL Cardiology Core</div>
+        </footer>
+      </section>
+
+
+      <!-- ====================================================================
+           SLIDE 10: LICO
+           ==================================================================== -->
+      <section class="slide" id="slide-lico">
+        <div class="product-header">
+          <div class="brand-title-wrap">
+            <h2 class="brand-name">LICO</h2>
+            <span class="brand-formulation">Lycopene 10% + Lutein + Betacarotene + Multivitamins + Zinc & Selenium</span>
+          </div>
+          <span class="brand-category-badge">Antioxidant Defense</span>
+          <span class="brand-pack">Syrup (200ml) & Capsules</span>
+        </div>
+
+        <div class="product-body">
+          <div class="grid-3">
+            <div class="detail-card">
+              <div class="card-heading">
+                <span class="card-icon">🧪</span> Comprehensive Radical Scavenger
+              </div>
+              <div class="card-text">
+                <ul>
+                  <li><strong>Natural Lycopene (10% Pure Extract):</strong> 10x more potent than Vitamin E in neutralizing free radicals and preventing lipid oxidation.</li>
+                  <li><strong>Lutein (6mg):</strong> Selectively concentrates in the macular retina, protecting photoreceptors from blue light and oxidative damage.</li>
+                  <li><strong>Selenium + Zinc Sulfate:</strong> Crucial cofactors for Glutathione Peroxidase and Superoxide Dismutase (SOD).</li>
+                  <li><strong>B-Complex Vitamins:</strong> Catalyzes cellular metabolic repair.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="detail-card card-emerald">
+              <div class="card-heading">
+                <span class="card-icon">🎯</span> Target Clinical Indications
+              </div>
+              <div class="card-text bullet-emerald">
+                <ul>
+                  <li><strong>Oxidative Stress in Diabetes & Hypertension:</strong> Mitigates microvascular and macrovascular complications.</li>
+                  <li><strong>Ocular Health & Macular Degeneration:</strong> Preserves retinal visual acuity in aging patients.</li>
+                  <li><strong>Dermatological Photo-Damage:</strong> Protects skin fibroblasts against UV radiation.</li>
+                  <li><strong>General Convalescence & Senior Wellness:</strong> Rejuvenates appetite, vitality, and immunity.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="detail-card card-amber">
+              <div class="card-heading">
+                <span class="card-icon">⭐</span> Competitive Clinical USPs
+              </div>
+              <div class="card-text bullet-amber">
+                <ul>
+                  <li><span class="tag tag-green">Full Spectrum Carotenoids:</span> Combines Lycopene, Lutein, and Betacarotene in clinically active ratios.</li>
+                  <li><span class="tag tag-amber">Delicious Formulation:</span> Syrup features a pleasant mango-orange flavor with high pediatric & geriatric compliance.</li>
+                  <li><span class="tag">Total Cellular Defense:</span> Neutralizes oxidative damage at the cellular nucleus.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="product-footer">
+          <div class="dosage-box">📋 Recommended Dosage: <span class="dosage-highlight">Syrup: 10ml BID after meals | Capsule: 1 Cap Daily</span></div>
+          <div class="usp-tagline">The Ultimate Antioxidant Shield • Reclaiming Peak Cellular Health</div>
+          <div class="nlcl-cert">NLCL Wellness & Nutrition</div>
+        </footer>
+      </section>
+
+
+      <!-- ====================================================================
+           SLIDE 11: Filo-cap
+           ==================================================================== -->
+      <section class="slide" id="slide-filocap">
+        <div class="product-header">
+          <div class="brand-title-wrap">
+            <h2 class="brand-name">Filo-cap</h2>
+            <span class="brand-formulation">Ferrous Ascorbate (Eq. to Elemental Iron 100mg) + Folic Acid 1.5mg + Zinc Sulfate 22.5mg</span>
+          </div>
+          <span class="brand-category-badge">Advanced Hematinic</span>
+          <span class="brand-pack">10 x 10 ALU-ALU Strip</span>
+        </div>
+
+        <div class="product-body">
+          <div class="grid-3">
+            <div class="detail-card">
+              <div class="card-heading">
+                <span class="card-icon">🧪</span> Ascorbate-Bonded Iron Complex
+              </div>
+              <div class="card-text">
+                <ul>
+                  <li><strong>Ferrous Ascorbate (100mg Elemental Iron):</strong> The physiological $Fe^{2+}$ state chelated with ascorbic acid, maintaining iron in the soluble ferrous form throughout the duodenum.</li>
+                  <li><strong>Folic Acid (1.5mg):</strong> Vital for normoblastic hematopoiesis and neural tube defect prevention in pregnancy.</li>
+                  <li><strong>Zinc Sulfate Monohydrate (22.5mg):</strong> Supports cellular division, protein synthesis, and fetal immune development.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="detail-card card-emerald">
+              <div class="card-heading">
+                <span class="card-icon">🎯</span> Target Clinical Indications
+              </div>
+              <div class="card-text bullet-emerald">
+                <ul>
+                  <li><strong>Iron Deficiency Anemia (IDA):</strong> Delivers rapid hemoglobin rise (1.5 - 2.0 g/dL in 3 to 4 weeks).</li>
+                  <li><strong>Pregnancy & Lactation Anemia:</strong> Safeguards maternal red cell mass and fetal birth weight.</li>
+                  <li><strong>Post-Surgical & Heavy Menstrual Blood Loss:</strong> Quickly replenishes depleted ferritin stores.</li>
+                  <li><strong>Anemia of Chronic Disease:</strong> Ensures consistent erythropoietic response.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="detail-card card-amber">
+              <div class="card-heading">
+                <span class="card-icon">⭐</span> Competitive Clinical USPs
+              </div>
+              <div class="card-text bullet-amber">
+                <ul>
+                  <li><span class="tag tag-green">Zero Constipation:</span> Up to 3x higher absorption with minimal free unabsorbed iron in the colon.</li>
+                  <li><span class="tag tag-amber">No Gastric Irritation:</span> Does not cause nausea, heartburn, or stomach cramps like ferrous sulfate.</li>
+                  <li><span class="tag">Food Independent:</span> Can be taken without strict empty-stomach timing constraints.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="product-footer">
+          <div class="dosage-box">📋 Recommended Dosage: <span class="dosage-highlight">1 Capsule Once Daily after main meal</span></div>
+          <div class="usp-tagline">Rapid Hemoglobin Rise • Zero Constipation • Maternal Confidence</div>
+          <div class="nlcl-cert">NLCL Hematinic Care</div>
+        </footer>
+      </section>
+
+
+      <!-- ====================================================================
+           SLIDE 12: Filo-syr
+           ==================================================================== -->
+      <section class="slide" id="slide-filosyr">
+        <div class="product-header">
+          <div class="brand-title-wrap">
+            <h2 class="brand-name">Filo-syr</h2>
+            <span class="brand-formulation">Ferrous Ascorbate (Eq. to Elemental Iron 30mg) + Folic Acid 500mcg / 5ml Syrup</span>
+          </div>
+          <span class="brand-category-badge">Liquid Hematinic</span>
+          <span class="brand-pack">200ml Pet Bottle in Carton</span>
+        </div>
+
+        <div class="product-body">
+          <div class="grid-3">
+            <div class="detail-card">
+              <div class="card-heading">
+                <span class="card-icon">🧪</span> Delicious Liquid Iron Matrix
+              </div>
+              <div class="card-text">
+                <ul>
+                  <li><strong>Ferrous Ascorbate Suspension:</strong> High-solubility liquid form engineered for rapid absorption across the intestinal brush border.</li>
+                  <li><strong>Folic Acid (500mcg per 5ml):</strong> Synergy for rapid red blood cell maturation and pediatric growth spurt support.</li>
+                  <li><strong>Enriched Caramel-Orange Flavor Base:</strong> Proprietary formulation completely masking the natural metallic iron aftertaste.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="detail-card card-emerald">
+              <div class="card-heading">
+                <span class="card-icon">🎯</span> Target Clinical Indications
+              </div>
+              <div class="card-text bullet-emerald">
+                <ul>
+                  <li><strong>Pediatric Nutritional Anemia:</strong> Reverses fatigue, poor concentration, and recurrent infections in children.</li>
+                  <li><strong>Pregnancy with Difficulty Swallowing Tablets:</strong> Pleasant liquid alternative for hyperemesis gravidarum patients.</li>
+                  <li><strong>Geriatric Iron Deficiency:</strong> Easy-to-dose formulation for elderly patients with dysphagia.</li>
+                  <li><strong>Adolescent Anemia:</strong> Accelerates hemoglobin recovery during rapid growth phases.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="detail-card card-amber">
+              <div class="card-heading">
+                <span class="card-icon">⭐</span> Competitive Clinical USPs
+              </div>
+              <div class="card-text bullet-amber">
+                <ul>
+                  <li><span class="tag tag-green">Zero Teeth Staining:</span> Non-reactive ascorbate complex prevents dark dental staining.</li>
+                  <li><span class="tag tag-amber">No Metallic Belching:</span> Patients love the smooth taste with zero nausea or vomiting.</li>
+                  <li><span class="tag">Maximum Compliance:</span> High pediatric acceptability ensures mothers complete the full 60-day course.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="product-footer">
+          <div class="dosage-box">📋 Recommended Dosage: <span class="dosage-highlight">Children: 2.5ml - 5ml OD | Adults: 5ml - 10ml BID after meals</span></div>
+          <div class="usp-tagline">Great Taste • Zero Teeth Staining • Gentle Liquid Hematinic</div>
+          <div class="nlcl-cert">NLCL Pediatric & Family Health</div>
+        </footer>
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- ========================================================================
+       PRESENTATION CONTROLLER JAVASCRIPT
+       ======================================================================== -->
+  <script>
+    class VisualAidController {
+      constructor() {
+        this.slides = Array.from(document.querySelectorAll('.slide'));
+        this.navButtons = Array.from(document.querySelectorAll('.nav-tab-btn'));
+        this.totalSlides = this.slides.length;
+        this.currentIndex = 0;
+
+        this.init();
+      }
+
+      init() {
+        this.bindEvents();
+        this.updateSlide(0);
+      }
+
+      bindEvents() {
+        // Keyboard controls
+        window.addEventListener('keydown', (e) => {
+          switch(e.key) {
+            case 'ArrowRight':
+            case 'ArrowDown':
+            case ' ':
+            case 'PageDown':
+              this.next();
+              break;
+            case 'ArrowLeft':
+            case 'ArrowUp':
+            case 'PageUp':
+              this.prev();
+              break;
+            case 'Home':
+              this.jumpTo(0);
+              break;
+            case 'End':
+              this.jumpTo(this.totalSlides - 1);
+              break;
+          }
+        });
+
+        // Touch swipe support for tablets/phones
+        let startX = 0;
+        let startY = 0;
+        window.addEventListener('touchstart', (e) => {
+          startX = e.touches[0].clientX;
+          startY = e.touches[0].clientY;
+        }, { passive: true });
+
+        window.addEventListener('touchend', (e) => {
+          const diffX = e.changedTouches[0].clientX - startX;
+          const diffY = e.changedTouches[0].clientY - startY;
+
+          if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40) {
+            if (diffX < 0) this.next();
+            else this.prev();
+          }
+        }, { passive: true });
+      }
+
+      updateSlide(newIndex) {
+        if (newIndex < 0 || newIndex >= this.totalSlides) return;
+
+        // Hide current
+        this.slides[this.currentIndex].classList.remove('active');
+        if (this.navButtons[this.currentIndex]) {
+          this.navButtons[this.currentIndex].classList.remove('active');
+        }
+
+        // Activate new
+        this.currentIndex = newIndex;
+        this.slides[this.currentIndex].classList.add('active');
+        if (this.navButtons[this.currentIndex]) {
+          this.navButtons[this.currentIndex].classList.add('active');
+          this.navButtons[this.currentIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
+      }
+
+      next() {
+        if (this.currentIndex < this.totalSlides - 1) {
+          this.updateSlide(this.currentIndex + 1);
+        }
+      }
+
+      prev() {
+        if (this.currentIndex > 0) {
+          this.updateSlide(this.currentIndex - 1);
+        }
+      }
+
+      jumpTo(idx) {
+        this.updateSlide(idx);
+      }
+    }
+
+    // Full Screen Toggle
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+    }
+
+    // Initialize Deck
+    const Deck = new VisualAidController();
+  </script>
+</body>
+</html>
