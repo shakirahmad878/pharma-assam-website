@@ -1,0 +1,1508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>RepPulse Pharma SFA — Field Force Operations Masterclass</title>
+  <style>
+    /* ==========================================================================
+       RepPulse Pharma SFA Presentation Theme
+       Color Palette: Deep Navy Slate, Crisp Medical Teal, Electric Cyan, Emerald
+       ========================================================================== */
+    :root {
+      --bg-dark: #0a0f1d;
+      --bg-surface: #111827;
+      --bg-card: rgba(17, 24, 39, 0.75);
+      --bg-card-border: rgba(56, 189, 248, 0.2);
+      --primary: #0284c7;
+      --accent-cyan: #38bdf8;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-family);
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Presentation Deck Structure */
+    .deck-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+    }
+
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: clamp(16px, 3vh, 36px) clamp(20px, 4vw, 54px);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(20px) scale(0.99);
+      transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.4s;
+      background: radial-gradient(circle at 80% 20%, rgba(14, 165, 233, 0.08) 0%, transparent 60%),
+                  radial-gradient(circle at 10% 80%, rgba(16, 185, 129, 0.06) 0%, transparent 50%),
+                  var(--bg-dark);
+      overflow: hidden;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0) scale(1);
+      z-index: 10;
+    }
+
+    /* Slide Header */
+    .slide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: clamp(8px, 1.5vh, 16px);
+      flex-shrink: 0;
+    }
+
+    .brand-tag {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-badge {
+      background: linear-gradient(135deg, #0284c7, #10b981);
+      color: #ffffff;
+      font-weight: 800;
+      font-size: clamp(0.75rem, 1.2vw, 0.95rem);
+      padding: 4px 10px;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+    }
+
+    .brand-sub {
+      font-size: clamp(0.75rem, 1.1vw, 0.9rem);
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+    }
+
+    .slide-counter {
+      font-family: monospace;
+      font-size: clamp(0.8rem, 1.2vw, 1rem);
+      color: var(--accent-cyan);
+      background: rgba(56, 189, 248, 0.1);
+      padding: 4px 12px;
+      border-radius: 20px;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+
+    /* Slide Content Core */
+    .slide-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: clamp(10px, 2vh, 24px) 0;
+      overflow: hidden;
+    }
+
+    .slide-title-block {
+      margin-bottom: clamp(12px, 2vh, 24px);
+    }
+
+    .slide-category {
+      display: inline-block;
+      text-transform: uppercase;
+      font-size: clamp(0.7rem, 1vw, 0.85rem);
+      font-weight: 700;
+      color: var(--accent-emerald);
+      letter-spacing: 1.5px;
+      margin-bottom: 4px;
+    }
+
+    .slide-title {
+      font-size: clamp(1.4rem, 2.8vw, 2.4rem);
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.15;
+      letter-spacing: -0.5px;
+    }
+
+    .slide-subtitle {
+      font-size: clamp(0.85rem, 1.3vw, 1.15rem);
+      color: var(--text-muted);
+      margin-top: 4px;
+      line-height: 1.35;
+    }
+
+    /* Grid Layouts */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: clamp(12px, 2vw, 24px);
+      align-items: stretch;
+      height: 100%;
+      max-height: calc(100vh - 200px);
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: clamp(10px, 1.5vw, 20px);
+      align-items: stretch;
+      height: 100%;
+      max-height: calc(100vh - 200px);
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: clamp(8px, 1.2vw, 16px);
+      align-items: stretch;
+      height: 100%;
+      max-height: calc(100vh - 200px);
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 12px;
+      padding: clamp(12px, 1.8vh, 20px) clamp(14px, 1.8vw, 22px);
+      backdrop-filter: blur(12px);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent-cyan), transparent);
+    }
+
+    .card-emerald::before {
+      background: linear-gradient(90deg, var(--accent-emerald), transparent);
+    }
+
+    .card-amber::before {
+      background: linear-gradient(90deg, var(--accent-amber), transparent);
+    }
+
+    .card-rose::before {
+      background: linear-gradient(90deg, var(--accent-rose), transparent);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: clamp(6px, 1.2vh, 12px);
+    }
+
+    .step-number {
+      width: clamp(24px, 2.5vw, 32px);
+      height: clamp(24px, 2.5vw, 32px);
+      border-radius: 50%;
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid var(--accent-cyan);
+      color: var(--accent-cyan);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: clamp(0.75rem, 1vw, 0.95rem);
+      flex-shrink: 0;
+    }
+
+    .card-title {
+      font-size: clamp(0.95rem, 1.3vw, 1.2rem);
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .card-content {
+      font-size: clamp(0.8rem, 1.1vw, 0.95rem);
+      color: var(--text-muted);
+      line-height: 1.45;
+      flex: 1;
+    }
+
+    .card-content ul {
+      list-style-type: none;
+      padding-left: 0;
+      margin-top: 6px;
+    }
+
+    .card-content li {
+      margin-bottom: 6px;
+      position: relative;
+      padding-left: 18px;
+    }
+
+    .card-content li::before {
+      content: '▸';
+      position: absolute;
+      left: 0;
+      color: var(--accent-cyan);
+      font-weight: bold;
+    }
+
+    .highlight-pill {
+      display: inline-block;
+      background: rgba(56, 189, 248, 0.12);
+      color: var(--accent-cyan);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 0.85em;
+      border: 1px solid rgba(56, 189, 248, 0.25);
+    }
+
+    .pill-green {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    .pill-amber {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    .pill-rose {
+      background: rgba(244, 63, 94, 0.15);
+      color: #fb7185;
+      border-color: rgba(244, 63, 94, 0.3);
+    }
+
+    /* Screen Path Visualizer */
+    .app-path {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px dashed rgba(255, 255, 255, 0.2);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: clamp(0.75rem, 1vw, 0.9rem);
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    /* Slide Footer Controls */
+    .slide-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: clamp(8px, 1.5vh, 16px);
+      flex-shrink: 0;
+    }
+
+    .controls-hint {
+      font-size: clamp(0.7rem, 0.9vw, 0.82rem);
+      color: var(--text-muted);
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-nav {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+      padding: clamp(6px, 1vh, 8px) clamp(12px, 1.5vw, 18px);
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: clamp(0.75rem, 1vw, 0.85rem);
+      transition: all 0.2s ease;
+    }
+
+    .btn-nav:hover {
+      background: var(--primary);
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 12px rgba(2, 132, 199, 0.4);
+    }
+
+    .progress-bar-container {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100vw;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      z-index: 100;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #0284c7, #38bdf8, #10b981);
+      width: 10%;
+      transition: width 0.3s ease;
+    }
+
+    /* Quick Jump Drawer */
+    .overview-drawer {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 15, 29, 0.95);
+      backdrop-filter: blur(16px);
+      z-index: 200;
+      display: none;
+      flex-direction: column;
+      padding: 40px;
+    }
+
+    .overview-drawer.open {
+      display: flex;
+    }
+
+    .overview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      overflow-y: auto;
+      max-height: calc(100vh - 120px);
+    }
+
+    .overview-item {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      padding: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .overview-item:hover {
+      border-color: var(--accent-cyan);
+      transform: translateY(-2px);
+      background: rgba(56, 189, 248, 0.1);
+    }
+
+    .overview-number {
+      font-size: 0.8rem;
+      color: var(--accent-cyan);
+      font-weight: 700;
+    }
+
+    .overview-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #ffffff;
+      margin-top: 4px;
+    }
+
+    /* Title Slide Specifics */
+    .hero-layout {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      height: 100%;
+      position: relative;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 6px 16px;
+      border-radius: 30px;
+      color: var(--accent-cyan);
+      font-size: clamp(0.75rem, 1.2vw, 0.95rem);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+    }
+
+    .hero-title {
+      font-size: clamp(2.2rem, 5vw, 4.2rem);
+      font-weight: 900;
+      line-height: 1.08;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, #ffffff 30%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 14px;
+      max-width: 900px;
+    }
+
+    .hero-gradient {
+      background: linear-gradient(135deg, #38bdf8 0%, #10b981 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-desc {
+      font-size: clamp(1rem, 1.6vw, 1.35rem);
+      color: var(--text-muted);
+      max-width: 720px;
+      line-height: 1.5;
+      margin-bottom: 28px;
+    }
+
+    .meta-box {
+      display: flex;
+      gap: 20px;
+      background: rgba(17, 24, 39, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 12px 24px;
+      border-radius: 12px;
+    }
+
+    .meta-item {
+      text-align: left;
+    }
+
+    .meta-label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .meta-value {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    /* Comparison / Table-Like Cards */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      font-size: clamp(0.75rem, 1.05vw, 0.9rem);
+    }
+
+    .data-table th {
+      text-align: left;
+      padding: 8px 10px;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--accent-cyan);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .data-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="deck-container">
+
+    <!-- ========================================================================
+         SLIDE 1: TITLE SLIDE
+         ======================================================================== -->
+    <section class="slide active" id="slide-1">
+      <header class="slide-header">
+        <div class="brand-tag">
+          <span class="logo-badge">RepPulse SFA</span>
+          <span class="brand-sub">Pappu Da Company / NextLife Care</span>
+        </div>
+        <div class="slide-counter">01 / 10</div>
+      </header>
+
+      <div class="slide-body">
+        <div class="hero-layout">
+          <div class="hero-badge">Medical Representative Field Guide</div>
+          <h1 class="hero-title">Mastering <span class="hero-gradient">RepPulse Pharma</span> Mobile SFA</h1>
+          <p class="hero-desc">Your comprehensive visual training manual: from morning 10:30 AM punch-in and tour plans to doctor master detailing, chemist order booking, and instant TA/DA expense claims.</p>
+          
+          <div class="meta-box">
+            <div class="meta-item">
+              <div class="meta-label">Primary Territories</div>
+              <div class="meta-value">Silchar • Karimganj • Dharmanagar</div>
+            </div>
+            <div class="meta-item" style="border-left: 1px solid rgba(255,255,255,0.1); padding-left: 20px;">
+              <div class="meta-label">App Release</div>
+              <div class="meta-value">v1.7.4 (Live Cloud Supabase)</div>
+            </div>
+            <div class="meta-item" style="border-left: 1px solid rgba(255,255,255,0.1); padding-left: 20px;">
+              <div class="meta-label">Security Protocol</div>
+              <div class="meta-value">Division Isolation & GPS Geofence</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="slide-footer">
+        <span class="controls-hint">Use <strong>Left / Right Arrow</strong>, <strong>Space</strong>, or on-screen buttons to navigate • Press <strong>O</strong> for overview</span>
+        <div class="nav-buttons">
+          <button class="btn-nav" onclick="Deck.showOverview()">Slides</button>
+          <button class="btn-nav" onclick="Deck.next()">Next ➔</button>
+        </div>
+      </footer>
+    </section>
+
+
+    <!-- ========================================================================
+         SLIDE 2: THE 4 DAILY MILESTONES
+         ======================================================================== -->
+    <section class="slide" id="slide-2">
+      <header class="slide-header">
+        <div class="brand-tag">
+          <span class="logo-badge">Workflow</span>
+          <span class="brand-sub">Daily Operations Rhythm</span>
+        </div>
+        <div class="slide-counter">02 / 10</div>
+      </header>
+
+      <div class="slide-body">
+        <div class="slide-title-block">
+          <span class="slide-category">Daily Discipline</span>
+          <h2 class="slide-title">The 4 Field Milestones Every Single Day</h2>
+          <p class="slide-subtitle">Your success as a Medical Representative follows this structured timeline every working day.</p>
+        </div>
+
+        <div class="grid-4">
+          <div class="card card-emerald">
+            <div class="card-header">
+              <span class="step-number">1</span>
+              <h3 class="card-title">09:00 - 10:30 AM</h3>
+            </div>
+            <div class="card-content">
+              <span class="highlight-pill pill-green">Morning Attendance</span>
+              <ul>
+                <li>Punch in before <strong>10:30 AM Cutoff</strong>.</li>
+                <li>Take clean live GPS selfie.</li>
+                <li>Select day's beat (HQ, Ex-station, Outstation).</li>
+                <li>Verify sync status with RSM dashboard.</li>
+              </ul>
+              <div class="app-path">📱 Home ➔ Punch In</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="step-number">2</span>
+              <h3 class="card-title">10:30 - 02:00 PM</h3>
+            </div>
+            <div class="card-content">
+              <span class="highlight-pill">Morning Chamber Calls</span>
+              <ul>
+                <li>Check MTP Calendar for target route.</li>
+                <li>Visit Hospital OPDs and clinics.</li>
+                <li>Auto GPS check-in (100m geofence).</li>
+                <li>Digital visual aid detailing & samples.</li>
+              </ul>
+              <div class="app-path">📱 Visits ➔ Select Doctor</div>
+            </div>
+          </div>
+
+          <div class="card card-amber">
+            <div class="card-header">
+              <span class="step-number">3</span>
+              <h3 class="card-title">02:00 - 05:30 PM</h3>
+            </div>
+            <div class="card-content">
+              <span class="highlight-pill pill-amber">Retail Chemist Booking</span>
+              <ul>
+                <li>Check secondary stock at stockists.</li>
+                <li>Book chemist orders with PTR/PTS rates.</li>
+                <li>Capture doctor prescription feedback.</li>
+                <li>Confirm delivery route schedule.</li>
+              </ul>
+              <div class="app-path">📱 Orders ➔ Book Order</div>
+            </div>
+          </div>
+
+          <div class="card card-rose">
+            <div class="card-header">
+              <span class="step-number">4</span>
+              <h3 class="card-title">06:00 - 07:30 PM</h3>
+            </div>
+            <div class="card-content">
+              <span class="highlight-pill pill-rose">Evening DCR & TA/DA</span>
+              <ul>
+                <li>Submit daily travel expense claim.</li>
+                <li>Auto-calc Standard Fare Chart (SFC).</li>
+                <li>Review Daily Call Report (DCR) stats.</li>
+                <li>Punch Out to close operational day.</li>
+              </ul>
+              <div class="app-path">📱 More ➔ Expenses / Punch Out</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="slide-footer">
+        <span class="controls-hint">Every action syncs immediately to Bodrud RSM's regional console.</span>
+        <div class="nav-buttons">
+          <button class="btn-nav" onclick="Deck.prev()">⬅ Prev</button>
+          <button class="btn-nav" onclick="Deck.next()">Next ➔</button>
+        </div>
+      </footer>
+    </section>
+
+
+    <!-- ========================================================================
+         SLIDE 3: LOGIN & ACCOUNT SETUP
+         ======================================================================== -->
+    <section class="slide" id="slide-3">
+      <header class="slide-header">
+        <div class="brand-tag">
+          <span class="logo-badge">Module 1</span>
+          <span class="brand-sub">Authentication & Credentials</span>
+        </div>
+        <div class="slide-counter">03 / 10</div>
+      </header>
+
+      <div class="slide-body">
+        <div class="slide-title-block">
+          <span class="slide-category">Getting Started</span>
+          <h2 class="slide-title">Logging In & Verifying Your Territory Profile</h2>
+          <p class="slide-subtitle">RepPulse associates your credentials with your assigned Headquarter and doctor list.</p>
+        </div>
+
+        <div class="grid-3">
+          <div class="card">
+            <div class="card-header">
+              <span class="step-number">A</span>
+              <h3 class="card-title">Login Credentials</h3>
+            </div>
+            <div class="card-content">
+              <p>Launch <strong>RepPulse</strong> and enter your registered credentials:</p>
+              <ul>
+                <li><strong>Mobile Number:</strong> Your registered 10-digit number.</li>
+                <li><strong>Security PIN:</strong> Default is <span class="highlight-pill">1234</span>.</li>
+                <li><strong>Employee Code:</strong> Automatically detected (e.g. <code>NLCL-0005</code> for Satyam, <code>NLCL-0004</code> for Pranjal).</li>
+              </ul>
+              <div class="app-path">📱 Login Screen</div>
+            </div>
+          </div>
+
+          <div class="card card-emerald">
+            <div class="card-header">
+              <span class="step-number">B</span>
+              <h3 class="card-title">Location Permissions</h3>
+            </div>
+            <div class="card-content">
+              <p>Pharma SFA requires location services to enable call verification:</p>
+              <ul>
+                <li>Select <span class="highlight-pill pill-green">"Allow While Using App"</span>.</li>
+                <li>Enable <strong>High Accuracy Mode</strong> for accurate geofencing.</li>
+                <li>Background Telemetry logs location every 15 mins during duty hours.</li>
+              </ul>
+              <div class="app-path">⚙️ System Settings ➔ Location: ON</div>
+            </div>
+          </div>
+
+          <div class="card card-amber">
+            <div class="card-header">
+              <span class="step-number">C</span>
+              <h3 class="card-title">Territory Verification</h3>
+            </div>
+            <div class="card-content">
+              <p>Check your assigned division on the top profile badge:</p>
+              <ul>
+                <li><strong>Satyam Shil:</strong> Silchar HQ (Primary), with Kalain, Sonai, Bagha, Badarpur & Halflong.</li>
+                <li><strong>Pranjal Malakar:</strong> Karimganj HQ (Primary), with Kaliganj, Nilambazar, RK Nagar & Dharmanagar.</li>
+              </ul>
+              <div class="app-path">📱 Home Header ➔ Profile Card</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="slide-footer">
+        <span class="controls-hint">Never share your PIN. If locked out, contact Shakir (HR) or Bodrud (RSM).</span>
+        <div class="nav-buttons">
+          <button class="btn-nav" onclick="Deck.prev()">⬅ Prev</button>
+          <button class="btn-nav" onclick="Deck.next()">Next ➔</button>
+        </div>
+      </footer>
+    </section>
+
+
+    <!-- ========================================================================
+         SLIDE 4: MORNING ATTENDANCE & 10:30 CUTOFF
+         ======================================================================== -->
+    <section class="slide" id="slide-4">
+      <header class="slide-header">
+        <div class="brand-tag">
+          <span class="logo-badge">Module 2</span>
+          <span class="brand-sub">Daily Shift Activation</span>
+        </div>
+        <div class="slide-counter">04 / 10</div>
+      </header>
+
+      <div class="slide-body">
+        <div class="slide-title-block">
+          <span class="slide-category">Attendance Protocol</span>
+          <h2 class="slide-title">Morning Punch-In & The Strict 10:30 AM Cutoff</h2>
+          <p class="slide-subtitle">Field duty must be reported every morning with geo-tagged verification.</p>
+        </div>
+
+        <div class="grid-3">
+          <div class="card card-emerald">
+            <div class="card-header">
+              <span class="step-number">1</span>
+              <h3 class="card-title">Punch In Before 10:30 AM</h3>
+            </div>
+            <div class="card-content">
+              <ul>
+                <li>Tap <strong>"PUNCH IN"</strong> on the Home dashboard.</li>
+                <li><strong>GPS Camera:</strong> Take a clear photo of yourself in field attire in your working area.</li>
+                <li>GPS coordinates and timestamp are embedded into your daily log.</li>
+              </ul>
+              <div class="app-path">📱 Home ➔ PUNCH IN Button</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="step-number">2</span>
+              <h3 class="card-title">Select Working Route / Beat</h3>
+            </div>
+            <div class="card-content">
+              <p>Choose your work type matching your approved Tour Plan:</p>
+              <ul>
+                <li><strong>HQ Working:</strong> Silchar Central, Karimganj Town, etc.</li>
+                <li><strong>Ex-station (Extension):</strong> Kalain, Sonai, Bagha, Kaliganj, RK Nagar.</li>
+                <li><strong>Outstation:</strong> Halflong, Dharmanagar, Aizawl.</li>
+                <li><strong>Joint Tour:</strong> When RSM Bodrud is accompanying you.</li>
+              </ul>
+              <div class="app-path">📱 Punch-In Screen ➔ Work Type Chips</div>
+            </div>
+          </div>
+
+          <div class="card card-rose">
+            <div class="card-header">
+              <span class="step-number">!</span>
+              <h3 class="card-title">Past 10:30 AM? Late Approval</h3>
+            </div>
+            <div class="card-content">
+              <p>If you punch in after 10:30 AM, reporting is <strong>LOCKED</strong>:</p>
+              <ul>
+                <li>A modal appears: <em>"Late Attendance Locked"</em>.</li>
+                <li>Enter the legitimate reason (e.g. <em>"Vehicle breakdown at Kalain road"</em>).</li>
+                <li>Tap <strong>"Request RSM Approval"</strong>.</li>
+                <li>Bodrud RSM will approve instantly from his console to unlock your day.</li>
+              </ul>
+              <div class="app-path">📱 Popup ➔ Request RSM Approval</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="slide-footer">
+        <span class="controls-hint">Always punch in before 10:30 AM to avoid delays in starting doctor calls.</span>
+        <div class="nav-buttons">
+          <button class="btn-nav" onclick="Deck.prev()">⬅ Prev</button>
+          <button class="btn-nav" onclick="Deck.next()">Next ➔</button>
+        </div>
+      </footer>
+    </section>
+
+
+    <!-- ========================================================================
+         SLIDE 5: TOUR PLAN (MTP) CALENDAR
+         ======================================================================== -->
+    <section class="slide" id="slide-5">
+      <header class="slide-header">
+        <div class="brand-tag">
+          <span class="logo-badge">Module 3</span>
+          <span class="brand-sub">Monthly Tour Programme (MTP)</span>
+        </div>
+        <div class="slide-counter">05 / 10</div>
+      </header>
+
+      <div class="slide-body">
+        <div class="slide-title-block">
+          <span class="slide-category">Tour Planning</span>
+          <h2 class="slide-title">Checking Your Approved Tour Plan (MTP)</h2>
+          <p class="slide-subtitle">Your monthly work schedule is live in the cloud and guides your daily calls.</p>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header">
+              <span class="step-number">A</span>
+              <h3 class="card-title">Where to Find Your Tour Plan</h3>
+            </div>
+            <div class="card-content">
+              <ul>
+                <li>Open the app and tap the <strong>"More" (☰)</strong> tab on the bottom bar.</li>
+                <li>Select <strong>"Tour Plan" (MTP Calendar)</strong>.</li>
+                <li>You will see your monthly calendar grid with color-coded days:
+                  <br>• <span class="highlight-pill pill-green">Green (TOUR):</span> Approved working beat.
+                  <br>• <span class="highlight-pill pill-amber">Amber (SUNDAY):</span> Weekly rest day.
+                  <br>• <span class="highlight-pill pill-rose">Rose (LEAVE/HOLIDAY):</span> Official holiday.
+                </li>
+                <li>Tap any date to view scheduled town, target doctors (10), and target chemists (4).</li>
+              </ul>
+              <div class="app-path">📱 Bottom Bar ➔ More (☰) ➔ Tour Plan</div>
+            </div>
+          </div>
+
+          <div class="card card-emerald">
+            <div class="card-header">
+              <span class="step-number">B</span>
+              <h3 class="card-title">How It Syncs to Morning Attendance</h3>
+            </div>
+            <div class="card-content">
+              <ul>
+                <li>When you punch in each morning, RepPulse automatically checks the cloud <code>tour_plans</code> table.</li>
+                <li>Your scheduled town (e.g. <em>"Work at Kalain Ex-station"</em>) is <strong>automatically selected</strong> for you!</li>
+                <li>No need to manually remember which beat you are supposed to work today.</li>
+                <li><strong>Rescheduling:</strong> If heavy rain or road closure requires changing your beat, use the <em>"Request Reschedule"</em> button to alert Bodrud RSM.</li>
+              </ul>
+              <div class="app-path">⚡ Auto-Linked between MTP ↔ Attendance</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="slide-footer">
+        <span class="controls-hint">Satyam's & Pranjal's Nov 20-30 tour programs are fully loaded in the database.</span>
+        <div class="nav-buttons">
+          <button class="btn-nav" onclick="Deck.prev()">⬅ Prev</button>
+          <button class="btn-nav" onclick="Deck.next()">Next ➔</button>
+        </div>
+      </footer>
+    </section>
+
+
+    <!-- ========================================================================
+         SLIDE 6: DOCTOR MASTER & TERRITORY ISOLATION
+         ======================================================================== -->
+    <section class="slide" id="slide-6">
+      <header class="slide-header">
+        <div class="brand-tag">
+          <span class="logo-badge">Module 4</span>
+          <span class="brand-sub">Doctor Directory Management</span>
+        </div>
+        <div class="slide-counter">06 / 10</div>
+      </header>
+
+      <div class="slide-body">
+        <div class="slide-title-block">
+          <span class="slide-category">Doctor Relationship Management</span>
+          <h2 class="slide-title">Doctor Directory, Territory Isolation & Adding Doctors</h2>
+          <p class="slide-subtitle">Access your doctor list and add new prescribers with GPS verification.</p>
+        </div>
+
+        <div class="grid-3">
+          <div class="card">
+            <div class="card-header">
+              <span class="step-number">1</span>
+              <h3 class="card-title">Territory Isolation</h3>
+            </div>
+            <div class="card-content">
+              <p>The app shows <strong>only</strong> doctors relevant to your assigned beat:</p>
+              <ul>
+                <li><strong>Satyam:</strong> Silchar (Cachar), SMCH Ghungoor, Hospital Rd, Sonai, Bagha, Kalain.</li>
+                <li><strong>Pranjal:</strong> Karimganj, Nilambazar, Patharkandi, Dharmanagar, RK Nagar.</li>
+                <li>You will never be cluttered with doctors from other divisions!</li>
+              </ul>
+              <div class="app-path">📱 Bottom Bar ➔ Doctors Tab</div>
+            </div>
+          </div>
+
+          <div class="card card-emerald">
+            <div class="card-header">
+              <span class="step-number">2</span>
+              <h3 class="card-title">Searching & Filtering</h3>
+            </div>
+            <div class="card-content">
+              <ul>
+                <li>Use the top search bar to search by <strong>Doctor Name</strong>, <strong>Clinic</strong>, or <strong>Specialty</strong>.</li>
+                <li>Filter by:
+                  <br>• <strong>Pending:</strong> Doctors not yet met this month.
+                  <br>• <strong>Completed:</strong> Calls already logged.
+                  <br>• <strong>Tier A / B / C:</strong> High-priority prescribers.
+                </li>
+              </ul>
+              <div class="app-path">🔍 Doctor List ➔ Search Input</div>
+            </div>
+          </div>
+
+          <div class="card card-amber">
+            <div class="card-header">
+              <span class="step-number">3</span>
+              <h3 class="card-title">Adding a New Doctor</h3>
+            </div>
+            <div class="card-content">
+              <p>Found a new prescriber? Add them instantly:</p>
+              <ul>
+                <li>Tap the <strong>"+" (Add Doctor)</strong> button in the top right.</li>
+                <li>Fill in: Doctor Name, Specialty, Chamber Name & Address.</li>
+                <li>Tap <strong>"Capture Current GPS Location"</strong> while standing at the clinic.</li>
+                <li>Save ➔ Doctor is instantly live in your territory.</li>
+              </ul>
+              <div class="app-path">📱 Doctors Tab ➔ Top Right "+" Icon</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="slide-footer">
+        <span class="controls-hint">Every newly added doctor is geofenced so future visits can be verified accurately.</span>
+        <div class="nav-buttons">
+          <button class="btn-nav" onclick="Deck.prev()">⬅ Prev</button>
+          <button class="btn-nav" onclick="Deck.next()">Next ➔</button>
+        </div>
+      </footer>
+    </section>
+
+
+    <!-- ========================================================================
+         SLIDE 7: LOGGING A FIELD VISIT (DCR)
+         ======================================================================== -->
+    <section class="slide" id="slide-7">
+      <header class="slide-header">
+        <div class="brand-tag">
+          <span class="logo-badge">Module 5</span>
+          <span class="brand-sub">Daily Call Reporting (DCR)</span>
+        </div>
+        <div class="slide-counter">07 / 10</div>
+      </header>
+
+      <div class="slide-body">
+        <div class="slide-title-block">
+          <span class="slide-category">Call Execution</span>
+          <h2 class="slide-title">Conducting & Submitting a Doctor Call</h2>
+          <p class="slide-subtitle">How to check in, show visual product aids, and log samples in under 60 seconds.</p>
+        </div>
+
+        <div class="grid-4">
+          <div class="card">
+            <div class="card-header">
+              <span class="step-number">1</span>
+              <h3 class="card-title">Geofence Check-in</h3>
+            </div>
+            <div class="card-content">
+              <p>When you arrive at the doctor's chamber:</p>
+              <ul>
+                <li>Tap the doctor's name in the <strong>Visits</strong> tab.</li>
+                <li>Tap <span class="highlight-pill pill-green">"Check In"</span>.</li>
+                <li>The app verifies your GPS within 100 meters of the chamber.</li>
+              </ul>
+              <div class="app-path">📍 Within 100m Geofence</div>
+            </div>
+          </div>
+
+          <div class="card card-emerald">
+            <div class="card-header">
+              <span class="step-number">2</span>
+              <h3 class="card-title">Product Detailing</h3>
+            </div>
+            <div class="card-content">
+              <p>Detail our high-margin brands:</p>
+              <ul>
+                <li>Tap <strong>"Open Visual Aid"</strong> to show interactive product cards to the doctor.</li>
+                <li>Highlight key indications: Cefixime, Azithromycin, Pantoprazole.</li>
+              </ul>
+              <div class="app-path">📱 Tap "Detailing Slides"</div>
+            </div>
+          </div>
+
+          <div class="card card-amber">
+            <div class="card-header">
+              <span class="step-number">3</span>
+              <h3 class="card-title">Sampling & Inputs</h3>
+            </div>
+            <div class="card-content">
+              <p>Record all promotional items given:</p>
+              <ul>
+                <li>Select sample packs handed over (e.g. 2 strips).</li>
+                <li>Select promotional gifts / LBLs given.</li>
+                <li>Auto-deducts from your assigned sample bag.</li>
+              </ul>
+              <div class="app-path">📦 Sample Quantity Counter</div>
+            </div>
+          </div>
+
+          <div class="card card-rose">
+            <div class="card-header">
+              <span class="step-number">4</span>
+              <h3 class="card-title">Feedback & Submit</h3>
+            </div>
+            <div class="card-content">
+              <p>Complete the call report:</p>
+              <ul>
+                <li>Select doctor's response: <span class="highlight-pill pill-green">High Prescriber</span>, <span class="highlight-pill pill-amber">Supportive</span>, or <span class="highlight-pill">Follow-up</span>.</li>
+                <li>Tag supporting chemist nearby.</li>
+                <li>Tap <strong>"Submit Visit"</strong>.</li>
+              </ul>
+              <div class="app-path">✅ Call Saved ➔ DCR +1</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="slide-footer">
+        <span class="controls-hint">Aim for 10+ doctor calls daily to achieve company performance bonuses.</span>
+        <div class="nav-buttons">
+          <button class="btn-nav" onclick="Deck.prev()">⬅ Prev</button>
+          <button class="btn-nav" onclick="Deck.next()">Next ➔</button>
+        </div>
+      </footer>
+    </section>
+
+
+    <!-- ========================================================================
+         SLIDE 8: CHEMIST ORDER BOOKING
+         ======================================================================== -->
+    <section class="slide" id="slide-8">
+      <header class="slide-header">
+        <div class="brand-tag">
+          <span class="logo-badge">Module 6</span>
+          <span class="brand-sub">Commercial Operations</span>
+        </div>
+        <div class="slide-counter">08 / 10</div>
+      </header>
+
+      <div class="slide-body">
+        <div class="slide-title-block">
+          <span class="slide-category">Sales & Distribution</span>
+          <h2 class="slide-title">Booking Chemist & Retailer Orders</h2>
+          <p class="slide-subtitle">Generate instant digital purchase orders for local stockists and distributors.</p>
+        </div>
+
+        <div class="grid-3">
+          <div class="card">
+            <div class="card-header">
+              <span class="step-number">1</span>
+              <h3 class="card-title">Select Chemist / Firm</h3>
+            </div>
+            <div class="card-content">
+              <ul>
+                <li>Tap the <strong>"Orders"</strong> tab on the bottom navigation bar.</li>
+                <li>Tap <strong>"New Order"</strong> and pick the Chemist from your territory list (e.g. <em>Talent Drug Store, Popular Pharmacy, Apollo Silchar</em>).</li>
+                <li>If visiting a new chemist, tap <em>"Add Chemist"</em> to record their Drug License (DL) and phone.</li>
+              </ul>
+              <div class="app-path">📱 Orders Tab ➔ New Order</div>
+            </div>
+          </div>
+
+          <div class="card card-emerald">
+            <div class="card-header">
+              <span class="step-number">2</span>
+              <h3 class="card-title">Add Products with Rates</h3>
+            </div>
+            <div class="card-content">
+              <p>The app shows real-time commercial pricing:</p>
+              <ul>
+                <li><strong>MRP:</strong> Maximum Retail Price for patients.</li>
+                <li><strong>PTR:</strong> Price to Retailer (Chemist buying rate).</li>
+                <li><strong>PTS:</strong> Price to Stockist.</li>
+                <li>Select product (e.g. <em>Nexcel-200, Pantanex-DSR</em>), enter quantity, and apply active trade schemes (e.g. 10+1 free).</li>
+              </ul>
+              <div class="app-path">💊 Product Master Catalog</div>
+            </div>
+          </div>
+
+          <div class="card card-amber">
+            <div class="card-header">
+              <span class="step-number">3</span>
+              <h3 class="card-title">Review & Submit Order</h3>
+            </div>
+            <div class="card-content">
+              <ul>
+                <li>Review the order summary with net value and applicable GST.</li>
+                <li>Select the supplying stockist (e.g. <em>Barak Pharma Distributors</em>).</li>
+                <li>Tap <strong>"Confirm & Send Order"</strong>.</li>
+                <li>Generates instant PDF order copy and syncs with headquarters for dispatch.</li>
+              </ul>
+              <div class="app-path">📄 Instant Digital PO Dispatch</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="slide-footer">
+        <span class="controls-hint">Retailer orders can be booked offline and will transmit automatically once back online.</span>
+        <div class="nav-buttons">
+          <button class="btn-nav" onclick="Deck.prev()">⬅ Prev</button>
+          <button class="btn-nav" onclick="Deck.next()">Next ➔</button>
+        </div>
+      </footer>
+    </section>
+
+
+    <!-- ========================================================================
+         SLIDE 9: EXPENSES & STANDARD FARE CHART (SFC)
+         ======================================================================== -->
+    <section class="slide" id="slide-9">
+      <header class="slide-header">
+        <div class="brand-tag">
+          <span class="logo-badge">Module 7</span>
+          <span class="brand-sub">Travel & Expense Claims</span>
+        </div>
+        <div class="slide-counter">09 / 10</div>
+      </header>
+
+      <div class="slide-body">
+        <div class="slide-title-block">
+          <span class="slide-category">Compensation & Claims</span>
+          <h2 class="slide-title">Daily Travel Allowance (TA) & Daily Allowance (DA)</h2>
+          <p class="slide-subtitle">Automatic fare calculations backed by the company Standard Fare Chart (SFC).</p>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header">
+              <span class="step-number">A</span>
+              <h3 class="card-title">How SFC Auto-Calculates Your Claim</h3>
+            </div>
+            <div class="card-content">
+              <p>No manual math needed! When you select your working beat, your entitlement is pre-set:</p>
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Work Type</th>
+                    <th>Standard Fare (TA)</th>
+                    <th>Daily Allowance (DA)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>HQ Working</strong> (Local)</td>
+                    <td>₹30 - ₹45</td>
+                    <td><span class="highlight-pill pill-green">₹250 / day</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Ex-station</strong> (Kalain/Sonai/Bagha)</td>
+                    <td>₹135 - ₹195</td>
+                    <td><span class="highlight-pill pill-amber">₹450 / day</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Outstation</strong> (Halflong/Dharmanagar)</td>
+                    <td>₹420 - ₹540</td>
+                    <td><span class="highlight-pill pill-rose">₹750 / day</span></td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="app-path">⚙️ Pre-configured in Supabase <code>sfc_routes</code></div>
+            </div>
+          </div>
+
+          <div class="card card-emerald">
+            <div class="card-header">
+              <span class="step-number">B</span>
+              <h3 class="card-title">Submitting Your Daily Expense</h3>
+            </div>
+            <div class="card-content">
+              <ul>
+                <li>Go to <strong>More (☰) ➔ Expenses</strong>.</li>
+                <li>Tap <strong>"Claim Today's Expense"</strong>.</li>
+                <li>Select the route you worked. The base TA & DA are filled in automatically.</li>
+                <li>Add extra costs if applicable:
+                  <br>• Hotel / Lodge charges (for Outstation overnight stays).
+                  <br>• Toll / Parking / Courier tickets.
+                </li>
+                <li>Attach photo of ticket or receipt.</li>
+                <li>Tap <strong>"Submit Claim"</strong> ➔ Status displays as <span class="highlight-pill pill-amber">Pending Approval</span> until RSM approves.</li>
+              </ul>
+              <div class="app-path">📱 More (☰) ➔ Expenses ➔ Add Expense</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="slide-footer">
+        <span class="controls-hint">Submit expenses on the same evening to ensure fast weekly clearance.</span>
+        <div class="nav-buttons">
+          <button class="btn-nav" onclick="Deck.prev()">⬅ Prev</button>
+          <button class="btn-nav" onclick="Deck.next()">Next ➔</button>
+        </div>
+      </footer>
+    </section>
+
+
+    <!-- ========================================================================
+         SLIDE 10: LEAVES, HOLIDAYS & OFFLINE RESILIENCE
+         ======================================================================== -->
+    <section class="slide" id="slide-10">
+      <header class="slide-header">
+        <div class="brand-tag">
+          <span class="logo-badge">Module 8</span>
+          <span class="brand-sub">Field Best Practices</span>
+        </div>
+        <div class="slide-counter">10 / 10</div>
+      </header>
+
+      <div class="slide-body">
+        <div class="slide-title-block">
+          <span class="slide-category">Staff Support</span>
+          <h2 class="slide-title">Leaves, Holidays & Offline Resilience</h2>
+          <p class="slide-subtitle">How RepPulse supports your field conditions, remote networks, and leave balances.</p>
+        </div>
+
+        <div class="grid-3">
+          <div class="card card-emerald">
+            <div class="card-header">
+              <span class="step-number">1</span>
+              <h3 class="card-title">Leave Ledger</h3>
+            </div>
+            <div class="card-content">
+              <ul>
+                <li>Open <strong>More (☰) ➔ Leaves</strong>.</li>
+                <li>Check your available balances:
+                  <br>• <strong>Casual Leave (CL):</strong> 12 days/yr
+                  <br>• <strong>Earned Leave (EL):</strong> 15 days/yr
+                  <br>• <strong>Sick Leave (SL):</strong> 12 days/yr
+                </li>
+                <li>Tap <strong>"Apply Leave"</strong>, choose dates and reason ➔ Directly sent to Shakir (HR) & Bodrud (RSM).</li>
+              </ul>
+              <div class="app-path">📱 More ➔ Leaves</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="step-number">2</span>
+              <h3 class="card-title">Assam Holiday Calendar</h3>
+            </div>
+            <div class="card-content">
+              <ul>
+                <li>Open <strong>More (☰) ➔ Holidays</strong>.</li>
+                <li>Displays all statutory gazetted holidays:
+                  <br>• Republic Day, Magh Bihu, Eid-ul-Fitr, Bohag Bihu, Independence Day, Durga Puja, Diwali.
+                </li>
+                <li>Holidays are automatically tagged in your calendar so you are not marked absent.</li>
+              </ul>
+              <div class="app-path">📱 More ➔ Holidays</div>
+            </div>
+          </div>
+
+          <div class="card card-amber">
+            <div class="card-header">
+              <span class="step-number">3</span>
+              <h3 class="card-title">Offline Network Shield</h3>
+            </div>
+            <div class="card-content">
+              <ul>
+                <li>Working in a rural area with <strong>No 4G/WiFi</strong> (e.g. Kalain hills or Halflong)?</li>
+                <li><strong>No problem:</strong> RepPulse continues to record punches, doctor visits, and chemist orders locally.</li>
+                <li>As soon as your phone gets 1 bar of mobile data, a green badge appears: <span class="highlight-pill pill-green">Synced to Cloud</span>.</li>
+              </ul>
+              <div class="app-path">📶 Auto-Sync Resilience Active</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="slide-footer">
+        <span class="controls-hint">Congratulations! You are now fully trained on RepPulse Pharma SFA. Good luck in the field!</span>
+        <div class="nav-buttons">
+          <button class="btn-nav" onclick="Deck.prev()">⬅ Prev</button>
+          <button class="btn-nav" onclick="Deck.jumpTo(0)">Restart ↺</button>
+        </div>
+      </footer>
+    </section>
+
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="progress-bar-container">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <!-- Slide Overview Drawer -->
+  <div class="overview-drawer" id="overviewDrawer">
+    <div class="overview-header">
+      <h2 style="color: #ffffff;">Presentation Slides Overview</h2>
+      <button class="btn-nav" onclick="Deck.hideOverview()">Close (Esc)</button>
+    </div>
+    <div class="overview-grid" id="overviewGrid">
+      <!-- Injected dynamically -->
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       PRESENTATION CONTROLLER JAVASCRIPT
+       ======================================================================== -->
+  <script>
+    class PresentationController {
+      constructor() {
+        this.slides = Array.from(document.querySelectorAll('.slide'));
+        this.totalSlides = this.slides.length;
+        this.currentIndex = 0;
+        this.progressBar = document.getElementById('progressBar');
+        this.overviewDrawer = document.getElementById('overviewDrawer');
+        this.overviewGrid = document.getElementById('overviewGrid');
+
+        this.init();
+      }
+
+      init() {
+        this.populateOverview();
+        this.bindEvents();
+        this.updateSlide(0);
+      }
+
+      populateOverview() {
+        this.overviewGrid.innerHTML = '';
+        this.slides.forEach((slide, idx) => {
+          const title = slide.querySelector('.slide-title')?.innerText || 
+                        slide.querySelector('.hero-title')?.innerText || 
+                        `Slide ${idx + 1}`;
+          const item = document.createElement('div');
+          item.className = 'overview-item';
+          item.innerHTML = `
+            <div class="overview-number">SLIDE ${String(idx + 1).padStart(2, '0')}</div>
+            <div class="overview-title">${title}</div>
+          `;
+          item.onclick = () => {
+            this.jumpTo(idx);
+            this.hideOverview();
+          };
+          this.overviewGrid.appendChild(item);
+        });
+      }
+
+      bindEvents() {
+        // Keyboard controls
+        window.addEventListener('keydown', (e) => {
+          if (this.overviewDrawer.classList.contains('open')) {
+            if (e.key === 'Escape') this.hideOverview();
+            return;
+          }
+
+          switch(e.key) {
+            case 'ArrowRight':
+            case 'ArrowDown':
+            case ' ':
+            case 'PageDown':
+              this.next();
+              break;
+            case 'ArrowLeft':
+            case 'ArrowUp':
+            case 'PageUp':
+              this.prev();
+              break;
+            case 'Home':
+              this.jumpTo(0);
+              break;
+            case 'End':
+              this.jumpTo(this.totalSlides - 1);
+              break;
+            case 'o':
+            case 'O':
+              this.toggleOverview();
+              break;
+          }
+        });
+
+        // Touch swipe support
+        let startX = 0;
+        let startY = 0;
+        window.addEventListener('touchstart', (e) => {
+          startX = e.touches[0].clientX;
+          startY = e.touches[0].clientY;
+        }, { passive: true });
+
+        window.addEventListener('touchend', (e) => {
+          const diffX = e.changedTouches[0].clientX - startX;
+          const diffY = e.changedTouches[0].clientY - startY;
+
+          if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+            if (diffX < 0) this.next();
+            else this.prev();
+          }
+        }, { passive: true });
+      }
+
+      updateSlide(newIndex) {
+        if (newIndex < 0 || newIndex >= this.totalSlides) return;
+
+        this.slides[this.currentIndex].classList.remove('active');
+        this.currentIndex = newIndex;
+        this.slides[this.currentIndex].classList.add('active');
+
+        // Update progress bar
+        const progressPercent = ((this.currentIndex + 1) / this.totalSlides) * 100;
+        this.progressBar.style.width = `${progressPercent}%`;
+      }
+
+      next() {
+        if (this.currentIndex < this.totalSlides - 1) {
+          this.updateSlide(this.currentIndex + 1);
+        }
+      }
+
+      prev() {
+        if (this.currentIndex > 0) {
+          this.updateSlide(this.currentIndex - 1);
+        }
+      }
+
+      jumpTo(idx) {
+        this.updateSlide(idx);
+      }
+
+      toggleOverview() {
+        this.overviewDrawer.classList.toggle('open');
+      }
+
+      showOverview() {
+        this.overviewDrawer.classList.add('open');
+      }
+
+      hideOverview() {
+        this.overviewDrawer.classList.remove('open');
+      }
+    }
+
+    // Initialize Presentation Controller
+    const Deck = new PresentationController();
+  </script>
+</body>
+</html>
