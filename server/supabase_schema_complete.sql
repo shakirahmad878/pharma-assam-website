@@ -52,6 +52,8 @@ VALUES
     ('rt-kxj-02', 'HQ-KXJ-02', 'Karimganj South - Nilambazar & Charbazar', 'Karimganj', 'HQ', 'Karimganj', '["Nilambazar", "Charbazar", "Settlement Point"]'::jsonb, 32, 96, 250),
     ('rt-kxj-patharkandi', 'EX-KXJ-01', 'Karimganj to Patharkandi (Ex-station)', 'Karimganj', 'EXTENSION', 'Karimganj', '["Patharkandi Town", "Patharkandi Hospital Rd", "Defalcherra"]'::jsonb, 70, 210, 450),
     ('rt-kxj-badarpur', 'EX-KXJ-02', 'Karimganj to Badarpur & RK Nagar (Ex-station)', 'Karimganj', 'EXTENSION', 'Karimganj', '["Badarpur Junction", "Ramkrishna Nagar", "Anipur"]'::jsonb, 66, 198, 450),
+    ('rt-kxj-kaliganj', 'EX-KXJ-04', 'Karimganj to Kaliganj (Ex-station)', 'Karimganj', 'EXTENSION', 'Karimganj', '["Kaliganj Bazar", "Kaliganj Block PHC", "Eraligool"]'::jsonb, 45, 135, 450),
+    ('rt-kxj-rknagar', 'EX-KXJ-05', 'Karimganj to Ramkrishnanagar (Ex-station)', 'Karimganj', 'EXTENSION', 'Karimganj', '["Ramkrishna Nagar Civil Hospital", "R.K. Nagar Bazar", "Anipur"]'::jsonb, 65, 195, 450),
     ('rt-kxj-makunda', 'OUT-KXJ-01', 'Karimganj to Makunda Christian Hospital (Outstation)', 'Karimganj', 'OUTSTATION', 'Karimganj', '["Makunda Christian Hospital", "Bazaricherra", "Churaibari"]'::jsonb, 154, 462, 750),
     ('rt-kxj-dharmanagar', 'EX-KXJ-03', 'Karimganj to Dharmanagar (Ex-station)', 'Karimganj', 'EXTENSION', 'Dharmanagar', '["Dharmanagar District Hospital", "Station Road", "Town Belt"]'::jsonb, 75, 225, 450),
 
@@ -115,7 +117,20 @@ VALUES
     ('tp-satyam-2026-11-27', 'usr-nlcl-0005', 'NLCL-0005', 'Satyam Shil', '2026-11-27', 2026, 11, 27, 'Fri', 'Work at bagha ,natunbazar', 'rt-sil-bagha', 'EXTENSION', 10, 4, 'APPROVED', 'TOUR'),
     ('tp-satyam-2026-11-28', 'usr-nlcl-0005', 'NLCL-0005', 'Satyam Shil', '2026-11-28', 2026, 11, 28, 'Sat', 'Work at SilcharHQ', 'rt-sil-01', 'HQ', 10, 4, 'APPROVED', 'TOUR'),
     ('tp-satyam-2026-11-29', 'usr-nlcl-0005', 'NLCL-0005', 'Satyam Shil', '2026-11-29', 2026, 11, 29, 'Sun', 'Weekly Rest / Sunday', null, 'HQ', 0, 0, 'APPROVED', 'SUNDAY'),
-    ('tp-satyam-2026-11-30', 'usr-nlcl-0005', 'NLCL-0005', 'Satyam Shil', '2026-11-30', 2026, 11, 30, 'Mon', 'Work at SilcharHQ', 'rt-sil-02', 'HQ', 10, 4, 'APPROVED', 'TOUR')
+    ('tp-satyam-2026-11-30', 'usr-nlcl-0005', 'NLCL-0005', 'Satyam Shil', '2026-11-30', 2026, 11, 30, 'Mon', 'Work at SilcharHQ', 'rt-sil-02', 'HQ', 10, 4, 'APPROVED', 'TOUR'),
+
+    -- Seed Pranjal Malakar's (NLCL-0004) Official November 2026 Tour Plan
+    ('tp-pranjal-2026-11-20', 'usr-nlcl-0004', 'NLCL-0004', 'Pranjal Malakar', '2026-11-20', 2026, 11, 20, 'Fri', 'Karimganj HQ', 'rt-kxj-01', 'HQ', 10, 4, 'APPROVED', 'TOUR'),
+    ('tp-pranjal-2026-11-21', 'usr-nlcl-0004', 'NLCL-0004', 'Pranjal Malakar', '2026-11-21', 2026, 11, 21, 'Sat', 'Kaliganj EX', 'rt-kxj-kaliganj', 'EXTENSION', 10, 4, 'APPROVED', 'TOUR'),
+    ('tp-pranjal-2026-11-22', 'usr-nlcl-0004', 'NLCL-0004', 'Pranjal Malakar', '2026-11-22', 2026, 11, 22, 'Sun', 'Weekly Rest / Sunday', null, 'HQ', 0, 0, 'APPROVED', 'SUNDAY'),
+    ('tp-pranjal-2026-11-23', 'usr-nlcl-0004', 'NLCL-0004', 'Pranjal Malakar', '2026-11-23', 2026, 11, 23, 'Mon', 'Dharmanagar OS', 'rt-kxj-dharmanagar', 'OUTSTATION', 10, 4, 'APPROVED', 'TOUR'),
+    ('tp-pranjal-2026-11-24', 'usr-nlcl-0004', 'NLCL-0004', 'Pranjal Malakar', '2026-11-24', 2026, 11, 24, 'Tue', 'Dharmanagar OS', 'rt-kxj-dharmanagar', 'OUTSTATION', 10, 4, 'APPROVED', 'TOUR'),
+    ('tp-pranjal-2026-11-25', 'usr-nlcl-0004', 'NLCL-0004', 'Pranjal Malakar', '2026-11-25', 2026, 11, 25, 'Wed', 'Dharmanagar OS', 'rt-kxj-dharmanagar', 'OUTSTATION', 10, 4, 'APPROVED', 'TOUR'),
+    ('tp-pranjal-2026-11-26', 'usr-nlcl-0004', 'NLCL-0004', 'Pranjal Malakar', '2026-11-26', 2026, 11, 26, 'Thu', 'Karimganj HQ', 'rt-kxj-01', 'HQ', 10, 4, 'APPROVED', 'TOUR'),
+    ('tp-pranjal-2026-11-27', 'usr-nlcl-0004', 'NLCL-0004', 'Pranjal Malakar', '2026-11-27', 2026, 11, 27, 'Fri', 'NILAMBAZAR PATHARKANDI EX', 'rt-kxj-patharkandi', 'EXTENSION', 10, 4, 'APPROVED', 'TOUR'),
+    ('tp-pranjal-2026-11-28', 'usr-nlcl-0004', 'NLCL-0004', 'Pranjal Malakar', '2026-11-28', 2026, 11, 28, 'Sat', 'RAMKRISHNANAGAR, EX', 'rt-kxj-rknagar', 'EXTENSION', 10, 4, 'APPROVED', 'TOUR'),
+    ('tp-pranjal-2026-11-29', 'usr-nlcl-0004', 'NLCL-0004', 'Pranjal Malakar', '2026-11-29', 2026, 11, 29, 'Sun', 'Weekly Rest / Sunday', null, 'HQ', 0, 0, 'APPROVED', 'SUNDAY'),
+    ('tp-pranjal-2026-11-30', 'usr-nlcl-0004', 'NLCL-0004', 'Pranjal Malakar', '2026-11-30', 2026, 11, 30, 'Mon', 'Karimganj HQ', 'rt-kxj-01', 'HQ', 10, 4, 'APPROVED', 'TOUR')
 ON CONFLICT (id) DO UPDATE
 SET city = EXCLUDED.city, status = EXCLUDED.status, route_id = EXCLUDED.route_id, route_type = EXCLUDED.route_type;
 
