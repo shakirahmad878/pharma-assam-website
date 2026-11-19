@@ -12,8 +12,8 @@
     :root {
       --bg-dark: #0a0f1d;
       --bg-surface: #111827;
-      --bg-card: rgba(17, 24, 39, 0.75);
-      --bg-card-border: rgba(56, 189, 248, 0.2);
+      --bg-card: rgba(17, 24, 39, 0.85);
+      --bg-card-border: rgba(56, 189, 248, 0.22);
       --primary: #0284c7;
       --accent-cyan: #38bdf8;
       --accent-emerald: #10b981;
@@ -61,11 +61,11 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: clamp(16px, 3vh, 36px) clamp(20px, 4vw, 54px);
+      padding: clamp(12px, 2.2vh, 28px) clamp(16px, 3vw, 44px);
       opacity: 0;
       visibility: hidden;
-      transform: translateY(20px) scale(0.99);
-      transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.4s;
+      transform: translateY(16px) scale(0.99);
+      transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.35s;
       background: radial-gradient(circle at 80% 20%, rgba(14, 165, 233, 0.08) 0%, transparent 60%),
                   radial-gradient(circle at 10% 80%, rgba(16, 185, 129, 0.06) 0%, transparent 50%),
                   var(--bg-dark);
@@ -85,7 +85,7 @@
       justify-content: space-between;
       align-items: center;
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      padding-bottom: clamp(8px, 1.5vh, 16px);
+      padding-bottom: clamp(6px, 1.2vh, 12px);
       flex-shrink: 0;
     }
 
@@ -99,8 +99,8 @@
       background: linear-gradient(135deg, #0284c7, #10b981);
       color: #ffffff;
       font-weight: 800;
-      font-size: clamp(0.75rem, 1.2vw, 0.95rem);
-      padding: 4px 10px;
+      font-size: clamp(0.72rem, 1.1vw, 0.88rem);
+      padding: 3px 9px;
       border-radius: 6px;
       letter-spacing: 0.5px;
       text-transform: uppercase;
@@ -108,17 +108,17 @@
     }
 
     .brand-sub {
-      font-size: clamp(0.75rem, 1.1vw, 0.9rem);
+      font-size: clamp(0.72rem, 1vw, 0.85rem);
       color: var(--text-muted);
       letter-spacing: 0.5px;
     }
 
     .slide-counter {
       font-family: monospace;
-      font-size: clamp(0.8rem, 1.2vw, 1rem);
+      font-size: clamp(0.75rem, 1vw, 0.9rem);
       color: var(--accent-cyan);
       background: rgba(56, 189, 248, 0.1);
-      padding: 4px 12px;
+      padding: 3px 10px;
       border-radius: 20px;
       border: 1px solid rgba(56, 189, 248, 0.3);
     }
@@ -129,26 +129,26 @@
       display: flex;
       flex-direction: column;
       justify-content: center;
-      padding: clamp(10px, 2vh, 24px) 0;
+      padding: clamp(6px, 1.2vh, 16px) 0;
       overflow: hidden;
     }
 
     .slide-title-block {
-      margin-bottom: clamp(12px, 2vh, 24px);
+      margin-bottom: clamp(8px, 1.4vh, 16px);
     }
 
     .slide-category {
       display: inline-block;
       text-transform: uppercase;
-      font-size: clamp(0.7rem, 1vw, 0.85rem);
+      font-size: clamp(0.65rem, 0.85vw, 0.78rem);
       font-weight: 700;
       color: var(--accent-emerald);
       letter-spacing: 1.5px;
-      margin-bottom: 4px;
+      margin-bottom: 2px;
     }
 
     .slide-title {
-      font-size: clamp(1.4rem, 2.8vw, 2.4rem);
+      font-size: clamp(1.3rem, 2.4vw, 2.1rem);
       font-weight: 800;
       color: #ffffff;
       line-height: 1.15;
@@ -156,52 +156,205 @@
     }
 
     .slide-subtitle {
-      font-size: clamp(0.85rem, 1.3vw, 1.15rem);
+      font-size: clamp(0.78rem, 1.1vw, 0.95rem);
       color: var(--text-muted);
-      margin-top: 4px;
+      margin-top: 2px;
       line-height: 1.35;
     }
 
-    /* Grid Layouts */
-    .grid-2 {
+    /* Split Layout: Instructions (Left 58%) vs Smartphone Mockup (Right 42%) */
+    .split-layout {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: clamp(12px, 2vw, 24px);
-      align-items: stretch;
+      grid-template-columns: 1.25fr 0.95fr;
+      gap: clamp(14px, 2.5vw, 32px);
+      align-items: center;
       height: 100%;
-      max-height: calc(100vh - 200px);
+      max-height: calc(100vh - 170px);
     }
 
-    .grid-3 {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: clamp(10px, 1.5vw, 20px);
-      align-items: stretch;
-      height: 100%;
-      max-height: calc(100vh - 200px);
+    .instructions-pane {
+      display: flex;
+      flex-direction: column;
+      gap: clamp(8px, 1.4vh, 14px);
+      overflow-y: auto;
+      scrollbar-width: none;
     }
 
-    .grid-4 {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: clamp(8px, 1.2vw, 16px);
-      align-items: stretch;
+    .instructions-pane::-webkit-scrollbar {
+      display: none;
+    }
+
+    .phone-pane {
+      display: flex;
+      justify-content: center;
+      align-items: center;
       height: 100%;
-      max-height: calc(100vh - 200px);
+    }
+
+    /* ==========================================================================
+       SMARTPHONE HARDWARE FRAME (CSS Realistic Android / iOS Frame)
+       ========================================================================== */
+    .phone-mockup {
+      width: clamp(230px, 22vw, 285px);
+      height: clamp(380px, 58vh, 500px);
+      background: #090d16;
+      border: 3px solid #2d3748;
+      border-radius: 32px;
+      padding: 10px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.8),
+                  0 0 0 1px rgba(255, 255, 255, 0.08),
+                  0 0 35px rgba(56, 189, 248, 0.15);
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .phone-notch {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 55px;
+      height: 10px;
+      background: #1a202c;
+      border-radius: 10px;
+      z-index: 30;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .phone-camera-dot {
+      width: 5px;
+      height: 5px;
+      background: #2b6cb0;
+      border-radius: 50%;
+    }
+
+    .phone-screen {
+      flex: 1;
+      background: #0f172a;
+      border-radius: 24px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 0.72rem;
+    }
+
+    .phone-status-bar {
+      height: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 14px;
+      font-size: 0.62rem;
+      color: #94a3b8;
+      font-weight: 600;
+      background: rgba(0, 0, 0, 0.4);
+      flex-shrink: 0;
+      z-index: 25;
+    }
+
+    .phone-app-header {
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #ffffff;
+      flex-shrink: 0;
+    }
+
+    .phone-app-title {
+      font-weight: 700;
+      font-size: 0.78rem;
+    }
+
+    .phone-app-body {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      scrollbar-width: none;
+    }
+
+    .phone-app-body::-webkit-scrollbar {
+      display: none;
+    }
+
+    .phone-nav-bar {
+      height: 36px;
+      background: #090d16;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      font-size: 0.6rem;
+      color: #64748b;
+      flex-shrink: 0;
+    }
+
+    .phone-nav-item.active {
+      color: #38bdf8;
+      font-weight: 700;
+    }
+
+    /* Screen UI Component Mockups */
+    .ui-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.6rem;
+      font-weight: 700;
+    }
+
+    .ui-badge-green { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    .ui-badge-amber { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+    .ui-badge-rose  { background: rgba(244, 63, 94, 0.2);  color: #fb7185; }
+    .ui-badge-cyan  { background: rgba(56, 189, 248, 0.2); color: #38bdf8; }
+
+    .ui-box {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 8px;
+    }
+
+    .ui-btn {
+      background: #0284c7;
+      color: #ffffff;
+      padding: 6px 10px;
+      border-radius: 6px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 0.68rem;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
+    }
+
+    .ui-btn-rose {
+      background: #e11d48;
+      box-shadow: 0 2px 8px rgba(225, 29, 72, 0.4);
     }
 
     /* Cards */
     .card {
       background: var(--bg-card);
       border: 1px solid var(--bg-card-border);
-      border-radius: 12px;
-      padding: clamp(12px, 1.8vh, 20px) clamp(14px, 1.8vw, 22px);
+      border-radius: 10px;
+      padding: clamp(10px, 1.5vh, 16px) clamp(12px, 1.5vw, 18px);
       backdrop-filter: blur(12px);
       display: flex;
       flex-direction: column;
       position: relative;
       overflow: hidden;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
     }
 
     .card::before {
@@ -214,28 +367,20 @@
       background: linear-gradient(90deg, var(--accent-cyan), transparent);
     }
 
-    .card-emerald::before {
-      background: linear-gradient(90deg, var(--accent-emerald), transparent);
-    }
-
-    .card-amber::before {
-      background: linear-gradient(90deg, var(--accent-amber), transparent);
-    }
-
-    .card-rose::before {
-      background: linear-gradient(90deg, var(--accent-rose), transparent);
-    }
+    .card-emerald::before { background: linear-gradient(90deg, var(--accent-emerald), transparent); }
+    .card-amber::before   { background: linear-gradient(90deg, var(--accent-amber), transparent); }
+    .card-rose::before    { background: linear-gradient(90deg, var(--accent-rose), transparent); }
 
     .card-header {
       display: flex;
       align-items: center;
-      gap: 10px;
-      margin-bottom: clamp(6px, 1.2vh, 12px);
+      gap: 8px;
+      margin-bottom: clamp(4px, 0.8vh, 8px);
     }
 
     .step-number {
-      width: clamp(24px, 2.5vw, 32px);
-      height: clamp(24px, 2.5vw, 32px);
+      width: clamp(22px, 2vw, 28px);
+      height: clamp(22px, 2vw, 28px);
       border-radius: 50%;
       background: rgba(56, 189, 248, 0.15);
       border: 1px solid var(--accent-cyan);
@@ -244,18 +389,18 @@
       align-items: center;
       justify-content: center;
       font-weight: 800;
-      font-size: clamp(0.75rem, 1vw, 0.95rem);
+      font-size: clamp(0.72rem, 0.9vw, 0.85rem);
       flex-shrink: 0;
     }
 
     .card-title {
-      font-size: clamp(0.95rem, 1.3vw, 1.2rem);
+      font-size: clamp(0.9rem, 1.15vw, 1.05rem);
       font-weight: 700;
       color: #ffffff;
     }
 
     .card-content {
-      font-size: clamp(0.8rem, 1.1vw, 0.95rem);
+      font-size: clamp(0.75rem, 0.95vw, 0.88rem);
       color: var(--text-muted);
       line-height: 1.45;
       flex: 1;
@@ -264,13 +409,14 @@
     .card-content ul {
       list-style-type: none;
       padding-left: 0;
-      margin-top: 6px;
+      margin-top: 4px;
     }
 
     .card-content li {
-      margin-bottom: 6px;
+      margin-bottom: 5px;
       position: relative;
-      padding-left: 18px;
+      padding-left: 16px;
+      color: #e2e8f0;
     }
 
     .card-content li::before {
@@ -285,44 +431,30 @@
       display: inline-block;
       background: rgba(56, 189, 248, 0.12);
       color: var(--accent-cyan);
-      padding: 2px 8px;
+      padding: 1px 7px;
       border-radius: 4px;
       font-weight: 600;
       font-size: 0.85em;
       border: 1px solid rgba(56, 189, 248, 0.25);
     }
 
-    .pill-green {
-      background: rgba(16, 185, 129, 0.15);
-      color: #34d399;
-      border-color: rgba(16, 185, 129, 0.3);
-    }
-
-    .pill-amber {
-      background: rgba(245, 158, 11, 0.15);
-      color: #fbbf24;
-      border-color: rgba(245, 158, 11, 0.3);
-    }
-
-    .pill-rose {
-      background: rgba(244, 63, 94, 0.15);
-      color: #fb7185;
-      border-color: rgba(244, 63, 94, 0.3);
-    }
+    .pill-green { background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3); }
+    .pill-amber { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border-color: rgba(245, 158, 11, 0.3); }
+    .pill-rose  { background: rgba(244, 63, 94, 0.15);  color: #fb7185; border-color: rgba(244, 63, 94, 0.3); }
 
     /* Screen Path Visualizer */
     .app-path {
-      background: rgba(0, 0, 0, 0.4);
-      border: 1px dashed rgba(255, 255, 255, 0.2);
-      padding: 8px 12px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px dashed rgba(56, 189, 248, 0.3);
+      padding: 6px 10px;
       border-radius: 6px;
       font-family: monospace;
-      font-size: clamp(0.75rem, 1vw, 0.9rem);
+      font-size: clamp(0.7rem, 0.85vw, 0.8rem);
       color: #38bdf8;
       display: flex;
       align-items: center;
       gap: 6px;
-      margin-top: 10px;
+      margin-top: 8px;
     }
 
     /* Slide Footer Controls */
@@ -331,36 +463,36 @@
       justify-content: space-between;
       align-items: center;
       border-top: 1px solid rgba(255, 255, 255, 0.08);
-      padding-top: clamp(8px, 1.5vh, 16px);
+      padding-top: clamp(6px, 1.2vh, 12px);
       flex-shrink: 0;
     }
 
     .controls-hint {
-      font-size: clamp(0.7rem, 0.9vw, 0.82rem);
+      font-size: clamp(0.68rem, 0.85vw, 0.78rem);
       color: var(--text-muted);
     }
 
     .nav-buttons {
       display: flex;
-      gap: 10px;
+      gap: 8px;
     }
 
     .btn-nav {
       background: rgba(255, 255, 255, 0.06);
       border: 1px solid rgba(255, 255, 255, 0.15);
       color: #ffffff;
-      padding: clamp(6px, 1vh, 8px) clamp(12px, 1.5vw, 18px);
+      padding: clamp(5px, 0.8vh, 7px) clamp(10px, 1.2vw, 15px);
       border-radius: 6px;
       cursor: pointer;
       font-weight: 600;
-      font-size: clamp(0.75rem, 1vw, 0.85rem);
+      font-size: clamp(0.72rem, 0.9vw, 0.82rem);
       transition: all 0.2s ease;
     }
 
     .btn-nav:hover {
       background: var(--primary);
       border-color: var(--accent-cyan);
-      box-shadow: 0 0 12px rgba(2, 132, 199, 0.4);
+      box-shadow: 0 0 10px rgba(2, 132, 199, 0.4);
     }
 
     .progress-bar-container {
@@ -389,7 +521,7 @@
       z-index: 200;
       display: none;
       flex-direction: column;
-      padding: 40px;
+      padding: 30px;
     }
 
     .overview-drawer.open {
@@ -400,21 +532,21 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
     }
 
     .overview-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
       overflow-y: auto;
-      max-height: calc(100vh - 120px);
+      max-height: calc(100vh - 100px);
     }
 
     .overview-item {
       background: var(--bg-card);
       border: 1px solid var(--bg-card-border);
-      padding: 16px;
+      padding: 14px;
       border-radius: 8px;
       cursor: pointer;
       transition: all 0.2s;
@@ -427,19 +559,19 @@
     }
 
     .overview-number {
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       color: var(--accent-cyan);
       font-weight: 700;
     }
 
     .overview-title {
-      font-size: 1rem;
+      font-size: 0.92rem;
       font-weight: 600;
       color: #ffffff;
-      margin-top: 4px;
+      margin-top: 3px;
     }
 
-    /* Title Slide Specifics */
+    /* Hero Layout (Slide 1) */
     .hero-layout {
       display: flex;
       flex-direction: column;
@@ -453,29 +585,29 @@
     .hero-badge {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       background: rgba(56, 189, 248, 0.12);
       border: 1px solid rgba(56, 189, 248, 0.3);
-      padding: 6px 16px;
+      padding: 5px 14px;
       border-radius: 30px;
       color: var(--accent-cyan);
-      font-size: clamp(0.75rem, 1.2vw, 0.95rem);
+      font-size: clamp(0.72rem, 1vw, 0.88rem);
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 1px;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
     }
 
     .hero-title {
-      font-size: clamp(2.2rem, 5vw, 4.2rem);
+      font-size: clamp(2rem, 4.4vw, 3.8rem);
       font-weight: 900;
-      line-height: 1.08;
+      line-height: 1.1;
       letter-spacing: -1px;
       background: linear-gradient(135deg, #ffffff 30%, #94a3b8 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      margin-bottom: 14px;
-      max-width: 900px;
+      margin-bottom: 12px;
+      max-width: 850px;
     }
 
     .hero-gradient {
@@ -485,59 +617,33 @@
     }
 
     .hero-desc {
-      font-size: clamp(1rem, 1.6vw, 1.35rem);
+      font-size: clamp(0.9rem, 1.4vw, 1.2rem);
       color: var(--text-muted);
-      max-width: 720px;
+      max-width: 680px;
       line-height: 1.5;
-      margin-bottom: 28px;
+      margin-bottom: 24px;
     }
 
     .meta-box {
       display: flex;
-      gap: 20px;
+      gap: 16px;
       background: rgba(17, 24, 39, 0.8);
       border: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 12px 24px;
+      padding: 10px 20px;
       border-radius: 12px;
     }
 
-    .meta-item {
-      text-align: left;
-    }
+    .meta-item { text-align: left; }
+    .meta-label { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; }
+    .meta-value { font-size: 0.88rem; font-weight: 700; color: #ffffff; }
 
-    .meta-label {
-      font-size: 0.72rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .meta-value {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: #ffffff;
-    }
-
-    /* Comparison / Table-Like Cards */
-    .data-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 8px;
-      font-size: clamp(0.75rem, 1.05vw, 0.9rem);
-    }
-
-    .data-table th {
-      text-align: left;
-      padding: 8px 10px;
-      background: rgba(255, 255, 255, 0.05);
-      color: var(--accent-cyan);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .data-table td {
-      padding: 8px 10px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      color: var(--text-main);
+    /* 4 Grid on Slide 2 */
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: clamp(8px, 1.2vw, 16px);
+      height: 100%;
+      max-height: calc(100vh - 170px);
     }
   </style>
 </head>
@@ -559,20 +665,20 @@
 
       <div class="slide-body">
         <div class="hero-layout">
-          <div class="hero-badge">Medical Representative Field Guide</div>
+          <div class="hero-badge">Visual Field Training Guide</div>
           <h1 class="hero-title">Mastering <span class="hero-gradient">RepPulse Pharma</span> Mobile SFA</h1>
-          <p class="hero-desc">Your comprehensive visual training manual: from morning 10:30 AM punch-in and tour plans to doctor master detailing, chemist order booking, and instant TA/DA expense claims.</p>
+          <p class="hero-desc">Your complete visual training manual: from morning 10:30 AM punch-in and tour plans to doctor master detailing, chemist order booking, and instant TA/DA expense claims.</p>
           
           <div class="meta-box">
             <div class="meta-item">
               <div class="meta-label">Primary Territories</div>
               <div class="meta-value">Silchar • Karimganj • Dharmanagar</div>
             </div>
-            <div class="meta-item" style="border-left: 1px solid rgba(255,255,255,0.1); padding-left: 20px;">
+            <div class="meta-item" style="border-left: 1px solid rgba(255,255,255,0.1); padding-left: 16px;">
               <div class="meta-label">App Release</div>
               <div class="meta-value">v1.7.4 (Live Cloud Supabase)</div>
             </div>
-            <div class="meta-item" style="border-left: 1px solid rgba(255,255,255,0.1); padding-left: 20px;">
+            <div class="meta-item" style="border-left: 1px solid rgba(255,255,255,0.1); padding-left: 16px;">
               <div class="meta-label">Security Protocol</div>
               <div class="meta-value">Division Isolation & GPS Geofence</div>
             </div>
@@ -581,7 +687,7 @@
       </div>
 
       <footer class="slide-footer">
-        <span class="controls-hint">Use <strong>Left / Right Arrow</strong>, <strong>Space</strong>, or on-screen buttons to navigate • Press <strong>O</strong> for overview</span>
+        <span class="controls-hint">Use <strong>Left / Right Arrow</strong>, <strong>Space</strong>, or on-screen buttons • Press <strong>O</strong> for slide index</span>
         <div class="nav-buttons">
           <button class="btn-nav" onclick="Deck.showOverview()">Slides</button>
           <button class="btn-nav" onclick="Deck.next()">Next ➔</button>
@@ -623,7 +729,7 @@
                 <li>Select day's beat (HQ, Ex-station, Outstation).</li>
                 <li>Verify sync status with RSM dashboard.</li>
               </ul>
-              <div class="app-path">📱 Home ➔ Punch In</div>
+              <div class="app-path">📱 Home ➔ PUNCH IN</div>
             </div>
           </div>
 
@@ -691,7 +797,7 @@
 
 
     <!-- ========================================================================
-         SLIDE 3: LOGIN & ACCOUNT SETUP
+         SLIDE 3: LOGIN & PROFILE (WITH SMARTPHONE MOCKUP)
          ======================================================================== -->
     <section class="slide" id="slide-3">
       <header class="slide-header">
@@ -709,51 +815,74 @@
           <p class="slide-subtitle">RepPulse associates your credentials with your assigned Headquarter and doctor list.</p>
         </div>
 
-        <div class="grid-3">
-          <div class="card">
-            <div class="card-header">
-              <span class="step-number">A</span>
-              <h3 class="card-title">Login Credentials</h3>
+        <div class="split-layout">
+          <div class="instructions-pane">
+            <div class="card">
+              <div class="card-header">
+                <span class="step-number">1</span>
+                <h3 class="card-title">Mobile Login Credentials</h3>
+              </div>
+              <div class="card-content">
+                <ul>
+                  <li><strong>Registered Phone:</strong> Enter your 10-digit mobile number.</li>
+                  <li><strong>Security PIN:</strong> Enter default PIN <span class="highlight-pill">1234</span>.</li>
+                  <li><strong>Employee Code:</strong> Auto-recognized (e.g. <code>NLCL-0005</code> for Satyam, <code>NLCL-0004</code> for Pranjal).</li>
+                </ul>
+                <div class="app-path">📱 Login Screen ➔ PIN 1234</div>
+              </div>
             </div>
-            <div class="card-content">
-              <p>Launch <strong>RepPulse</strong> and enter your registered credentials:</p>
-              <ul>
-                <li><strong>Mobile Number:</strong> Your registered 10-digit number.</li>
-                <li><strong>Security PIN:</strong> Default is <span class="highlight-pill">1234</span>.</li>
-                <li><strong>Employee Code:</strong> Automatically detected (e.g. <code>NLCL-0005</code> for Satyam, <code>NLCL-0004</code> for Pranjal).</li>
-              </ul>
-              <div class="app-path">📱 Login Screen</div>
+
+            <div class="card card-emerald">
+              <div class="card-header">
+                <span class="step-number">2</span>
+                <h3 class="card-title">GPS & Background Permissions</h3>
+              </div>
+              <div class="card-content">
+                <ul>
+                  <li>When prompted, select <span class="highlight-pill pill-green">"Allow While Using App"</span>.</li>
+                  <li>Keep <strong>High Accuracy Location</strong> enabled for clinic geofencing.</li>
+                </ul>
+              </div>
             </div>
           </div>
 
-          <div class="card card-emerald">
-            <div class="card-header">
-              <span class="step-number">B</span>
-              <h3 class="card-title">Location Permissions</h3>
-            </div>
-            <div class="card-content">
-              <p>Pharma SFA requires location services to enable call verification:</p>
-              <ul>
-                <li>Select <span class="highlight-pill pill-green">"Allow While Using App"</span>.</li>
-                <li>Enable <strong>High Accuracy Mode</strong> for accurate geofencing.</li>
-                <li>Background Telemetry logs location every 15 mins during duty hours.</li>
-              </ul>
-              <div class="app-path">⚙️ System Settings ➔ Location: ON</div>
-            </div>
-          </div>
+          <!-- Smartphone Mockup: Login Screen -->
+          <div class="phone-pane">
+            <div class="phone-mockup">
+              <div class="phone-notch"><div class="phone-camera-dot"></div></div>
+              <div class="phone-screen">
+                <div class="phone-status-bar">
+                  <span>09:28</span>
+                  <span>5G 📶 100% 🔋</span>
+                </div>
+                <div class="phone-app-header">
+                  <span class="phone-app-title">RepPulse SFA</span>
+                  <span class="ui-badge ui-badge-cyan">v1.7.4</span>
+                </div>
+                <div class="phone-app-body" style="justify-content: center; align-items: center; text-align: center;">
+                  <div style="width: 44px; height: 44px; border-radius: 10px; background: linear-gradient(135deg, #0284c7, #10b981); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: #fff; font-weight: bold; margin-bottom: 6px;">RP</div>
+                  <div style="font-weight: 800; color: #fff; font-size: 0.85rem;">Sign In to RepPulse</div>
+                  <div style="font-size: 0.65rem; color: #94a3b8; margin-bottom: 12px;">NextLife Care Life Sciences</div>
 
-          <div class="card card-amber">
-            <div class="card-header">
-              <span class="step-number">C</span>
-              <h3 class="card-title">Territory Verification</h3>
-            </div>
-            <div class="card-content">
-              <p>Check your assigned division on the top profile badge:</p>
-              <ul>
-                <li><strong>Satyam Shil:</strong> Silchar HQ (Primary), with Kalain, Sonai, Bagha, Badarpur & Halflong.</li>
-                <li><strong>Pranjal Malakar:</strong> Karimganj HQ (Primary), with Kaliganj, Nilambazar, RK Nagar & Dharmanagar.</li>
-              </ul>
-              <div class="app-path">📱 Home Header ➔ Profile Card</div>
+                  <div style="width: 100%; text-align: left; margin-bottom: 6px;">
+                    <div style="font-size: 0.58rem; color: #94a3b8; margin-bottom: 2px;">MOBILE NUMBER</div>
+                    <div style="background: rgba(255,255,255,0.06); border: 1px solid #38bdf8; border-radius: 6px; padding: 6px 8px; color: #fff; font-family: monospace;">+91 93948 31412</div>
+                  </div>
+
+                  <div style="width: 100%; text-align: left; margin-bottom: 10px;">
+                    <div style="font-size: 0.58rem; color: #94a3b8; margin-bottom: 2px;">4-DIGIT PIN</div>
+                    <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 6px 8px; color: #38bdf8; letter-spacing: 6px; font-weight: bold;">••••</div>
+                  </div>
+
+                  <div style="width: 100%;" class="ui-btn">LOG IN AS MEDICAL REP</div>
+
+                  <div class="ui-box" style="width: 100%; margin-top: 10px; text-align: left;">
+                    <div style="font-size: 0.6rem; color: #34d399; font-weight: bold;">✔ VERIFIED PROFILE</div>
+                    <div style="font-size: 0.62rem; color: #fff;">Satyam Shil (NLCL-0005)</div>
+                    <div style="font-size: 0.58rem; color: #94a3b8;">Headquarter: Silchar HQ</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -788,53 +917,77 @@
           <p class="slide-subtitle">Field duty must be reported every morning with geo-tagged verification.</p>
         </div>
 
-        <div class="grid-3">
-          <div class="card card-emerald">
-            <div class="card-header">
-              <span class="step-number">1</span>
-              <h3 class="card-title">Punch In Before 10:30 AM</h3>
+        <div class="split-layout">
+          <div class="instructions-pane">
+            <div class="card card-emerald">
+              <div class="card-header">
+                <span class="step-number">1</span>
+                <h3 class="card-title">Punch In Before 10:30 AM</h3>
+              </div>
+              <div class="card-content">
+                <ul>
+                  <li>Tap <strong>"PUNCH IN"</strong> on the Home dashboard.</li>
+                  <li><strong>Live Selfie:</strong> Take a photo in field attire at your working beat.</li>
+                  <li><strong>Working Route:</strong> Select HQ, Ex-station, or Outstation matching your Tour Plan.</li>
+                </ul>
+                <div class="app-path">📱 Home ➔ PUNCH IN Button</div>
+              </div>
             </div>
-            <div class="card-content">
-              <ul>
-                <li>Tap <strong>"PUNCH IN"</strong> on the Home dashboard.</li>
-                <li><strong>GPS Camera:</strong> Take a clear photo of yourself in field attire in your working area.</li>
-                <li>GPS coordinates and timestamp are embedded into your daily log.</li>
-              </ul>
-              <div class="app-path">📱 Home ➔ PUNCH IN Button</div>
+
+            <div class="card card-rose">
+              <div class="card-header">
+                <span class="step-number">!</span>
+                <h3 class="card-title">Past 10:30 AM? Late Approval</h3>
+              </div>
+              <div class="card-content">
+                <p>If you punch in after 10:30 AM, reporting is <strong>LOCKED</strong>:</p>
+                <ul>
+                  <li>A red dialog appears: <em>"Late Attendance Locked"</em>.</li>
+                  <li>Enter your legitimate reason (e.g. <em>"Bus breakdown at Kalain"</em>).</li>
+                  <li>Tap <strong>"Request RSM Approval"</strong>. Bodrud RSM approves from his console to unlock your day.</li>
+                </ul>
+                <div class="app-path">📱 Modal ➔ Request RSM Approval</div>
+              </div>
             </div>
           </div>
 
-          <div class="card">
-            <div class="card-header">
-              <span class="step-number">2</span>
-              <h3 class="card-title">Select Working Route / Beat</h3>
-            </div>
-            <div class="card-content">
-              <p>Choose your work type matching your approved Tour Plan:</p>
-              <ul>
-                <li><strong>HQ Working:</strong> Silchar Central, Karimganj Town, etc.</li>
-                <li><strong>Ex-station (Extension):</strong> Kalain, Sonai, Bagha, Kaliganj, RK Nagar.</li>
-                <li><strong>Outstation:</strong> Halflong, Dharmanagar, Aizawl.</li>
-                <li><strong>Joint Tour:</strong> When RSM Bodrud is accompanying you.</li>
-              </ul>
-              <div class="app-path">📱 Punch-In Screen ➔ Work Type Chips</div>
-            </div>
-          </div>
+          <!-- Smartphone Mockup: Attendance Screen -->
+          <div class="phone-pane">
+            <div class="phone-mockup">
+              <div class="phone-notch"><div class="phone-camera-dot"></div></div>
+              <div class="phone-screen">
+                <div class="phone-status-bar">
+                  <span>09:34</span>
+                  <span>5G 📶 98% 🔋</span>
+                </div>
+                <div class="phone-app-header">
+                  <span class="phone-app-title">Punch-In Attendance</span>
+                  <span class="ui-badge ui-badge-green">ON-TIME</span>
+                </div>
+                <div class="phone-app-body">
+                  <!-- Camera Frame Mockup -->
+                  <div style="height: 110px; background: #1e293b; border: 2px dashed #38bdf8; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
+                    <div style="width: 45px; height: 45px; border-radius: 50%; border: 2px solid #34d399; display: flex; align-items: center; justify-content: center; color: #34d399; font-size: 1.2rem;">👤</div>
+                    <div style="font-size: 0.58rem; color: #38bdf8; margin-top: 4px;">📍 24.8333° N, 92.7789° E</div>
+                    <div style="position: absolute; bottom: 4px; right: 6px; font-size: 0.52rem; color: #94a3b8;">Nov 20, 09:34 AM</div>
+                  </div>
 
-          <div class="card card-rose">
-            <div class="card-header">
-              <span class="step-number">!</span>
-              <h3 class="card-title">Past 10:30 AM? Late Approval</h3>
-            </div>
-            <div class="card-content">
-              <p>If you punch in after 10:30 AM, reporting is <strong>LOCKED</strong>:</p>
-              <ul>
-                <li>A modal appears: <em>"Late Attendance Locked"</em>.</li>
-                <li>Enter the legitimate reason (e.g. <em>"Vehicle breakdown at Kalain road"</em>).</li>
-                <li>Tap <strong>"Request RSM Approval"</strong>.</li>
-                <li>Bodrud RSM will approve instantly from his console to unlock your day.</li>
-              </ul>
-              <div class="app-path">📱 Popup ➔ Request RSM Approval</div>
+                  <div style="font-size: 0.62rem; color: #94a3b8; font-weight: bold;">SELECT WORK BEAT</div>
+                  <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                    <span class="ui-badge ui-badge-cyan">Silchar Central HQ</span>
+                    <span class="ui-badge ui-badge-green">Kalain Ex-station</span>
+                    <span class="ui-badge ui-badge-amber">Sonai/Bagha</span>
+                  </div>
+
+                  <!-- Late Modal Overlay Callout -->
+                  <div class="ui-box" style="background: rgba(225, 29, 72, 0.15); border-color: rgba(225, 29, 72, 0.4);">
+                    <div style="color: #fb7185; font-weight: bold; font-size: 0.62rem;">⚠️ 10:30 AM CUTOFF RULE</div>
+                    <div style="font-size: 0.58rem; color: #e2e8f0; margin-top: 2px;">Field reporting locked past 10:30 AM without RSM approval.</div>
+                  </div>
+
+                  <div class="ui-btn" style="background: #10b981; margin-top: auto;">CONFIRM PUNCH IN (09:34 AM)</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -869,40 +1022,89 @@
           <p class="slide-subtitle">Your monthly work schedule is live in the cloud and guides your daily calls.</p>
         </div>
 
-        <div class="grid-2">
-          <div class="card">
-            <div class="card-header">
-              <span class="step-number">A</span>
-              <h3 class="card-title">Where to Find Your Tour Plan</h3>
+        <div class="split-layout">
+          <div class="instructions-pane">
+            <div class="card">
+              <div class="card-header">
+                <span class="step-number">A</span>
+                <h3 class="card-title">Where to Find Your Tour Plan</h3>
+              </div>
+              <div class="card-content">
+                <ul>
+                  <li>Open the app and tap <strong>More (☰) ➔ Tour Plan</strong>.</li>
+                  <li>Color-coded calendar grid:
+                    <br>• <span class="highlight-pill pill-green">Green (TOUR):</span> Approved working beat.
+                    <br>• <span class="highlight-pill pill-amber">Amber (SUNDAY):</span> Weekly rest day.
+                    <br>• <span class="highlight-pill pill-rose">Rose (HOLIDAY):</span> Official holiday.
+                  </li>
+                  <li>Satyam's & Pranjal's Nov 20–30 beats are already pre-loaded!</li>
+                </ul>
+                <div class="app-path">📱 More (☰) ➔ Tour Plan</div>
+              </div>
             </div>
-            <div class="card-content">
-              <ul>
-                <li>Open the app and tap the <strong>"More" (☰)</strong> tab on the bottom bar.</li>
-                <li>Select <strong>"Tour Plan" (MTP Calendar)</strong>.</li>
-                <li>You will see your monthly calendar grid with color-coded days:
-                  <br>• <span class="highlight-pill pill-green">Green (TOUR):</span> Approved working beat.
-                  <br>• <span class="highlight-pill pill-amber">Amber (SUNDAY):</span> Weekly rest day.
-                  <br>• <span class="highlight-pill pill-rose">Rose (LEAVE/HOLIDAY):</span> Official holiday.
-                </li>
-                <li>Tap any date to view scheduled town, target doctors (10), and target chemists (4).</li>
-              </ul>
-              <div class="app-path">📱 Bottom Bar ➔ More (☰) ➔ Tour Plan</div>
+
+            <div class="card card-emerald">
+              <div class="card-header">
+                <span class="step-number">B</span>
+                <h3 class="card-title">Auto-Syncs with Morning Punch-In</h3>
+              </div>
+              <div class="card-content">
+                <ul>
+                  <li>When you punch in, your scheduled beat (e.g. <em>Kalain Ex-station</em>) is <strong>automatically selected</strong>.</li>
+                  <li>No manual guesswork required.</li>
+                </ul>
+              </div>
             </div>
           </div>
 
-          <div class="card card-emerald">
-            <div class="card-header">
-              <span class="step-number">B</span>
-              <h3 class="card-title">How It Syncs to Morning Attendance</h3>
-            </div>
-            <div class="card-content">
-              <ul>
-                <li>When you punch in each morning, RepPulse automatically checks the cloud <code>tour_plans</code> table.</li>
-                <li>Your scheduled town (e.g. <em>"Work at Kalain Ex-station"</em>) is <strong>automatically selected</strong> for you!</li>
-                <li>No need to manually remember which beat you are supposed to work today.</li>
-                <li><strong>Rescheduling:</strong> If heavy rain or road closure requires changing your beat, use the <em>"Request Reschedule"</em> button to alert Bodrud RSM.</li>
-              </ul>
-              <div class="app-path">⚡ Auto-Linked between MTP ↔ Attendance</div>
+          <!-- Smartphone Mockup: Tour Plan Calendar -->
+          <div class="phone-pane">
+            <div class="phone-mockup">
+              <div class="phone-notch"><div class="phone-camera-dot"></div></div>
+              <div class="phone-screen">
+                <div class="phone-status-bar">
+                  <span>10:15</span>
+                  <span>5G 📶 95% 🔋</span>
+                </div>
+                <div class="phone-app-header">
+                  <span class="phone-app-title">Tour Plan (Nov 2026)</span>
+                  <span class="ui-badge ui-badge-green">APPROVED</span>
+                </div>
+                <div class="phone-app-body">
+                  <!-- Mini Calendar Grid -->
+                  <div class="ui-box">
+                    <div style="font-weight: bold; font-size: 0.65rem; color: #fff; margin-bottom: 4px;">NOVEMBER 2026</div>
+                    <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; font-size: 0.55rem; color: #94a3b8;">
+                      <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; font-size: 0.58rem; margin-top: 4px;">
+                      <span style="color:#475569">17</span><span style="color:#475569">18</span><span style="color:#475569">19</span>
+                      <span style="background:#10b981; color:#fff; border-radius:3px; font-weight:bold;">20</span>
+                      <span style="background:#0284c7; color:#fff; border-radius:3px;">21</span>
+                      <span style="background:#f59e0b; color:#fff; border-radius:3px;">22</span>
+                      <span style="background:#0284c7; color:#fff; border-radius:3px;">23</span>
+                    </div>
+                  </div>
+
+                  <!-- Selected Day Details -->
+                  <div class="ui-box" style="border-left: 3px solid #10b981;">
+                    <div style="font-weight: bold; color: #38bdf8; font-size: 0.68rem;">Fri, 20 Nov 2026</div>
+                    <div style="font-size: 0.65rem; color: #fff; font-weight: 700; margin-top: 2px;">Work at Kalain Ex-station</div>
+                    <div style="font-size: 0.58rem; color: #94a3b8;">Route: rt-sil-kalain (55 km)</div>
+                    <div style="margin-top: 4px; display: flex; gap: 4px;">
+                      <span class="ui-badge ui-badge-green">Target: 10 Drs</span>
+                      <span class="ui-badge ui-badge-cyan">4 Chemists</span>
+                    </div>
+                  </div>
+
+                  <div class="ui-box" style="border-left: 3px solid #0284c7;">
+                    <div style="font-weight: bold; color: #94a3b8; font-size: 0.65rem;">Sat, 21 Nov 2026</div>
+                    <div style="font-size: 0.62rem; color: #fff;">Work at SilcharHQ (SMCH Core)</div>
+                  </div>
+
+                  <div class="ui-btn" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); margin-top: auto;">REQUEST RESCHEDULE</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -937,55 +1139,94 @@
           <p class="slide-subtitle">Access your doctor list and add new prescribers with GPS verification.</p>
         </div>
 
-        <div class="grid-3">
-          <div class="card">
-            <div class="card-header">
-              <span class="step-number">1</span>
-              <h3 class="card-title">Territory Isolation</h3>
+        <div class="split-layout">
+          <div class="instructions-pane">
+            <div class="card">
+              <div class="card-header">
+                <span class="step-number">1</span>
+                <h3 class="card-title">Territory Isolation (Zero Clutter)</h3>
+              </div>
+              <div class="card-content">
+                <ul>
+                  <li><strong>Satyam:</strong> Silchar (Cachar), SMCH Ghungoor, Hospital Rd, Sonai, Bagha, Kalain.</li>
+                  <li><strong>Pranjal:</strong> Karimganj, Nilambazar, Patharkandi, Dharmanagar, RK Nagar.</li>
+                  <li>You only see doctors assigned to your active territory!</li>
+                </ul>
+                <div class="app-path">📱 Bottom Bar ➔ Doctors Tab</div>
+              </div>
             </div>
-            <div class="card-content">
-              <p>The app shows <strong>only</strong> doctors relevant to your assigned beat:</p>
-              <ul>
-                <li><strong>Satyam:</strong> Silchar (Cachar), SMCH Ghungoor, Hospital Rd, Sonai, Bagha, Kalain.</li>
-                <li><strong>Pranjal:</strong> Karimganj, Nilambazar, Patharkandi, Dharmanagar, RK Nagar.</li>
-                <li>You will never be cluttered with doctors from other divisions!</li>
-              </ul>
-              <div class="app-path">📱 Bottom Bar ➔ Doctors Tab</div>
+
+            <div class="card card-amber">
+              <div class="card-header">
+                <span class="step-number">2</span>
+                <h3 class="card-title">Adding a New Prescriber</h3>
+              </div>
+              <div class="card-content">
+                <ul>
+                  <li>Tap the <strong>"+" (Add Doctor)</strong> button in top right.</li>
+                  <li>Enter Doctor Name, Specialty, Clinic Name & Address.</li>
+                  <li>Tap <strong>"Capture Current GPS Location"</strong> while at chamber.</li>
+                </ul>
+                <div class="app-path">📱 Doctors Tab ➔ Top Right "+" Icon</div>
+              </div>
             </div>
           </div>
 
-          <div class="card card-emerald">
-            <div class="card-header">
-              <span class="step-number">2</span>
-              <h3 class="card-title">Searching & Filtering</h3>
-            </div>
-            <div class="card-content">
-              <ul>
-                <li>Use the top search bar to search by <strong>Doctor Name</strong>, <strong>Clinic</strong>, or <strong>Specialty</strong>.</li>
-                <li>Filter by:
-                  <br>• <strong>Pending:</strong> Doctors not yet met this month.
-                  <br>• <strong>Completed:</strong> Calls already logged.
-                  <br>• <strong>Tier A / B / C:</strong> High-priority prescribers.
-                </li>
-              </ul>
-              <div class="app-path">🔍 Doctor List ➔ Search Input</div>
-            </div>
-          </div>
+          <!-- Smartphone Mockup: Doctor Master -->
+          <div class="phone-pane">
+            <div class="phone-mockup">
+              <div class="phone-notch"><div class="phone-camera-dot"></div></div>
+              <div class="phone-screen">
+                <div class="phone-status-bar">
+                  <span>10:45</span>
+                  <span>5G 📶 92% 🔋</span>
+                </div>
+                <div class="phone-app-header">
+                  <span class="phone-app-title">Doctors (Cachar)</span>
+                  <span style="background: #10b981; color: #fff; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; cursor: pointer;">+</span>
+                </div>
+                <div class="phone-app-body">
+                  <!-- Search Bar -->
+                  <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; padding: 5px 8px; font-size: 0.62rem; color: #94a3b8;">🔍 Search Doctor / Clinic...</div>
 
-          <div class="card card-amber">
-            <div class="card-header">
-              <span class="step-number">3</span>
-              <h3 class="card-title">Adding a New Doctor</h3>
-            </div>
-            <div class="card-content">
-              <p>Found a new prescriber? Add them instantly:</p>
-              <ul>
-                <li>Tap the <strong>"+" (Add Doctor)</strong> button in the top right.</li>
-                <li>Fill in: Doctor Name, Specialty, Chamber Name & Address.</li>
-                <li>Tap <strong>"Capture Current GPS Location"</strong> while standing at the clinic.</li>
-                <li>Save ➔ Doctor is instantly live in your territory.</li>
-              </ul>
-              <div class="app-path">📱 Doctors Tab ➔ Top Right "+" Icon</div>
+                  <!-- Territory Filter Chips -->
+                  <div style="display: flex; gap: 4px;">
+                    <span class="ui-badge ui-badge-cyan">All (16)</span>
+                    <span class="ui-badge ui-badge-green">Silchar Core</span>
+                    <span class="ui-badge">Kalain</span>
+                  </div>
+
+                  <!-- Doctor Card 1 -->
+                  <div class="ui-box" style="border-left: 3px solid #38bdf8;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                      <span style="font-weight: bold; color: #fff; font-size: 0.68rem;">Dr. Shamim Ahmed Laskar</span>
+                      <span class="ui-badge ui-badge-green">TIER A</span>
+                    </div>
+                    <div style="font-size: 0.58rem; color: #38bdf8;">General Medicine (MBBS, MD)</div>
+                    <div style="font-size: 0.55rem; color: #94a3b8; margin-top: 2px;">Chamber: Hospital Road, Silchar</div>
+                    <div style="margin-top: 4px; display: flex; justify-content: space-between; align-items: center;">
+                      <span style="font-size: 0.52rem; color: #f59e0b;">Target: 8 calls (2 done)</span>
+                      <span class="ui-badge ui-badge-cyan">LOG CALL ➔</span>
+                    </div>
+                  </div>
+
+                  <!-- Doctor Card 2 -->
+                  <div class="ui-box">
+                    <div style="display: flex; justify-content: space-between;">
+                      <span style="font-weight: bold; color: #fff; font-size: 0.65rem;">Dr. B. Debnath</span>
+                      <span class="ui-badge ui-badge-amber">TIER B</span>
+                    </div>
+                    <div style="font-size: 0.58rem; color: #94a3b8;">Pediatrics • Meherpur</div>
+                  </div>
+                </div>
+                <div class="phone-nav-bar">
+                  <span>Home</span>
+                  <span class="phone-nav-item active">Doctors</span>
+                  <span>Visits</span>
+                  <span>Orders</span>
+                  <span>More</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1020,67 +1261,82 @@
           <p class="slide-subtitle">How to check in, show visual product aids, and log samples in under 60 seconds.</p>
         </div>
 
-        <div class="grid-4">
-          <div class="card">
-            <div class="card-header">
-              <span class="step-number">1</span>
-              <h3 class="card-title">Geofence Check-in</h3>
+        <div class="split-layout">
+          <div class="instructions-pane">
+            <div class="card card-emerald">
+              <div class="card-header">
+                <span class="step-number">1</span>
+                <h3 class="card-title">100m Geofence Auto-Detection</h3>
+              </div>
+              <div class="card-content">
+                <ul>
+                  <li>Arrive at doctor's clinic ➔ Tap <strong>"Check In"</strong>.</li>
+                  <li>GPS verifies you are within 100 meters of the chamber.</li>
+                </ul>
+              </div>
             </div>
-            <div class="card-content">
-              <p>When you arrive at the doctor's chamber:</p>
-              <ul>
-                <li>Tap the doctor's name in the <strong>Visits</strong> tab.</li>
-                <li>Tap <span class="highlight-pill pill-green">"Check In"</span>.</li>
-                <li>The app verifies your GPS within 100 meters of the chamber.</li>
-              </ul>
-              <div class="app-path">📍 Within 100m Geofence</div>
+
+            <div class="card">
+              <div class="card-header">
+                <span class="step-number">2</span>
+                <h3 class="card-title">Detailing & Sample Logging</h3>
+              </div>
+              <div class="card-content">
+                <ul>
+                  <li><strong>Visual Aid:</strong> Tap <em>"Open Detailing"</em> to present products.</li>
+                  <li><strong>Record Samples:</strong> Select sample strips handed over.</li>
+                  <li><strong>1-Tap Submit:</strong> Instantly updates your daily call count (+1 DCR).</li>
+                </ul>
+                <div class="app-path">📱 Visits ➔ Check In ➔ Submit Call</div>
+              </div>
             </div>
           </div>
 
-          <div class="card card-emerald">
-            <div class="card-header">
-              <span class="step-number">2</span>
-              <h3 class="card-title">Product Detailing</h3>
-            </div>
-            <div class="card-content">
-              <p>Detail our high-margin brands:</p>
-              <ul>
-                <li>Tap <strong>"Open Visual Aid"</strong> to show interactive product cards to the doctor.</li>
-                <li>Highlight key indications: Cefixime, Azithromycin, Pantoprazole.</li>
-              </ul>
-              <div class="app-path">📱 Tap "Detailing Slides"</div>
-            </div>
-          </div>
+          <!-- Smartphone Mockup: Visit Detailing -->
+          <div class="phone-pane">
+            <div class="phone-mockup">
+              <div class="phone-notch"><div class="phone-camera-dot"></div></div>
+              <div class="phone-screen">
+                <div class="phone-status-bar">
+                  <span>11:20</span>
+                  <span>5G 📶 88% 🔋</span>
+                </div>
+                <div class="phone-app-header">
+                  <span class="phone-app-title">Dr. Shamim Ahmed Laskar</span>
+                  <span class="ui-badge ui-badge-green">IN CLINIC</span>
+                </div>
+                <div class="phone-app-body">
+                  <div class="ui-box" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.3);">
+                    <div style="font-size: 0.6rem; color: #34d399; font-weight: bold;">📍 GEOFENCE VERIFIED</div>
+                    <div style="font-size: 0.58rem; color: #fff;">Within 38m of Hospital Rd Chamber</div>
+                  </div>
 
-          <div class="card card-amber">
-            <div class="card-header">
-              <span class="step-number">3</span>
-              <h3 class="card-title">Sampling & Inputs</h3>
-            </div>
-            <div class="card-content">
-              <p>Record all promotional items given:</p>
-              <ul>
-                <li>Select sample packs handed over (e.g. 2 strips).</li>
-                <li>Select promotional gifts / LBLs given.</li>
-                <li>Auto-deducts from your assigned sample bag.</li>
-              </ul>
-              <div class="app-path">📦 Sample Quantity Counter</div>
-            </div>
-          </div>
+                  <!-- Detailing Card -->
+                  <div class="ui-box">
+                    <div style="font-size: 0.58rem; color: #94a3b8; font-weight: bold;">DETAILED BRANDS</div>
+                    <div style="display: flex; gap: 4px; margin-top: 3px;">
+                      <span class="ui-badge ui-badge-cyan">R-DSR Cap</span>
+                      <span class="ui-badge ui-badge-green">CardioPulse-AM</span>
+                    </div>
+                  </div>
 
-          <div class="card card-rose">
-            <div class="card-header">
-              <span class="step-number">4</span>
-              <h3 class="card-title">Feedback & Submit</h3>
-            </div>
-            <div class="card-content">
-              <p>Complete the call report:</p>
-              <ul>
-                <li>Select doctor's response: <span class="highlight-pill pill-green">High Prescriber</span>, <span class="highlight-pill pill-amber">Supportive</span>, or <span class="highlight-pill">Follow-up</span>.</li>
-                <li>Tag supporting chemist nearby.</li>
-                <li>Tap <strong>"Submit Visit"</strong>.</li>
-              </ul>
-              <div class="app-path">✅ Call Saved ➔ DCR +1</div>
+                  <!-- Samples Given -->
+                  <div class="ui-box">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                      <span style="font-size: 0.62rem; color: #fff;">R-DSR Sample Strips:</span>
+                      <span style="background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 4px; color: #38bdf8; font-weight: bold;">2 Strips</span>
+                    </div>
+                  </div>
+
+                  <div style="font-size: 0.58rem; color: #94a3b8;">DOCTOR FEEDBACK</div>
+                  <div style="display: flex; gap: 4px;">
+                    <span class="ui-badge ui-badge-green">High Prescriber</span>
+                    <span class="ui-badge">Supportive</span>
+                  </div>
+
+                  <div class="ui-btn" style="background: #10b981; margin-top: auto;">SUBMIT VISIT REPORT</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1115,52 +1371,84 @@
           <p class="slide-subtitle">Generate instant digital purchase orders for local stockists and distributors.</p>
         </div>
 
-        <div class="grid-3">
-          <div class="card">
-            <div class="card-header">
-              <span class="step-number">1</span>
-              <h3 class="card-title">Select Chemist / Firm</h3>
+        <div class="split-layout">
+          <div class="instructions-pane">
+            <div class="card">
+              <div class="card-header">
+                <span class="step-number">1</span>
+                <h3 class="card-title">Select Chemist & Add Products</h3>
+              </div>
+              <div class="card-content">
+                <ul>
+                  <li>Tap <strong>"Orders" ➔ "New Order"</strong>.</li>
+                  <li>Pick registered Chemist (e.g. <em>Talent Drug Store, Bagha</em>).</li>
+                  <li>Live Pricing: Displays <strong>MRP, PTR</strong> (Chemist rate), and <strong>PTS</strong>.</li>
+                  <li>Enter quantity and apply active trade schemes (e.g. 10+1 free).</li>
+                </ul>
+                <div class="app-path">📱 Orders Tab ➔ New Order</div>
+              </div>
             </div>
-            <div class="card-content">
-              <ul>
-                <li>Tap the <strong>"Orders"</strong> tab on the bottom navigation bar.</li>
-                <li>Tap <strong>"New Order"</strong> and pick the Chemist from your territory list (e.g. <em>Talent Drug Store, Popular Pharmacy, Apollo Silchar</em>).</li>
-                <li>If visiting a new chemist, tap <em>"Add Chemist"</em> to record their Drug License (DL) and phone.</li>
-              </ul>
-              <div class="app-path">📱 Orders Tab ➔ New Order</div>
+
+            <div class="card card-emerald">
+              <div class="card-header">
+                <span class="step-number">2</span>
+                <h3 class="card-title">Select Supplying Stockist</h3>
+              </div>
+              <div class="card-content">
+                <ul>
+                  <li>Pick local distributor (e.g. <em>Barak Pharma Distributors</em>).</li>
+                  <li>Generates instant PDF order copy and syncs with warehouse.</li>
+                </ul>
+              </div>
             </div>
           </div>
 
-          <div class="card card-emerald">
-            <div class="card-header">
-              <span class="step-number">2</span>
-              <h3 class="card-title">Add Products with Rates</h3>
-            </div>
-            <div class="card-content">
-              <p>The app shows real-time commercial pricing:</p>
-              <ul>
-                <li><strong>MRP:</strong> Maximum Retail Price for patients.</li>
-                <li><strong>PTR:</strong> Price to Retailer (Chemist buying rate).</li>
-                <li><strong>PTS:</strong> Price to Stockist.</li>
-                <li>Select product (e.g. <em>Nexcel-200, Pantanex-DSR</em>), enter quantity, and apply active trade schemes (e.g. 10+1 free).</li>
-              </ul>
-              <div class="app-path">💊 Product Master Catalog</div>
-            </div>
-          </div>
+          <!-- Smartphone Mockup: Chemist Order -->
+          <div class="phone-pane">
+            <div class="phone-mockup">
+              <div class="phone-notch"><div class="phone-camera-dot"></div></div>
+              <div class="phone-screen">
+                <div class="phone-status-bar">
+                  <span>14:10</span>
+                  <span>5G 📶 82% 🔋</span>
+                </div>
+                <div class="phone-app-header">
+                  <span class="phone-app-title">New Chemist Order</span>
+                  <span class="ui-badge ui-badge-cyan">DRAFT</span>
+                </div>
+                <div class="phone-app-body">
+                  <div class="ui-box">
+                    <div style="font-size: 0.58rem; color: #94a3b8;">CHEMIST / FIRM</div>
+                    <div style="font-size: 0.68rem; color: #fff; font-weight: bold;">Talent Drug Store</div>
+                    <div style="font-size: 0.55rem; color: #38bdf8;">Bagha Bazar, Cachar • DL-29384</div>
+                  </div>
 
-          <div class="card card-amber">
-            <div class="card-header">
-              <span class="step-number">3</span>
-              <h3 class="card-title">Review & Submit Order</h3>
-            </div>
-            <div class="card-content">
-              <ul>
-                <li>Review the order summary with net value and applicable GST.</li>
-                <li>Select the supplying stockist (e.g. <em>Barak Pharma Distributors</em>).</li>
-                <li>Tap <strong>"Confirm & Send Order"</strong>.</li>
-                <li>Generates instant PDF order copy and syncs with headquarters for dispatch.</li>
-              </ul>
-              <div class="app-path">📄 Instant Digital PO Dispatch</div>
+                  <!-- Order Items -->
+                  <div class="ui-box" style="border-left: 3px solid #34d399;">
+                    <div style="display: flex; justify-content: space-between;">
+                      <span style="font-weight: bold; color: #fff; font-size: 0.65rem;">CefoPrime-200 Tab</span>
+                      <span style="color: #38bdf8; font-weight: bold; font-size: 0.65rem;">₹1,607.10</span>
+                    </div>
+                    <div style="font-size: 0.55rem; color: #94a3b8;">PTR: ₹160.71 • Qty: 10 + 1 Free</div>
+                  </div>
+
+                  <div class="ui-box">
+                    <div style="display: flex; justify-content: space-between;">
+                      <span style="color: #fff; font-size: 0.62rem;">GastroShield-DSR</span>
+                      <span style="color: #38bdf8; font-size: 0.62rem;">₹635.70</span>
+                    </div>
+                    <div style="font-size: 0.55rem; color: #94a3b8;">PTR: ₹127.14 • Qty: 5</div>
+                  </div>
+
+                  <!-- Total Box -->
+                  <div style="margin-top: auto; padding: 6px; background: rgba(255,255,255,0.06); border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 0.62rem; color: #94a3b8;">Net Value (+GST):</span>
+                    <span style="font-size: 0.75rem; color: #34d399; font-weight: bold;">₹2,511.94</span>
+                  </div>
+
+                  <div class="ui-btn" style="background: #0284c7;">CONFIRM & SEND ORDER</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1195,62 +1483,83 @@
           <p class="slide-subtitle">Automatic fare calculations backed by the company Standard Fare Chart (SFC).</p>
         </div>
 
-        <div class="grid-2">
-          <div class="card">
-            <div class="card-header">
-              <span class="step-number">A</span>
-              <h3 class="card-title">How SFC Auto-Calculates Your Claim</h3>
+        <div class="split-layout">
+          <div class="instructions-pane">
+            <div class="card">
+              <div class="card-header">
+                <span class="step-number">A</span>
+                <h3 class="card-title">SFC Standard Rates Table</h3>
+              </div>
+              <div class="card-content">
+                <ul>
+                  <li><strong>HQ Working:</strong> TA ₹30–45 • <span class="highlight-pill pill-green">DA ₹250/day</span></li>
+                  <li><strong>Ex-station (Kalain/Sonai):</strong> TA ₹135–195 • <span class="highlight-pill pill-amber">DA ₹450/day</span></li>
+                  <li><strong>Outstation (Halflong):</strong> TA ₹420–540 • <span class="highlight-pill pill-rose">DA ₹750/day</span></li>
+                </ul>
+                <div class="app-path">⚙️ Pre-configured in Supabase <code>sfc_routes</code></div>
+              </div>
             </div>
-            <div class="card-content">
-              <p>No manual math needed! When you select your working beat, your entitlement is pre-set:</p>
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Work Type</th>
-                    <th>Standard Fare (TA)</th>
-                    <th>Daily Allowance (DA)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><strong>HQ Working</strong> (Local)</td>
-                    <td>₹30 - ₹45</td>
-                    <td><span class="highlight-pill pill-green">₹250 / day</span></td>
-                  </tr>
-                  <tr>
-                    <td><strong>Ex-station</strong> (Kalain/Sonai/Bagha)</td>
-                    <td>₹135 - ₹195</td>
-                    <td><span class="highlight-pill pill-amber">₹450 / day</span></td>
-                  </tr>
-                  <tr>
-                    <td><strong>Outstation</strong> (Halflong/Dharmanagar)</td>
-                    <td>₹420 - ₹540</td>
-                    <td><span class="highlight-pill pill-rose">₹750 / day</span></td>
-                  </tr>
-                </tbody>
-              </table>
-              <div class="app-path">⚙️ Pre-configured in Supabase <code>sfc_routes</code></div>
+
+            <div class="card card-emerald">
+              <div class="card-header">
+                <span class="step-number">B</span>
+                <h3 class="card-title">Submitting Today's Claim</h3>
+              </div>
+              <div class="card-content">
+                <ul>
+                  <li>Go to <strong>More ➔ Expenses ➔ Claim Today</strong>.</li>
+                  <li>Pick route ➔ TA & DA are filled in automatically.</li>
+                  <li>Attach receipt photo for hotel/toll/courier.</li>
+                </ul>
+                <div class="app-path">📱 More (☰) ➔ Expenses ➔ Submit</div>
+              </div>
             </div>
           </div>
 
-          <div class="card card-emerald">
-            <div class="card-header">
-              <span class="step-number">B</span>
-              <h3 class="card-title">Submitting Your Daily Expense</h3>
-            </div>
-            <div class="card-content">
-              <ul>
-                <li>Go to <strong>More (☰) ➔ Expenses</strong>.</li>
-                <li>Tap <strong>"Claim Today's Expense"</strong>.</li>
-                <li>Select the route you worked. The base TA & DA are filled in automatically.</li>
-                <li>Add extra costs if applicable:
-                  <br>• Hotel / Lodge charges (for Outstation overnight stays).
-                  <br>• Toll / Parking / Courier tickets.
-                </li>
-                <li>Attach photo of ticket or receipt.</li>
-                <li>Tap <strong>"Submit Claim"</strong> ➔ Status displays as <span class="highlight-pill pill-amber">Pending Approval</span> until RSM approves.</li>
-              </ul>
-              <div class="app-path">📱 More (☰) ➔ Expenses ➔ Add Expense</div>
+          <!-- Smartphone Mockup: Expense Screen -->
+          <div class="phone-pane">
+            <div class="phone-mockup">
+              <div class="phone-notch"><div class="phone-camera-dot"></div></div>
+              <div class="phone-screen">
+                <div class="phone-status-bar">
+                  <span>18:30</span>
+                  <span>5G 📶 75% 🔋</span>
+                </div>
+                <div class="phone-app-header">
+                  <span class="phone-app-title">Daily Expense Claim</span>
+                  <span class="ui-badge ui-badge-amber">PENDING</span>
+                </div>
+                <div class="phone-app-body">
+                  <div class="ui-box">
+                    <div style="font-size: 0.58rem; color: #94a3b8;">ACTIVE ROUTE</div>
+                    <div style="font-size: 0.68rem; color: #fff; font-weight: bold;">Silchar ➔ Kalain Ex-station</div>
+                    <div style="font-size: 0.55rem; color: #38bdf8;">55 km • Rate: ₹3.0/km</div>
+                  </div>
+
+                  <!-- Entitlements -->
+                  <div class="ui-box">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                      <span style="color:#94a3b8; font-size:0.6rem;">Travel Allowance (TA):</span>
+                      <span style="color:#fff; font-weight:bold; font-size:0.62rem;">₹165.00</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                      <span style="color:#94a3b8; font-size:0.6rem;">Daily Allowance (DA):</span>
+                      <span style="color:#fff; font-weight:bold; font-size:0.62rem;">₹450.00</span>
+                    </div>
+                  </div>
+
+                  <div class="ui-box" style="border-style: dashed;">
+                    <div style="font-size: 0.58rem; color: #38bdf8; text-align: center;">📷 + ATTACH TICKET / RECEIPT</div>
+                  </div>
+
+                  <div style="margin-top: auto; padding: 6px; background: rgba(255,255,255,0.06); border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 0.62rem; color: #94a3b8;">Total Claim:</span>
+                    <span style="font-size: 0.78rem; color: #38bdf8; font-weight: bold;">₹615.00</span>
+                  </div>
+
+                  <div class="ui-btn" style="background: #10b981;">SUBMIT TO RSM BODRUD</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1285,55 +1594,84 @@
           <p class="slide-subtitle">How RepPulse supports your field conditions, remote networks, and leave balances.</p>
         </div>
 
-        <div class="grid-3">
-          <div class="card card-emerald">
-            <div class="card-header">
-              <span class="step-number">1</span>
-              <h3 class="card-title">Leave Ledger</h3>
+        <div class="split-layout">
+          <div class="instructions-pane">
+            <div class="card card-emerald">
+              <div class="card-header">
+                <span class="step-number">1</span>
+                <h3 class="card-title">Leave Ledger (CL, SL, EL)</h3>
+              </div>
+              <div class="card-content">
+                <ul>
+                  <li>Open <strong>More ➔ Leaves</strong>.</li>
+                  <li>Check balance: <strong>12 CL</strong>, <strong>15 EL</strong>, <strong>12 SL</strong>.</li>
+                  <li>Apply leave with dates ➔ Sent to Shakir (HR) & Bodrud (RSM).</li>
+                </ul>
+                <div class="app-path">📱 More ➔ Leaves</div>
+              </div>
             </div>
-            <div class="card-content">
-              <ul>
-                <li>Open <strong>More (☰) ➔ Leaves</strong>.</li>
-                <li>Check your available balances:
-                  <br>• <strong>Casual Leave (CL):</strong> 12 days/yr
-                  <br>• <strong>Earned Leave (EL):</strong> 15 days/yr
-                  <br>• <strong>Sick Leave (SL):</strong> 12 days/yr
-                </li>
-                <li>Tap <strong>"Apply Leave"</strong>, choose dates and reason ➔ Directly sent to Shakir (HR) & Bodrud (RSM).</li>
-              </ul>
-              <div class="app-path">📱 More ➔ Leaves</div>
+
+            <div class="card">
+              <div class="card-header">
+                <span class="step-number">2</span>
+                <h3 class="card-title">Offline Network Shield</h3>
+              </div>
+              <div class="card-content">
+                <ul>
+                  <li>Working in rural pocket without 4G?</li>
+                  <li>RepPulse continues to record punches, visits, and chemist orders locally.</li>
+                  <li>Auto-syncs once mobile data is restored.</li>
+                </ul>
+                <div class="app-path">📶 Offline Safe • Automatic Cloud Sync</div>
+              </div>
             </div>
           </div>
 
-          <div class="card">
-            <div class="card-header">
-              <span class="step-number">2</span>
-              <h3 class="card-title">Assam Holiday Calendar</h3>
-            </div>
-            <div class="card-content">
-              <ul>
-                <li>Open <strong>More (☰) ➔ Holidays</strong>.</li>
-                <li>Displays all statutory gazetted holidays:
-                  <br>• Republic Day, Magh Bihu, Eid-ul-Fitr, Bohag Bihu, Independence Day, Durga Puja, Diwali.
-                </li>
-                <li>Holidays are automatically tagged in your calendar so you are not marked absent.</li>
-              </ul>
-              <div class="app-path">📱 More ➔ Holidays</div>
-            </div>
-          </div>
+          <!-- Smartphone Mockup: Leaves & Holidays -->
+          <div class="phone-pane">
+            <div class="phone-mockup">
+              <div class="phone-notch"><div class="phone-camera-dot"></div></div>
+              <div class="phone-screen">
+                <div class="phone-status-bar">
+                  <span>19:00</span>
+                  <span>5G 📶 70% 🔋</span>
+                </div>
+                <div class="phone-app-header">
+                  <span class="phone-app-title">Leave & Holidays</span>
+                  <span class="ui-badge ui-badge-green">ONLINE</span>
+                </div>
+                <div class="phone-app-body">
+                  <!-- Balance Counters -->
+                  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;">
+                    <div class="ui-box" style="text-align: center;">
+                      <div style="font-size: 0.55rem; color: #94a3b8;">CASUAL</div>
+                      <div style="font-size: 0.8rem; font-weight: bold; color: #38bdf8;">12</div>
+                    </div>
+                    <div class="ui-box" style="text-align: center;">
+                      <div style="font-size: 0.55rem; color: #94a3b8;">SICK</div>
+                      <div style="font-size: 0.8rem; font-weight: bold; color: #10b981;">12</div>
+                    </div>
+                    <div class="ui-box" style="text-align: center;">
+                      <div style="font-size: 0.55rem; color: #94a3b8;">EARNED</div>
+                      <div style="font-size: 0.8rem; font-weight: bold; color: #f59e0b;">15</div>
+                    </div>
+                  </div>
 
-          <div class="card card-amber">
-            <div class="card-header">
-              <span class="step-number">3</span>
-              <h3 class="card-title">Offline Network Shield</h3>
-            </div>
-            <div class="card-content">
-              <ul>
-                <li>Working in a rural area with <strong>No 4G/WiFi</strong> (e.g. Kalain hills or Halflong)?</li>
-                <li><strong>No problem:</strong> RepPulse continues to record punches, doctor visits, and chemist orders locally.</li>
-                <li>As soon as your phone gets 1 bar of mobile data, a green badge appears: <span class="highlight-pill pill-green">Synced to Cloud</span>.</li>
-              </ul>
-              <div class="app-path">📶 Auto-Sync Resilience Active</div>
+                  <!-- Upcoming Holiday -->
+                  <div class="ui-box" style="border-left: 3px solid #f43f5e;">
+                    <div style="font-size: 0.58rem; color: #fb7185; font-weight: bold;">UPCOMING HOLIDAY</div>
+                    <div style="font-size: 0.65rem; color: #fff; font-weight: bold;">Magh Bihu / Makar Sankranti</div>
+                    <div style="font-size: 0.55rem; color: #94a3b8;">15 January 2026 • Gazetted</div>
+                  </div>
+
+                  <div class="ui-box" style="background: rgba(16, 185, 129, 0.12);">
+                    <div style="font-size: 0.58rem; color: #34d399; font-weight: bold;">📶 CLOUD DATABASE SYNCED</div>
+                    <div style="font-size: 0.55rem; color: #fff;">11 Doctor Calls & 2 Orders Synced</div>
+                  </div>
+
+                  <div class="ui-btn" style="background: #0284c7; margin-top: auto;">APPLY FOR LEAVE</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1366,9 +1704,7 @@
     </div>
   </div>
 
-  <!-- ========================================================================
-       PRESENTATION CONTROLLER JAVASCRIPT
-       ======================================================================== -->
+  <!-- Presentation Controller JavaScript -->
   <script>
     class PresentationController {
       constructor() {
@@ -1453,7 +1789,7 @@
           const diffX = e.changedTouches[0].clientX - startX;
           const diffY = e.changedTouches[0].clientY - startY;
 
-          if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+          if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40) {
             if (diffX < 0) this.next();
             else this.prev();
           }
