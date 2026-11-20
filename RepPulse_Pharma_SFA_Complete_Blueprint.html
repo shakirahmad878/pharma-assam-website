@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>RepPulse Pharma SFA - Complete Technical & Operational Blueprint</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 14mm 12mm 14mm 12mm;
+    }
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+      color: #0f172a;
+      line-height: 1.45;
+      font-size: 9.5pt;
+      background: #ffffff;
+      margin: 0;
+      padding: 24px;
+    }
+    .cover-banner {
+      background: linear-gradient(135deg, #0a0f1d 0%, #0369a1 50%, #0284c7 100%);
+      color: white;
+      padding: 24px 22px;
+      border-radius: 8px;
+      margin-bottom: 18px;
+    }
+    .cover-banner h1 {
+      margin: 0 0 6px 0;
+      font-size: 21pt;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .cover-banner .subtitle {
+      font-size: 10.5pt;
+      color: #93c5fd;
+      margin-bottom: 12px;
+      font-weight: 500;
+    }
+    .badge-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .badge {
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 4px 9px;
+      border-radius: 4px;
+      font-size: 8pt;
+      font-weight: 600;
+    }
+    h2 {
+      color: #0f172a;
+      font-size: 12pt;
+      border-bottom: 2px solid #0284c7;
+      padding-bottom: 4px;
+      margin-top: 18px;
+      margin-bottom: 10px;
+    }
+    h3 {
+      color: #0369a1;
+      font-size: 10pt;
+      margin-top: 12px;
+      margin-bottom: 4px;
+    }
+    p, ul {
+      margin-top: 4px;
+      margin-bottom: 8px;
+    }
+    ul {
+      padding-left: 20px;
+    }
+    li {
+      margin-bottom: 4px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      margin-bottom: 14px;
+      font-size: 8.5pt;
+    }
+    table th {
+      background: #f1f5f9;
+      color: #0f172a;
+      font-weight: 700;
+      text-align: left;
+      padding: 7px 9px;
+      border: 1px solid #cbd5e1;
+    }
+    table td {
+      padding: 6px 9px;
+      border: 1px solid #cbd5e1;
+      vertical-align: top;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .card {
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 10px 12px;
+      background: #f8fafc;
+    }
+    .card h4 {
+      margin: 0 0 4px 0;
+      color: #0284c7;
+      font-size: 9pt;
+      font-weight: 700;
+    }
+    .card p {
+      margin: 0;
+      font-size: 8.5pt;
+      color: #475569;
+    }
+    .callout {
+      background: #eff6ff;
+      border-left: 4px solid #0284c7;
+      padding: 10px 14px;
+      margin: 12px 0;
+      border-radius: 0 4px 4px 0;
+      font-size: 9pt;
+    }
+    .callout-title {
+      font-weight: bold;
+      color: #1e40af;
+      margin-bottom: 3px;
+    }
+    .page-break {
+      page-break-before: always;
+    }
+    .footer {
+      margin-top: 24px;
+      padding-top: 10px;
+      border-top: 1px solid #cbd5e1;
+      font-size: 8pt;
+      color: #64748b;
+      display: flex;
+      justify-content: space-between;
+    }
+    @media print {
+      body {
+        padding: 0;
+      }
+      .no-print {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Print Button for Browser -->
+  <div class="no-print" style="margin-bottom: 16px; text-align: right;">
+    <button onclick="window.print()" style="background: #0284c7; color: white; border: none; padding: 8px 18px; border-radius: 5px; font-weight: 600; cursor: pointer; font-size: 10pt;">
+      🖨️ Print / Save as PDF
+    </button>
+  </div>
+
+  <div class="cover-banner">
+    <h1>RepPulse Pharma SFA</h1>
+    <div class="subtitle">Complete Technical, Architectural & Functional Mobile APK Blueprint</div>
+    <div class="badge-row">
+      <span class="badge">Version 2.5 (Release v1.7.4)</span>
+      <span class="badge">React Native 0.74 / Expo SDK 51</span>
+      <span class="badge">PostgreSQL 15 Cloud Backend</span>
+      <span class="badge">Northeast & Barak Division</span>
+    </div>
+  </div>
+
+  <h2>1. Executive Summary & Core Platform Value</h2>
+  <p><strong>RepPulse Pharma SFA</strong> is an enterprise-grade Field Force Automation and Mobile CRM platform built specifically for pharmaceutical sales operations. Engineered to solve acute field challenges in multi-district territories, RepPulse enforces anti-fraud geotagged attendance, 15-minute background location telemetry, doctor/chemist visit auditing (DCR), Monthly Tour Plan (MTP) governance, and real-time managerial oversight.</p>
+  <p>The APK operates on a <strong>True Offline-First architecture</strong>: Medical Representatives (MRs) can log doctor calls, detail products, capture sample distributions, and book chemist orders even in remote hill pockets with zero cellular reception. When connectivity is restored, the synchronization engine flushes cached transactions to the Supabase cloud database using deterministic, collision-resistant event identifiers.</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 25%;">Business Challenge</th>
+        <th style="width: 35%;">Traditional Manual Method</th>
+        <th style="width: 40%;">RepPulse Pharma SFA Solution</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Fake Attendance / Buddy Punching</strong></td>
+        <td>Paper registers, WhatsApp photos, or manual punch.</td>
+        <td><strong>Triple-Lock Verification:</strong> Live front-camera selfie + hardware GPS satellite lock (< 10m accuracy) + Android Mock Location detection lockout.</td>
+      </tr>
+      <tr>
+        <td><strong>Late Field Reporting</strong></td>
+        <td>Reps begin field work past noon without accountability.</td>
+        <td><strong>Strict 10:30 AM IST Cutoff:</strong> Reporting locks past 10:30 AM; requires multi-tier manager authorization (RSM/HR) to unlock daily operations.</td>
+      </tr>
+      <tr>
+        <td><strong>Field Deviation & Proxy Visits</strong></td>
+        <td>Reps claim doctor visits while staying at hotel or home.</td>
+        <td><strong>100m Doctor Geofencing + 15-Min Telemetry:</strong> Call submission is blocked unless the MR is physically within 100 meters of the doctor's registered clinic GPS coordinates.</td>
+      </tr>
+      <tr>
+        <td><strong>Connectivity Dropouts in Rural Beats</strong></td>
+        <td>Lost orders, dropped reports, app crashes.</td>
+        <td><strong>Offline-First Cache:</strong> Full local CRUD operations; transactions queue locally and sync automatically without manual retry.</td>
+      </tr>
+      <tr>
+        <td><strong>Unplanned Route Deviations</strong></td>
+        <td>Reps skip assigned routes without management approval.</td>
+        <td><strong>Tour Plan Governance:</strong> Reps follow an approved calendar of daily routes; date swaps require formal RSM authorization.</td>
+      </tr>
+      <tr>
+        <td><strong>Manual Travel Claim Disputes</strong></td>
+        <td>Inflated manual travel expense submissions.</td>
+        <td><strong>Standard Fare Chart (SFC):</strong> Fares and Daily Allowances (DA) calculate automatically based on HQ, Ex-station, or Outstation classifications.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>2. Five-Tier Organizational Hierarchy & Access Control</h2>
+  <div class="grid-2">
+    <div class="card">
+      <h4>Tier 1: Medical Representative (MR)</h4>
+      <p>Satyam Shil (NLCL-0005), Pranjal Malakar (NLCL-0004). Territory-isolated doctor lists, daily punch-in, approved MTP beat execution, chemist POB booking, and TA/DA claims.</p>
+    </div>
+    <div class="card">
+      <h4>Tier 2: Area Business Manager (ABM)</h4>
+      <p>Field-level supervision, joint doctor call logging, beat coverage monitoring, and team daily performance auditing.</p>
+    </div>
+    <div class="card">
+      <h4>Tier 3: Regional Sales Manager (RSM)</h4>
+      <p>Bodrud Jaman Sadiol (NLCL-0003). Multi-division oversight across Cachar, Karimganj, Hailakandi, and Mizoram. Real-time live fleet tracking map, 10:30 AM late login authorizations, and MTP deviation approvals.</p>
+    </div>
+    <div class="card">
+      <h4>Tier 4 & 5: HR Manager & Directors</h4>
+      <p>Shakir Ahmad (NLCL-0002) & Samsuj Jaman Sadiol (NLCL-0001). Central employee directory control, leave ledgers, monthly payroll calculations, and executive revenue dashboards.</p>
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <h2>3. Core Operational Modules in the APK</h2>
+
+  <h3>3.1 Anti-Fraud Geotagged Attendance & Shift Lock</h3>
+  <ul>
+    <li><strong>Geotagged Front-Facing Selfie:</strong> Captures fresh front-camera photo with real-time timestamping. Gallery selection is prohibited.</li>
+    <li><strong>Hardware GPS Lock & Anti-Mock Engine:</strong> Inspects Android location provider flags (<code>isMockLocation</code>). Developer option location spoofing triggers immediate lockout.</li>
+    <li><strong>10:30 AM Shift Cutoff:</strong> Reps attempting to begin duty past 10:30 AM must submit a reason (e.g. transport delay). The request routes instantly to RSM Bodrud for digital authorization.</li>
+  </ul>
+
+  <h3>3.2 15-Minute Background Location Telemetry & Live Fleet Map</h3>
+  <ul>
+    <li><strong>Background Telemetry:</strong> An optimized background worker captures rep GPS coordinates and battery percentage every 15 minutes during active shift hours.</li>
+    <li><strong>Real-time Manager Map:</strong> RSMs and managers can open <em>Team & Employees &rarr; Live Location</em> to track active reps on an interactive map. If a rep has not started their shift, the system displays <em>'Shift Not Started'</em>.</li>
+  </ul>
+
+  <h3>3.3 Daily Call Reporting (DCR) with 100-Meter Geofencing</h3>
+  <ul>
+    <li><strong>Clinic Proximity Enforcement:</strong> Check-in is permitted only within 100 meters of the doctor's registered GPS coordinate using the mathematical Haversine formula.</li>
+    <li><strong>Brand Detailing & Sampling:</strong> Logs discussed brands, sample drops (with batch numbers and quantities), and promotional materials.</li>
+    <li><strong>Chemist POB Booking:</strong> Reps capture chemist orders, stockist tags, and booking values on the spot.</li>
+  </ul>
+
+  <h3>3.4 Monthly Tour Programme (MTP) & Calendar Sync</h3>
+  <ul>
+    <li><strong>Pre-Planned Monthly Beats:</strong> Reps follow an approved calendar of daily routes across divisions stored in cloud PostgreSQL.</li>
+    <li><strong>Auto-Default Working Beat:</strong> Scheduled town (e.g., Kalain Ex-station or Silchar Central HQ) automatically populates into daily attendance.</li>
+    <li><strong>Mandatory Reschedule Approval:</strong> Reps cannot swap dates unilaterally. Any change requires submitting a formal request to the RSM.</li>
+  </ul>
+
+  <h3>3.5 Standard Fare Chart (SFC) & Travel Expenses</h3>
+  <ul>
+    <li><strong>HQ Working:</strong> Standard TA ₹30–₹45, Daily Allowance (DA) <strong>₹250/day</strong>.</li>
+    <li><strong>Ex-station Working:</strong> Standard TA ₹135–₹195, Daily Allowance (DA) <strong>₹450/day</strong>.</li>
+    <li><strong>Outstation Working:</strong> Standard TA ₹420–₹540, Daily Allowance (DA) <strong>₹750/day</strong>.</li>
+    <li>Receipt camera upload for hotel lodge charges, toll, and courier.</li>
+  </ul>
+
+  <h2>4. Database Schema Topology (Supabase Cloud PostgreSQL 15)</h2>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 25%;">Table Name</th>
+        <th style="width: 35%;">Functional Purpose</th>
+        <th style="width: 40%;">Key Columns</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>employees</code></td>
+        <td>Staff credentials, roles & territory mapping</td>
+        <td><code>id, employee_code, name, role, phone, pin, headquarter, territory</code></td>
+      </tr>
+      <tr>
+        <td><code>attendance</code></td>
+        <td>Daily punch-in/out records & geotagged selfie</td>
+        <td><code>id, employee_code, date, punch_in_time, selfie_url, latitude, longitude, work_type</code></td>
+      </tr>
+      <tr>
+        <td><code>late_login_requests</code></td>
+        <td>10:30 AM cutoff authorization log</td>
+        <td><code>id, employee_code, date, attempted_time, reason, status, reviewed_by</code></td>
+      </tr>
+      <tr>
+        <td><code>tour_plans</code></td>
+        <td>Monthly Tour Programme (MTP) schedule</td>
+        <td><code>id, employee_code, date, city, route_id, route_type, status (APPROVED)</code></td>
+      </tr>
+      <tr>
+        <td><code>routes</code></td>
+        <td>Operational beat definitions & SFC rates</td>
+        <td><code>id, code, name, parent_hq, route_type, distance_km, standard_fare, da_allowed</code></td>
+      </tr>
+      <tr>
+        <td><code>doctors</code></td>
+        <td>Prescribers & clinic geofences</td>
+        <td><code>id, name, specialty, clinic_name, area, district, latitude, longitude, tier</code></td>
+      </tr>
+      <tr>
+        <td><code>visits</code></td>
+        <td>Daily Call Reporting (DCR)</td>
+        <td><code>id, employee_code, doctor_id, check_in_time, brands_detailed, samples_given</code></td>
+      </tr>
+      <tr>
+        <td><code>products</code></td>
+        <td>Product master with MRP, PTR, PTS, GST</td>
+        <td><code>id, brand_name, generic_name, formulation, mrp, ptr, pts, gst_rate</code></td>
+      </tr>
+      <tr>
+        <td><code>expenses</code></td>
+        <td>Daily TA/DA travel expense claims</td>
+        <td><code>id, employee_code, date, route_id, distance_km, ta_amount, da_amount, status</code></td>
+      </tr>
+      <tr>
+        <td><code>leave_balances</code></td>
+        <td>CL, SL, and EL balance ledgers</td>
+        <td><code>id, employee_code, casual_leave_available, earned_leave_available, sick_leave_available</code></td>
+      </tr>
+      <tr>
+        <td><code>holidays</code></td>
+        <td>Statutory Assam 2026 gazetted holidays</td>
+        <td><code>id, name, date, day_of_week, type (Gazetted)</code></td>
+      </tr>
+      <tr>
+        <td><code>location_telemetry</code></td>
+        <td>15-minute background location tracking</td>
+        <td><code>id, employee_code, timestamp, latitude, longitude, battery_level</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <div class="callout-title">Zero-Maintenance Cloud Deployment</div>
+    <div>Because the mobile APK connects directly to Supabase PostgREST endpoints over the air, <strong>adding doctors, changing tour plans, updating standard fare charts, or modifying products does not require rebuilding or reinstalling the APK</strong>. All changes reflect instantly on the representatives' devices.</div>
+  </div>
+
+  <div class="footer">
+    <span>RepPulse Pharma SFA &copy; 2026 | NextLife Care Life Sciences</span>
+    <span>Document: Complete Technical & Operational Blueprint v2.5</span>
+  </div>
+
+</body>
+</html>
