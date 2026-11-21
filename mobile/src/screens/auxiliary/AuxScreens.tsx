@@ -706,7 +706,7 @@ export const ExpensesScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => 
   const [selectedExpense, setSelectedExpense] = useState<DailyExpenseItem | null>(null);
   const [searchRoute, setSearchRoute] = useState('');
   const [sfcList, setSfcList] = useState<SFCRouteEntry[]>(MOCK_SFC_ROUTES);
-  const [expensesList, setExpensesList] = useState<DailyExpenseItem[]>(MOCK_EXPENSES_LOG);
+  const [expensesList, setExpensesList] = useState<DailyExpenseItem[]>([]);
 
   useEffect(() => {
     if (SupabaseDbService.isConnected()) {
@@ -738,10 +738,13 @@ export const ExpensesScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => 
       `₹${e.totalAmount}`,
       e.status,
     ]);
+    const totalClaimed = expensesList.reduce((acc, curr) => acc + (curr.totalAmount || 0), 0);
+    const totalDist = expensesList.reduce((acc, curr) => acc + (curr.distanceKm || 0), 0);
+    const approvedCount = expensesList.filter(e => e.status === 'Approved').length;
     const summary = [
-      { label: 'Total Allowance Claimed', value: '₹4,116' },
-      { label: 'Total Distance', value: '332 Km' },
-      { label: 'Approved Claims', value: '4 of 5' },
+      { label: 'Total Allowance Claimed', value: '₹' + totalClaimed },
+      { label: 'Total Distance', value: totalDist + ' Km' },
+      { label: 'Approved Claims', value: approvedCount + ' of ' + expensesList.length },
     ];
     await PdfReportService.generateAndShareReport(
       { title: 'Barak Valley Monthly Expense Report', subtitle: 'Standard Fare Chart (SFC) Verified Ledger' },
@@ -786,42 +789,54 @@ export const ExpensesScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => 
             </TouchableOpacity>
           </View>
 
-          {expensesList.map(item => (
-            <TouchableOpacity
-              key={item.id}
-              style={styles.expenseCard}
-              onPress={() => setSelectedExpense(item)}
-            >
-              <View style={styles.expenseCardHeader}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.expenseDate}>{item.date}</Text>
-                  <Text style={styles.expenseRoute}>{item.route}</Text>
-                </View>
-                <View
-                  style={[
-                    styles.statusPill,
-                    item.status === 'Approved' ? styles.statusApproved : styles.statusUnapproved,
-                  ]}
-                >
-                  <Text
+          {expensesList.length === 0 ? (
+            <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 48, backgroundColor: '#FFFFFF', borderRadius: radius.md, marginTop: 12, paddingHorizontal: 24, ...shadows.sm }}>
+              <Ionicons name="receipt-outline" size={48} color="#94A3B8" />
+              <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary, marginTop: 14 }}>
+                No Travel Claims Recorded
+              </Text>
+              <Text style={{ fontSize: 12, color: '#64748B', marginTop: 6, textAlign: 'center', lineHeight: 18 }}>
+                Daily travel allowances (TA/DA) will appear here as field duty shifts and verified route visits are completed.
+              </Text>
+            </View>
+          ) : (
+            expensesList.map(item => (
+              <TouchableOpacity
+                key={item.id}
+                style={styles.expenseCard}
+                onPress={() => setSelectedExpense(item)}
+              >
+                <View style={styles.expenseCardHeader}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.expenseDate}>{item.date}</Text>
+                    <Text style={styles.expenseRoute}>{item.route}</Text>
+                  </View>
+                  <View
                     style={[
-                      styles.statusPillText,
-                      item.status === 'Approved' ? styles.statusApprovedText : styles.statusUnapprovedText,
+                      styles.statusPill,
+                      item.status === 'Approved' ? styles.statusApproved : styles.statusUnapproved,
                     ]}
                   >
-                    {item.status}
-                  </Text>
+                    <Text
+                      style={[
+                        styles.statusPillText,
+                        item.status === 'Approved' ? styles.statusApprovedText : styles.statusUnapprovedText,
+                      ]}
+                    >
+                      {item.status}
+                    </Text>
+                  </View>
                 </View>
-              </View>
 
-              <View style={styles.expenseMetaRow}>
-                <Text style={styles.expenseMetaItem}>📍 {item.distanceKm} km</Text>
-                <Text style={styles.expenseMetaItem}>🚗 TA: ₹{item.taAmount}</Text>
-                <Text style={styles.expenseMetaItem}>🍲 DA: ₹{item.daAmount}</Text>
-                <Text style={styles.expenseTotalText}>₹{item.totalAmount}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
+                <View style={styles.expenseMetaRow}>
+                  <Text style={styles.expenseMetaItem}>📍 {item.distanceKm} km</Text>
+                  <Text style={styles.expenseMetaItem}>🚗 TA: ₹{item.taAmount}</Text>
+                  <Text style={styles.expenseMetaItem}>🍲 DA: ₹{item.daAmount}</Text>
+                  <Text style={styles.expenseTotalText}>₹{item.totalAmount}</Text>
+                </View>
+              </TouchableOpacity>
+            ))
+          )}
         </ScrollView>
       ) : (
         <ScrollView contentContainerStyle={styles.scrollContent}>

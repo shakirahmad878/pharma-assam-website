@@ -1401,11 +1401,5 @@ export interface DailyExpenseItem {
   adminRemark?: string;
 }
 
-export const MOCK_EXPENSES_LOG: DailyExpenseItem[] = [
-  { id: 'exp-01', date: '26 Sep 2026', route: 'Sribhumi HQ -> Karimganj Central Beat', distanceKm: 18, taAmount: 54, daAmount: 250, hotelAmount: 0, miscAmount: 0, totalAmount: 304, status: 'UnApproved', adminRemark: 'Pending monthly closing review' },
-  { id: 'exp-02', date: '25 Sep 2026', route: 'Sribhumi HQ -> Patharkandi', distanceKm: 70, taAmount: 210, daAmount: 450, hotelAmount: 0, miscAmount: 50, totalAmount: 710, status: 'Approved', adminRemark: 'Verified against SFC standard rate' },
-  { id: 'exp-03', date: '24 Sep 2026', route: 'Sribhumi HQ -> Makunda Outstation', distanceKm: 154, taAmount: 462, daAmount: 750, hotelAmount: 800, miscAmount: 120, totalAmount: 2132, status: 'Approved', adminRemark: 'Approved by ABM' },
-  { id: 'exp-04', date: '23 Sep 2026', route: 'Sribhumi HQ -> Badarpur Junction', distanceKm: 66, taAmount: 198, daAmount: 450, hotelAmount: 0, miscAmount: 0, totalAmount: 648, status: 'Approved', adminRemark: 'Auto-verified with GPS telemetry' },
-  { id: 'exp-05', date: '22 Sep 2026', route: 'Sribhumi HQ -> Lakhibazar', distanceKm: 24, taAmount: 72, daAmount: 250, hotelAmount: 0, miscAmount: 0, totalAmount: 322, status: 'Approved', adminRemark: 'Verified' },
-];
+export const MOCK_EXPENSES_LOG: DailyExpenseItem[] = [];
 
