@@ -12,6 +12,7 @@
 import { SUPABASE_CONFIG, isSupabaseConfigured } from '../../config/supabase';
 import { Doctor, UserProfile, AttendanceRecord, VisitRecord, LateLoginRequest, TourPlanRescheduleRequest, POBOrder, LocationTelemetryRecord, LocationRequestRecord } from '../../types';
 import { getBusinessDateStr } from '../../utils/dateUtils';
+import { determineLocationFreshness, LocationFreshness } from '../../utils/geoUtils';
 import { StorageService, STORAGE_KEYS } from '../storageService';
 
 export interface FirmRecord {
@@ -26,6 +27,27 @@ export interface FirmRecord {
   address?: string;
   latitude?: number;
   longitude?: number;
+}
+
+export interface FleetLiveLocationItem {
+  employeeId: string;
+  employeeCode: string;
+  employeeName: string;
+  role: string;
+  territory?: string;
+  headquarter?: string;
+  phone?: string;
+  shiftStatus: 'SHIFT_NOT_STARTED' | 'SHIFT_ACTIVE' | 'SHIFT_ENDED' | 'PENDING_SYNC';
+  locationStatus: LocationFreshness | 'LOCATION_UNAVAILABLE';
+  latitude: number | null;
+  longitude: number | null;
+  accuracyMeters: number | null;
+  speedKmh: number | null;
+  bearingDegrees: number | null;
+  batteryPercentage: number | null;
+  lastRecordedAt: string | null;
+  isMockLocation: boolean;
+  timeAgoText: string;
 }
 
 export interface DoctorDeletionRequest {
@@ -97,6 +119,7 @@ export class SupabaseDbService {
         isAssignedToMe: Boolean(d.is_assigned_to_me),
         assignedToEmployeeId: d.assigned_employee_id || undefined,
         assignedToEmployeeName: d.assigned_employee_name || undefined,
+        createdBy: d.created_by_employee_id || d.created_by || d.assigned_employee_id || undefined,
         clinics: d.clinics && Array.isArray(d.clinics) && d.clinics.length > 0
           ? d.clinics
           : (d.clinic_name ? [{
@@ -150,6 +173,7 @@ export class SupabaseDbService {
           is_assigned_to_me: Boolean(doc.isAssignedToMe),
           assigned_employee_id: doc.assignedToEmployeeId || null,
           assigned_employee_name: doc.assignedToEmployeeName || null,
+          created_by_employee_id: doc.createdBy || doc.assignedToEmployeeId || null,
           clinics: doc.clinics || [],
           updated_at: new Date().toISOString(),
         }),
@@ -186,6 +210,7 @@ export class SupabaseDbService {
     if (updates.geofenceRadiusMeters !== undefined) payload.geofence_radius_meters = updates.geofenceRadiusMeters;
     if (updates.assignedToEmployeeId !== undefined) payload.assigned_employee_id = updates.assignedToEmployeeId;
     if (updates.assignedToEmployeeName !== undefined) payload.assigned_employee_name = updates.assignedToEmployeeName;
+    if (updates.isAssignedToMe !== undefined) payload.is_assigned_to_me = updates.isAssignedToMe;
     if (updates.clinics !== undefined) payload.clinics = updates.clinics;
 
     try {
@@ -635,7 +660,7 @@ export class SupabaseDbService {
         const queryFilter = `or=(employee_id.eq.${clean},employee_id.eq.${codeClean},employee_id.eq.${idClean})`;
 
         const res = await fetch(
-          `${SUPABASE_CONFIG.url}/rest/v1/attendance?${queryFilter}&order=created_at.desc&limit=1`,
+          `${SUPABASE_CONFIG.url}/rest/v1/attendance?${queryFilter}&date=eq.${getBusinessDateStr()}`,
           { method: 'GET', headers: this.getHeaders() }
         );
         if (res.ok) {
@@ -924,33 +949,29 @@ export class SupabaseDbService {
         }
       }
 
-      // 2. Fetch latest telemetry
+      // 2. Fetch latest telemetry with strict Monotonic Ordering (Newer fix wins)
       telemetry = await this.getLatestEmployeeTelemetry(employeeIdOrCode);
-      if (telemetry && telemetry.latitude && telemetry.longitude) {
-        lat = telemetry.latitude;
-        lng = telemetry.longitude;
-        accuracy = telemetry.accuracy_meters || null;
+      const telTime = telemetry?.recorded_at ? new Date(telemetry.recorded_at).getTime() : 0;
+      const attTime = attRecord?.punch_in_timestamp ? new Date(attRecord.punch_in_timestamp).getTime() : 0;
+
+      if (telTime > 0 && telTime >= attTime && telemetry && telemetry.latitude && telemetry.longitude) {
+        lat = Number(telemetry.latitude);
+        lng = Number(telemetry.longitude);
+        accuracy = telemetry.accuracy_meters ? Number(telemetry.accuracy_meters) : null;
         battery = telemetry.battery_percentage ?? null;
         lastTime = telemetry.recorded_at || null;
-      } else if (attRecord && attRecord.latitude && attRecord.longitude) {
-        lat = attRecord.latitude;
-        lng = attRecord.longitude;
-        accuracy = attRecord.accuracy_meters || null;
+      } else if (attTime > 0 && attRecord && attRecord.latitude && attRecord.longitude) {
+        lat = Number(attRecord.latitude);
+        lng = Number(attRecord.longitude);
+        accuracy = attRecord.accuracy_meters ? Number(attRecord.accuracy_meters) : null;
         battery = attRecord.battery_percentage ?? null;
         lastTime = attRecord.punch_in_timestamp || null;
       }
 
-      // 3. Location Freshness Rating (INDEPENDENT of Shift Status)
+      // 3. Location Freshness Rating with 4-Tier Protection
       if (lat !== null && lng !== null && lastTime) {
-        const diffMs = Date.now() - new Date(lastTime).getTime();
-        const diffMins = diffMs / (1000 * 60);
-        if (diffMins <= 5) {
-          locationStatus = 'FRESH';
-        } else if (diffMins <= 15) {
-          locationStatus = 'AGING';
-        } else {
-          locationStatus = 'STALE';
-        }
+        const freshness = determineLocationFreshness(lastTime);
+        locationStatus = freshness.status as any;
       } else {
         locationStatus = 'LOCATION_UNAVAILABLE';
       }
@@ -1004,6 +1025,142 @@ export class SupabaseDbService {
       console.warn('[Supabase] updateEmployeeLiveLocation error:', err);
       return false;
     }
+  }
+
+
+  /**
+   * High-Efficiency Multi-Employee Fleet Location Query:
+   * Retrieves the latest validated GPS coordinates, shift status, and freshness
+   * for ALL authorized tracked employees in a single batch.
+   */
+  public static async fetchFleetLiveLocations(employees: UserProfile[]): Promise<FleetLiveLocationItem[]> {
+    const today = getBusinessDateStr();
+    const result: FleetLiveLocationItem[] = [];
+
+    let todayAttendance: any[] = [];
+    let recentTelemetry: any[] = [];
+
+    if (this.isConnected()) {
+      try {
+        const attRes = await fetch(
+          `${SUPABASE_CONFIG.url}/rest/v1/attendance?date=eq.${today}&order=created_at.desc`,
+          { method: 'GET', headers: this.getHeaders() }
+        );
+        if (attRes.ok) {
+          todayAttendance = await attRes.json();
+        }
+      } catch (err) {
+        console.warn('[Supabase] fetchFleetLiveLocations attendance error:', err);
+      }
+
+      try {
+        const telRes = await fetch(
+          `${SUPABASE_CONFIG.url}/rest/v1/location_telemetry?order=recorded_at.desc&limit=200`,
+          { method: 'GET', headers: this.getHeaders() }
+        );
+        if (telRes.ok) {
+          recentTelemetry = await telRes.json();
+        }
+      } catch (err) {
+        console.warn('[Supabase] fetchFleetLiveLocations telemetry error:', err);
+      }
+    }
+
+    const latestTelByEmp = new Map<string, any>();
+    recentTelemetry.forEach(t => {
+      const empKey = (t.employee_id || '').trim().toUpperCase();
+      if (empKey && !latestTelByEmp.has(empKey)) {
+        latestTelByEmp.set(empKey, t);
+      }
+      const canonicalKey = (t.employee_id || '').trim().toLowerCase();
+      if (canonicalKey && !latestTelByEmp.has(canonicalKey)) {
+        latestTelByEmp.set(canonicalKey, t);
+      }
+    });
+
+    const attByEmp = new Map<string, any>();
+    todayAttendance.forEach(a => {
+      const empKey = (a.employee_id || a.employee_code || '').trim().toUpperCase();
+      if (empKey && !attByEmp.has(empKey)) {
+        attByEmp.set(empKey, a);
+      }
+      const canonicalKey = (a.employee_id || '').trim().toLowerCase();
+      if (canonicalKey && !attByEmp.has(canonicalKey)) {
+        attByEmp.set(canonicalKey, a);
+      }
+    });
+
+    for (const emp of employees) {
+      const codeKey = (emp.employeeCode || '').trim().toUpperCase();
+      const idKey = (emp.id || '').trim().toLowerCase();
+
+      const att = attByEmp.get(codeKey) || attByEmp.get(idKey);
+      const tel = latestTelByEmp.get(codeKey) || latestTelByEmp.get(idKey);
+
+      let shiftStatus: 'SHIFT_NOT_STARTED' | 'SHIFT_ACTIVE' | 'SHIFT_ENDED' | 'PENDING_SYNC' = 'SHIFT_NOT_STARTED';
+      if (att) {
+        if (att.status === 'PUNCHED_OUT' || att.punch_out_timestamp) {
+          shiftStatus = 'SHIFT_ENDED';
+        } else if (att.status === 'PUNCHED_IN') {
+          shiftStatus = 'SHIFT_ACTIVE';
+        }
+      }
+
+      let lat: number | null = null;
+      let lng: number | null = null;
+      let accuracy: number | null = null;
+      let speedKmh: number | null = null;
+      let bearingDegrees: number | null = null;
+      let battery: number | null = null;
+      let lastTime: string | null = null;
+      let isMock = false;
+
+      const telTime = tel?.recorded_at ? new Date(tel.recorded_at).getTime() : 0;
+      const attTime = att?.punch_in_timestamp ? new Date(att.punch_in_timestamp).getTime() : 0;
+
+      if (telTime > 0 && telTime >= attTime && tel.latitude && tel.longitude) {
+        lat = Number(tel.latitude);
+        lng = Number(tel.longitude);
+        accuracy = tel.accuracy_meters ? Number(tel.accuracy_meters) : null;
+        speedKmh = tel.speed_mps ? Math.round(Number(tel.speed_mps) * 3.6 * 10) / 10 : null;
+        bearingDegrees = tel.bearing_degrees ? Number(tel.bearing_degrees) : null;
+        battery = tel.battery_percentage ?? null;
+        lastTime = tel.recorded_at;
+        isMock = tel.provider === 'mock' || Boolean(tel.is_mock_location);
+      } else if (attTime > 0 && att && att.latitude && att.longitude) {
+        lat = Number(att.latitude);
+        lng = Number(att.longitude);
+        accuracy = att.accuracy_meters ? Number(att.accuracy_meters) : null;
+        battery = att.battery_percentage ?? null;
+        lastTime = att.punch_in_timestamp;
+        isMock = Boolean(att.is_mock_location);
+      }
+
+      const freshness = determineLocationFreshness(lastTime);
+
+      result.push({
+        employeeId: emp.id,
+        employeeCode: emp.employeeCode,
+        employeeName: emp.name,
+        role: emp.role,
+        territory: emp.territory,
+        headquarter: emp.headquarter,
+        phone: emp.phone,
+        shiftStatus,
+        locationStatus: (lat !== null && lng !== null) ? freshness.status : 'LOCATION_UNAVAILABLE',
+        latitude: lat,
+        longitude: lng,
+        accuracyMeters: accuracy,
+        speedKmh,
+        bearingDegrees,
+        batteryPercentage: battery,
+        lastRecordedAt: lastTime,
+        isMockLocation: isMock,
+        timeAgoText: freshness.timeAgoText,
+      });
+    }
+
+    return result;
   }
 
   // ==========================================
@@ -1777,7 +1934,8 @@ export class SupabaseDbService {
     
     if (this.isConnected()) {
       try {
-        let url = `${SUPABASE_CONFIG.url}/rest/v1/tour_plans?employee_code=eq.${encodeURIComponent(cleanCode)}&order=date.asc`;
+        const empFilter = `or=(employee_code.eq.${encodeURIComponent(cleanCode)},employee_id.eq.${encodeURIComponent(cleanCode)},employee_id.eq.usr-${encodeURIComponent(cleanCode.toLowerCase())})`;
+        let url = `${SUPABASE_CONFIG.url}/rest/v1/tour_plans?${empFilter}&order=date.asc`;
         if (month) url += `&month=eq.${month}`;
         if (year) url += `&year=eq.${year}`;
 
@@ -1929,6 +2087,8 @@ export class SupabaseDbService {
           totalAmount: Number(e.total_amount),
           status: e.status,
           adminRemark: e.admin_remark,
+          receiptUrl: e.receipt_url || null,
+          receiptObjectKey: e.receipt_object_key || null,
         }));
       }
     } catch (err) {
@@ -1959,6 +2119,8 @@ export class SupabaseDbService {
           total_amount: claim.totalAmount || 0,
           status: claim.status || 'Pending',
           admin_remark: claim.adminRemark || null,
+          receipt_url: claim.receiptUrl || claim.receipt_url || null,
+          receipt_object_key: claim.receiptObjectKey || claim.receipt_object_key || null,
           created_at: new Date().toISOString(),
         }),
       });

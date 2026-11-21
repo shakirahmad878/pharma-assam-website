@@ -166,14 +166,7 @@ export const VisitListScreen: React.FC<VisitListScreenProps> = ({
     // 2. For MR, strictly filter to doctors added by or assigned to this MR
     const authorizedDocs = divisionScopedDocs.filter((doc) => {
       if (isManager || !currentUser) return true;
-      const empCode = (currentUser.employeeCode || '').toLowerCase();
-      const empId = (currentUser.id || '').toLowerCase();
-      const empName = (currentUser.name || '').toLowerCase();
-      return Boolean(
-        (doc.assignedToEmployeeId && (doc.assignedToEmployeeId.toLowerCase() === empCode || doc.assignedToEmployeeId.toLowerCase() === empId)) ||
-        (doc.assignedToEmployeeName && doc.assignedToEmployeeName.toLowerCase().includes(empName.split(' ')[0])) ||
-        doc.isAssignedToMe
-      );
+      return DivisionService.isDoctorAssignedToOrOwnedByEmployee(doc, currentUser);
     });
 
     const items: UnifiedCustomerItem[] = [];
@@ -317,7 +310,6 @@ export const VisitListScreen: React.FC<VisitListScreenProps> = ({
           <Badge
             label={isCompleted ? 'COMPLETED' : item.todayStatus === 'MISSED' ? 'MISSED' : 'PENDING'}
             variant={isCompleted ? 'success' : item.todayStatus === 'MISSED' ? 'danger' : 'warning'}
-            size="small"
           />
         </View>
 
@@ -383,9 +375,13 @@ export const VisitListScreen: React.FC<VisitListScreenProps> = ({
       <Header
         title="Field Visits & DCR"
         subtitle={`${currentUser?.name || 'Medical Representative'} • Barak Division`}
+        showBack
         onBack={onBack}
-        rightIcon="refresh"
-        onRightPress={handleRefresh}
+        rightAction={
+          <TouchableOpacity onPress={handleRefresh}>
+            <Ionicons name="refresh" size={20} color="#2563EB" />
+          </TouchableOpacity>
+        }
       />
 
       {/* Division Selector Section: Full for Manager, Assigned Beats for MR */}
@@ -581,8 +577,7 @@ export const VisitListScreen: React.FC<VisitListScreenProps> = ({
                     </Text>
                     <Badge
                       label={item.status || 'COMPLETED'}
-                      variant={item.status === 'COMPLETED' ? 'success' : 'neutral'}
-                      size="small"
+                      variant={item.status === 'COMPLETED' ? 'success' : 'muted'}
                     />
                   </View>
 

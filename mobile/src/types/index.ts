@@ -222,6 +222,7 @@ export interface Doctor {
   isAssignedToMe: boolean;
   assignedToEmployeeId?: string;
   assignedToEmployeeName?: string;
+  createdBy?: string;
   clinics?: DoctorClinic[];
 }
 
@@ -433,6 +434,7 @@ export interface LocationTelemetryRecord {
   bearing_degrees?: number;
   battery_percentage?: number;
   provider?: string;
+  is_mock_location?: boolean;
   source: 'SCHEDULED' | 'MANAGER_REQUEST' | 'MANUAL';
   recorded_at: string;
   received_at?: string;

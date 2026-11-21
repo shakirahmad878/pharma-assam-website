@@ -30,7 +30,7 @@ export class LocationService {
    */
   public static async requestForegroundPermission(): Promise<boolean> {
     try {
-      const existing = await Location.getForegroundPermissionsAsync();
+      const existing = await (Location as any).getForegroundPermissionsAsync?.();
       if (existing && existing.status === 'granted') {
         return true;
       }

@@ -264,7 +264,6 @@ export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
             <Badge
               label={isGeofenceVerified ? 'In Range (Verified)' : `${Math.round(distanceMeters)}m Out of Range`}
               variant={isGeofenceVerified ? 'success' : 'danger'}
-              size="small"
             />
           </View>
 

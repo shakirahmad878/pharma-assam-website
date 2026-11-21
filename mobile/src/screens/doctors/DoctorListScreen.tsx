@@ -251,6 +251,10 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
 
     const tierDisplayName = newDocTier === 'A_PLUS' ? 'Prime Core' : newDocTier === 'A' ? 'Core' : 'General';
 
+    const user = currentUser || AuthService.getCurrentUser();
+    const activeUserId = user?.employeeCode || user?.id || 'usr-nlcl-0005';
+    const activeUserName = user?.name || 'Satyam Shil';
+
     await DoctorService.addDoctor({
       name: formattedName,
       qualification: newDocQualification.trim(),
@@ -264,8 +268,9 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
       latitude: capturedCoords.lat,
       longitude: capturedCoords.lng,
       monthlyVisitTarget: newDocTier === 'A_PLUS' ? 12 : newDocTier === 'A' ? 8 : 4,
-      assignedToEmployeeId: currentUser?.employeeCode || currentUser?.id,
-      assignedToEmployeeName: currentUser?.name,
+      assignedToEmployeeId: activeUserId,
+      assignedToEmployeeName: activeUserName,
+      createdBy: activeUserId,
       isAssignedToMe: true,
     });
 
@@ -335,14 +340,7 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
 
     if (mode === 'VISITS') {
       if (!isManager && currentUser) {
-        const empCode = (currentUser.employeeCode || '').toLowerCase();
-        const empId = (currentUser.id || '').toLowerCase();
-        const empName = (currentUser.name || '').toLowerCase();
-        const isMyDoc = Boolean(
-          (doc.assignedToEmployeeId && (doc.assignedToEmployeeId.toLowerCase() === empCode || doc.assignedToEmployeeId.toLowerCase() === empId)) ||
-          (doc.assignedToEmployeeName && doc.assignedToEmployeeName.toLowerCase().includes(empName.split(' ')[0])) ||
-          doc.isAssignedToMe
-        );
+        const isMyDoc = DivisionService.isDoctorAssignedToOrOwnedByEmployee(doc, currentUser);
         if (!isMyDoc) {
           return false;
         }
@@ -350,7 +348,8 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
       if (subTab === 'TODAY') {
         return matchesSearch && (doc.todayVisitStatus === 'PENDING' || doc.todayVisitStatus === 'COMPLETED');
       }
-      return matchesSearch && (doc.todayVisitStatus === 'COMPLETED' || doc.completedVisitsThisMonth > 0 || doc.todayVisitStatus === 'PENDING');
+      // On ALL subtab in VISITS mode: display ALL doctors belonging to this MR!
+      return matchesSearch;
     }
 
     if (subTab === 'TODAY') {

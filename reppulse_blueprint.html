@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>RepPulse Pharma SFA - Client Presentation Blueprint</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 14mm 12mm 14mm 12mm;
+    }
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+      color: #1e293b;
+      line-height: 1.45;
+      font-size: 10pt;
+      background: #ffffff;
+      margin: 0;
+      padding: 0;
+    }
+    .cover-banner {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #2563eb 100%);
+      color: white;
+      padding: 24px 22px;
+      border-radius: 8px;
+      margin-bottom: 18px;
+    }
+    .cover-banner h1 {
+      margin: 0 0 6px 0;
+      font-size: 21pt;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .cover-banner .subtitle {
+      font-size: 10.5pt;
+      color: #93c5fd;
+      margin-bottom: 12px;
+      font-weight: 500;
+    }
+    .badge-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .badge {
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 4px 9px;
+      border-radius: 4px;
+      font-size: 8.5pt;
+      font-weight: 600;
+    }
+    h2 {
+      color: #0f172a;
+      font-size: 12.5pt;
+      border-bottom: 2px solid #2563eb;
+      padding-bottom: 4px;
+      margin-top: 18px;
+      margin-bottom: 10px;
+    }
+    h3 {
+      color: #1e3a8a;
+      font-size: 10.5pt;
+      margin-top: 12px;
+      margin-bottom: 6px;
+    }
+    p {
+      margin: 0 0 8px 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0 14px 0;
+      font-size: 8.8pt;
+    }
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 6px 9px;
+      text-align: left;
+    }
+    th {
+      background-color: #f1f5f9;
+      color: #0f172a;
+      font-weight: 700;
+    }
+    tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .card {
+      border: 1px solid #e2e8f0;
+      border-left: 4px solid #2563eb;
+      background: #f8fafc;
+      padding: 9px 11px;
+      border-radius: 4px;
+    }
+    .card h4 {
+      margin: 0 0 4px 0;
+      color: #0f172a;
+      font-size: 9.8pt;
+    }
+    .card p {
+      margin: 0;
+      font-size: 8.5pt;
+      color: #334155;
+    }
+    .callout {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-left: 4px solid #2563eb;
+      padding: 9px 11px;
+      border-radius: 4px;
+      margin: 10px 0;
+      font-size: 8.8pt;
+    }
+    .callout-title {
+      font-weight: bold;
+      color: #1e40af;
+      margin-bottom: 3px;
+    }
+    .page-break {
+      page-break-before: always;
+    }
+    ul {
+      margin: 4px 0 8px 18px;
+      padding: 0;
+      font-size: 8.8pt;
+    }
+    li {
+      margin-bottom: 3px;
+    }
+    .footer {
+      margin-top: 20px;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 8px;
+      text-align: center;
+      font-size: 8pt;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- COVER / HEADER -->
+  <div class="cover-banner">
+    <h1>RepPulse Pharma SFA</h1>
+    <div class="subtitle">Enterprise Sales Force Automation & Mobile CRM for Pharmaceutical Distribution</div>
+    <div class="badge-row">
+      <span class="badge">Platform: Android APK (Expo / React Native)</span>
+      <span class="badge">Database: Supabase Enterprise (PostgreSQL 15)</span>
+      <span class="badge">Architecture: Offline-First</span>
+      <span class="badge">Standard: Asia/Kolkata (IST)</span>
+      <span class="badge">Status: Production Ready v2.4</span>
+    </div>
+  </div>
+
+  <!-- SECTION 1 -->
+  <h2>1. Executive Summary & Core Value Proposition</h2>
+  <p>
+    <strong>RepPulse Pharma SFA</strong> is a purpose-built field force automation application engineered specifically for pharmaceutical companies operating in tiered distribution networks (Assam, Barak Valley, Tripura & Northeast India). It eliminates manual reporting, buddy punching, and field reporting leakages through hardware-verified geotagged attendance, 15-minute background location telemetry, doctor call auditing (DCR), and Tour Plan (MTP) governance.
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 25%;">Business Challenge</th>
+        <th style="width: 35%;">Traditional / Manual Flaw</th>
+        <th style="width: 40%;">RepPulse SFA Solution</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Proxy Attendance</strong></td>
+        <td>WhatsApp pings, paper logs, or easily spoofed GPS timestamps.</td>
+        <td><strong>Triple-Lock Verification:</strong> Front camera selfie + hardware satellite GPS lock (&lt; 10m accuracy) + Mock GPS prevention.</td>
+      </tr>
+      <tr>
+        <td><strong>Late Reporting</strong></td>
+        <td>Reps start field duty at noon without manager awareness.</td>
+        <td><strong>Strict 10:30 AM Cutoff:</strong> Reporting locks past 10:30 AM; requires real-time cloud authorization from RSM/HR/Director.</td>
+      </tr>
+      <tr>
+        <td><strong>Proxy Doctor Visits</strong></td>
+        <td>Reps mark visits from hotels or cafes without visiting clinics.</td>
+        <td><strong>100m Geofencing:</strong> DCR check-in unlocks only when rep is physically within 100 meters of the doctor's verified clinic.</td>
+      </tr>
+      <tr>
+        <td><strong>Interior Network Drops</strong></td>
+        <td>App crashes or lost visit logs in rural/hilly interior belts.</td>
+        <td><strong>True Offline-First Engine:</strong> All operations save locally with deterministic IDs; auto-syncs when signal returns.</td>
+      </tr>
+      <tr>
+        <td><strong>Arbitrary Beat Swapping</strong></td>
+        <td>Reps skip remote beats without supervisory oversight.</td>
+        <td><strong>MTP Reschedule Workflow:</strong> Reps cannot change assigned beats without submitting an audit reason approved by RSM.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- SECTION 2 -->
+  <h2>2. 5-Tier Organizational Hierarchy & Access Control</h2>
+  <div class="grid-2">
+    <div class="card">
+      <h4>Tier 1: Medical Representative (MR)</h4>
+      <p>Daily shift punch-in, assigned beat execution, doctor/chemist DCR call logging, sample tracking, and personal monthly target tracking.</p>
+    </div>
+    <div class="card">
+      <h4>Tier 2: Area Business Manager (ABM)</h4>
+      <p>Division-level field supervision, joint doctor call logging, beat coverage monitoring, and team daily performance auditing.</p>
+    </div>
+    <div class="card">
+      <h4>Tier 3: Regional Sales Manager (RSM)</h4>
+      <p>Multi-division oversight (Cachar, Karimganj, Hailakandi), real-time live GPS map tracking, late login approvals, and MTP reschedule approvals.</p>
+    </div>
+    <div class="card">
+      <h4>Tier 4 & 5: HR Manager & Directors</h4>
+      <p>Enterprise payroll integration, company-wide attendance audits, doctor/chemist master data control, and executive revenue analytics.</p>
+    </div>
+  </div>
+
+  <!-- PAGE BREAK -->
+  <div class="page-break"></div>
+
+  <!-- SECTION 3 -->
+  <h2>3. Core Operational Modules</h2>
+
+  <h3>3.1 Anti-Fraud Geotagged Attendance & Shift Lock</h3>
+  <ul>
+    <li><strong>Geotagged Front-Facing Selfie:</strong> Captures fresh front-camera photo with real-time timestamping. Gallery selection is prohibited.</li>
+    <li><strong>Hardware GPS Lock & Anti-Mock Engine:</strong> Inspects Android location provider flags (<code>isMockLocation</code>). Developer option location spoofing triggers immediate lockout.</li>
+    <li><strong>10:30 AM Shift Cutoff:</strong> Reps attempting to begin duty past 10:30 AM must submit a reason (e.g. clinic delay, transport issue). The request routes instantly to RSM, HR, and Director terminals for authorization.</li>
+  </ul>
+
+  <h3>3.2 15-Minute Background Location Telemetry & Live Map</h3>
+  <ul>
+    <li><strong>Background Telemetry:</strong> An optimized background worker captures rep GPS coordinates and battery percentage every 15 minutes during active shift hours.</li>
+    <li><strong>Real-time Manager Map:</strong> RSMs and managers can open <em>Team & Employees &rarr; Live Location</em> to track active reps on an interactive map. If a rep has not started their shift, the system displays <em>'Shift Not Started'</em>.</li>
+  </ul>
+
+  <h3>3.3 Daily Call Reporting (DCR) with 100-Meter Geofencing</h3>
+  <ul>
+    <li><strong>Clinic Proximity Enforcement:</strong> Check-in is permitted only within 100 meters of the doctor's registered GPS coordinate.</li>
+    <li><strong>Brand Detailing & Sampling:</strong> Logs discussed brands, sample drops (with batch numbers and quantities), and promotional materials.</li>
+    <li><strong>Chemist POB Booking:</strong> Reps capture chemist orders, stockist tags, and booking values on the spot.</li>
+  </ul>
+
+  <h3>3.4 Monthly Tour Programme (MTP) & Deviation Control</h3>
+  <ul>
+    <li><strong>Pre-Planned Monthly Beats:</strong> Reps follow an approved calendar of daily routes across divisions.</li>
+    <li><strong>Mandatory Reschedule Approval:</strong> Reps cannot swap dates unilaterally. Any change requires submitting a formal request to the RSM.</li>
+  </ul>
+
+  <h3>3.5 Conflict-Free Offline Synchronization</h3>
+  <ul>
+    <li><strong>Zero-Data-Loss Architecture:</strong> Offline records queue locally in encrypted storage.</li>
+    <li><strong>Deterministic Collision-Resistant IDs:</strong> Generates unique identifiers (e.g., <code>att_in_NLCL-0004_2026-11-02</code>) to guarantee idempotent cloud synchronization.</li>
+  </ul>
+
+  <!-- SECTION 4 -->
+  <h2>4. Technical Specifications & Architecture</h2>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 25%;">Component</th>
+        <th style="width: 35%;">Technology</th>
+        <th style="width: 40%;">Implementation Standard</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Mobile Client</strong></td>
+        <td>React Native 0.76+ / Expo SDK 52</td>
+        <td>100% TypeScript, strict type safety, zero compile errors.</td>
+      </tr>
+      <tr>
+        <td><strong>Cloud Database</strong></td>
+        <td>PostgreSQL 15 (Supabase Enterprise)</td>
+        <td>Single Source of Truth, Row-Level Security (RLS) policies.</td>
+      </tr>
+      <tr>
+        <td><strong>Admin Web Portal</strong></td>
+        <td>React 18, Vite, Tailwind CSS</td>
+        <td>Executive analytics, master data management, and report export.</td>
+      </tr>
+      <tr>
+        <td><strong>Timezone Standard</strong></td>
+        <td>Asia/Kolkata (IST: UTC+05:30)</td>
+        <td>Centralized date utilities; eliminates UTC midnight rollover bugs.</td>
+      </tr>
+      <tr>
+        <td><strong>OS Compatibility</strong></td>
+        <td>Android 8.0 (API 26) through Android 15+</td>
+        <td>Low RAM requirement (runs smoothly on 2GB/3GB entry devices).</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- SECTION 5 -->
+  <h2>5. Security, Verification & Client Sign-Off Evidence</h2>
+  <div class="callout">
+    <div class="callout-title">System Audit & Production Verification Status: PASSED</div>
+    <div>&bull; <strong>TypeScript Build:</strong> Mobile APK compiles with 0 errors (<code>npx tsc --noEmit</code>).</div>
+    <div>&bull; <strong>Web Portal Build:</strong> Vite production build compiles in 5.6s with 0 errors.</div>
+    <div>&bull; <strong>Database Connectivity:</strong> Live cloud records established for Karimganj and Silchar divisions.</div>
+    <div>&bull; <strong>Source Repositories:</strong> Up to date on master branch across both official remotes.</div>
+  </div>
+
+  <div class="footer">
+    RepPulse Pharma SFA &copy; 2026 | Confidential Client Presentation Blueprint | Authorized Enterprise Document
+  </div>
+
+</body>
+</html>

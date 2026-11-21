@@ -715,7 +715,7 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
                     <Text style={{ fontSize: 11, fontWeight: '700', color: '#0F172A' }}>
                       {pv.date || pv.checkInTimestamp?.split('T')[0]}
                     </Text>
-                    <Badge label={pv.status || 'COMPLETED'} variant="success" size="small" />
+                    <Badge label={pv.status || 'COMPLETED'} variant="success" />
                   </View>
                   {pv.visitObjective ? (
                     <Text style={{ fontSize: 10, color: colors.primary, fontWeight: '600', marginTop: 2 }}>

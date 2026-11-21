@@ -74,35 +74,20 @@ export const RoutePlanScreen: React.FC<RoutePlanScreenProps> = ({ onBack, onOpen
   const [existingAction, setExistingAction] = useState<'RESCHEDULE' | 'NEW_VISIT' | 'DEVIATION' | 'VISIT_FIRM'>('RESCHEDULE');
   const [existingCityName, setExistingCityName] = useState('Karimganj');
 
-  // Multi-day plan overrides stored in local state for calendar
-  const [dayPlans, setDayPlans] = useState<{ [day: number]: { city: string; type: 'TOUR' | 'LEAVE' | 'HOLIDAY' | 'APPROVED_LEAVE' | 'REJECTED' } }>({
-    1: { city: 'Silchar Central & Hospital Road', type: 'TOUR' },
-    2: { city: 'SMCH Ghungoor Beat', type: 'TOUR' },
-    3: { city: 'Tarapur & Station Beat', type: 'TOUR' },
-    4: { city: 'Rangirkhari & Meherpur Beat', type: 'TOUR' },
-    5: { city: 'Karimganj Main & Station Area', type: 'TOUR' },
-    7: { city: 'Badarpur Beat', type: 'TOUR' },
-    8: { city: 'Hailakandi Civil Hospital Road', type: 'TOUR' },
-    9: { city: 'Lala & Algapur Beat', type: 'TOUR' },
-    10: { city: 'Sonai & Dholai Beat', type: 'TOUR' },
-    11: { city: 'Lakhipur Beat', type: 'TOUR' },
-    12: { city: 'Patherkandi & Ramkrishna Nagar', type: 'TOUR' },
-    14: { city: 'Silchar Central & Hospital Road', type: 'TOUR' },
-    15: { city: 'SMCH Ghungoor Beat', type: 'TOUR' },
-    16: { city: 'Tarapur & Station Beat', type: 'TOUR' },
-    17: { city: 'Karimganj Main & Station Area', type: 'TOUR' },
-    18: { city: 'Badarpur Beat', type: 'TOUR' },
-    19: { city: 'Hailakandi Civil Hospital Road', type: 'TOUR' },
-    21: { city: 'Lala & Algapur Beat', type: 'TOUR' },
-    22: { city: 'Sonai & Dholai Beat', type: 'TOUR' },
-    23: { city: 'Silchar Central & Hospital Road', type: 'TOUR' },
-    24: { city: 'SMCH Ghungoor Beat', type: 'TOUR' },
-    25: { city: 'Tarapur & Station Beat', type: 'TOUR' },
-    26: { city: 'Karimganj Main & Station Area', type: 'TOUR' },
-    28: { city: 'Badarpur Beat', type: 'TOUR' },
-    29: { city: 'Hailakandi Civil Hospital Road', type: 'TOUR' },
-    30: { city: 'Lala & Algapur Beat', type: 'TOUR' },
-  });
+  const currentUser = AuthService.getCurrentUser();
+  const isManager = currentUser?.role === 'REGIONAL_MANAGER' || currentUser?.role === 'DIRECTOR' || currentUser?.role === 'SUPER_ADMIN';
+  const [selectedEmployeeCode, setSelectedEmployeeCode] = useState<string>(isManager ? 'NLCL-0005' : (currentUser?.employeeCode || 'NLCL-0005'));
+  const [selectedEmployeeName, setSelectedEmployeeName] = useState<string>(isManager ? 'Satyam Shil' : (currentUser?.name || 'Satyam Shil'));
+  const [loadingTour, setLoadingTour] = useState(false);
+
+  const getMonthNumber = (mName: string) => {
+    const map: { [m: string]: number } = {
+      September: 9, October: 10, November: 11, December: 12, January: 1
+    };
+    return map[mName] || 11;
+  };
+
+  const [dayPlans, setDayPlans] = useState<{ [day: number]: { city: string; type: 'TOUR' | 'LEAVE' | 'HOLIDAY' | 'APPROVED_LEAVE' | 'REJECTED'; status?: string } }>({});
 
   // Known Holidays for Sep/Oct
   const holidaysMap: { [month: string]: number[] } = {
@@ -115,11 +100,95 @@ export const RoutePlanScreen: React.FC<RoutePlanScreenProps> = ({ onBack, onOpen
 
   useEffect(() => {
     loadMtp();
-  }, [monthIndex]);
+  }, [monthIndex, selectedEmployeeCode]);
 
   const loadMtp = async () => {
-    const data = await RouteService.getMonthlyTourPlan(currentMonthName, currentYear);
-    setMtp(data);
+    setLoadingTour(true);
+    try {
+      const targetCode = selectedEmployeeCode;
+      const targetMonthNum = getMonthNumber(currentMonthName);
+
+      // 1. Fetch live cloud tour plans from Supabase
+      const cloudPlans = await SupabaseDbService.fetchTourPlans(targetCode, targetMonthNum, currentYear);
+
+      const newDayPlans: Record<number, any> = {};
+      const daysList: MTPDayPlan[] = [];
+      const totalDays = getDaysInMonth(currentMonthName);
+
+      for (let d = 1; d <= totalDays; d++) {
+        const dateStr = `${currentYear}-${String(targetMonthNum).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const dateObj = new Date(currentYear, targetMonthNum - 1, d);
+        const isSun = dateObj.getDay() === 0;
+
+        const plan = cloudPlans[dateStr];
+        if (plan) {
+          newDayPlans[d] = {
+            city: plan.city,
+            type: plan.type || 'TOUR',
+            status: plan.status || 'APPROVED',
+            routeId: plan.routeId,
+            routeType: plan.routeType,
+          };
+          daysList.push({
+            dayNumber: d,
+            dayOfWeek: dateObj.toLocaleDateString('en-US', { weekday: 'short' }),
+            dateString: `${d} ${currentMonthName.substring(0, 3)} ${currentYear}`,
+            isSunday: isSun,
+            routeId: plan.routeId || '',
+            routeName: plan.city,
+            targetDoctorCalls: 10,
+            targetChemistCalls: 4,
+            status: plan.status || 'APPROVED',
+            district: 'Cachar',
+          });
+        } else if (isSun) {
+          newDayPlans[d] = { city: 'Weekly Rest / Sunday', type: 'SUNDAY', status: 'APPROVED' };
+          daysList.push({
+            dayNumber: d,
+            dayOfWeek: dateObj.toLocaleDateString('en-US', { weekday: 'short' }),
+            dateString: `${d} ${currentMonthName.substring(0, 3)} ${currentYear}`,
+            isSunday: true,
+            routeId: 'sunday-off',
+            routeName: 'Weekly Rest / Sunday',
+            targetDoctorCalls: 0,
+            targetChemistCalls: 0,
+            status: 'HOLIDAY',
+            district: 'Cachar',
+          });
+        } else {
+          daysList.push({
+            dayNumber: d,
+            dayOfWeek: dateObj.toLocaleDateString('en-US', { weekday: 'short' }),
+            dateString: `${d} ${currentMonthName.substring(0, 3)} ${currentYear}`,
+            isSunday: false,
+            routeId: '',
+            routeName: 'Not Scheduled',
+            targetDoctorCalls: 10,
+            targetChemistCalls: 4,
+            status: 'SCHEDULED',
+            district: 'Cachar',
+          });
+        }
+      }
+
+      setDayPlans(newDayPlans);
+      setMtp({
+        month: currentMonthName,
+        monthName: currentMonthName,
+        year: currentYear,
+        employeeId: targetCode,
+        employeeName: selectedEmployeeName,
+        status: 'APPROVED',
+        totalWorkingDays: totalDays - 4,
+        totalDoctorTargets: (totalDays - 4) * 10,
+        totalChemistTargets: (totalDays - 4) * 4,
+        days: daysList,
+      });
+    } catch (err) {
+      console.warn('[RoutePlanScreen] loadMtp error:', err);
+    } finally {
+      setLoadingTour(false);
+    }
   };
 
   const handlePrevMonth = () => {
@@ -173,16 +242,26 @@ export const RoutePlanScreen: React.FC<RoutePlanScreenProps> = ({ onBack, onOpen
   };
 
   // Step 3: Confirm city -> assign to date
-  const handleConfirmCity = () => {
+  const handleConfirmCity = async () => {
     setSelectCityVisible(false);
     if (selectedDayNumber) {
       setDayPlans({
         ...dayPlans,
-        [selectedDayNumber]: { city: selectedCity, type: 'TOUR' },
+        [selectedDayNumber]: { city: selectedCity, type: 'TOUR', status: 'APPROVED' },
+      });
+      const targetMonthNum = getMonthNumber(currentMonthName);
+      const dateStr = `${currentYear}-${String(targetMonthNum).padStart(2, '0')}-${String(selectedDayNumber).padStart(2, '0')}`;
+      await SupabaseDbService.saveTourDayPlan({
+        employeeId: selectedEmployeeCode,
+        employeeCode: selectedEmployeeCode,
+        employeeName: selectedEmployeeName,
+        date: dateStr,
+        city: selectedCity,
+        type: 'TOUR',
       });
       Alert.alert(
         'Tour Plan Updated',
-        `Visit to ${selectedCity} scheduled for ${selectedDayNumber} ${currentMonthName} 2026.`
+        `Visit to ${selectedCity} scheduled for ${selectedDayNumber} ${currentMonthName} ${currentYear}.`
       );
     }
   };
@@ -351,7 +430,34 @@ export const RoutePlanScreen: React.FC<RoutePlanScreenProps> = ({ onBack, onOpen
         </TouchableOpacity>
       </View>
 
-      {/* Legend Strip */}
+      {/* RSM Team Member Selector Strip */}
+      {isManager && (
+        <View style={styles.rsmTeamStrip}>
+          <Text style={styles.rsmTeamLabel}>Team Plan:</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+            {[
+              { code: 'NLCL-0005', name: 'Satyam Shil (MR)' },
+              { code: 'NLCL-0004', name: 'Pranjal Malakar (MR)' },
+              { code: 'NLCL-0003', name: 'Bodrud Jaman Sadial (RSM)' },
+            ].map(emp => (
+              <TouchableOpacity
+                key={emp.code}
+                style={[styles.rsmEmpPill, selectedEmployeeCode === emp.code && styles.rsmEmpPillActive]}
+                onPress={() => {
+                  setSelectedEmployeeCode(emp.code);
+                  setSelectedEmployeeName(emp.name);
+                }}
+              >
+                <Text style={[styles.rsmEmpPillText, selectedEmployeeCode === emp.code && styles.rsmEmpPillTextActive]}>
+                  {emp.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+
+            {/* Legend Strip */}
       <View style={styles.legendStrip}>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: '#22C55E' }]} />
@@ -1196,6 +1302,42 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     fontSize: typography.fontSize.sm,
     color: '#0F172A',
+  },
+  rsmTeamStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    paddingHorizontal: spacing.md,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+    gap: 8,
+  },
+  rsmTeamLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#475569',
+  },
+  rsmEmpPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: radius.md,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+  },
+  rsmEmpPillActive: {
+    backgroundColor: '#2563EB',
+    borderColor: '#1D4ED8',
+  },
+  rsmEmpPillText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#475569',
+  },
+  rsmEmpPillTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '700',
   },
   cityScrollView: {
     maxHeight: 220,

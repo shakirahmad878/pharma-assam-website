@@ -27,8 +27,8 @@ export const ExpenseClaimsView: React.FC<ExpenseClaimsViewProps> = ({ currentUse
   const handleCreateClaim = (e: React.FormEvent) => {
     e.preventDefault();
     const km = parseFloat(kmTravelled) || 0;
-    const mileage = km * 7.50;
-    const da = 250.00;
+    const mileage = Math.round(km * 3.50 * 100) / 100;
+    const da = 220.00;
     const other = parseFloat(parkingAmount) || 0;
 
     const newClaim: ExpenseClaim = {
@@ -39,7 +39,7 @@ export const ExpenseClaimsView: React.FC<ExpenseClaimsViewProps> = ({ currentUse
       territoryName: currentUser?.territoryName || 'Silchar Regional HQ',
       date: claimDate,
       totalDistanceKm: km,
-      ratePerKm: 7.50,
+      ratePerKm: 3.50,
       mileageAmount: mileage,
       dailyAllowance: da,
       otherExpensesTotal: other,
@@ -48,7 +48,7 @@ export const ExpenseClaimsView: React.FC<ExpenseClaimsViewProps> = ({ currentUse
         {
           id: `item-${Date.now()}-1`,
           category: 'TRAVEL_KM_RATE',
-          description: `GPS Verified Field Distance (${km} km @ ₹7.50/km)`,
+          description: `GPS Verified Field Distance (${km} km @ ₹3.50/km)`,
           amount: mileage,
           verifiedKm: km,
         },
@@ -222,7 +222,7 @@ export const ExpenseClaimsView: React.FC<ExpenseClaimsViewProps> = ({ currentUse
                     onChange={(e) => setKmTravelled(e.target.value)}
                     className="w-full px-3 py-2 bg-white border border-[#DCE4EB] rounded-xl text-[#10243A] font-mono font-bold focus:outline-none focus:border-[#18A6A6]"
                   />
-                  <span className="absolute right-3 top-2 text-[#64748B] font-medium">@ ₹7.50/km</span>
+                  <span className="absolute right-3 top-2 text-[#64748B] font-medium">@ ₹3.50/km</span>
                 </div>
               </div>
 

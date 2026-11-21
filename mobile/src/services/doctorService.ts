@@ -70,6 +70,7 @@ export class DoctorService {
       isAssignedToMe: true,
       assignedToEmployeeId: newDoc.assignedToEmployeeId,
       assignedToEmployeeName: newDoc.assignedToEmployeeName,
+      createdBy: newDoc.createdBy,
     };
     await SupabaseDbService.addDoctor(doc);
     return doc;
@@ -152,6 +153,7 @@ export class DoctorService {
     return await this.updateDoctor(doctorId, {
       assignedToEmployeeId: employeeId,
       assignedToEmployeeName: employeeName,
+      isAssignedToMe: true,
     });
   }
 

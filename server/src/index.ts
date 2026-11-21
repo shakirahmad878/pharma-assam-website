@@ -32,7 +32,7 @@ app.get('/api/health', (req, res) => {
       telemetryIntervalMinutes: 15,
       geofenceRadiusMeters: 100,
       trackingPrivacyGate: 'SUPER_ADMIN_ONLY',
-      mileageRatePerKm: 7.50
+      mileageRatePerKm: 3.50
     }
   });
 });

@@ -705,8 +705,23 @@ export const ExpensesScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => 
   const [activeTab, setActiveTab] = useState<'EXPENSES' | 'SFC'>('EXPENSES');
   const [selectedExpense, setSelectedExpense] = useState<DailyExpenseItem | null>(null);
   const [searchRoute, setSearchRoute] = useState('');
+  const [sfcList, setSfcList] = useState<SFCRouteEntry[]>(MOCK_SFC_ROUTES);
+  const [expensesList, setExpensesList] = useState<DailyExpenseItem[]>(MOCK_EXPENSES_LOG);
 
-  const filteredSFC = MOCK_SFC_ROUTES.filter(
+  useEffect(() => {
+    if (SupabaseDbService.isConnected()) {
+      SupabaseDbService.fetchSFCRoutes().then((routes) => {
+        if (routes && routes.length > 0) setSfcList(routes);
+      }).catch(() => {});
+      const user = AuthService.getCurrentUser();
+      const code = user?.employeeCode || 'NLCL-0005';
+      SupabaseDbService.fetchExpenses(code).then((exps) => {
+        if (exps && exps.length > 0) setExpensesList(exps);
+      }).catch(() => {});
+    }
+  }, []);
+
+  const filteredSFC = sfcList.filter(
     r =>
       r.fromLocation.toLowerCase().includes(searchRoute.toLowerCase()) ||
       r.toLocation.toLowerCase().includes(searchRoute.toLowerCase())
@@ -714,7 +729,7 @@ export const ExpensesScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => 
 
   const handleExportPDF = async () => {
     const headers = ['Date', 'Route & Destination', 'Distance (Km)', 'TA (₹)', 'DA (₹)', 'Total (₹)', 'Status'];
-    const rows = MOCK_EXPENSES_LOG.map(e => [
+    const rows = expensesList.map(e => [
       e.date,
       e.route,
       `${e.distanceKm} km`,
@@ -738,7 +753,7 @@ export const ExpensesScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => 
 
   return (
     <SafeAreaView style={styles.container}>
-      <Header title="Expenses & SFC" subtitle="Barak Valley TA/DA & Standard Fares" showBack onBack={onBack} />
+      <Header title="Expenses & SFC" subtitle="NLCL Schedule I(a) — TA: ₹3.50/km | HQ: ₹220, EX: ₹250, OUT: ₹1000" showBack onBack={onBack} />
 
       {/* Top Switcher */}
       <View style={styles.topTabRow}>
@@ -771,7 +786,7 @@ export const ExpensesScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => 
             </TouchableOpacity>
           </View>
 
-          {MOCK_EXPENSES_LOG.map(item => (
+          {expensesList.map(item => (
             <TouchableOpacity
               key={item.id}
               style={styles.expenseCard}

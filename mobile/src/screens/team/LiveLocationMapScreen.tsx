@@ -9,78 +9,178 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
-  Platform,
+  TextInput,
+  RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, typography, spacing, radius, shadows } from '../../constants/theme';
+import { colors, spacing, radius } from '../../constants/theme';
 import { Header } from '../../components/common/Header';
 import { Card } from '../../components/common/Card';
 import { Badge } from '../../components/common/Badge';
-import { Button } from '../../components/common/Button';
 import { UserProfile, LocationTelemetryRecord } from '../../types';
-import { SupabaseDbService } from '../../services/supabase/supabaseDbService';
-import { getBusinessDateStr } from '../../utils/dateUtils';
+import { SupabaseDbService, FleetLiveLocationItem } from '../../services/supabase/supabaseDbService';
 import { AuthService } from '../../services/authService';
+import { LocationService } from '../../services/location/locationService';
+import {
+  calculateHaversineDistanceKm,
+  getCardinalDirection,
+  determineLocationFreshness,
+  LocationFreshness,
+} from '../../utils/geoUtils';
 
 interface LiveLocationMapScreenProps {
-  employee: UserProfile;
+  employee?: UserProfile | null;
+  teamEmployees?: UserProfile[];
   onBack: () => void;
 }
 
 export const LiveLocationMapScreen: React.FC<LiveLocationMapScreenProps> = ({
-  employee,
+  employee: initialEmployee,
+  teamEmployees = [],
   onBack,
 }) => {
-  const [loading, setLoading] = useState(true);
+  // Navigation & View Mode
+  const [selectedEmp, setSelectedEmp] = useState<UserProfile | null>(initialEmployee || null);
+  const [viewMode, setViewMode] = useState<'FLEET' | 'DETAIL'>(initialEmployee ? 'DETAIL' : 'FLEET');
+
+  // Loading States
+  const [loadingFleet, setLoadingFleet] = useState(true);
+  const [loadingDetail, setLoadingDetail] = useState(false);
   const [requestingFresh, setRequestingFresh] = useState(false);
-  const [shiftStatus, setShiftStatus] = useState<
-    'SHIFT_NOT_STARTED' | 'SHIFT_ACTIVE' | 'SHIFT_ENDED' | 'PENDING_SYNC'
-  >('SHIFT_NOT_STARTED');
-  const [locationStatus, setLocationStatus] = useState<
-    'FRESH' | 'AGING' | 'STALE' | 'LOCATION_UNAVAILABLE'
-  >('LOCATION_UNAVAILABLE');
-  const [latitude, setLatitude] = useState<number | null>(null);
-  const [longitude, setLongitude] = useState<number | null>(null);
-  const [accuracy, setAccuracy] = useState<number | null>(null);
-  const [battery, setBattery] = useState<number | null>(null);
-  const [lastRecordedAt, setLastRecordedAt] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Manager Device Location (for Great-Circle Haversine distance)
+  const [managerLocation, setManagerLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+
+  // Fleet Telemetry Data
+  const [fleetLocations, setFleetLocations] = useState<FleetLiveLocationItem[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'LIVE' | 'ACTIVE' | 'OFFLINE'>('ALL');
+
+  // Detail Mode State
+  const [singleTelemetry, setSingleTelemetry] = useState<{
+    shiftStatus: 'SHIFT_NOT_STARTED' | 'SHIFT_ACTIVE' | 'SHIFT_ENDED' | 'PENDING_SYNC';
+    locationStatus: LocationFreshness | 'LOCATION_UNAVAILABLE';
+    latitude: number | null;
+    longitude: number | null;
+    accuracy: number | null;
+    speedKmh: number | null;
+    bearing: number | null;
+    battery: number | null;
+    lastRecordedAt: string | null;
+    timeAgoText: string;
+    isMock: boolean;
+  } | null>(null);
+
   const [history, setHistory] = useState<LocationTelemetryRecord[]>([]);
   const [showHistory, setShowHistory] = useState(false);
 
-  const fetchLiveState = useCallback(async () => {
+  // Acquire Manager's Current Hardware GPS on mount
+  const acquireManagerLocation = useCallback(async () => {
     try {
-      const empKey = employee.id || employee.employeeCode;
-      const res = await SupabaseDbService.getAuthoritativeShiftStatus(empKey);
-      setShiftStatus(res.shiftStatus);
-      setLocationStatus(res.locationStatus);
-      setLatitude(res.rawLatitude);
-      setLongitude(res.rawLongitude);
-      setAccuracy(res.accuracyMeters);
-      setBattery(res.batteryPercentage);
-      setLastRecordedAt(res.lastRecordedAt);
-
-      // Load breadcrumbs if available
-      const hist = await SupabaseDbService.getEmployeeTelemetryHistory(empKey, 15);
-      setHistory(hist);
-    } catch (err: any) {
-      console.warn('[LiveLocationMap] Fetch error:', err);
-    } finally {
-      setLoading(false);
+      const loc = await LocationService.getCurrentLocation({ timeoutMs: 6000 });
+      if (loc && loc.latitude && loc.longitude) {
+        setManagerLocation({ latitude: loc.latitude, longitude: loc.longitude });
+      }
+    } catch (err) {
+      console.warn('[LiveMap] Manager GPS fix unavailable:', err);
     }
-  }, [employee]);
+  }, []);
 
+  // Fetch Fleet Locations for All Tracked Employees
+  const fetchFleetData = useCallback(async () => {
+    if (teamEmployees.length === 0) {
+      setLoadingFleet(false);
+      return;
+    }
+    try {
+      const fleet = await SupabaseDbService.fetchFleetLiveLocations(teamEmployees);
+      setFleetLocations(fleet);
+    } catch (err) {
+      console.warn('[LiveMap] Fleet fetch error:', err);
+    } finally {
+      setLoadingFleet(false);
+      setRefreshing(false);
+    }
+  }, [teamEmployees]);
+
+  // Fetch Single Employee Detailed Telemetry & Breadcrumbs
+  const fetchDetailData = useCallback(async (emp: UserProfile) => {
+    setLoadingDetail(true);
+    try {
+      const empKey = emp.id || emp.employeeCode;
+      const statusRes = await SupabaseDbService.getAuthoritativeShiftStatus(empKey);
+      const tel = await SupabaseDbService.getLatestEmployeeTelemetry(empKey);
+      const hist = await SupabaseDbService.getEmployeeTelemetryHistory(empKey, 20);
+
+      const speed = tel?.speed_mps ? Math.round(Number(tel.speed_mps) * 3.6 * 10) / 10 : null;
+      const bearing = tel?.bearing_degrees ? Number(tel.bearing_degrees) : null;
+      const isMock = Boolean((tel as any)?.is_mock_location || tel?.provider === 'mock');
+
+      const freshness = determineLocationFreshness(statusRes.lastRecordedAt);
+
+      setSingleTelemetry({
+        shiftStatus: statusRes.shiftStatus,
+        locationStatus: statusRes.locationStatus as any,
+        latitude: statusRes.rawLatitude,
+        longitude: statusRes.rawLongitude,
+        accuracy: statusRes.accuracyMeters,
+        speedKmh: speed,
+        bearing: bearing,
+        battery: statusRes.batteryPercentage,
+        lastRecordedAt: statusRes.lastRecordedAt,
+        timeAgoText: freshness.timeAgoText,
+        isMock: isMock,
+      });
+
+      setHistory(hist);
+    } catch (err) {
+      console.warn('[LiveMap] Detail fetch error:', err);
+    } finally {
+      setLoadingDetail(false);
+    }
+  }, []);
+
+  // Initial Load & Lifecycle
   useEffect(() => {
-    fetchLiveState();
-    // Auto-refresh every 30 seconds while screen is open
-    const interval = setInterval(fetchLiveState, 30000);
-    return () => clearInterval(interval);
-  }, [fetchLiveState]);
+    acquireManagerLocation();
+    fetchFleetData();
 
+    if (selectedEmp) {
+      fetchDetailData(selectedEmp);
+    }
+
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(() => {
+      fetchFleetData();
+      if (selectedEmp && viewMode === 'DETAIL') {
+        fetchDetailData(selectedEmp);
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [acquireManagerLocation, fetchFleetData, fetchDetailData, selectedEmp, viewMode]);
+
+  // Handle Switch to Single Rep Detail
+  const handleSelectEmployee = (empItem: FleetLiveLocationItem) => {
+    const matchedProfile = teamEmployees.find(
+      (e) => e.id === empItem.employeeId || e.employeeCode === empItem.employeeCode
+    );
+    if (matchedProfile) {
+      setSelectedEmp(matchedProfile);
+      setViewMode('DETAIL');
+      fetchDetailData(matchedProfile);
+    }
+  };
+
+  // On-Demand Satellite Ping
   const handleRequestFreshGps = async () => {
-    if (shiftStatus === 'SHIFT_NOT_STARTED') {
+    if (!selectedEmp) return;
+
+    if (singleTelemetry?.shiftStatus === 'SHIFT_NOT_STARTED') {
       Alert.alert(
         'Shift Not Started',
-        `${employee.name} has not punched in for today yet. Telemetry requests activate once duty begins.`
+        `${selectedEmp.name} has not punched in for today yet. Telemetry requests activate once duty begins.`
       );
       return;
     }
@@ -89,7 +189,7 @@ export const LiveLocationMapScreen: React.FC<LiveLocationMapScreenProps> = ({
     try {
       const currentUser = AuthService.getCurrentUser();
       const requestedBy = currentUser?.name || 'Manager';
-      const empKey = employee.id || employee.employeeCode;
+      const empKey = selectedEmp.id || selectedEmp.employeeCode;
 
       const req = await SupabaseDbService.createLocationRequest(empKey, requestedBy);
       if (!req || !req.id) {
@@ -105,10 +205,10 @@ export const LiveLocationMapScreen: React.FC<LiveLocationMapScreenProps> = ({
         if (attempts > 6) {
           clearInterval(pollTimer);
           setRequestingFresh(false);
-          await fetchLiveState();
+          await fetchDetailData(selectedEmp);
           Alert.alert(
             'Request Queued 🛰️',
-            `Ping sent to ${employee.name}'s Android device. Showing latest confirmed coordinates while device acquires satellite lock.`
+            `Ping sent to ${selectedEmp.name}'s Android device. Showing latest confirmed coordinates while device acquires satellite lock.`
           );
           return;
         }
@@ -117,8 +217,8 @@ export const LiveLocationMapScreen: React.FC<LiveLocationMapScreenProps> = ({
         if (polled && polled.status === 'COMPLETED') {
           clearInterval(pollTimer);
           setRequestingFresh(false);
-          await fetchLiveState();
-          Alert.alert('Fresh GPS Acquired ✅', `Received real-time satellite fix from ${employee.name}'s device.`);
+          await fetchDetailData(selectedEmp);
+          Alert.alert('Fresh GPS Acquired ✅', `Received real-time satellite fix from ${selectedEmp.name}'s device.`);
         }
       }, 2000);
     } catch (err: any) {
@@ -127,224 +227,550 @@ export const LiveLocationMapScreen: React.FC<LiveLocationMapScreenProps> = ({
     }
   };
 
-  const openInGoogleMaps = () => {
-    if (latitude !== null && longitude !== null) {
-      const url = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
+  // Launch External Google Maps
+  const openInGoogleMaps = (lat: number | null, lng: number | null) => {
+    if (lat !== null && lng !== null) {
+      const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
       Linking.openURL(url);
     } else {
       Alert.alert('No Coordinates', 'Coordinates are not yet available for mapping.');
     }
   };
 
-  const getShiftBadge = () => {
-    switch (shiftStatus) {
-      case 'SHIFT_ACTIVE':
-        return <Badge label="🟢 Shift Active — Field Duty" variant="success" />;
-      case 'SHIFT_ENDED':
-        return <Badge label="⏹️ Shift Ended" variant="muted" />;
-      case 'PENDING_SYNC':
-        return <Badge label="⏳ Attendance Pending Sync" variant="warning" />;
-      case 'SHIFT_NOT_STARTED':
+  // Status Badge Component
+  const renderFreshnessBadge = (status: LocationFreshness | 'LOCATION_UNAVAILABLE', timeAgo?: string) => {
+    switch (status) {
+      case 'LIVE':
+        return (
+          <View style={[styles.badgeBase, styles.badgeLive]}>
+            <View style={styles.pulseDotGreen} />
+            <Text style={styles.badgeTextLive}>LIVE {timeAgo ? `(${timeAgo})` : ''}</Text>
+          </View>
+        );
+      case 'RECENT':
+        return (
+          <View style={[styles.badgeBase, styles.badgeRecent]}>
+            <Ionicons name="time" size={11} color="#0284C7" />
+            <Text style={styles.badgeTextRecent}>RECENT {timeAgo ? `(${timeAgo})` : ''}</Text>
+          </View>
+        );
+      case 'DELAYED':
+        return (
+          <View style={[styles.badgeBase, styles.badgeDelayed]}>
+            <Ionicons name="alert-circle" size={11} color="#D97706" />
+            <Text style={styles.badgeTextDelayed}>DELAYED {timeAgo ? `(${timeAgo})` : ''}</Text>
+          </View>
+        );
+      case 'STALE':
+        return (
+          <View style={[styles.badgeBase, styles.badgeStale]}>
+            <Ionicons name="cloud-offline" size={11} color="#64748B" />
+            <Text style={styles.badgeTextStale}>LAST KNOWN {timeAgo ? `(${timeAgo})` : ''}</Text>
+          </View>
+        );
       default:
-        return <Badge label="⚠️ Shift Not Started" variant="danger" />;
+        return (
+          <View style={[styles.badgeBase, styles.badgeStale]}>
+            <Text style={styles.badgeTextStale}>NO GPS FIX</Text>
+          </View>
+        );
     }
   };
 
-  const getLocationBadge = () => {
-    switch (locationStatus) {
-      case 'FRESH':
-        return <Badge label="🟢 Live GPS (0–5m ago)" variant="success" />;
-      case 'AGING':
-        return <Badge label="🟡 Aging Fix (5–15m ago)" variant="warning" />;
-      case 'STALE':
-        return <Badge label="🟠 Stale Fix (>15m ago)" variant="warning" />;
-      case 'LOCATION_UNAVAILABLE':
+  // Shift Status Badge
+  const renderShiftBadge = (shift: string) => {
+    switch (shift) {
+      case 'SHIFT_ACTIVE':
+        return <Badge label="🟢 Active on Duty" variant="success" />;
+      case 'SHIFT_ENDED':
+        return <Badge label="⏹️ Shift Ended" variant="muted" />;
+      case 'PENDING_SYNC':
+        return <Badge label="⏳ Pending Sync" variant="warning" />;
       default:
-        return <Badge label="⚪ Location Unavailable" variant="muted" />;
+        return <Badge label="⚠️ Not Punched In" variant="danger" />;
     }
   };
+
+  // Filter Fleet List
+  const filteredFleet = fleetLocations.filter((item) => {
+    const matchesSearch =
+      item.employeeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.employeeCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.territory || '').toLowerCase().includes(searchQuery.toLowerCase());
+
+    if (!matchesSearch) return false;
+
+    if (statusFilter === 'LIVE') return item.locationStatus === 'LIVE';
+    if (statusFilter === 'ACTIVE') return item.shiftStatus === 'SHIFT_ACTIVE';
+    if (statusFilter === 'OFFLINE') return item.locationStatus === 'STALE' || item.shiftStatus === 'SHIFT_NOT_STARTED';
+
+    return true;
+  });
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <Header
-        title="Live Location & Telemetry"
-        subtitle={`${employee.name} (#${employee.employeeCode})`}
+        title={viewMode === 'FLEET' ? 'Live Field Force Map' : 'Employee Location & Telemetry'}
+        subtitle={
+          viewMode === 'FLEET'
+            ? `${fleetLocations.length} Tracked Field Representatives`
+            : `${selectedEmp?.name} (#${selectedEmp?.employeeCode})`
+        }
         showBack
-        onBack={onBack}
+        onBack={() => {
+          if (viewMode === 'DETAIL' && !initialEmployee) {
+            setViewMode('FLEET');
+          } else {
+            onBack();
+          }
+        }}
       />
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* EMPLOYEE & STATUS CARD */}
-        <Card style={styles.profileCard}>
-          <View style={styles.headerRow}>
-            <View style={styles.avatarCircle}>
-              <Text style={styles.avatarText}>
-                {employee.name.split(' ').map((n) => n[0]).join('').substring(0, 2)}
+      {/* TOP VIEW MODE TOGGLE PILLS */}
+      {teamEmployees.length > 0 && (
+        <View style={styles.viewModeToggleRow}>
+          <TouchableOpacity
+            style={[styles.modePill, viewMode === 'FLEET' && styles.modePillActive]}
+            onPress={() => setViewMode('FLEET')}
+          >
+            <Ionicons
+              name="globe-outline"
+              size={15}
+              color={viewMode === 'FLEET' ? '#FFFFFF' : '#475569'}
+            />
+            <Text style={[styles.modePillText, viewMode === 'FLEET' && styles.modePillTextActive]}>
+              Fleet Overview ({fleetLocations.length})
+            </Text>
+          </TouchableOpacity>
+
+          {selectedEmp && (
+            <TouchableOpacity
+              style={[styles.modePill, viewMode === 'DETAIL' && styles.modePillActive]}
+              onPress={() => setViewMode('DETAIL')}
+            >
+              <Ionicons
+                name="person-outline"
+                size={15}
+                color={viewMode === 'DETAIL' ? '#FFFFFF' : '#475569'}
+              />
+              <Text style={[styles.modePillText, viewMode === 'DETAIL' && styles.modePillTextActive]}>
+                {selectedEmp.name.split(' ')[0]} Focus
               </Text>
-            </View>
-            <View style={{ flex: 1, marginLeft: 12 }}>
-              <Text style={styles.empName}>{employee.name}</Text>
-              <Text style={styles.empRole}>
-                {employee.role === 'MEDICAL_REP' ? 'Medical Representative' : employee.role} &bull; {employee.headquarter || 'HQ'}
-              </Text>
-              <Text style={styles.empTerritory}>{employee.territory || 'Barak Valley'}</Text>
-            </View>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
+
+      {/* ============================================================== */}
+      {/* 1. FLEET OVERVIEW VIEW MODE                                     */}
+      {/* ============================================================== */}
+      {viewMode === 'FLEET' ? (
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => {
+                setRefreshing(true);
+                acquireManagerLocation();
+                fetchFleetData();
+              }}
+            />
+          }
+        >
+          {/* Manager Location Indicator Banner */}
+          <View style={styles.managerGpsBanner}>
+            <Ionicons name="radio" size={16} color="#2563EB" />
+            <Text style={styles.managerGpsText}>
+              {managerLocation
+                ? 'Manager Location Lock: Active (Haversine Distance Online)'
+                : 'Acquiring Manager GPS for exact distance calculations...'}
+            </Text>
           </View>
 
-          <View style={styles.statusRow}>
-            <View style={{ flex: 1 }}>{getShiftBadge()}</View>
-            <View>{getLocationBadge()}</View>
+          {/* Search Bar */}
+          <View style={styles.searchBarBox}>
+            <Ionicons name="search-outline" size={18} color="#64748B" />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search field rep by name, code, or territory..."
+              placeholderTextColor="#94A3B8"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')}>
+                <Ionicons name="close-circle" size={18} color="#94A3B8" />
+              </TouchableOpacity>
+            )}
           </View>
-        </Card>
 
-        {loading ? (
-          <View style={styles.centerBox}>
-            <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={styles.loadingText}>Connecting to Satellite Telemetry Feed...</Text>
+          {/* Quick Filter Pills */}
+          <View style={styles.filterRow}>
+            {[
+              { id: 'ALL', label: `All (${fleetLocations.length})` },
+              { id: 'LIVE', label: `🟢 Live (${fleetLocations.filter((f) => f.locationStatus === 'LIVE').length})` },
+              { id: 'ACTIVE', label: `Active (${fleetLocations.filter((f) => f.shiftStatus === 'SHIFT_ACTIVE').length})` },
+              { id: 'OFFLINE', label: `⚪ Stale/Offline (${fleetLocations.filter((f) => f.locationStatus === 'STALE' || f.shiftStatus === 'SHIFT_NOT_STARTED').length})` },
+            ].map((f) => (
+              <TouchableOpacity
+                key={f.id}
+                style={[styles.filterPill, statusFilter === f.id && styles.filterPillActive]}
+                onPress={() => setStatusFilter(f.id as any)}
+              >
+                <Text style={[styles.filterPillText, statusFilter === f.id && styles.filterPillTextActive]}>
+                  {f.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
-        ) : (
-          <>
-            {/* MAP VISUAL CONTAINER */}
-            <Card style={styles.mapCard}>
-              <View style={styles.mapCanvas}>
-                {/* Visual Satellite Map Mock / Grid */}
-                <View style={styles.gridOverlay}>
-                  <View style={styles.mapCircleOuter}>
-                    <View style={styles.mapCircleInner}>
-                      <Ionicons name="location" size={32} color="#DC2626" />
+
+          {loadingFleet ? (
+            <View style={styles.centerBox}>
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text style={styles.loadingText}>Synchronizing Field Force Telemetry...</Text>
+            </View>
+          ) : filteredFleet.length === 0 ? (
+            <View style={styles.emptyCard}>
+              <Ionicons name="people-outline" size={40} color="#94A3B8" />
+              <Text style={styles.emptyTitle}>No Field Representatives Found</Text>
+              <Text style={styles.emptySubtitle}>No matching tracked representatives for this filter.</Text>
+            </View>
+          ) : (
+            filteredFleet.map((item) => {
+              const distanceKm =
+                managerLocation && item.latitude && item.longitude
+                  ? calculateHaversineDistanceKm(
+                      managerLocation.latitude,
+                      managerLocation.longitude,
+                      item.latitude,
+                      item.longitude
+                    )
+                  : null;
+
+              const direction = getCardinalDirection(item.bearingDegrees);
+
+              return (
+                <Card key={item.employeeId} style={styles.repCard}>
+                  {/* Card Header */}
+                  <View style={styles.repHeaderRow}>
+                    <View style={styles.repAvatarCircle}>
+                      <Text style={styles.repAvatarText}>
+                        {item.employeeName
+                          .split(' ')
+                          .map((n) => n[0])
+                          .join('')
+                          .substring(0, 2)}
+                      </Text>
+                    </View>
+
+                    <View style={{ flex: 1, marginLeft: 12 }}>
+                      <Text style={styles.repName}>{item.employeeName}</Text>
+                      <Text style={styles.repRole}>
+                        {item.role === 'MEDICAL_REP' ? 'Medical Representative' : item.role} &bull; #
+                        {item.employeeCode}
+                      </Text>
+                      <Text style={styles.repTerritory}>{item.territory || item.headquarter || 'Barak Valley'}</Text>
+                    </View>
+
+                    {renderFreshnessBadge(item.locationStatus as any, item.timeAgoText)}
+                  </View>
+
+                  {/* Telemetry Metrics Grid */}
+                  <View style={styles.repMetricsGrid}>
+                    {/* Distance From Manager */}
+                    <View style={styles.gridMetricItem}>
+                      <Ionicons name="navigate-circle-outline" size={15} color="#2563EB" />
+                      <Text style={styles.gridMetricLabel}>Distance Away</Text>
+                      <Text style={styles.gridMetricValue}>
+                        {distanceKm !== null ? `${distanceKm} km away` : 'GPS Pending'}
+                      </Text>
+                    </View>
+
+                    {/* GPS Accuracy */}
+                    <View style={styles.gridMetricItem}>
+                      <Ionicons name="locate-outline" size={15} color="#0D9488" />
+                      <Text style={styles.gridMetricLabel}>GPS Accuracy</Text>
+                      <Text style={styles.gridMetricValue}>
+                        {item.accuracyMeters ? `±${Math.round(item.accuracyMeters)}m` : 'N/A'}
+                      </Text>
+                    </View>
+
+                    {/* Speed & Heading */}
+                    <View style={styles.gridMetricItem}>
+                      <Ionicons name="speedometer-outline" size={15} color="#7C3AED" />
+                      <Text style={styles.gridMetricLabel}>Speed / Heading</Text>
+                      <Text style={styles.gridMetricValue}>
+                        {item.speedKmh !== null && item.speedKmh > 0
+                          ? `${item.speedKmh} km/h ${direction}`
+                          : 'Stationary'}
+                      </Text>
+                    </View>
+
+                    {/* Last Updated */}
+                    <View style={styles.gridMetricItem}>
+                      <Ionicons name="time-outline" size={15} color="#EA580C" />
+                      <Text style={styles.gridMetricLabel}>Last Recorded</Text>
+                      <Text style={styles.gridMetricValue}>{item.timeAgoText}</Text>
                     </View>
                   </View>
+
+                  {/* Actions Row */}
+                  <View style={styles.repCardActions}>
+                    <TouchableOpacity
+                      style={styles.drilldownBtn}
+                      onPress={() => handleSelectEmployee(item)}
+                    >
+                      <Ionicons name="eye-outline" size={16} color="#FFFFFF" />
+                      <Text style={styles.drilldownBtnText}>Drill Down & Telemetry</Text>
+                    </TouchableOpacity>
+
+                    {item.latitude && item.longitude && (
+                      <TouchableOpacity
+                        style={styles.quickMapsBtn}
+                        onPress={() => openInGoogleMaps(item.latitude, item.longitude)}
+                      >
+                        <Ionicons name="map-outline" size={16} color="#2563EB" />
+                        <Text style={styles.quickMapsBtnText}>Maps</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                </Card>
+              );
+            })
+          )}
+        </ScrollView>
+      ) : (
+        /* ============================================================== */
+        /* 2. SINGLE EMPLOYEE DETAILED TELEMETRY MODE                    */
+        /* ============================================================== */
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => {
+                setRefreshing(true);
+                acquireManagerLocation();
+                if (selectedEmp) fetchDetailData(selectedEmp);
+              }}
+            />
+          }
+        >
+          {selectedEmp && (
+            <Card style={styles.profileCard}>
+              <View style={styles.headerRow}>
+                <View style={styles.avatarCircle}>
+                  <Text style={styles.avatarText}>
+                    {selectedEmp.name
+                      .split(' ')
+                      .map((n) => n[0])
+                      .join('')
+                      .substring(0, 2)}
+                  </Text>
+                </View>
+                <View style={{ flex: 1, marginLeft: 12 }}>
+                  <Text style={styles.empName}>{selectedEmp.name}</Text>
+                  <Text style={styles.empRole}>
+                    {selectedEmp.role === 'MEDICAL_REP' ? 'Medical Representative' : selectedEmp.role} &bull;{' '}
+                    {selectedEmp.headquarter || 'HQ'}
+                  </Text>
+                  <Text style={styles.empTerritory}>{selectedEmp.territory || 'Barak Valley'}</Text>
+                </View>
+              </View>
+
+              <View style={styles.statusRow}>
+                <View style={{ flex: 1 }}>
+                  {renderShiftBadge(singleTelemetry?.shiftStatus || 'SHIFT_NOT_STARTED')}
+                </View>
+                <View>
+                  {renderFreshnessBadge(
+                    singleTelemetry?.locationStatus || 'LOCATION_UNAVAILABLE',
+                    singleTelemetry?.timeAgoText
+                  )}
+                </View>
+              </View>
+            </Card>
+          )}
+
+          {loadingDetail ? (
+            <View style={styles.centerBox}>
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text style={styles.loadingText}>Fetching Real-time Satellite Telemetry...</Text>
+            </View>
+          ) : (
+            <>
+              {/* SATELLITE MAP VISUALIZATION CARD */}
+              <Card style={styles.mapCard}>
+                <View style={styles.mapCanvas}>
+                  <View style={styles.gridOverlay}>
+                    <View style={styles.mapCircleOuter}>
+                      <View style={styles.mapCircleInner}>
+                        <Ionicons name="location" size={32} color="#DC2626" />
+                      </View>
+                    </View>
+                  </View>
+
+                  {singleTelemetry?.latitude !== null && singleTelemetry?.longitude !== null ? (
+                    <View style={styles.mapFloatingInfo}>
+                      <Text style={styles.floatingCoords}>
+                        📍 {singleTelemetry?.latitude?.toFixed(5)}° N, {singleTelemetry?.longitude?.toFixed(5)}° E
+                      </Text>
+                      <Text style={styles.floatingAccuracy}>
+                        Accuracy: &plusmn;{singleTelemetry?.accuracy ? Math.round(singleTelemetry.accuracy) : 6}m
+                        {singleTelemetry?.accuracy && singleTelemetry.accuracy <= 15
+                          ? ' (High Precision Lock)'
+                          : ''}
+                      </Text>
+                    </View>
+                  ) : (
+                    <View style={styles.mapFloatingInfo}>
+                      <Text style={styles.floatingCoords}>No GPS Fix Acquired Today</Text>
+                      <Text style={styles.floatingAccuracy}>Waiting for morning attendance punch-in</Text>
+                    </View>
+                  )}
                 </View>
 
-                {latitude !== null && longitude !== null ? (
-                  <View style={styles.mapFloatingInfo}>
-                    <Text style={styles.floatingCoords}>
-                      📍 {latitude.toFixed(5)}° N, {longitude.toFixed(5)}° E
-                    </Text>
-                    <Text style={styles.floatingAccuracy}>
-                      Accuracy: &plusmn;{accuracy ? Math.round(accuracy) : 6}m {accuracy && accuracy <= 15 ? '(High Precision GPS)' : ''}
+                {/* Map Action Buttons */}
+                <View style={styles.mapActionRow}>
+                  <TouchableOpacity
+                    style={[styles.actionBtn, styles.mapsBtn]}
+                    onPress={() =>
+                      openInGoogleMaps(singleTelemetry?.latitude || null, singleTelemetry?.longitude || null)
+                    }
+                    disabled={singleTelemetry?.latitude === null}
+                  >
+                    <Ionicons name="navigate-outline" size={18} color="#FFFFFF" />
+                    <Text style={styles.btnTextWhite}>Open in Google Maps</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.actionBtn, styles.refreshBtn, requestingFresh && { opacity: 0.7 }]}
+                    onPress={handleRequestFreshGps}
+                    disabled={requestingFresh}
+                  >
+                    {requestingFresh ? (
+                      <ActivityIndicator size="small" color="#FFFFFF" />
+                    ) : (
+                      <>
+                        <Ionicons name="flash-outline" size={18} color="#FFFFFF" />
+                        <Text style={styles.btnTextWhite}>Ping Fresh GPS</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </Card>
+
+              {/* TELEMETRY & SENSOR DIAGNOSTICS */}
+              <Card style={styles.metricsCard}>
+                <Text style={styles.sectionTitle}>Telemetry & Field Diagnostics</Text>
+
+                <View style={styles.metricRow}>
+                  {/* Distance from Manager */}
+                  <View style={styles.metricItem}>
+                    <Ionicons name="navigate-outline" size={20} color="#2563EB" />
+                    <Text style={styles.metricLabel}>Distance</Text>
+                    <Text style={styles.metricValue}>
+                      {managerLocation && singleTelemetry?.latitude && singleTelemetry?.longitude
+                        ? `${calculateHaversineDistanceKm(
+                            managerLocation.latitude,
+                            managerLocation.longitude,
+                            singleTelemetry.latitude,
+                            singleTelemetry.longitude
+                          )} km`
+                        : 'Unavailable'}
                     </Text>
                   </View>
-                ) : (
-                  <View style={styles.mapFloatingInfo}>
-                    <Text style={styles.floatingCoords}>No GPS Fix Acquired Today</Text>
-                    <Text style={styles.floatingAccuracy}>Waiting for morning attendance punch-in</Text>
+
+                  {/* Battery */}
+                  <View style={styles.metricItem}>
+                    <Ionicons name="battery-charging-outline" size={20} color="#0D9488" />
+                    <Text style={styles.metricLabel}>Battery</Text>
+                    <Text style={styles.metricValue}>
+                      {singleTelemetry?.battery !== null ? `${singleTelemetry?.battery}%` : 'N/A'}
+                    </Text>
+                  </View>
+
+                  {/* Speed */}
+                  <View style={styles.metricItem}>
+                    <Ionicons name="speedometer-outline" size={20} color="#7C3AED" />
+                    <Text style={styles.metricLabel}>Speed</Text>
+                    <Text style={styles.metricValue}>
+                      {singleTelemetry?.speedKmh !== null && singleTelemetry?.speedKmh! > 0
+                        ? `${singleTelemetry?.speedKmh} km/h`
+                        : '0 km/h'}
+                    </Text>
+                  </View>
+
+                  {/* Bearing */}
+                  <View style={styles.metricItem}>
+                    <Ionicons name="compass-outline" size={20} color="#EA580C" />
+                    <Text style={styles.metricLabel}>Heading</Text>
+                    <Text style={styles.metricValue}>
+                      {getCardinalDirection(singleTelemetry?.bearing) || 'North'}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.disclaimerBox}>
+                  <Ionicons name="information-circle-outline" size={16} color="#64748B" />
+                  <Text style={styles.disclaimerText}>
+                    15-minute background telemetry automatically records movement during active duty. Tapping
+                    &quot;Ping Fresh GPS&quot; sends a priority satellite wake-up command.
+                  </Text>
+                </View>
+              </Card>
+
+              {/* BREADCRUMB TRAIL ACCORDION */}
+              <Card style={styles.historyCard}>
+                <TouchableOpacity
+                  style={styles.historyHeader}
+                  onPress={() => setShowHistory(!showHistory)}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Ionicons name="trail-sign-outline" size={20} color={colors.primary} />
+                    <Text style={styles.historyTitle}>
+                      Today&apos;s Route Trail ({history.length} telemetry points)
+                    </Text>
+                  </View>
+                  <Ionicons
+                    name={showHistory ? 'chevron-up' : 'chevron-down'}
+                    size={20}
+                    color="#64748B"
+                  />
+                </TouchableOpacity>
+
+                {showHistory && (
+                  <View style={styles.historyList}>
+                    {history.length === 0 ? (
+                      <Text style={styles.emptyHistory}>No breadcrumb history logged yet for today.</Text>
+                    ) : (
+                      history.map((pt, idx) => (
+                        <View key={pt.id || idx} style={styles.historyItem}>
+                          <View style={styles.historyDot} />
+                          <View style={{ flex: 1, marginLeft: 10 }}>
+                            <Text style={styles.historyCoords}>
+                              {pt.latitude.toFixed(5)}° N, {pt.longitude.toFixed(5)}° E
+                            </Text>
+                            <Text style={styles.historyTime}>
+                              {new Date(pt.recorded_at).toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit',
+                              })}{' '}
+                              &bull; &plusmn;{Math.round(pt.accuracy_meters)}m &bull; Source: {pt.source}
+                            </Text>
+                          </View>
+                        </View>
+                      ))
+                    )}
                   </View>
                 )}
-              </View>
-
-              <View style={styles.mapActionRow}>
-                <TouchableOpacity
-                  style={[styles.actionBtn, styles.mapsBtn]}
-                  onPress={openInGoogleMaps}
-                  disabled={latitude === null}
-                >
-                  <Ionicons name="navigate-outline" size={18} color="#FFFFFF" />
-                  <Text style={styles.btnTextWhite}>Open in Google Maps</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.actionBtn, styles.refreshBtn, requestingFresh && { opacity: 0.7 }]}
-                  onPress={handleRequestFreshGps}
-                  disabled={requestingFresh}
-                >
-                  {requestingFresh ? (
-                    <ActivityIndicator size="small" color="#FFFFFF" />
-                  ) : (
-                    <>
-                      <Ionicons name="flash-outline" size={18} color="#FFFFFF" />
-                      <Text style={styles.btnTextWhite}>Ping Fresh GPS</Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-              </View>
-            </Card>
-
-            {/* TELEMETRY METRICS */}
-            <Card style={styles.metricsCard}>
-              <Text style={styles.sectionTitle}>Telemetry & Device Diagnostics</Text>
-
-              <View style={styles.metricRow}>
-                <View style={styles.metricItem}>
-                  <Ionicons name="battery-charging-outline" size={20} color="#0D9488" />
-                  <Text style={styles.metricLabel}>Battery Level</Text>
-                  <Text style={styles.metricValue}>{battery !== null ? `${battery}%` : 'N/A'}</Text>
-                </View>
-
-                <View style={styles.metricItem}>
-                  <Ionicons name="hardware-chip-outline" size={20} color="#2563EB" />
-                  <Text style={styles.metricLabel}>GPS Hardware</Text>
-                  <Text style={styles.metricValue}>Fused / Satellite</Text>
-                </View>
-
-                <View style={styles.metricItem}>
-                  <Ionicons name="time-outline" size={20} color="#7C3AED" />
-                  <Text style={styles.metricLabel}>Last Seen</Text>
-                  <Text style={styles.metricValue}>
-                    {lastRecordedAt
-                      ? new Date(lastRecordedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                      : 'None'}
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.disclaimerBox}>
-                <Ionicons name="information-circle-outline" size={16} color="#64748B" />
-                <Text style={styles.disclaimerText}>
-                  15-minute background telemetry operates automatically during active shift duty. Tapping &quot;Ping Fresh GPS&quot; triggers an immediate satellite fix.
-                </Text>
-              </View>
-            </Card>
-
-            {/* LOCATION HISTORY ACCORDION */}
-            <Card style={styles.historyCard}>
-              <TouchableOpacity
-                style={styles.historyHeader}
-                onPress={() => setShowHistory(!showHistory)}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Ionicons name="trail-sign-outline" size={20} color={colors.primary} />
-                  <Text style={styles.historyTitle}>
-                    Today&apos;s Breadcrumb Trail ({history.length} fixes)
-                  </Text>
-                </View>
-                <Ionicons
-                  name={showHistory ? 'chevron-up' : 'chevron-down'}
-                  size={20}
-                  color="#64748B"
-                />
-              </TouchableOpacity>
-
-              {showHistory && (
-                <View style={styles.historyList}>
-                  {history.length === 0 ? (
-                    <Text style={styles.emptyHistory}>No breadcrumb history logged yet for today.</Text>
-                  ) : (
-                    history.map((pt, idx) => (
-                      <View key={pt.id || idx} style={styles.historyItem}>
-                        <View style={styles.historyDot} />
-                        <View style={{ flex: 1, marginLeft: 10 }}>
-                          <Text style={styles.historyCoords}>
-                            {pt.latitude.toFixed(5)}° N, {pt.longitude.toFixed(5)}° E
-                          </Text>
-                          <Text style={styles.historyTime}>
-                            {new Date(pt.recorded_at).toLocaleTimeString([], {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                              second: '2-digit',
-                            })}{' '}
-                            &bull; Accuracy: &plusmn;{Math.round(pt.accuracy_meters)}m &bull; Source: {pt.source}
-                          </Text>
-                        </View>
-                      </View>
-                    ))
-                  )}
-                </View>
-              )}
-            </Card>
-          </>
-        )}
-      </ScrollView>
+              </Card>
+            </>
+          )}
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 };
@@ -357,6 +783,243 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: spacing.md,
     paddingBottom: spacing.xxl,
+  },
+  viewModeToggleRow: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: spacing.md,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+    gap: 8,
+  },
+  modePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: radius.md,
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+  },
+  modePillActive: {
+    backgroundColor: '#2563EB',
+    borderColor: '#1D4ED8',
+  },
+  modePillText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#475569',
+  },
+  modePillTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+  managerGpsBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    marginBottom: 10,
+  },
+  managerGpsText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#1E40AF',
+  },
+  searchBarBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: radius.md,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    marginBottom: 10,
+    gap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 13,
+    color: '#0F172A',
+  },
+  filterRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 12,
+  },
+  filterPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 14,
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  filterPillActive: {
+    backgroundColor: '#2563EB',
+    borderColor: '#1D4ED8',
+  },
+  filterPillText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#475569',
+  },
+  filterPillTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+  repCard: {
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  repHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  repAvatarCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#2563EB',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  repAvatarText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 15,
+  },
+  repName: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  repRole: {
+    fontSize: 12,
+    color: '#475569',
+    marginTop: 2,
+  },
+  repTerritory: {
+    fontSize: 11,
+    color: '#64748B',
+  },
+  repMetricsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    backgroundColor: '#F8FAFC',
+    borderRadius: radius.md,
+    padding: 10,
+    gap: 8,
+    marginBottom: 12,
+  },
+  gridMetricItem: {
+    width: '47%',
+  },
+  gridMetricLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#64748B',
+    marginTop: 2,
+  },
+  gridMetricValue: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  repCardActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  drilldownBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#2563EB',
+    paddingVertical: 9,
+    borderRadius: radius.md,
+    gap: 6,
+  },
+  drilldownBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  quickMapsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRadius: radius.md,
+    gap: 4,
+  },
+  quickMapsBtnText: {
+    color: '#2563EB',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  badgeBase: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  badgeLive: {
+    backgroundColor: '#DCFCE7',
+  },
+  badgeRecent: {
+    backgroundColor: '#E0F2FE',
+  },
+  badgeDelayed: {
+    backgroundColor: '#FEF3C7',
+  },
+  badgeStale: {
+    backgroundColor: '#F1F5F9',
+  },
+  badgeTextLive: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#15803D',
+  },
+  badgeTextRecent: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#0369A1',
+  },
+  badgeTextDelayed: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#B45309',
+  },
+  badgeTextStale: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#64748B',
+  },
+  pulseDotGreen: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#16A34A',
   },
   profileCard: {
     padding: spacing.md,
@@ -398,18 +1061,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
-  },
-  centerBox: {
-    padding: 40,
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 13,
-    color: '#64748B',
   },
   mapCard: {
     padding: 0,
@@ -425,29 +1076,25 @@ const styles = StyleSheet.create({
   },
   gridOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#0F172A',
-    opacity: 0.85,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#1E293B',
   },
   mapCircleOuter: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: 'rgba(37, 99, 235, 0.25)',
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: 'rgba(239, 68, 68, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(37, 99, 235, 0.4)',
   },
   mapCircleInner: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#FFFFFF',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(239, 68, 68, 0.4)',
     justifyContent: 'center',
     alignItems: 'center',
-    ...shadows.card,
   },
   mapFloatingInfo: {
     position: 'absolute',
@@ -455,14 +1102,13 @@ const styles = StyleSheet.create({
     left: 12,
     right: 12,
     backgroundColor: 'rgba(15, 23, 42, 0.85)',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
+    padding: 10,
+    borderRadius: radius.md,
   },
   floatingCoords: {
     color: '#FFFFFF',
-    fontWeight: '700',
     fontSize: 13,
+    fontWeight: '700',
   },
   floatingAccuracy: {
     color: '#94A3B8',
@@ -473,6 +1119,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: spacing.md,
     gap: spacing.sm,
+    backgroundColor: '#FFFFFF',
   },
   actionBtn: {
     flex: 1,
@@ -481,7 +1128,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 12,
     borderRadius: radius.md,
-    gap: 6,
+    gap: 8,
   },
   mapsBtn: {
     backgroundColor: '#2563EB',
@@ -491,7 +1138,7 @@ const styles = StyleSheet.create({
   },
   btnTextWhite: {
     color: '#FFFFFF',
-    fontWeight: '600',
+    fontWeight: '700',
     fontSize: 13,
   },
   metricsCard: {
@@ -499,10 +1146,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   sectionTitle: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '700',
     color: '#0F172A',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
   },
   metricRow: {
     flexDirection: 'row',
@@ -510,40 +1157,37 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   metricItem: {
-    flex: 1,
     alignItems: 'center',
-    padding: 10,
-    backgroundColor: '#F8FAFC',
-    borderRadius: radius.md,
-    marginHorizontal: 3,
+    flex: 1,
   },
   metricLabel: {
     fontSize: 11,
     color: '#64748B',
     marginTop: 4,
+    marginBottom: 2,
   },
   metricValue: {
     fontSize: 13,
     fontWeight: '700',
     color: '#0F172A',
-    marginTop: 2,
   },
   disclaimerBox: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     backgroundColor: '#F1F5F9',
-    padding: 10,
+    padding: spacing.sm,
     borderRadius: radius.sm,
-    gap: 6,
+    gap: 8,
   },
   disclaimerText: {
     flex: 1,
     fontSize: 11,
-    color: '#475569',
+    color: '#64748B',
     lineHeight: 16,
   },
   historyCard: {
     padding: spacing.md,
+    marginBottom: spacing.md,
   },
   historyHeader: {
     flexDirection: 'row',
@@ -560,36 +1204,66 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     borderTopWidth: 1,
     borderTopColor: '#E2E8F0',
-    paddingTop: spacing.sm,
+    paddingTop: spacing.md,
+  },
+  emptyHistory: {
+    fontSize: 12,
+    color: '#94A3B8',
+    fontStyle: 'italic',
+    textAlign: 'center',
+    paddingVertical: 12,
   },
   historyItem: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#F8FAFC',
+    borderBottomColor: '#F1F5F9',
   },
   historyDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
     backgroundColor: '#2563EB',
-    marginTop: 5,
   },
   historyCoords: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#1E293B',
+    color: '#0F172A',
   },
   historyTime: {
     fontSize: 11,
     color: '#64748B',
     marginTop: 2,
   },
-  emptyHistory: {
-    textAlign: 'center',
-    color: '#94A3B8',
+  centerBox: {
+    paddingVertical: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 13,
+    color: '#64748B',
+  },
+  emptyCard: {
+    padding: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  emptyTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginTop: 10,
+  },
+  emptySubtitle: {
     fontSize: 12,
-    paddingVertical: 12,
+    color: '#64748B',
+    marginTop: 4,
   },
 });

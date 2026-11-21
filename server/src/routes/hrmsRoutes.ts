@@ -33,7 +33,7 @@ router.get('/attendance', (req, res) => res.json({ success: true, data: ATTENDAN
 // Mileage & Expense Claim Calculation (@ ₹7.50 / km)
 router.post('/expenses/claim', (req: AuthRequest, res) => {
   const { date, distanceKm, daCategory, daAmount, hotelAmount, fareAmount, miscellaneousAmount, remarks } = req.body;
-  const ratePerKm = 7.50;
+  const ratePerKm = 3.50;
   const mileageAllowance = Math.round((distanceKm || 0) * ratePerKm * 100) / 100;
   const totalClaim = mileageAllowance + (daAmount || 0) + (hotelAmount || 0) + (fareAmount || 0) + (miscellaneousAmount || 0);
 
@@ -46,7 +46,7 @@ router.post('/expenses/claim', (req: AuthRequest, res) => {
     ratePerKm,
     mileageAllowance,
     daCategory: daCategory || 'HQ',
-    daAmount: daAmount || 250,
+    daAmount: daAmount || 220,
     hotelAmount: hotelAmount || 0,
     fareAmount: fareAmount || 0,
     miscellaneousAmount: miscellaneousAmount || 0,

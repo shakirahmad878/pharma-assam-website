@@ -125,6 +125,35 @@ export class DivisionService {
     return found ? found.label : div;
   }
 
+  public static isDoctorAssignedToOrOwnedByEmployee(doc: Doctor, user: UserProfile | null): boolean {
+    if (!user) return false;
+    const userCode = (user.employeeCode || '').trim().toUpperCase();
+    const userId = (user.id || '').trim().toLowerCase();
+    const userName = (user.name || '').trim().toLowerCase();
+
+    const assignedId = (doc.assignedToEmployeeId || '').trim();
+    const assignedName = (doc.assignedToEmployeeName || '').trim().toLowerCase();
+
+    // 1. Direct ID / Code match (supports NLCL-0005, usr-nlcl-0005, etc.)
+    if (assignedId) {
+      const cleanAssigned = assignedId.toUpperCase();
+      if (cleanAssigned === userCode || assignedId.toLowerCase() === userId) return true;
+      if (cleanAssigned.includes(userCode) || userCode.includes(cleanAssigned.replace(/^USR-/, ''))) return true;
+    }
+
+    // 2. Name match (if assigned by name)
+    if (assignedName && (assignedName === userName || assignedName.includes(userName.split(' ')[0]))) {
+      return true;
+    }
+
+    // 3. Created by user or assigned to me
+    if (doc.createdBy && (doc.createdBy.toUpperCase() === userCode || doc.createdBy.toLowerCase() === userId)) {
+      return true;
+    }
+
+    return Boolean(doc.isAssignedToMe);
+  }
+
   public static filterDoctorsByDivision(
     doctors: Doctor[],
     selectedDivision: DivisionType,
@@ -132,15 +161,20 @@ export class DivisionService {
   ): Doctor[] {
     if (!doctors) return [];
 
-    // If user is MR, they are authorized across their assigned divisions
+    // If user is MR:
+    // Any doctor assigned to or created by this MR MUST ALWAYS be visible in their profile,
+    // regardless of whether located at HQ, Ex-Station, Outstation, or any other district.
     if (!this.isManager(user)) {
       const allowedDivs = this.getUserAllowedDivisions(user);
-      // If user selected a specific allowed division, strictly filter to that division
-      if (selectedDivision !== 'ALL' && allowedDivs.includes(selectedDivision)) {
-        return doctors.filter((doc) => this.matchesDivision(doc.district, doc.area, selectedDivision));
-      }
-      // Otherwise fallback to their primary HQ or allowed set
-      return doctors.filter((doc) => allowedDivs.some((d) => this.matchesDivision(doc.district, doc.area, d)));
+      return doctors.filter((doc) => {
+        if (this.isDoctorAssignedToOrOwnedByEmployee(doc, user)) {
+          return true;
+        }
+        if (selectedDivision !== 'ALL' && allowedDivs.includes(selectedDivision)) {
+          return this.matchesDivision(doc.district, doc.area, selectedDivision);
+        }
+        return allowedDivs.some((d) => this.matchesDivision(doc.district, doc.area, d));
+      });
     }
 
     // For Managers, filter by the selected division

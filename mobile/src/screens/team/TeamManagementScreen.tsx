@@ -52,6 +52,7 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onBa
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDivision, setSelectedDivision] = useState<DivisionType>('ALL');
   const [selectedLiveEmployee, setSelectedLiveEmployee] = useState<UserProfile | null>(null);
+  const [showFleetMap, setShowFleetMap] = useState(false);
 
   // Modal State for Add / Edit
   const [modalVisible, setModalVisible] = useState(false);
@@ -434,6 +435,26 @@ Live GPS tracking activates automatically once the employee punches in their mor
           </Text>
         </View>
       </View>
+
+      {/* Live Fleet Force Map Banner Button */}
+      {isManager && (
+        <TouchableOpacity
+          style={styles.fleetMapBannerBtn}
+          onPress={() => setShowFleetMap(true)}
+          activeOpacity={0.85}
+        >
+          <View style={styles.fleetMapIconBox}>
+            <Ionicons name="map" size={20} color="#FFFFFF" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.fleetMapBannerTitle}>🗺️ Live Field Force Map</Text>
+            <Text style={styles.fleetMapBannerSubtitle}>
+              Real-time telemetry, GPS accuracy & distance to all field representatives
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color="#2563EB" />
+        </TouchableOpacity>
+      )}
 
       {/* Tab Switcher: Directory vs Approvals */}
       {isManager && (
@@ -1381,7 +1402,39 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     ...shadows.sm,
   },
-  saveModalBtnText: {
+    fleetMapBannerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1.5,
+    borderColor: '#BFDBFE',
+    marginHorizontal: spacing.md,
+    marginTop: spacing.sm,
+    padding: 12,
+    borderRadius: radius.md,
+    gap: 12,
+    ...shadows.sm,
+  },
+  fleetMapIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#2563EB',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fleetMapBannerTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#1E40AF',
+  },
+  fleetMapBannerSubtitle: {
+    fontSize: 11,
+    color: '#3B82F6',
+    marginTop: 2,
+    lineHeight: 15,
+  },
+saveModalBtnText: {
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '800',

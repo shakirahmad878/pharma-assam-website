@@ -96,6 +96,9 @@ export const USER_SATYAM_MR: UserProfile = {
     'route-cachar-01',
     'route-cachar-02',
     'route-cachar-03',
+    'rt-sil-kalain',
+    'rt-sil-bagha',
+    'rt-sil-sonai',
     'route-hailakandi-01',
     'route-aizawl-01',
   ],
@@ -189,6 +192,45 @@ export const BARAK_ROUTES: RoutePlan[] = [
     isAssigned: true,
     isActiveToday: false,
     description: 'Peripheral subdivision clinics, CHCs, and tea garden hospital network.',
+  },
+    {
+    id: 'rt-sil-kalain',
+    code: 'EX-SIL-01',
+    name: 'Silchar to Kalain (Ex-station)',
+    district: 'Cachar',
+    areas: ['Kalain Town', 'Kalain Hospital Road', 'Gumrah Bazar', 'Bihara'],
+    totalDoctors: 12,
+    totalHospitals: 3,
+    totalChemists: 15,
+    isAssigned: true,
+    isActiveToday: false,
+    description: 'Ex-station beat covering Kalain town, Gumrah Bazar and peripheral PHCs (55 km, TA: ₹165, DA: ₹450).',
+  },
+  {
+    id: 'rt-sil-bagha',
+    code: 'EX-SIL-02',
+    name: 'Silchar to Bagha & Natunbazar (Ex-station)',
+    district: 'Cachar',
+    areas: ['Bagha Bazar', 'Natunbazar', 'Islamabad', 'Talent Drug Store Belt'],
+    totalDoctors: 10,
+    totalHospitals: 2,
+    totalChemists: 14,
+    isAssigned: true,
+    isActiveToday: false,
+    description: 'Ex-station beat covering Bagha Bazar and Natunbazar commercial corridor (65 km, TA: ₹195, DA: ₹450).',
+  },
+  {
+    id: 'rt-sil-sonai',
+    code: 'EX-SIL-04',
+    name: 'Silchar to Sonai, Sonabarighat & Nayabazar (Ex-station)',
+    district: 'Cachar',
+    areas: ['Sonai FRU', 'Sonabarighat', 'Nayabazar', 'Kachudaram'],
+    totalDoctors: 11,
+    totalHospitals: 3,
+    totalChemists: 16,
+    isAssigned: true,
+    isActiveToday: false,
+    description: 'Ex-station beat covering Sonai First Referral Unit and Nayabazar (38 km, TA: ₹114, DA: ₹450).',
   },
   {
     id: 'route-aizawl-01',
@@ -1260,15 +1302,24 @@ export interface SFCRouteEntry {
 }
 
 export const MOCK_SFC_ROUTES: SFCRouteEntry[] = [
-  { id: 'sfc-01', fromLocation: 'Sribhumi HQ', toLocation: 'Patharkandi', distanceKm: 70, ratePerKm: 3.0, standardFare: 210, daAllowed: 450, routeType: 'EX_HQ' },
-  { id: 'sfc-02', fromLocation: 'Sribhumi HQ', toLocation: 'Makunda', distanceKm: 154, ratePerKm: 3.0, standardFare: 462, daAllowed: 750, routeType: 'OUTSTATION' },
-  { id: 'sfc-03', fromLocation: 'Sribhumi HQ', toLocation: 'Badarpur Junction', distanceKm: 66, ratePerKm: 3.0, standardFare: 198, daAllowed: 450, routeType: 'EX_HQ' },
-  { id: 'sfc-04', fromLocation: 'Sribhumi HQ', toLocation: 'Lakhibazar', distanceKm: 24, ratePerKm: 3.0, standardFare: 72, daAllowed: 250, routeType: 'HQ' },
-  { id: 'sfc-05', fromLocation: 'Sribhumi HQ', toLocation: 'Nilambazar', distanceKm: 32, ratePerKm: 3.0, standardFare: 96, daAllowed: 250, routeType: 'HQ' },
-  { id: 'sfc-06', fromLocation: 'Sribhumi HQ', toLocation: 'Girishganj', distanceKm: 40, ratePerKm: 3.0, standardFare: 120, daAllowed: 250, routeType: 'HQ' },
-  { id: 'sfc-07', fromLocation: 'Sribhumi HQ', toLocation: 'Nivia', distanceKm: 58, ratePerKm: 3.0, standardFare: 174, daAllowed: 450, routeType: 'EX_HQ' },
-  { id: 'sfc-08', fromLocation: 'Sribhumi HQ', toLocation: 'Silchar SMCH', distanceKm: 110, ratePerKm: 3.0, standardFare: 330, daAllowed: 750, routeType: 'OUTSTATION' },
-  { id: 'sfc-09', fromLocation: 'Sribhumi HQ', toLocation: 'Hailakandi Town', distanceKm: 90, ratePerKm: 3.0, standardFare: 270, daAllowed: 450, routeType: 'EX_HQ' },
+  // Silchar HQ Base (Satyam Shil / NLCL-0005)
+  { id: 'sfc-sil-01', fromLocation: 'Silchar HQ', toLocation: 'SMCH & Hospital Road', distanceKm: 10, ratePerKm: 3.5, standardFare: 35, daAllowed: 220, routeType: 'HQ' },
+  { id: 'sfc-sil-02', fromLocation: 'Silchar HQ', toLocation: 'Kalain Ex-station', distanceKm: 55, ratePerKm: 3.5, standardFare: 193, daAllowed: 250, routeType: 'EX_HQ' },
+  { id: 'sfc-sil-03', fromLocation: 'Silchar HQ', toLocation: 'Bagha & Natunbazar', distanceKm: 65, ratePerKm: 3.5, standardFare: 228, daAllowed: 250, routeType: 'EX_HQ' },
+  { id: 'sfc-sil-04', fromLocation: 'Silchar HQ', toLocation: 'Badarpur Junction', distanceKm: 35, ratePerKm: 3.5, standardFare: 123, daAllowed: 250, routeType: 'EX_HQ' },
+  { id: 'sfc-sil-05', fromLocation: 'Silchar HQ', toLocation: 'Sonai, Sonabarighat & Nayabazar', distanceKm: 38, ratePerKm: 3.5, standardFare: 133, daAllowed: 250, routeType: 'EX_HQ' },
+  { id: 'sfc-sil-06', fromLocation: 'Silchar HQ', toLocation: 'Lakhipur & Dhalai', distanceKm: 60, ratePerKm: 3.5, standardFare: 210, daAllowed: 250, routeType: 'EX_HQ' },
+  { id: 'sfc-sil-07', fromLocation: 'Silchar HQ', toLocation: 'Hailakandi Town', distanceKm: 90, ratePerKm: 3.5, standardFare: 315, daAllowed: 250, routeType: 'EX_HQ' },
+  { id: 'sfc-sil-08', fromLocation: 'Silchar HQ', toLocation: 'Halflong Outstation', distanceKm: 140, ratePerKm: 3.5, standardFare: 490, daAllowed: 1000, routeType: 'OUTSTATION' },
+  { id: 'sfc-sil-09', fromLocation: 'Silchar HQ', toLocation: 'Aizawl Corridor', distanceKm: 180, ratePerKm: 3.5, standardFare: 630, daAllowed: 1000, routeType: 'OUTSTATION' },
+
+  // Sribhumi / Karimganj HQ Base (Pranjal Malakar / NLCL-0004)
+  { id: 'sfc-kxj-01', fromLocation: 'Sribhumi HQ', toLocation: 'Karimganj Central Beat', distanceKm: 15, ratePerKm: 3.5, standardFare: 53, daAllowed: 220, routeType: 'HQ' },
+  { id: 'sfc-kxj-02', fromLocation: 'Sribhumi HQ', toLocation: 'Nilambazar', distanceKm: 32, ratePerKm: 3.5, standardFare: 112, daAllowed: 220, routeType: 'HQ' },
+  { id: 'sfc-kxj-03', fromLocation: 'Sribhumi HQ', toLocation: 'Badarpur Junction', distanceKm: 66, ratePerKm: 3.5, standardFare: 231, daAllowed: 250, routeType: 'EX_HQ' },
+  { id: 'sfc-kxj-04', fromLocation: 'Sribhumi HQ', toLocation: 'Patharkandi', distanceKm: 70, ratePerKm: 3.5, standardFare: 245, daAllowed: 250, routeType: 'EX_HQ' },
+  { id: 'sfc-kxj-05', fromLocation: 'Sribhumi HQ', toLocation: 'Dharmanagar HQ', distanceKm: 75, ratePerKm: 3.5, standardFare: 263, daAllowed: 250, routeType: 'EX_HQ' },
+  { id: 'sfc-kxj-06', fromLocation: 'Sribhumi HQ', toLocation: 'Makunda Outstation', distanceKm: 154, ratePerKm: 3.5, standardFare: 539, daAllowed: 1000, routeType: 'OUTSTATION' },
 ];
 
 // Leave Entitlements (Images 28, 37)
@@ -1280,9 +1331,9 @@ export interface LeaveEntitlement {
 }
 
 export const MOCK_LEAVE_BALANCE: LeaveEntitlement[] = [
-  { type: 'Casual Leave(CL)', code: 'CL', available: 12, total: 12 },
+  { type: 'Casual Leave(CL)', code: 'CL', available: 10, total: 10 },
   { type: 'Earn Leave(EL)', code: 'EL', available: 15, total: 15 },
-  { type: 'Sick Leave(SL)', code: 'SL', available: 12, total: 12 },
+  { type: 'Sick Leave(SL)', code: 'SL', available: 10, total: 10 },
 ];
 
 // Assam Regional Holiday Calendar (Image 24)
