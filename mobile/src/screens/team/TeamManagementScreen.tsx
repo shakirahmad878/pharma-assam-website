@@ -164,97 +164,8 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onBa
     Alert.alert('Deletion Declined', 'Doctor deletion request rejected.');
   };
 
-    const handleViewLiveLocation = async (emp: UserProfile) => {
-    try {
-      const today = getBusinessDateStr();
-      const isSelf = emp.id === currentUser?.id || emp.employeeCode === currentUser?.employeeCode;
-
-      // If viewing self, read device GPS hardware directly
-      let liveGps: any = null;
-      if (isSelf) {
-        liveGps = await LocationService.getCurrentLocation();
-      }
-
-      // Query authoritative location using canonical id or employee code
-      const att = await SupabaseDbService.getLatestEmployeeLocation(emp.id || emp.employeeCode);
-      const isRecordToday = att && att.date === today;
-      const isPunchedInToday = isRecordToday && att.status === 'PUNCHED_IN';
-      const isPunchedOutToday = isRecordToday && att.status === 'PUNCHED_OUT';
-
-      if (isSelf && liveGps && liveGps.latitude && liveGps.longitude) {
-        const lat = liveGps.latitude;
-        const lng = liveGps.longitude;
-        const acc = liveGps.accuracyMeters ? `±${Math.round(liveGps.accuracyMeters)}m` : '±6m (High Precision GPS)';
-        const shiftStatus = isPunchedInToday ? 'Active on Field Duty' : 'Shift Not Punched In (Device GPS Active)';
-        Alert.alert(
-          `📍 Real-Time GPS: ${emp.name}`,
-          `Employee ID: #${emp.employeeCode}
-Role: ${emp.role === 'REGIONAL_MANAGER' ? 'Regional Sales Manager' : emp.role}
-Duty Status: ${shiftStatus}
-Device Coordinates: ${lat.toFixed(5)}, ${lng.toFixed(5)}
-Accuracy: ${acc}
-Hardware GPS Lock: Active 🛰️`,
-          [
-            { text: 'Close', style: 'cancel' },
-            {
-              text: '🗺️ Open in Google Maps',
-              onPress: () => {
-                Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`);
-              },
-            },
-          ]
-        );
-        return;
-      }
-
-      if (isPunchedInToday && att.latitude && att.longitude) {
-        const lat = att.latitude;
-        const lng = att.longitude;
-        const timeStr = att.punch_in_timestamp
-          ? new Date(att.punch_in_timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          : 'Today';
-        const acc = att.accuracy_meters ? `±${Math.round(att.accuracy_meters)}m` : '±6m';
-        Alert.alert(
-          `📍 Field Duty GPS: ${emp.name}`,
-          `Employee ID: #${emp.employeeCode}
-Role: ${emp.role}
-Territory: ${emp.territory || 'Assam'}
-Status: Punched In (Active on Shift)
-Punch-in Time: ${timeStr}
-Route: ${att.route_name || 'Assigned Beat Route'}
-GPS Coordinates: ${lat.toFixed(5)}, ${lng.toFixed(5)}
-Accuracy: ${acc}`,
-          [
-            { text: 'Close', style: 'cancel' },
-            {
-              text: '🗺️ Open in Google Maps',
-              onPress: () => {
-                Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`);
-              },
-            },
-          ]
-        );
-        return;
-      }
-
-      // If no punch in today: DO NOT fake active coordinates!
-      Alert.alert(
-        `⚠️ Shift Not Started: ${emp.name}`,
-        `Employee ID: #${emp.employeeCode}
-Role: ${emp.role}
-Headquarter: ${emp.headquarter || 'HQ'}
-Territory: ${emp.territory || 'Assam'}
-
-Status: No shift punch-in recorded for today (${today}).
-
-Live GPS tracking activates automatically once the employee punches in their morning geotagged selfie and starts duty route.`,
-        [
-          { text: 'OK', style: 'cancel' }
-        ]
-      );
-    } catch (e: any) {
-      Alert.alert('Telemetry Offline', e?.message || 'Unable to retrieve location telemetry.');
-    }
+    const handleViewLiveLocation = (emp: UserProfile) => {
+    setSelectedLiveEmployee(emp);
   };
 
   const openAddModal = () => {
@@ -403,6 +314,26 @@ Live GPS tracking activates automatically once the employee punches in their mor
 
     return divMatch && searchMatch;
   });
+
+  if (selectedLiveEmployee) {
+    return (
+      <LiveLocationMapScreen
+        employee={selectedLiveEmployee}
+        teamEmployees={employees}
+        onBack={() => setSelectedLiveEmployee(null)}
+      />
+    );
+  }
+
+  if (showFleetMap) {
+    return (
+      <LiveLocationMapScreen
+        employee={null}
+        teamEmployees={employees}
+        onBack={() => setShowFleetMap(false)}
+      />
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
