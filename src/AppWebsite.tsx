@@ -4,7 +4,7 @@ import { PMHeader } from './components/PMHeader';
 import { PMHeroIndia } from './components/PMHeroIndia';
 import { PMAudiencePortals } from './components/PMAudiencePortals';
 import { PMSqueezeShowcase } from './components/PMSqueezeShowcase';
-import { PMChakraScienceWheel } from './components/PMChakraScienceWheel';
+import { PMPrecisionDial } from './components/PMPrecisionDial';
 import { PMCategoryShowcase } from './components/PMCategoryShowcase';
 import { PMProductCatalog } from './components/PMProductCatalog';
 import { PMInnovation3D } from './components/PMInnovation3D';
@@ -102,8 +102,8 @@ export default function AppWebsite() {
           onNavigate={handleNavigatePublic}
         />
 
-        {/* 4.5. Ashoka Chakra Scientific Innovation Wheel (24 Spokes of Molecular Precision) */}
-        <PMChakraScienceWheel
+        {/* 4.5. NLCL Precision Dial Section (Six Stages. One Standard of Care.) */}
+        <PMPrecisionDial
           onNavigate={handleNavigatePublic}
           onOpenEnquiry={handleOpenEnquiryModal}
         />
