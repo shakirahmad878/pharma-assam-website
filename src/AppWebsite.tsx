@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PMTopBar } from './components/PMTopBar';
 import { PMHeader } from './components/PMHeader';
 import { PMHeroIndia } from './components/PMHeroIndia';
+import { PMHomeSections } from './components/PMHomeSections';
 import { PMPartnersAndFlagship } from './components/PMPartnersAndFlagship';
 import { PMSqueezeShowcase } from './components/PMSqueezeShowcase';
 import { PMPrecisionDial } from './components/PMPrecisionDial';
@@ -34,6 +35,7 @@ export default function AppWebsite() {
   const [enquiryProductName, setEnquiryProductName] = useState<string>(PRODUCTS[0].name);
   const [selectedPublicCategory, setSelectedPublicCategory] = useState<ProductCategory | 'All Products'>('All Products');
   const [isPublicSidebarOpen, setIsPublicSidebarOpen] = useState<boolean>(false);
+  const [selectedFlagshipIndex, setSelectedFlagshipIndex] = useState<number>(0);
 
   useEffect(() => {
     const TABS = ['home', 'partners', 'flagship', 'precision', 'products', 'about', 'contact', 'flipbook'];
@@ -95,9 +97,19 @@ export default function AppWebsite() {
           />
         </section>
 
+        {/* Home Overview Sections (only visible on Home tab) */}
+        <div hidden={activePublicSection !== 'home'}>
+          <PMHomeSections
+            onNavigate={handleNavigatePublic}
+            onSelectCategory={(cat) => setSelectedPublicCategory(cat)}
+            onSelectFlagshipProduct={(idx) => setSelectedFlagshipIndex(idx)}
+          />
+        </div>
+
         {/* Tab: Partners & Flagship Formulations Showcase */}
         <PMPartnersAndFlagship
           activeSection={activePublicSection}
+          selectedFlagshipIndex={selectedFlagshipIndex}
           onNavigate={handleNavigatePublic}
           onOpenEnquiry={handleOpenEnquiryModal}
         />

@@ -15,7 +15,7 @@ export const PMHeroIndia: React.FC<PMHeroIndiaProps> = ({
         .nl-hero {
           --saffron: #FF9933;
           --green: #138808;
-          --navy: #1b2a6b;
+          --navy: #14213d;
           --ink: #14213d;
           position: relative;
           overflow: hidden;
@@ -24,7 +24,7 @@ export const PMHeroIndia: React.FC<PMHeroIndiaProps> = ({
           align-items: center;
           padding: 64px 6vw;
           background: linear-gradient(120deg, #fff7ee 0%, #ffffff 50%, #eefaf0 100%);
-          font-family: "Poppins", system-ui, sans-serif;
+          font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
           color: var(--ink);
         }
         .nl-hero__text {

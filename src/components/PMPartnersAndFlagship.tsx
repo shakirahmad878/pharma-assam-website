@@ -4,12 +4,14 @@ interface PMPartnersAndFlagshipProps {
   onNavigate: (sectionId: string) => void;
   onOpenEnquiry: (context?: string) => void;
   activeSection?: string;
+  selectedFlagshipIndex?: number;
 }
 
 export const PMPartnersAndFlagship: React.FC<PMPartnersAndFlagshipProps> = ({
   onNavigate,
   onOpenEnquiry,
-  activeSection
+  activeSection,
+  selectedFlagshipIndex
 }) => {
   const PRODUCTS = [
     {
@@ -110,6 +112,12 @@ export const PMPartnersAndFlagship: React.FC<PMPartnersAndFlagshipProps> = ({
 
   const n = PRODUCTS.length;
   const currentProduct = PRODUCTS[cur];
+
+  useEffect(() => {
+    if (typeof selectedFlagshipIndex === 'number' && selectedFlagshipIndex >= 0 && selectedFlagshipIndex < n) {
+      setCur(selectedFlagshipIndex);
+    }
+  }, [selectedFlagshipIndex, n]);
 
   useEffect(() => {
     if (activeSection === 'flagship' && railRef.current) {
