@@ -103,28 +103,34 @@ export const PMProductCatalog: React.FC<PMProductCatalogProps> = ({
             {filteredProducts.map(product => (
               <div
                 key={product.id}
-                className="bg-white rounded-xl border border-[#DCE4EB] hover:border-[#18A6A6] shadow-2xs hover:shadow-md transition-all duration-300 flex flex-col justify-between overflow-hidden group"
+                className="bg-white rounded-2xl border border-[#DCE4EB] hover:border-[#18A6A6] shadow-sm hover:shadow-[0_25px_50px_-12px_rgba(16,36,58,0.18)] hover:-translate-y-2 transition-all duration-300 flex flex-col justify-between overflow-hidden group relative"
               >
                 {/* Top Half: Image & Badges */}
                 <div>
-                  {/* Image Container */}
+                  {/* Image Container with 3D Pedestal Lighting */}
                   <div 
                     onClick={() => onSelectProduct(product)}
-                    className="relative w-full h-56 bg-[#F5F8FA] border-b border-[#E8EEF4] flex items-center justify-center p-4 cursor-pointer overflow-hidden group-hover:bg-[#E8EEF4]/60 transition-colors"
+                    className="relative w-full h-56 bg-gradient-to-b from-[#F8FAFC] to-[#EEF4F8] border-b border-[#E8EEF4] flex flex-col items-center justify-center p-4 cursor-pointer overflow-hidden group-hover:from-white group-hover:to-teal-50/40 transition-colors"
                   >
+                    {/* Ambient 3D Glow on Hover */}
+                    <div className="absolute w-36 h-36 rounded-full bg-[#18A6A6]/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
                     <img
                       src={product.imageUrl}
                       alt={product.name}
-                      className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300 drop-shadow-xs"
+                      className="max-h-44 max-w-full object-contain group-hover:scale-108 group-hover:-translate-y-1 transition-all duration-300 filter drop-shadow-[0_10px_15px_rgba(16,36,58,0.15)] relative z-10"
                     />
 
+                    {/* Subtle 3D Pedestal Base Shadow */}
+                    <div className="w-28 h-2 rounded-[100%] bg-slate-900/15 blur-xs mt-1 pointer-events-none" />
+
                     {/* Category Label Pill */}
-                    <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-xs border border-[#DCE4EB] text-[#10243A] text-[10px] font-semibold px-2 py-0.5 rounded-md shadow-2xs">
+                    <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-md border border-[#DCE4EB] text-[#10243A] text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-2xs z-20">
                       {product.category}
                     </div>
 
                     {/* Monograph Badge */}
-                    <div className="absolute top-3 right-3 bg-[#10243A] text-white text-[10px] font-semibold px-2 py-0.5 rounded-md shadow-2xs">
+                    <div className="absolute top-3 right-3 bg-[#10243A] text-[#00E5C9] text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full shadow-2xs z-20 border border-slate-700">
                       {product.pharmacopoeiaStandard}
                     </div>
                   </div>

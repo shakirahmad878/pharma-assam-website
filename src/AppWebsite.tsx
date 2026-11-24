@@ -4,6 +4,7 @@ import { PMHeader } from './components/PMHeader';
 import { PMHeroSlider } from './components/PMHeroSlider';
 import { PMCategoryShowcase } from './components/PMCategoryShowcase';
 import { PMProductCatalog } from './components/PMProductCatalog';
+import { PMInnovation3D } from './components/PMInnovation3D';
 import { PMAboutSection } from './components/PMAboutSection';
 import { PMFlipbook } from './components/PMFlipbook';
 import { PMEnquiryForm } from './components/PMEnquiryForm';
@@ -100,13 +101,19 @@ export default function AppWebsite() {
           onOpenEnquiry={handleOpenEnquiryModal}
         />
 
-        {/* 6. Official About Us & Factsheet Section */}
+        {/* 6. 3D Drug Delivery Platforms & Formulation Science */}
+        <PMInnovation3D
+          onOpenEnquiry={handleOpenEnquiryModal}
+          onNavigate={handleNavigatePublic}
+        />
+
+        {/* 7. Official About Us & Factsheet Section */}
         <PMAboutSection
           onOpenEnquiry={() => handleOpenEnquiryModal()}
           onNavigate={handleNavigatePublic}
         />
 
-        {/* 7. Clinical Flipbook / Visual Aid Viewer */}
+        {/* 8. Clinical Flipbook / Visual Aid Viewer */}
         <PMFlipbook
           onOpenEnquiry={handleOpenEnquiryModal}
           onSelectProduct={(product) => setSelectedPublicProduct(product)}
