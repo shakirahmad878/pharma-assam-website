@@ -3,8 +3,9 @@ import { PMTopBar } from './components/PMTopBar';
 import { PMHeader } from './components/PMHeader';
 import { PMHeroPfizer } from './components/PMHeroPfizer';
 import { PMAudiencePortals } from './components/PMAudiencePortals';
-import { PMCategoryShowcase } from './components/PMCategoryShowcase';
 import { PMSqueezeShowcase } from './components/PMSqueezeShowcase';
+import { PMChakraScienceWheel } from './components/PMChakraScienceWheel';
+import { PMCategoryShowcase } from './components/PMCategoryShowcase';
 import { PMProductCatalog } from './components/PMProductCatalog';
 import { PMInnovation3D } from './components/PMInnovation3D';
 import { PMAboutSection } from './components/PMAboutSection';
@@ -102,7 +103,13 @@ export default function AppWebsite() {
           onNavigate={handleNavigatePublic}
         />
 
-        {/* 4.5. Product Categories Showcase */}
+        {/* 4.5. Ashoka Chakra Scientific Innovation Wheel (24 Spokes of Molecular Precision) */}
+        <PMChakraScienceWheel
+          onNavigate={handleNavigatePublic}
+          onOpenEnquiry={handleOpenEnquiryModal}
+        />
+
+        {/* 4.8. Product Categories Showcase */}
         <PMCategoryShowcase
           onSelectCategory={(cat) => setSelectedPublicCategory(cat)}
           onNavigate={handleNavigatePublic}
