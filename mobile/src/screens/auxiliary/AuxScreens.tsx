@@ -1259,7 +1259,7 @@ export const MonthlySummaryScreen: React.FC<{ onBack: () => void }> = ({ onBack 
   const years = ['2025', '2026', '2027'];
 
   const currentMonthIdx = new Date().getMonth();
-  const currentMonthName = months[currentMonthIdx] || 'October';
+  const currentMonthName = months[currentMonthIdx] || 'November';
   const currentYearStr = new Date().getFullYear().toString();
 
   const currentUser = AuthService.getCurrentUser();
@@ -1284,6 +1284,16 @@ export const MonthlySummaryScreen: React.FC<{ onBack: () => void }> = ({ onBack 
   const [agentModalVisible, setAgentModalVisible] = useState(false);
   const [teamAgents, setTeamAgents] = useState<any[]>([]);
 
+  // Live Dynamic State (Zero Hardcoded Mock Data)
+  const [loadingSummary, setLoadingSummary] = useState(false);
+  const [doctorCallsCount, setDoctorCallsCount] = useState<number>(0);
+  const [chemistCallsCount, setChemistCallsCount] = useState<number>(0);
+  const [hospitalCallsCount, setHospitalCallsCount] = useState<number>(0);
+  const [totalPobAmount, setTotalPobAmount] = useState<number>(0);
+  const [doctorPobAmount, setDoctorPobAmount] = useState<number>(0);
+  const [chemistPobAmount, setChemistPobAmount] = useState<number>(0);
+  const [tourPlanStatus, setTourPlanStatus] = useState<'NOT_SUBMITTED' | 'PENDING' | 'APPROVED' | 'REJECTED'>('NOT_SUBMITTED');
+
   useEffect(() => {
     EmployeeService.getEmployees().then(list => {
       if (list && list.length > 0) {
@@ -1291,6 +1301,124 @@ export const MonthlySummaryScreen: React.FC<{ onBack: () => void }> = ({ onBack 
       }
     });
   }, []);
+
+  const loadMonthlySummaryData = async (agent: typeof selectedAgent, month: string, year: string) => {
+    try {
+      setLoadingSummary(true);
+      const monthIdx = months.indexOf(month); // 0-11
+      const monthNum = monthIdx + 1; // 1-12
+      const yearNum = parseInt(year, 10) || new Date().getFullYear();
+
+      const cleanCode = (agent.employeeCode || agent.id || '').trim();
+
+      // 1. Fetch Visits from Supabase Cloud and Local Storage
+      let cloudVisits: any[] = [];
+      try {
+        cloudVisits = await SupabaseDbService.fetchVisits(cleanCode, 100);
+      } catch (e) {
+        console.warn('fetchVisits err in summary:', e);
+      }
+
+      const localVisits = await VisitService.getVisits();
+      const visitMap = new Map<string, any>();
+      cloudVisits.forEach(v => visitMap.set(v.id, v));
+      localVisits.forEach(v => {
+        if (!visitMap.has(v.id)) {
+          visitMap.set(v.id, {
+            id: v.id,
+            customer_type: v.customerType,
+            doctor_id: v.doctorId,
+            chemist_id: v.chemistId,
+            employee_id: v.employeeId,
+            employee_name: v.employeeName,
+            visit_date: v.date,
+            timestamp: v.checkInTimestamp,
+            pob_amount: v.pobAmount,
+            status: v.status,
+          });
+        }
+      });
+
+      const allVisits = Array.from(visitMap.values());
+      
+      // Filter for selected employee and selected month/year
+      const monthVisits = allVisits.filter(v => {
+        const empMatch = (v.employee_id || '').toLowerCase().includes(cleanCode.toLowerCase()) ||
+                         (v.employee_name || '').toLowerCase().includes((agent.name || '').toLowerCase());
+        if (!empMatch && cleanCode) return false;
+
+        const dateStr = v.visit_date || v.timestamp || '';
+        if (!dateStr) return false;
+        try {
+          const d = new Date(dateStr);
+          return d.getMonth() === monthIdx && d.getFullYear() === yearNum;
+        } catch {
+          return false;
+        }
+      });
+
+      let docCalls = 0;
+      let chemCalls = 0;
+      let hospCalls = 0;
+      let docPob = 0;
+      let chemPob = 0;
+
+      monthVisits.forEach(v => {
+        const type = (v.customer_type || (v.chemist_id ? 'CHEMIST' : 'DOCTOR')).toUpperCase();
+        const pob = Number(v.pob_amount) || 0;
+        if (type === 'DOCTOR') {
+          docCalls++;
+          docPob += pob;
+        } else if (type === 'CHEMIST' || type === 'STOCKIST') {
+          chemCalls++;
+          chemPob += pob;
+        } else if (type === 'HOSPITAL') {
+          hospCalls++;
+        } else {
+          docCalls++;
+          docPob += pob;
+        }
+      });
+
+      setDoctorCallsCount(docCalls);
+      setChemistCallsCount(chemCalls);
+      setHospitalCallsCount(hospCalls);
+      setDoctorPobAmount(docPob);
+      setChemistPobAmount(chemPob);
+      setTotalPobAmount(docPob + chemPob);
+
+      // 2. Fetch Live Tour Plan status for this agent in this month/year
+      let tpStatus: 'NOT_SUBMITTED' | 'PENDING' | 'APPROVED' | 'REJECTED' = 'NOT_SUBMITTED';
+      try {
+        const plans = await SupabaseDbService.fetchTourPlans(cleanCode, monthNum, yearNum);
+        if (plans && Object.keys(plans).length > 0) {
+          const values = Object.values(plans);
+          const hasPending = values.some((p: any) => p.status === 'PENDING' || p.status === 'SUBMITTED');
+          const hasApproved = values.some((p: any) => p.status === 'APPROVED');
+          const hasRejected = values.some((p: any) => p.status === 'REJECTED');
+          if (hasPending) tpStatus = 'PENDING';
+          else if (hasApproved) tpStatus = 'APPROVED';
+          else if (hasRejected) tpStatus = 'REJECTED';
+          else tpStatus = 'PENDING';
+        } else {
+          tpStatus = 'NOT_SUBMITTED';
+        }
+      } catch (tpErr) {
+        console.warn('fetchTourPlans err:', tpErr);
+        tpStatus = 'NOT_SUBMITTED';
+      }
+
+      setTourPlanStatus(tpStatus);
+    } catch (err) {
+      console.warn('loadMonthlySummaryData err:', err);
+    } finally {
+      setLoadingSummary(false);
+    }
+  };
+
+  useEffect(() => {
+    loadMonthlySummaryData(selectedAgent, selectedMonth, selectedYear);
+  }, [selectedAgent, selectedMonth, selectedYear]);
 
   const handleAgentClick = () => {
     if (!isExecutiveOrManager) {
@@ -1314,7 +1442,7 @@ export const MonthlySummaryScreen: React.FC<{ onBack: () => void }> = ({ onBack 
 
   return (
     <SafeAreaView style={styles.container}>
-      <Header title="Monthly Summary" subtitle="Barak Division Field Performance" showBack onBack={onBack} />
+      <Header title="Monthly Summary" subtitle="Live Territory Performance (Zero Mock Data)" showBack onBack={onBack} />
       
       {/* Role Authority Banner */}
       <View style={styles.authBadgeBanner}>
@@ -1371,52 +1499,90 @@ export const MonthlySummaryScreen: React.FC<{ onBack: () => void }> = ({ onBack 
           </TouchableOpacity>
         </View>
 
-        {/* 3 Circular Dials / Gauges matching Images 29 & 31 */}
+        {loadingSummary && (
+          <View style={{ paddingVertical: 10, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 6 }}>
+            <ActivityIndicator size="small" color="#2563EB" />
+            <Text style={{ fontSize: 12, color: '#2563EB', fontWeight: '600' }}>Updating live metrics...</Text>
+          </View>
+        )}
+
+        {/* 3 Circular Dials / Gauges (Live Real-Time Counts) */}
         <View style={styles.gaugesContainer}>
           <View style={styles.gaugeCard}>
             <View style={styles.circleDial}>
-              <Text style={styles.dialCount}>4</Text>
+              <Text style={styles.dialCount}>{doctorCallsCount}</Text>
               <Text style={styles.dialLabel}>Doctor</Text>
             </View>
           </View>
           <View style={styles.gaugeCard}>
             <View style={styles.circleDial}>
-              <Text style={styles.dialCount}>0</Text>
+              <Text style={styles.dialCount}>{chemistCallsCount}</Text>
               <Text style={styles.dialLabel}>Chem / Stk</Text>
             </View>
           </View>
           <View style={styles.gaugeCard}>
             <View style={styles.circleDial}>
-              <Text style={styles.dialCount}>0</Text>
+              <Text style={styles.dialCount}>{hospitalCallsCount}</Text>
               <Text style={styles.dialLabel}>Hospital</Text>
             </View>
           </View>
         </View>
 
-        {/* POB Section matching Images 29 & 31 */}
+        {/* POB Section (Live Real-Time Orders) */}
         <Text style={styles.sectionHeaderLabel}>POB</Text>
         <View style={styles.pobSectionCard}>
           <View style={styles.pobMainBox}>
-            <Text style={styles.pobMainVal}>₹0</Text>
+            <Text style={styles.pobMainVal}>₹{totalPobAmount.toLocaleString('en-IN')}</Text>
             <Text style={styles.pobMainLabel}>Total POB</Text>
           </View>
           <View style={styles.pobSubCols}>
             <View style={styles.pobSubBox}>
-              <Text style={styles.pobSubVal}>₹0</Text>
+              <Text style={styles.pobSubVal}>₹{doctorPobAmount.toLocaleString('en-IN')}</Text>
               <Text style={styles.pobSubLabel}>Doctor</Text>
             </View>
             <View style={styles.pobSubBox}>
-              <Text style={styles.pobSubVal}>₹0</Text>
+              <Text style={styles.pobSubVal}>₹{chemistPobAmount.toLocaleString('en-IN')}</Text>
               <Text style={styles.pobSubLabel}>Chem / Stk</Text>
             </View>
           </View>
         </View>
 
-        {/* Tour Program Status */}
+        {/* Tour Program Status (Live Verification) */}
         <Text style={styles.sectionHeaderLabel}>Tour Program Status</Text>
-        <View style={styles.tpStatusCard}>
-          <Ionicons name="calendar-outline" size={20} color="#16A34A" />
-          <Text style={styles.tpStatusText}>Approved</Text>
+        <View style={[
+          styles.tpStatusCard,
+          tourPlanStatus === 'NOT_SUBMITTED' && { borderColor: '#CBD5E1', backgroundColor: '#F8FAFC' },
+          tourPlanStatus === 'PENDING' && { borderColor: '#FDE68A', backgroundColor: '#FFFBEB' },
+          tourPlanStatus === 'REJECTED' && { borderColor: '#FECACA', backgroundColor: '#FEF2F2' },
+        ]}>
+          <Ionicons
+            name={
+              tourPlanStatus === 'APPROVED' ? 'checkmark-circle' :
+              tourPlanStatus === 'PENDING' ? 'time-outline' :
+              tourPlanStatus === 'REJECTED' ? 'close-circle' :
+              'alert-circle-outline'
+            }
+            size={20}
+            color={
+              tourPlanStatus === 'APPROVED' ? '#16A34A' :
+              tourPlanStatus === 'PENDING' ? '#D97706' :
+              tourPlanStatus === 'REJECTED' ? '#DC2626' :
+              '#64748B'
+            }
+          />
+          <Text style={[
+            styles.tpStatusText,
+            tourPlanStatus === 'NOT_SUBMITTED' && { color: '#64748B' },
+            tourPlanStatus === 'PENDING' && { color: '#D97706' },
+            tourPlanStatus === 'REJECTED' && { color: '#DC2626' },
+          ]}>
+            {
+              tourPlanStatus === 'APPROVED' ? 'Approved by RSM' :
+              tourPlanStatus === 'PENDING' ? 'Pending RSM Approval' :
+              tourPlanStatus === 'REJECTED' ? 'Rejected by RSM' :
+              'Not Submitted / No Plan Created'
+            }
+          </Text>
         </View>
       </ScrollView>
 
