@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PMTopBar } from './components/PMTopBar';
 import { PMHeader } from './components/PMHeader';
 import { PMHeroIndia } from './components/PMHeroIndia';
-import { PMAudiencePortals } from './components/PMAudiencePortals';
+import { PMPartnersAndFlagship } from './components/PMPartnersAndFlagship';
 import { PMSqueezeShowcase } from './components/PMSqueezeShowcase';
 import { PMPrecisionDial } from './components/PMPrecisionDial';
 import { PMCategoryShowcase } from './components/PMCategoryShowcase';
@@ -89,8 +89,8 @@ export default function AppWebsite() {
           />
         </section>
 
-        {/* 3.5. Tri-Portal Stakeholder Audience Pathways */}
-        <PMAudiencePortals
+        {/* 3.5. How NLCL Partners With You & Flagship Formulations Showcase */}
+        <PMPartnersAndFlagship
           onNavigate={handleNavigatePublic}
           onOpenEnquiry={handleOpenEnquiryModal}
         />
