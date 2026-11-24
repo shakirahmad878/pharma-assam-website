@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PMTopBar } from './components/PMTopBar';
 import { PMHeader } from './components/PMHeader';
-import { PMHeroPfizer } from './components/PMHeroPfizer';
+import { PMHeroIndia } from './components/PMHeroIndia';
 import { PMAudiencePortals } from './components/PMAudiencePortals';
 import { PMSqueezeShowcase } from './components/PMSqueezeShowcase';
 import { PMChakraScienceWheel } from './components/PMChakraScienceWheel';
@@ -81,12 +81,11 @@ export default function AppWebsite() {
       {/* Main Content Sections */}
       <main className="flex-grow">
         
-        {/* 3. Pfizer-Style Corporate Purpose Hero with 3D Molecular Simulation */}
+        {/* 3. Official NLCL India-Themed Hero with 24-Petal Ashoka Chakra Mandala */}
         <section id="home">
-          <PMHeroPfizer
-            onSelectProduct={(product) => setSelectedPublicProduct(product)}
-            onOpenEnquiry={handleOpenEnquiryModal}
+          <PMHeroIndia
             onNavigate={handleNavigatePublic}
+            onOpenEnquiry={handleOpenEnquiryModal}
           />
         </section>
 
