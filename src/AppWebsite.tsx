@@ -3,6 +3,7 @@ import { PMTopBar } from './components/PMTopBar';
 import { PMHeader } from './components/PMHeader';
 import { PMHeroSlider } from './components/PMHeroSlider';
 import { PMCategoryShowcase } from './components/PMCategoryShowcase';
+import { PMSqueezeShowcase } from './components/PMSqueezeShowcase';
 import { PMProductCatalog } from './components/PMProductCatalog';
 import { PMInnovation3D } from './components/PMInnovation3D';
 import { PMAboutSection } from './components/PMAboutSection';
@@ -90,6 +91,13 @@ export default function AppWebsite() {
         {/* 4. Product Categories Showcase */}
         <PMCategoryShowcase
           onSelectCategory={(cat) => setSelectedPublicCategory(cat)}
+          onNavigate={handleNavigatePublic}
+        />
+
+        {/* 4.5. 21st.dev Squeeze Carousel Flagship Portfolio Showcase */}
+        <PMSqueezeShowcase
+          onSelectProduct={(product) => setSelectedPublicProduct(product)}
+          onOpenEnquiry={handleOpenEnquiryModal}
           onNavigate={handleNavigatePublic}
         />
 
