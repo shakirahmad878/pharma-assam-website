@@ -174,10 +174,9 @@ export const VisitListScreen: React.FC<VisitListScreenProps> = ({
     // Map Doctors
     authorizedDocs.forEach(doc => {
       const todayVisit = todayVisitMap.get(doc.id);
-      let calculatedStatus: UnifiedCustomerItem['todayStatus'] = doc.todayVisitStatus || 'PENDING';
-      if (todayVisit) {
-        calculatedStatus = todayVisit.status === 'COMPLETED' ? 'COMPLETED' : 'PENDING';
-      }
+      const calculatedStatus: UnifiedCustomerItem['todayStatus'] = todayVisit
+        ? (todayVisit.status === 'COMPLETED' ? 'COMPLETED' : 'PENDING')
+        : 'PENDING';
 
       items.push({
         id: doc.id,
