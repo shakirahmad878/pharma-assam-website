@@ -15,14 +15,12 @@ import { PMSidebarNav } from './components/PMSidebarNav';
 import { PRODUCTS } from './data/products';
 import { Product, ProductCategory } from './types';
 
-const SFA_PORTAL_URL = 'https://reppulse.nlcl.in/';
-
 export default function AppWebsite() {
   useEffect(() => {
-    document.title = 'New Life Care Laboratories Pvt. Ltd. | Quality Pharmaceutical Formulations & Distribution (Assam)';
+    document.title = 'NLCL | New Life Care Laboratories Pvt. Ltd. - Quality Formulations & Pharmaceutical Distribution (Assam)';
     const metaDesc = document.querySelector('meta[name="description"]');
     if (metaDesc) {
-      metaDesc.setAttribute('content', 'New Life Care Laboratories Pvt. Ltd. is an established pharmaceutical manufacturer and distributor supplying WHO-GMP compliant formulations across Assam and the North-East.');
+      metaDesc.setAttribute('content', 'NLCL (New Life Care Laboratories Pvt. Ltd. - nlcl.in) is an established pharmaceutical company supplying WHO-GMP compliant formulations, capsules, syrups, tablets, and injectables across Assam and the North-East.');
     }
   }, []);
 
@@ -59,17 +57,12 @@ export default function AppWebsite() {
     setIsEnquiryModalOpen(true);
   };
 
-  const handleOpenPortal = () => {
-    window.location.href = SFA_PORTAL_URL;
-  };
-
   return (
     <div className="min-h-screen bg-[#F5F8FA] text-[#1E293B] flex flex-col justify-between selection:bg-[#18A6A6] selection:text-white font-sans antialiased">
       
       {/* 1. Official Top Bar */}
       <PMTopBar 
         onOpenEnquiry={() => handleOpenEnquiryModal()}
-        onOpenPortal={handleOpenPortal}
       />
 
       {/* 2. Official Corporate Header & Mega Dropdown Navigation */}
@@ -79,7 +72,6 @@ export default function AppWebsite() {
         onSelectProduct={(product) => setSelectedPublicProduct(product)}
         onOpenEnquiry={handleOpenEnquiryModal}
         onOpenSidebar={() => setIsPublicSidebarOpen(true)}
-        onOpenPortal={handleOpenPortal}
       />
 
       {/* Main Content Sections */}
@@ -132,7 +124,6 @@ export default function AppWebsite() {
       <PMFooter
         onNavigate={handleNavigatePublic}
         onSelectCategory={(cat) => setSelectedPublicCategory(cat)}
-        onOpenPortal={handleOpenPortal}
       />
 
       {/* Modals & Drawers */}

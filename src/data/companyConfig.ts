@@ -1,6 +1,7 @@
 export interface CompanyConfig {
   name: string;
   shortName: string;
+  website: string;
   tagline: string;
   headline: string;
   subheadline: string;
@@ -22,12 +23,13 @@ export interface CompanyConfig {
 
 export const COMPANY_CONFIG: CompanyConfig = {
   name: 'New Life Care Laboratories Pvt. Ltd.',
-  shortName: 'New Life Care Laboratories',
+  shortName: 'NLCL',
+  website: 'nlcl.in',
   tagline: 'Pioneering Quality Formulations & Ethical Healthcare Distribution',
   headline: 'Advancing North-East Healthcare Through Quality Pharmaceutical Formulations.',
-  subheadline: 'New Life Care Laboratories Pvt. Ltd. is an established pharmaceutical enterprise supplying high-efficacy Oral Solid Dosages, Softgel Capsules, Digestive & Nutritional Formulations, and Sterile Injectables across hospital formularies, authorized stockists, and healthcare institutions in Assam and the North-East.',
+  subheadline: 'NLCL (New Life Care Laboratories Pvt. Ltd.) is an established pharmaceutical enterprise supplying high-efficacy Oral Solid Dosages, Softgel Capsules, Digestive & Nutritional Formulations, and Sterile Injectables across hospital formularies, authorized stockists, and healthcare institutions in Assam and the North-East.',
   missionStatement: '"To empower clinical practice and patient health with therapeutically proven, strictly quality-tested pharmaceutical formulations delivered through transparent, ethical partnerships across Assam and the North-East."',
-  corporateStory: 'New Life Care Laboratories Pvt. Ltd. was established to provide reliable, therapeutic-grade medicines conforming strictly to Indian Pharmacopoeia (IP) and World Health Organization (WHO-GMP) standards. Operating with central logistics hubs in Silchar and Guwahati, we maintain a robust cold-chain and distribution network serving doctors, chemists, and institutional hospitals across Barak Valley and Greater Assam.',
+  corporateStory: 'New Life Care Laboratories Pvt. Ltd. (NLCL) was established to provide reliable, therapeutic-grade medicines conforming strictly to Indian Pharmacopoeia (IP) and World Health Organization (WHO-GMP) standards. Operating with central logistics hubs in Silchar and Guwahati, we maintain a robust cold-chain and distribution network serving doctors, chemists, and institutional hospitals across Barak Valley and Greater Assam.',
   yearsOfExperience: 'Established & Trusted Across Assam',
   productsCount: '10+ Core Formulations',
   marketsServed: 'Barak Valley, Greater Assam & North-East Region',

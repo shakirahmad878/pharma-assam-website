@@ -365,10 +365,11 @@ export const VisitManagementView: React.FC<VisitManagementViewProps> = ({ curren
 
                       <td className="py-3.5 px-4">
                         <Badge
-                          label={v.status || 'COMPLETED'}
                           variant={v.status === 'COMPLETED' ? 'success' : v.status === 'MISSED' ? 'danger' : 'warning'}
-                          size="small"
-                        />
+                          size="sm"
+                        >
+                          {v.status || 'COMPLETED'}
+                        </Badge>
                       </td>
 
                       <td className="py-3.5 px-4 text-right">

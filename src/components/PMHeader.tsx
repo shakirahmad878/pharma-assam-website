@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, ChevronDown, Menu, ArrowRight, Building2, Lock, Sparkles } from 'lucide-react';
+import { Search, ChevronDown, Menu, ArrowRight, Building2, Sparkles } from 'lucide-react';
 import { PRODUCTS } from '../data/products';
 import { COMPANY_CONFIG } from '../data/companyConfig';
 import { Product } from '../types';
@@ -10,7 +10,6 @@ interface PMHeaderProps {
   onSelectProduct: (product: Product) => void;
   onOpenEnquiry: (productName?: string) => void;
   onOpenSidebar: () => void;
-  onOpenPortal?: () => void;
 }
 
 export const PMHeader: React.FC<PMHeaderProps> = ({
@@ -18,8 +17,7 @@ export const PMHeader: React.FC<PMHeaderProps> = ({
   onNavigate,
   onSelectProduct,
   onOpenEnquiry,
-  onOpenSidebar,
-  onOpenPortal
+  onOpenSidebar
 }) => {
   const [isProductsMenuOpen, setIsProductsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -82,11 +80,14 @@ export const PMHeader: React.FC<PMHeaderProps> = ({
               </div>
               <div className="flex-shrink-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-base sm:text-lg md:text-xl font-bold tracking-tight text-[#10243A] whitespace-nowrap">
-                    {COMPANY_CONFIG.name}
+                  <span className="text-base sm:text-lg md:text-xl font-black tracking-tight text-[#10243A] whitespace-nowrap">
+                    NLCL
+                  </span>
+                  <span className="text-xs sm:text-sm font-semibold text-slate-700 whitespace-nowrap hidden lg:inline-block">
+                    • {COMPANY_CONFIG.name}
                   </span>
                   <span className="text-[10px] font-semibold text-[#137F83] bg-[#E8EEF4] border border-[#DCE4EB] px-2 py-0.5 rounded tracking-wider uppercase whitespace-nowrap hidden sm:inline-block">
-                    PHARMACEUTICALS
+                    nlcl.in
                   </span>
                 </div>
                 <p className="text-[10.5px] text-[#64748B] font-medium tracking-wide uppercase mt-0.5 whitespace-nowrap">
@@ -350,18 +351,6 @@ export const PMHeader: React.FC<PMHeaderProps> = ({
                 </div>
               )}
             </div>
-
-            {/* SFA Portal Action Button */}
-            {onOpenPortal && (
-              <button
-                onClick={onOpenPortal}
-                className="hidden md:flex items-center gap-1.5 bg-[#10243A] hover:bg-[#182F49] text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-xs transition-all border border-[#182F49] cursor-pointer"
-                title="Open SFA RepPulse Field Portal"
-              >
-                <Lock className="w-3.5 h-3.5 text-[#18A6A6]" />
-                <span>Field Portal</span>
-              </button>
-            )}
 
             {/* Mobile Navigation Trigger Button */}
             <button

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pill, Phone, Mail, MapPin, ChevronRight, Lock, ShieldCheck } from 'lucide-react';
+import { Pill, Phone, Mail, MapPin, ChevronRight, ShieldCheck, Globe } from 'lucide-react';
 import { COMPANY_CONFIG } from '../data/companyConfig';
 import { CATEGORIES } from '../data/products';
 import { ProductCategory } from '../types';
@@ -7,13 +7,11 @@ import { ProductCategory } from '../types';
 interface PMFooterProps {
   onNavigate: (sectionId: string) => void;
   onSelectCategory: (category: ProductCategory | 'All Products') => void;
-  onOpenPortal?: () => void;
 }
 
 export const PMFooter: React.FC<PMFooterProps> = ({
   onNavigate,
-  onSelectCategory,
-  onOpenPortal
+  onSelectCategory
 }) => {
   const handleCategoryClick = (categoryLabel: string) => {
     onSelectCategory(categoryLabel as ProductCategory | 'All Products');
@@ -58,15 +56,13 @@ export const PMFooter: React.FC<PMFooterProps> = ({
               <span>{COMPANY_CONFIG.email}</span>
             </a>
 
-            {onOpenPortal && (
-              <button
-                onClick={onOpenPortal}
-                className="flex items-center gap-1.5 bg-[#18A6A6] hover:bg-[#137F83] text-white px-3 py-1.5 rounded-lg font-semibold transition-colors cursor-pointer"
-              >
-                <Lock className="w-3 h-3" />
-                <span>Field Force Portal</span>
-              </button>
-            )}
+            <a 
+              href="https://nlcl.in" 
+              className="flex items-center gap-1.5 bg-[#18A6A6]/20 border border-[#18A6A6]/40 text-teal-300 px-3 py-1.5 rounded-lg transition-colors font-semibold"
+            >
+              <Globe className="w-3.5 h-3.5 text-[#18A6A6]" />
+              <span>nlcl.in</span>
+            </a>
           </div>
 
         </div>
@@ -140,28 +136,6 @@ export const PMFooter: React.FC<PMFooterProps> = ({
                   <ChevronRight className="w-3 h-3 text-[#18A6A6]" />
                   <span>Contact Dossier</span>
                 </button>
-              </li>
-              <li className="pt-2 border-t border-slate-700/60">
-                <a 
-                  href="https://reppulse.nlcl.in/" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="hover:text-teal-300 text-teal-400 font-semibold transition-colors flex items-center gap-1"
-                >
-                  <ChevronRight className="w-3 h-3 text-teal-400" />
-                  <span>RepPulse SFA Portal ↗</span>
-                </a>
-              </li>
-              <li>
-                <a 
-                  href="https://hrms.nlcl.in/" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="hover:text-sky-300 text-sky-400 font-semibold transition-colors flex items-center gap-1"
-                >
-                  <ChevronRight className="w-3 h-3 text-sky-400" />
-                  <span>Apex HRMS Portal ↗</span>
-                </a>
               </li>
             </ul>
           </div>
