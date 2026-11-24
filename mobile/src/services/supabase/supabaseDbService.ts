@@ -1230,6 +1230,28 @@ export class SupabaseDbService {
     }
   }
 
+  public static async fetchAttendanceHistory(employeeIdOrCode?: string, limit: number = 50): Promise<any[]> {
+    if (!this.isConnected()) return [];
+    try {
+      let url = `${SUPABASE_CONFIG.url}/rest/v1/attendance?order=date.desc,punch_in_timestamp.desc&limit=${limit}`;
+      if (employeeIdOrCode && employeeIdOrCode !== 'ALL') {
+        const clean = employeeIdOrCode.trim();
+        const codeClean = clean.startsWith('usr-') ? clean.replace('usr-', '').toUpperCase() : clean;
+        const idClean = clean.startsWith('usr-') ? clean : `usr-${clean.toLowerCase()}`;
+        url += `&or=(employee_id.eq.${encodeURIComponent(clean)},employee_id.eq.${encodeURIComponent(codeClean)},employee_id.eq.${encodeURIComponent(idClean)},employee_name.ilike.%25${encodeURIComponent(clean)}%25)`;
+      }
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+      if (!res.ok) return [];
+      return await res.json();
+    } catch (err) {
+      console.warn('[Supabase] fetchAttendanceHistory error:', err);
+      return [];
+    }
+  }
+
   // ==========================================
   // 6. LATE LOGIN REQUESTS (10:30 AM Cutoff)
   // ==========================================

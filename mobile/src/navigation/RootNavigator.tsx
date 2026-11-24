@@ -16,6 +16,7 @@ import {
 import { colors, typography, spacing } from '../constants/theme';
 import { AuthService } from '../services/authService';
 import { AttendanceService } from '../services/attendanceService';
+import { SyncService } from '../services/sync/syncService';
 import { NetworkBanner } from '../components/common/NetworkBanner';
 import { DrawerMenu } from '../components/navigation/DrawerMenu';
 
@@ -88,6 +89,9 @@ export const RootNavigator: React.FC = () => {
       setIsAuthenticated(!!user);
       setCurrentUser(user);
 
+      // Auto-flush any pending offline calls, attendance, or orders in background
+      SyncService.processQueue().catch(() => {});
+
       // If user is a field representative and has not punched in today, require Start Working
       if (user && user.role === 'MEDICAL_REP') {
         const att = await AttendanceService.getTodayAttendance();
@@ -115,6 +119,9 @@ export const RootNavigator: React.FC = () => {
     // AppState listener: Check session immediately whenever app becomes active
     const appStateSub = AppState.addEventListener('change', async (nextState: AppStateStatus) => {
       if (nextState === 'active') {
+        // Auto-flush pending queue whenever app resumes
+        SyncService.processQueue().catch(() => {});
+
         const check = await AuthService.checkAutoLogout();
         if (check.autoLoggedOut) {
           setIsAuthenticated(false);

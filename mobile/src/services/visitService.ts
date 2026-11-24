@@ -53,7 +53,19 @@ export class VisitService {
       await DoctorService.updateDoctorTodayStatus(visit.doctorId, 'COMPLETED');
     }
 
-    // Queue for background cloud sync
+    // Direct real-time persistence to Supabase cloud if online
+    if (SupabaseDbService.isConnected()) {
+      try {
+        await SupabaseDbService.recordVisit(newVisit);
+        newVisit.syncStatus = 'SYNCED';
+        visits[0].syncStatus = 'SYNCED';
+        await StorageService.setItem(STORAGE_KEYS.VISITS_LOCAL, visits);
+      } catch (err) {
+        console.warn('[VisitService] Direct Supabase push deferred to offline queue:', err);
+      }
+    }
+
+    // Always enqueue in sync queue for background retry/resilience
     await SyncService.enqueue('VISIT', newVisit);
 
     return newVisit;
