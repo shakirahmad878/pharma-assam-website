@@ -58,7 +58,7 @@ export default function AppWebsite() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F8FA] text-[#1E293B] flex flex-col justify-between selection:bg-[#18A6A6] selection:text-white font-sans antialiased">
+    <div className="min-h-screen bg-[#F8FAFC] text-[#1E293B] flex flex-col justify-between selection:bg-[#18A6A6] selection:text-white font-sans antialiased overflow-x-hidden w-full max-w-full">
       
       {/* 1. Official Top Bar */}
       <PMTopBar 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pill, FlaskConical, Layers, Syringe, ArrowRight } from 'lucide-react';
+import { Pill, FlaskConical, Sparkles, Heart, ShieldCheck, ArrowRight } from 'lucide-react';
 import { ProductCategory } from '../types';
 
 interface PMCategoryShowcaseProps {
@@ -13,36 +13,36 @@ export const PMCategoryShowcase: React.FC<PMCategoryShowcaseProps> = ({
 }) => {
   const categories = [
     {
-      title: 'Pharmaceutical Capsules',
-      categoryKey: 'Pharmaceutical Capsules' as ProductCategory,
-      count: '3 Formulations',
-      description: 'Advanced softgel lipid carriers & multi-pellet sustained release formulations.',
-      productsList: ['Calcibone D3 Softgels', 'PRO-L Q10 Capsules', 'Rabefill DSR Capsules'],
-      icon: Pill,
-    },
-    {
-      title: 'Pharmaceutical Syrup',
-      categoryKey: 'Pharmaceutical Syrup' as ProductCategory,
-      count: '4 Formulations',
-      description: 'Stabilized digestive enzymes, lycopene antioxidants & neuro-nutritional suspensions.',
-      productsList: ['Lycoreach Syrup', 'Mytro Q10 Syrup', 'Peptin Gold Syrup', 'PRO Carnoshine Syrup'],
+      title: 'Nutritional Support',
+      categoryKey: 'Nutritional Support' as ProductCategory,
+      count: '2 Formulations',
+      description: 'High-potency antioxidant carotenoids, essential amino acids & maternal vital micronutrients.',
+      productsList: ['Lyco-KR Syrup (200ml)', 'NL-Nine Granules (10x5g)'],
       icon: FlaskConical,
     },
     {
-      title: 'Pharmaceutical Tablets',
-      categoryKey: 'Pharmaceutical Tablets' as ProductCategory,
-      count: '2 Formulations',
-      description: 'Precision compressed film-coated tablets for metabolic & hepatoprotective care.',
-      productsList: ['Ovamain Tablets', 'Ursocure 300 Tablets'],
-      icon: Layers,
+      title: 'Omega-3 Essentials',
+      categoryKey: 'Omega-3 Range' as ProductCategory,
+      count: '3 Formulations',
+      description: 'Molecularly distilled EPA & DHA in Softgels, Liquid Syrup & Pediatric Dropper Bottles.',
+      productsList: ['Life-KR Softgel (1300mg)', 'Life-KR Syrup (150ml)', 'Life-KR Drops (30ml)'],
+      icon: Pill,
     },
     {
-      title: 'Pharmaceutical Injectable',
-      categoryKey: 'Pharmaceutical Injectable' as ProductCategory,
-      count: '1 Formulation',
-      description: 'Sterile lyophilized hospital injectables manufactured in Grade-A cleanrooms.',
-      productsList: ['20mg Rabefill IV Injection'],
-      icon: Syringe,
+      title: 'Digestive Wellness',
+      categoryKey: 'Digestive Wellness' as ProductCategory,
+      count: '4 Formulations',
+      description: 'Proteolytic enzymes, alginate anti-reflux raft barrier, enteric PPI & H2 acid suppressors.',
+      productsList: ['Zymocare Syrup (200ml)', 'Lifekr-Raft Oral Suspension', 'Esomax D40', 'Ran-Life Solution'],
+      icon: ShieldCheck,
+    },
+    {
+      title: 'Skin Radiance & Energy',
+      categoryKey: 'Skin Brightening' as ProductCategory,
+      count: '4 Formulations',
+      description: 'Master antioxidant L-Glutathione brightening, mitochondrial CoQ10 & intimate health.',
+      productsList: ['Glutavia-250', 'Glutavia-500', 'Myo-Q10 Syrup', 'Borifemina Vaginal Tabs'],
+      icon: Sparkles,
     }
   ];
 
@@ -61,7 +61,7 @@ export const PMCategoryShowcase: React.FC<PMCategoryShowcaseProps> = ({
             Therapeutic Divisions
           </span>
           <h2 className="mt-3 text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#10243A] tracking-tight">
-            Our Core Pharmaceutical Dosage Forms
+            Our Core Product Portfolio
           </h2>
           <p className="mt-2 text-sm sm:text-base text-[#64748B]">
             Formulations manufactured strictly to IP/BP/USP pharmacopoeial monographs and WHO-GMP quality assurance guidelines.
@@ -98,20 +98,20 @@ export const PMCategoryShowcase: React.FC<PMCategoryShowcaseProps> = ({
                   </p>
 
                   {/* Product Bullets */}
-                  <div className="mt-4 pt-4 border-t border-[#DCE4EB] space-y-1.5">
-                    {cat.productsList.map((item, pIdx) => (
-                      <p key={pIdx} className="text-xs text-[#1E293B] font-medium flex items-center gap-2 truncate">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#18A6A6]"></span>
-                        <span>{item}</span>
-                      </p>
+                  <div className="mt-4 pt-4 border-t border-[#F1F6F8] space-y-1.5">
+                    {cat.productsList.map((prod, pIdx) => (
+                      <div key={pIdx} className="flex items-center gap-1.5 text-xs text-[#1E293B] font-medium">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#18A6A6] flex-shrink-0"></span>
+                        <span className="truncate">{prod}</span>
+                      </div>
                     ))}
                   </div>
                 </div>
 
-                {/* View Category Link */}
-                <div className="mt-6 pt-3 flex items-center justify-between text-xs font-bold text-[#10243A] group-hover:text-[#18A6A6] transition-colors border-t border-[#F1F6F8]">
-                  <span>Explore Formulations</span>
-                  <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
+                {/* Card Footer Link */}
+                <div className="mt-6 pt-3 border-t border-[#F1F6F8] flex items-center justify-between text-xs font-bold text-[#18A6A6] group-hover:text-[#137F83]">
+                  <span>Explore Division</span>
+                  <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
                 </div>
               </div>
             );

@@ -14,14 +14,16 @@ export const PMHeroSlider: React.FC<PMHeroSliderProps> = ({
   onOpenEnquiry,
   onNavigate
 }) => {
-  // We showcase 6 featured formulations from the catalog
+  // We showcase featured formulations from the NLCL catalog
   const featuredIds = [
-    'rabefill-dsr-capsules',
-    'lycoreach-syrup',
-    'ovamain-tablets',
-    '20mg-rabefill-iv-injection',
-    'calcibone-d3-softgel-capsules',
-    'pro-l-q10-capsules'
+    'lyco-kr-syrup',
+    'nl-nine-granules',
+    'myo-q10-syrup',
+    'life-kr-softgel',
+    'glutavia-500',
+    'lifekr-raft-suspension',
+    'esomax-d40',
+    'borifemina-tablets'
   ];
 
   const slides = PRODUCTS.filter(p => featuredIds.includes(p.id));

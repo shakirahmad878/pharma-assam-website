@@ -2,14 +2,12 @@ import React, { useState } from 'react';
 import { 
   X, 
   ChevronRight, 
-  Building2, 
   Phone, 
   MessageCircle, 
   ShieldCheck, 
-  ExternalLink,
-  Lock,
-  Layers,
-  Sparkles
+  BookOpen,
+  Send,
+  Pill
 } from 'lucide-react';
 import { COMPANY_CONFIG } from '../data/companyConfig';
 import { ProductCategory } from '../types';
@@ -31,7 +29,7 @@ export const PMSidebarNav: React.FC<PMSidebarNavProps> = ({
   onSelectCategory,
   onOpenEnquiry
 }) => {
-  const [isFormulationsExpanded, setIsFormulationsExpanded] = useState<boolean>(true);
+  const [isCategoriesExpanded, setIsCategoriesExpanded] = useState<boolean>(true);
 
   if (!isOpen) return null;
 
@@ -54,24 +52,26 @@ export const PMSidebarNav: React.FC<PMSidebarNavProps> = ({
         onClick={onClose}
       />
 
-      {/* Cloudflare-Style Docked Left Sidebar */}
+      {/* Docked Left Sidebar */}
       <div 
         className="fixed inset-y-0 left-0 w-72 sm:w-80 bg-white border-r border-[#E2E8F0] shadow-2xl flex flex-col justify-between z-10 select-none animate-in slide-in-from-left duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         
-        {/* Top Header: Account / Organization Indicator (Exact Cloudflare Header Style) */}
+        {/* Top Header: Brand Identity with Official Logo */}
         <div className="p-3.5 border-b border-[#E2E8F0] flex items-center justify-between bg-slate-50/70">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-[#10243A] flex items-center justify-center text-[#18A6A6] flex-shrink-0 shadow-2xs border border-[#182F49]">
-              <Building2 className="w-4 h-4 text-[#18A6A6]" />
-            </div>
+            <img
+              src="./images/nlcl-logo.jpg"
+              alt="NLCL Logo"
+              className="w-9 h-9 rounded-full object-cover flex-shrink-0 shadow-2xs border border-slate-200"
+            />
             <div className="min-w-0">
-              <span className="text-xs font-bold text-slate-900 truncate block tracking-tight">
-                {COMPANY_CONFIG.name}
+              <span className="text-xs font-black text-slate-900 truncate block tracking-tight">
+                NLCL
               </span>
-              <span className="text-[10.5px] text-slate-500 font-mono block truncate">
-                nlcl.in • Assam Pharma
+              <span className="text-[10px] text-slate-500 font-medium block truncate">
+                nlcl.in • Creating Health. Inspiring Life.
               </span>
             </div>
           </div>
@@ -88,12 +88,12 @@ export const PMSidebarNav: React.FC<PMSidebarNavProps> = ({
         {/* Scrollable Navigation Body */}
         <div className="flex-1 overflow-y-auto p-3 space-y-1 text-xs">
           
-          {/* Main Website Sections (Cloudflare Flat Menu Style) */}
+          {/* Main Website Sections */}
           <button
             onClick={() => handleNav('home')}
             className={`w-full text-left py-2 px-3 rounded-lg flex items-center justify-between transition-colors cursor-pointer ${
               activeSection === 'home'
-                ? 'bg-[#F1F5F9] text-[#0284C7] font-bold'
+                ? 'bg-[#F1F5F9] text-[#137F83] font-bold'
                 : 'text-slate-700 hover:bg-slate-100/80 font-medium'
             }`}
           >
@@ -104,56 +104,70 @@ export const PMSidebarNav: React.FC<PMSidebarNavProps> = ({
             onClick={() => handleNav('about')}
             className={`w-full text-left py-2 px-3 rounded-lg flex items-center justify-between transition-colors cursor-pointer ${
               activeSection === 'about'
-                ? 'bg-[#F1F5F9] text-[#0284C7] font-bold'
+                ? 'bg-[#F1F5F9] text-[#137F83] font-bold'
                 : 'text-slate-700 hover:bg-slate-100/80 font-medium'
             }`}
           >
-            <span>Corporate Factsheet</span>
+            <span>About Us</span>
           </button>
 
-          {/* Expandable Formulations Category */}
+          {/* Expandable Product Categories */}
           <div>
             <button
-              onClick={() => setIsFormulationsExpanded(!isFormulationsExpanded)}
+              onClick={() => setIsCategoriesExpanded(!isCategoriesExpanded)}
               className={`w-full text-left py-2 px-3 rounded-lg flex items-center justify-between transition-colors cursor-pointer ${
                 activeSection === 'products'
-                  ? 'bg-[#F1F5F9] text-[#0284C7] font-bold'
+                  ? 'bg-[#F1F5F9] text-[#137F83] font-bold'
                   : 'text-slate-700 hover:bg-slate-100/80 font-medium'
               }`}
             >
-              <span>Therapeutic Formulations</span>
-              <ChevronRight className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isFormulationsExpanded ? 'rotate-90 text-[#0284C7]' : ''}`} />
+              <span>Product Portfolio (13)</span>
+              <ChevronRight className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isCategoriesExpanded ? 'rotate-90 text-[#137F83]' : ''}`} />
             </button>
 
             {/* Indented Subcategories */}
-            {isFormulationsExpanded && (
+            {isCategoriesExpanded && (
               <div className="ml-3 pl-3 border-l border-slate-200 space-y-1 my-1">
                 <button
-                  onClick={() => handleCategoryNav('Pharmaceutical Tablets')}
-                  className="w-full text-left py-1.5 px-2 text-[11.5px] text-slate-600 hover:text-[#0284C7] hover:bg-slate-50 rounded-md transition-colors cursor-pointer flex items-center justify-between"
+                  onClick={() => handleCategoryNav('Nutritional Support')}
+                  className="w-full text-left py-1.5 px-2 text-[11.5px] text-slate-600 hover:text-[#137F83] hover:bg-slate-50 rounded-md transition-colors cursor-pointer flex items-center justify-between"
                 >
-                  <span>Pharmaceutical Tablets</span>
-                  <span className="text-[10px] text-slate-400 font-mono">3</span>
-                </button>
-                <button
-                  onClick={() => handleCategoryNav('Pharmaceutical Syrup')}
-                  className="w-full text-left py-1.5 px-2 text-[11.5px] text-slate-600 hover:text-[#0284C7] hover:bg-slate-50 rounded-md transition-colors cursor-pointer flex items-center justify-between"
-                >
-                  <span>Pharmaceutical Syrup</span>
-                  <span className="text-[10px] text-slate-400 font-mono">3</span>
-                </button>
-                <button
-                  onClick={() => handleCategoryNav('Pharmaceutical Capsules')}
-                  className="w-full text-left py-1.5 px-2 text-[11.5px] text-slate-600 hover:text-[#0284C7] hover:bg-slate-50 rounded-md transition-colors cursor-pointer flex items-center justify-between"
-                >
-                  <span>Pharmaceutical Capsules</span>
+                  <span>Nutritional Support</span>
                   <span className="text-[10px] text-slate-400 font-mono">2</span>
                 </button>
                 <button
-                  onClick={() => handleCategoryNav('Pharmaceutical Injectable')}
-                  className="w-full text-left py-1.5 px-2 text-[11.5px] text-slate-600 hover:text-[#0284C7] hover:bg-slate-50 rounded-md transition-colors cursor-pointer flex items-center justify-between"
+                  onClick={() => handleCategoryNav('Omega-3 Range')}
+                  className="w-full text-left py-1.5 px-2 text-[11.5px] text-slate-600 hover:text-[#137F83] hover:bg-slate-50 rounded-md transition-colors cursor-pointer flex items-center justify-between"
                 >
-                  <span>Pharmaceutical Injectable</span>
+                  <span>Omega-3 Essentials</span>
+                  <span className="text-[10px] text-slate-400 font-mono">3</span>
+                </button>
+                <button
+                  onClick={() => handleCategoryNav('Digestive Wellness')}
+                  className="w-full text-left py-1.5 px-2 text-[11.5px] text-slate-600 hover:text-[#137F83] hover:bg-slate-50 rounded-md transition-colors cursor-pointer flex items-center justify-between"
+                >
+                  <span>Digestive Health</span>
+                  <span className="text-[10px] text-slate-400 font-mono">4</span>
+                </button>
+                <button
+                  onClick={() => handleCategoryNav('Cardiovascular & Energy')}
+                  className="w-full text-left py-1.5 px-2 text-[11.5px] text-slate-600 hover:text-[#137F83] hover:bg-slate-50 rounded-md transition-colors cursor-pointer flex items-center justify-between"
+                >
+                  <span>Cardiovascular & Energy</span>
+                  <span className="text-[10px] text-slate-400 font-mono">1</span>
+                </button>
+                <button
+                  onClick={() => handleCategoryNav('Skin Brightening')}
+                  className="w-full text-left py-1.5 px-2 text-[11.5px] text-slate-600 hover:text-[#137F83] hover:bg-slate-50 rounded-md transition-colors cursor-pointer flex items-center justify-between"
+                >
+                  <span>Skin Brightening (Glutavia)</span>
+                  <span className="text-[10px] text-slate-400 font-mono">2</span>
+                </button>
+                <button
+                  onClick={() => handleCategoryNav("Women's & Specialized Wellness")}
+                  className="w-full text-left py-1.5 px-2 text-[11.5px] text-slate-600 hover:text-[#137F83] hover:bg-slate-50 rounded-md transition-colors cursor-pointer flex items-center justify-between"
+                >
+                  <span>Women's Wellness (Borifemina)</span>
                   <span className="text-[10px] text-slate-400 font-mono">1</span>
                 </button>
               </div>
@@ -164,11 +178,14 @@ export const PMSidebarNav: React.FC<PMSidebarNavProps> = ({
             onClick={() => handleNav('flipbook')}
             className={`w-full text-left py-2 px-3 rounded-lg flex items-center justify-between transition-colors cursor-pointer ${
               activeSection === 'flipbook'
-                ? 'bg-[#F1F5F9] text-[#0284C7] font-bold'
+                ? 'bg-[#F1F5F9] text-[#137F83] font-bold'
                 : 'text-slate-700 hover:bg-slate-100/80 font-medium'
             }`}
           >
-            <span>Visual Aid Monograph</span>
+            <div className="flex items-center gap-2">
+              <BookOpen className="w-3.5 h-3.5 text-[#18A6A6]" />
+              <span>Visual Aid Monograph</span>
+            </div>
           </button>
 
           <button
@@ -178,8 +195,11 @@ export const PMSidebarNav: React.FC<PMSidebarNavProps> = ({
             }}
             className="w-full text-left py-2 px-3 rounded-lg flex items-center justify-between transition-colors cursor-pointer text-slate-700 hover:bg-slate-100/80 font-medium"
           >
-            <span>B2B Requirement Enquiry</span>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#0284C7] bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">
+            <div className="flex items-center gap-2">
+              <Send className="w-3.5 h-3.5 text-[#18A6A6]" />
+              <span>B2B Requirement Enquiry</span>
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#137F83] bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">
               Direct
             </span>
           </button>
@@ -188,47 +208,14 @@ export const PMSidebarNav: React.FC<PMSidebarNavProps> = ({
             onClick={() => handleNav('contact')}
             className={`w-full text-left py-2 px-3 rounded-lg flex items-center justify-between transition-colors cursor-pointer ${
               activeSection === 'contact'
-                ? 'bg-[#F1F5F9] text-[#0284C7] font-bold'
+                ? 'bg-[#F1F5F9] text-[#137F83] font-bold'
                 : 'text-slate-700 hover:bg-slate-100/80 font-medium'
             }`}
           >
-            <span>Contact Dossier & Depot</span>
+            <span>Contact & Regional Depots</span>
           </button>
 
-          {/* Section Divider 1: Enterprise Portals */}
-          <div className="pt-4 pb-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-3 block">
-              Enterprise Portals
-            </span>
-          </div>
-
-          <a
-            href="https://reppulse.nlcl.in/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full text-left py-2 px-3 rounded-lg flex items-center justify-between transition-colors text-slate-700 hover:bg-slate-100/80 font-medium"
-          >
-            <div className="flex items-center gap-2">
-              <Layers className="w-3.5 h-3.5 text-slate-500" />
-              <span>RepPulse SFA</span>
-            </div>
-            <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
-          </a>
-
-          <a
-            href="https://hrms.nlcl.in/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full text-left py-2 px-3 rounded-lg flex items-center justify-between transition-colors text-slate-700 hover:bg-slate-100/80 font-medium"
-          >
-            <div className="flex items-center gap-2">
-              <Lock className="w-3.5 h-3.5 text-slate-500" />
-              <span>Apex HRMS</span>
-            </div>
-            <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
-          </a>
-
-          {/* Section Divider 2: Trade & Direct Desk */}
+          {/* Direct Trade Desk Section */}
           <div className="pt-4 pb-1">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-3 block">
               Direct Trade Desk
@@ -236,7 +223,7 @@ export const PMSidebarNav: React.FC<PMSidebarNavProps> = ({
           </div>
 
           <a
-            href="https://wa.me/916900700102?text=Hello%20New%20Life%20Care%20Laboratories,%20I%20would%20like%20to%20inquire%20about%20pharmaceutical%20distribution%20and%20product%20MOQ."
+            href="https://wa.me/916900700102?text=Hello%20NLCL%20(New%20Life%20Care%20Laboratories),%20I%20would%20like%20to%20inquire%20about%20pharmaceutical%20distribution%20and%20product%20MOQ."
             target="_blank"
             rel="noopener noreferrer"
             className="w-full text-left py-2 px-3 rounded-lg flex items-center justify-between transition-colors text-slate-700 hover:bg-slate-100/80 font-medium"
@@ -264,10 +251,10 @@ export const PMSidebarNav: React.FC<PMSidebarNavProps> = ({
         <div className="p-3 border-t border-[#E2E8F0] bg-slate-50/70 text-[10.5px] text-slate-500 space-y-1">
           <div className="flex items-center gap-1.5 text-slate-700 font-semibold">
             <ShieldCheck className="w-3.5 h-3.5 text-[#18A6A6]" />
-            <span>WHO-GMP Compliant</span>
+            <span>WHO-GMP & ISO Certified</span>
           </div>
           <p className="truncate font-mono text-[9.5px]">
-            {COMPANY_CONFIG.registrationNumber}
+            {COMPANY_CONFIG.headquarters}
           </p>
         </div>
 
