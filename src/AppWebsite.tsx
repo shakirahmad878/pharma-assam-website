@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { PMTopBar } from './components/PMTopBar';
 import { PMHeader } from './components/PMHeader';
-import { PMHeroSlider } from './components/PMHeroSlider';
+import { PMHeroPfizer } from './components/PMHeroPfizer';
+import { PMAudiencePortals } from './components/PMAudiencePortals';
 import { PMCategoryShowcase } from './components/PMCategoryShowcase';
 import { PMSqueezeShowcase } from './components/PMSqueezeShowcase';
 import { PMProductCatalog } from './components/PMProductCatalog';
@@ -79,25 +80,31 @@ export default function AppWebsite() {
       {/* Main Content Sections */}
       <main className="flex-grow">
         
-        {/* 3. Hero Showcase Slider */}
+        {/* 3. Pfizer-Style Corporate Purpose Hero with 3D Molecular Simulation */}
         <section id="home">
-          <PMHeroSlider
+          <PMHeroPfizer
             onSelectProduct={(product) => setSelectedPublicProduct(product)}
             onOpenEnquiry={handleOpenEnquiryModal}
             onNavigate={handleNavigatePublic}
           />
         </section>
 
-        {/* 4. Product Categories Showcase */}
-        <PMCategoryShowcase
-          onSelectCategory={(cat) => setSelectedPublicCategory(cat)}
+        {/* 3.5. Tri-Portal Stakeholder Audience Pathways */}
+        <PMAudiencePortals
           onNavigate={handleNavigatePublic}
+          onOpenEnquiry={handleOpenEnquiryModal}
         />
 
-        {/* 4.5. 21st.dev Squeeze Carousel Flagship Portfolio Showcase */}
+        {/* 4. 21st.dev Squeeze Carousel Flagship Portfolio Showcase */}
         <PMSqueezeShowcase
           onSelectProduct={(product) => setSelectedPublicProduct(product)}
           onOpenEnquiry={handleOpenEnquiryModal}
+          onNavigate={handleNavigatePublic}
+        />
+
+        {/* 4.5. Product Categories Showcase */}
+        <PMCategoryShowcase
+          onSelectCategory={(cat) => setSelectedPublicCategory(cat)}
           onNavigate={handleNavigatePublic}
         />
 
