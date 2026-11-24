@@ -3,11 +3,13 @@ import React, { useState, useEffect } from 'react';
 interface PMPrecisionDialProps {
   onNavigate: (sectionId: string) => void;
   onOpenEnquiry: (context?: string) => void;
+  hidden?: boolean;
 }
 
 export const PMPrecisionDial: React.FC<PMPrecisionDialProps> = ({
   onNavigate,
-  onOpenEnquiry
+  onOpenEnquiry,
+  hidden
 }) => {
   const STAGES = [
     {
@@ -287,7 +289,7 @@ export const PMPrecisionDial: React.FC<PMPrecisionDialProps> = ({
         }
       `}</style>
 
-      <section className="pd" id="precision" aria-labelledby="pd-title">
+      <section className="pd" id="precision" aria-labelledby="pd-title" hidden={hidden}>
         <div className="pd__head">
           <span className="pd__badge">Made in India · Pharmaceutical Excellence</span>
           <h2 id="pd-title">Six stages. <span>One standard of care.</span></h2>

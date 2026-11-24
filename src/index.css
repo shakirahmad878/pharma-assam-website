@@ -153,3 +153,14 @@
 .animate-pulse-slow {
   animation: pulse-slow 3s infinite ease-in-out;
 }
+
+/* ===== TAB ROUTER ===== */
+section[hidden], div[hidden] { display: none !important; }
+.nav a.active, button.nav-tab-active { background: #14213d !important; color: #fff !important; }
+main > section:not(.nl-hero) { min-height: 70vh; }
+@media (max-width: 1000px) {
+  .header__inner { height: auto; padding: 10px 0; flex-wrap: wrap; }
+  .nav { order: 3; width: 100%; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 6px; }
+  .nav a { white-space: nowrap; }
+}
+

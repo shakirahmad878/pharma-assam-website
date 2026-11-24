@@ -35,25 +35,31 @@ export default function AppWebsite() {
   const [selectedPublicCategory, setSelectedPublicCategory] = useState<ProductCategory | 'All Products'>('All Products');
   const [isPublicSidebarOpen, setIsPublicSidebarOpen] = useState<boolean>(false);
 
-  const handleNavigatePublic = (sectionId: string) => {
-    setActivePublicSection(sectionId);
-    if (sectionId === 'home') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-      const el = document.getElementById(sectionId);
-      if (el) {
-        const offset = 80;
-        const bodyRect = document.body.getBoundingClientRect().top;
-        const elementRect = el.getBoundingClientRect().top;
-        const elementPosition = elementRect - bodyRect;
-        const offsetPosition = elementPosition - offset;
+  useEffect(() => {
+    const TABS = ['home', 'partners', 'flagship', 'precision', 'products', 'about', 'contact', 'flipbook'];
 
-        window.scrollTo({
-          top: offsetPosition,
-          behavior: 'smooth'
-        });
-      }
+    const route = () => {
+      let id = window.location.hash.slice(1);
+      if (id === 'catalog') id = 'products';
+      if (!TABS.includes(id)) id = 'home';
+      setActivePublicSection(id);
+      window.scrollTo(0, 0);
+    };
+
+    window.addEventListener('hashchange', route);
+    if (window.location.hash) {
+      route();
     }
+
+    return () => window.removeEventListener('hashchange', route);
+  }, []);
+
+  const handleNavigatePublic = (sectionId: string) => {
+    let target = sectionId;
+    if (target === 'catalog') target = 'products';
+    setActivePublicSection(target);
+    window.location.hash = target;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleOpenEnquiryModal = (productName?: string) => {
@@ -78,73 +84,79 @@ export default function AppWebsite() {
         onOpenSidebar={() => setIsPublicSidebarOpen(true)}
       />
 
-      {/* Main Content Sections */}
+      {/* Main Content Sections with Tab Router */}
       <main className="flex-grow">
         
-        {/* 3. Official NLCL India-Themed Hero with 24-Petal Ashoka Chakra Mandala */}
-        <section id="home">
+        {/* Tab: Home */}
+        <section id="home" hidden={activePublicSection !== 'home'}>
           <PMHeroIndia
             onNavigate={handleNavigatePublic}
             onOpenEnquiry={handleOpenEnquiryModal}
           />
         </section>
 
-        {/* 3.5. How NLCL Partners With You & Flagship Formulations Showcase */}
+        {/* Tab: Partners & Flagship Formulations Showcase */}
         <PMPartnersAndFlagship
+          activeSection={activePublicSection}
           onNavigate={handleNavigatePublic}
           onOpenEnquiry={handleOpenEnquiryModal}
         />
 
-        {/* 4. 21st.dev Squeeze Carousel Flagship Portfolio Showcase */}
-        <PMSqueezeShowcase
-          onSelectProduct={(product) => setSelectedPublicProduct(product)}
-          onOpenEnquiry={handleOpenEnquiryModal}
-          onNavigate={handleNavigatePublic}
-        />
+        {/* Tab: Flagship Squeeze Carousel (Visible on Flagship tab) */}
+        <div hidden={activePublicSection !== 'flagship'}>
+          <PMSqueezeShowcase
+            onSelectProduct={(product) => setSelectedPublicProduct(product)}
+            onOpenEnquiry={handleOpenEnquiryModal}
+            onNavigate={handleNavigatePublic}
+          />
+        </div>
 
-        {/* 4.5. NLCL Precision Dial Section (Six Stages. One Standard of Care.) */}
+        {/* Tab: Quality Architecture (Precision Dial) */}
         <PMPrecisionDial
+          hidden={activePublicSection !== 'precision'}
           onNavigate={handleNavigatePublic}
           onOpenEnquiry={handleOpenEnquiryModal}
         />
 
-        {/* 4.8. Product Categories Showcase */}
-        <PMCategoryShowcase
-          onSelectCategory={(cat) => setSelectedPublicCategory(cat)}
-          onNavigate={handleNavigatePublic}
-        />
+        {/* Tab: Product Catalog Directory */}
+        <div hidden={activePublicSection !== 'products'}>
+          <PMCategoryShowcase
+            onSelectCategory={(cat) => setSelectedPublicCategory(cat)}
+            onNavigate={handleNavigatePublic}
+          />
+          <PMProductCatalog
+            selectedCategory={selectedPublicCategory}
+            onSelectCategory={(cat) => setSelectedPublicCategory(cat)}
+            onSelectProduct={(product) => setSelectedPublicProduct(product)}
+            onOpenEnquiry={handleOpenEnquiryModal}
+          />
+          <PMInnovation3D
+            onOpenEnquiry={handleOpenEnquiryModal}
+            onNavigate={handleNavigatePublic}
+          />
+        </div>
 
-        {/* 5. Full Product Catalog Directory */}
-        <PMProductCatalog
-          selectedCategory={selectedPublicCategory}
-          onSelectCategory={(cat) => setSelectedPublicCategory(cat)}
-          onSelectProduct={(product) => setSelectedPublicProduct(product)}
-          onOpenEnquiry={handleOpenEnquiryModal}
-        />
+        {/* Tab: About Us & Factsheet */}
+        <div hidden={activePublicSection !== 'about'}>
+          <PMAboutSection
+            onOpenEnquiry={() => handleOpenEnquiryModal()}
+            onNavigate={handleNavigatePublic}
+          />
+        </div>
 
-        {/* 6. 3D Drug Delivery Platforms & Formulation Science */}
-        <PMInnovation3D
-          onOpenEnquiry={handleOpenEnquiryModal}
-          onNavigate={handleNavigatePublic}
-        />
+        {/* Tab: Clinical Flipbook (Visual Aid) */}
+        <div hidden={activePublicSection !== 'flipbook'}>
+          <PMFlipbook
+            onOpenEnquiry={handleOpenEnquiryModal}
+            onSelectProduct={(product) => setSelectedPublicProduct(product)}
+          />
+        </div>
 
-        {/* 7. Official About Us & Factsheet Section */}
-        <PMAboutSection
-          onOpenEnquiry={() => handleOpenEnquiryModal()}
-          onNavigate={handleNavigatePublic}
-        />
-
-        {/* 8. Clinical Flipbook / Visual Aid Viewer */}
-        <PMFlipbook
-          onOpenEnquiry={handleOpenEnquiryModal}
-          onSelectProduct={(product) => setSelectedPublicProduct(product)}
-        />
-
-        {/* 8. Quick Requirement / Direct Enquiry Form */}
-        <PMEnquiryForm defaultProduct={enquiryProductName} />
-
-        {/* 9. Official Contact Details, Registered Address & Map */}
-        <PMContactSection />
+        {/* Tab: Contact & Direct Enquiry */}
+        <div hidden={activePublicSection !== 'contact'}>
+          <PMContactSection />
+          <PMEnquiryForm defaultProduct={enquiryProductName} />
+        </div>
 
       </main>
 

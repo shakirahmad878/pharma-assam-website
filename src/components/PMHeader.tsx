@@ -115,6 +115,45 @@ export const PMHeader: React.FC<PMHeaderProps> = ({
               <span>Home</span>
             </button>
 
+            {/* Partners */}
+            <button
+              onClick={() => handleNavClick('partners')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-1 cursor-pointer whitespace-nowrap ${
+                activeSection === 'partners'
+                  ? 'bg-white text-[#10243A] shadow-xs border border-slate-200/80 font-black'
+                  : 'text-slate-600 hover:text-[#10243A] hover:bg-white/60'
+              }`}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full transition-opacity ${activeSection === 'partners' ? 'bg-[#18A6A6] opacity-100' : 'opacity-0'}`}></span>
+              <span>Partners</span>
+            </button>
+
+            {/* Flagship */}
+            <button
+              onClick={() => handleNavClick('flagship')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-1 cursor-pointer whitespace-nowrap ${
+                activeSection === 'flagship'
+                  ? 'bg-white text-[#10243A] shadow-xs border border-slate-200/80 font-black'
+                  : 'text-slate-600 hover:text-[#10243A] hover:bg-white/60'
+              }`}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full transition-opacity ${activeSection === 'flagship' ? 'bg-[#18A6A6] opacity-100' : 'opacity-0'}`}></span>
+              <span>Flagship</span>
+            </button>
+
+            {/* Quality Standard */}
+            <button
+              onClick={() => handleNavClick('precision')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-1 cursor-pointer whitespace-nowrap ${
+                activeSection === 'precision'
+                  ? 'bg-white text-[#10243A] shadow-xs border border-slate-200/80 font-black'
+                  : 'text-slate-600 hover:text-[#10243A] hover:bg-white/60'
+              }`}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full transition-opacity ${activeSection === 'precision' ? 'bg-[#18A6A6] opacity-100' : 'opacity-0'}`}></span>
+              <span>Quality Protocol</span>
+            </button>
+
             {/* About Us */}
             <button
               onClick={() => handleNavClick('about')}

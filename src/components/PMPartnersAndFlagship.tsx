@@ -3,11 +3,13 @@ import React, { useState, useRef, useEffect } from 'react';
 interface PMPartnersAndFlagshipProps {
   onNavigate: (sectionId: string) => void;
   onOpenEnquiry: (context?: string) => void;
+  activeSection?: string;
 }
 
 export const PMPartnersAndFlagship: React.FC<PMPartnersAndFlagshipProps> = ({
   onNavigate,
-  onOpenEnquiry
+  onOpenEnquiry,
+  activeSection
 }) => {
   const PRODUCTS = [
     {
@@ -108,6 +110,18 @@ export const PMPartnersAndFlagship: React.FC<PMPartnersAndFlagshipProps> = ({
 
   const n = PRODUCTS.length;
   const currentProduct = PRODUCTS[cur];
+
+  useEffect(() => {
+    if (activeSection === 'flagship' && railRef.current) {
+      const tile = railRef.current.children[cur] as HTMLElement;
+      if (tile) {
+        railRef.current.scrollTo({
+          left: tile.offsetLeft - (railRef.current.clientWidth - tile.offsetWidth) / 2,
+          behavior: 'smooth'
+        });
+      }
+    }
+  }, [activeSection, cur]);
 
   const handleSelectProduct = (i: number) => {
     const nextIndex = (i + n) % n;
@@ -414,7 +428,7 @@ export const PMPartnersAndFlagship: React.FC<PMPartnersAndFlagshipProps> = ({
       `}</style>
 
       {/* ======================= PARTNERS ======================= */}
-      <section className="pp" id="partners" aria-labelledby="pp-title">
+      <section className="pp" id="partners" aria-labelledby="pp-title" hidden={activeSection ? activeSection !== 'partners' : false}>
         <div className="sec-head">
           <span className="sec-badge">Work with NLCL</span>
           <h2 id="pp-title">How NLCL <span>partners with you</span></h2>
@@ -528,7 +542,7 @@ export const PMPartnersAndFlagship: React.FC<PMPartnersAndFlagshipProps> = ({
       </section>
 
       {/* ======================= FLAGSHIP PRODUCTS ======================= */}
-      <section className="fp" id="flagship" aria-labelledby="fp-title">
+      <section className="fp" id="flagship" aria-labelledby="fp-title" hidden={activeSection ? activeSection !== 'flagship' : false}>
         <div className="sec-head">
           <span className="sec-badge">Our portfolio</span>
           <h2 id="fp-title">Flagship formulations <span>&amp; delivery systems</span></h2>

@@ -101,6 +101,39 @@ export const PMSidebarNav: React.FC<PMSidebarNavProps> = ({
           </button>
 
           <button
+            onClick={() => handleNav('partners')}
+            className={`w-full text-left py-2 px-3 rounded-lg flex items-center justify-between transition-colors cursor-pointer ${
+              activeSection === 'partners'
+                ? 'bg-[#F1F5F9] text-[#137F83] font-bold'
+                : 'text-slate-700 hover:bg-slate-100/80 font-medium'
+            }`}
+          >
+            <span>Partners & Pathways</span>
+          </button>
+
+          <button
+            onClick={() => handleNav('flagship')}
+            className={`w-full text-left py-2 px-3 rounded-lg flex items-center justify-between transition-colors cursor-pointer ${
+              activeSection === 'flagship'
+                ? 'bg-[#F1F5F9] text-[#137F83] font-bold'
+                : 'text-slate-700 hover:bg-slate-100/80 font-medium'
+            }`}
+          >
+            <span>Flagship Formulations</span>
+          </button>
+
+          <button
+            onClick={() => handleNav('precision')}
+            className={`w-full text-left py-2 px-3 rounded-lg flex items-center justify-between transition-colors cursor-pointer ${
+              activeSection === 'precision'
+                ? 'bg-[#F1F5F9] text-[#137F83] font-bold'
+                : 'text-slate-700 hover:bg-slate-100/80 font-medium'
+            }`}
+          >
+            <span>Quality Protocol (QA)</span>
+          </button>
+
+          <button
             onClick={() => handleNav('about')}
             className={`w-full text-left py-2 px-3 rounded-lg flex items-center justify-between transition-colors cursor-pointer ${
               activeSection === 'about'
