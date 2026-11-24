@@ -453,12 +453,10 @@ export function SqueezeCarousel({
                                 {slide.overlay && (
                                     <span
                                         aria-hidden="true"
-                                        className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end p-4 pt-16 @lg:p-6 @lg:pt-20"
+                                        className="pointer-events-none absolute inset-0 flex items-start justify-start p-4 z-20"
                                         style={{
                                             opacity: front ? 1 : 0,
                                             transition: `opacity var(--sq-ms) var(--sq-ease)`,
-                                            backgroundImage:
-                                                "linear-gradient(to top, rgb(0 0 0 / 0.75), transparent)",
                                         }}
                                     >
                                         {slide.overlay}
@@ -524,13 +522,24 @@ function Picture({ slide }: { slide: SqueezeSlide }) {
 
     if (slide.image) {
         return (
-            <img
-                src={slide.image}
-                alt={slide.imageAlt ?? ""}
-                draggable={false}
-                className="absolute inset-y-0 left-1/2 h-full max-w-none -translate-x-1/2 object-cover"
+            <div 
+                className="absolute inset-y-0 left-1/2 -translate-x-1/2 h-full flex flex-col items-center justify-center p-6 bg-gradient-to-b from-[#F8FAFC] via-white to-[#EEF4F8] select-none"
                 style={box}
-            />
+            >
+                {/* Ambient Soft Studio Glow */}
+                <div className="absolute w-48 h-48 rounded-full bg-[#18A6A6]/8 blur-2xl pointer-events-none" />
+
+                {/* Real Product Packshot (100% un-cropped, authentic pack image) */}
+                <img
+                    src={slide.image}
+                    alt={slide.imageAlt ?? ""}
+                    draggable={false}
+                    className="max-h-[80%] max-w-[85%] object-contain filter drop-shadow-[0_14px_28px_rgba(16,36,58,0.22)] transition-transform duration-300 relative z-10"
+                />
+
+                {/* 3D Pedestal Base Shadow */}
+                <div className="w-36 h-2 rounded-[100%] bg-slate-900/15 blur-xs mt-1.5 pointer-events-none relative z-0" />
+            </div>
         );
     }
 

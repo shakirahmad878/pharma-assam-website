@@ -18,13 +18,13 @@ export const PMSqueezeShowcase: React.FC<PMSqueezeShowcaseProps> = ({
   // Helper to find full product by ID
   const getProduct = (id: string) => PRODUCTS.find(p => p.id === id);
 
-  // A sleek wordmark badge for the corner of the open panel
+  // A sleek floating clinical badge for the corner of the open panel
   const renderBadge = (category: string, code: string) => (
-    <div className="flex flex-col gap-1">
-      <span className="text-[10px] font-mono tracking-wider uppercase text-cyan-300 font-bold bg-slate-900/80 backdrop-blur-md px-2 py-0.5 rounded border border-cyan-400/30 w-max">
+    <div className="flex flex-col gap-1 items-start">
+      <span className="text-[10px] font-mono tracking-wider uppercase text-[#137F83] font-bold bg-white/95 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-teal-200/80 shadow-2xs">
         {category}
       </span>
-      <span className="text-base font-bold text-white tracking-tight drop-shadow-md">
+      <span className="text-sm font-black text-[#10243A] tracking-tight bg-white/90 backdrop-blur-xs px-2.5 py-0.5 rounded-md shadow-2xs border border-slate-200/60">
         {code}
       </span>
     </div>
@@ -37,8 +37,8 @@ export const PMSqueezeShowcase: React.FC<PMSqueezeShowcaseProps> = ({
       description: 'Lycopene 10% (2000 IU) + L-Lysine 200mg + Zinc + B-Complex. Defends against oxidative cellular damage and accelerates tissue healing without glycemic impact.',
       action: 'View Formulation Monograph',
       overlay: renderBadge('Nutritional Support', 'Lyco-KR Syrup (200ml)'),
-      image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1200&q=80',
-      imageAlt: 'Lyco-KR Pharmaceutical Laboratory Monograph',
+      image: './images/products/lyco-kr-syrup.jpg',
+      imageAlt: 'Lyco-KR Syrup 200ml Official Packshot',
       onAction: () => {
         const p = getProduct('lyco-kr-syrup');
         if (p) onSelectProduct(p);
@@ -50,8 +50,8 @@ export const PMSqueezeShowcase: React.FC<PMSqueezeShowcaseProps> = ({
       description: 'Ultra-pure omega-3 marine fatty acids in bioavailable triglyceride form. Reduces arterial plaque formation, lowers serum triglycerides, and supports cognitive neuro-circuits.',
       action: 'Explore Lipid Profile',
       overlay: renderBadge('Omega-3 Essentials', 'Life-KR 1300mg Softgels'),
-      image: 'https://images.unsplash.com/photo-1576086213369-97a306d36557?auto=format&fit=crop&w=1200&q=80',
-      imageAlt: 'Molecular distillation omega-3 capsule testing',
+      image: './images/products/life-kr-softgel.jpg',
+      imageAlt: 'Life-KR 1300mg Softgel Capsules Official Packshot',
       onAction: () => {
         const p = getProduct('life-kr-softgel');
         if (p) onSelectProduct(p);
@@ -63,8 +63,8 @@ export const PMSqueezeShowcase: React.FC<PMSqueezeShowcaseProps> = ({
       description: 'L-Arginine 3g + DHA + Proanthocyanidin + Folic Acid + Zinc in 10x5g sachets. Clinically formulated for gestational vascular health and fetal growth restriction.',
       action: 'Inspect Clinical Specs',
       overlay: renderBadge('Nutritional Support', 'NL-Nine Granules (10x5g)'),
-      image: 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=1200&q=80',
-      imageAlt: 'Pharmaceutical chromatography and amino acid crystallization',
+      image: './images/products/nl-nine-granules.jpg',
+      imageAlt: 'NL-Nine Granules 10x5g Sachets Official Packshot',
       onAction: () => {
         const p = getProduct('nl-nine-granules');
         if (p) onSelectProduct(p);
@@ -76,8 +76,8 @@ export const PMSqueezeShowcase: React.FC<PMSqueezeShowcaseProps> = ({
       description: 'Sodium Alginate + Potassium Bicarbonate. Forms an inert physical raft floating on gastric contents within seconds, preventing reflux of acid and pepsin into the esophagus.',
       action: 'View Raft Kinetics',
       overlay: renderBadge('Digestive Wellness', 'Lifekr-Raft Suspension (200ml)'),
-      image: 'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&w=1200&q=80',
-      imageAlt: 'Gastroenterology drug delivery polymer matrix research',
+      image: './images/products/lifekr-raft-suspension.jpg',
+      imageAlt: 'Lifekr-Raft Oral Suspension 200ml Official Packshot',
       onAction: () => {
         const p = getProduct('lifekr-raft-suspension');
         if (p) onSelectProduct(p);
@@ -89,8 +89,8 @@ export const PMSqueezeShowcase: React.FC<PMSqueezeShowcaseProps> = ({
       description: 'Pure bio-active intracellular antioxidant promoting Phase-II hepatic detoxification, radical neutralization, and systemic cellular rejuvenation.',
       action: 'Inquire Batch MOQ',
       overlay: renderBadge('Skin Radiance & Energy', 'Glutavia-500 Tablets (30s)'),
-      image: 'https://images.unsplash.com/photo-1585435557343-3b092031a831?auto=format&fit=crop&w=1200&q=80',
-      imageAlt: 'Tableting and sterile cleanroom encapsulation',
+      image: './images/products/glutavia-500.jpg',
+      imageAlt: 'Glutavia-500 Tablets Official Packshot',
       onAction: () => {
         const p = getProduct('glutavia-500');
         if (p) onSelectProduct(p);
@@ -102,8 +102,8 @@ export const PMSqueezeShowcase: React.FC<PMSqueezeShowcaseProps> = ({
       description: 'Esomeprazole 40mg (Delayed Release) + Domperidone 30mg (Sustained Release). Sustained 24-hour intragastric pH control coupled with synchronized prokinetic motility.',
       action: 'Explore Monograph',
       overlay: renderBadge('Digestive Wellness', 'Esomax D40 Capsules (10x15)'),
-      image: 'https://images.unsplash.com/photo-1550572017-ed2109406085?auto=format&fit=crop&w=1200&q=80',
-      imageAlt: 'Enteric coated micro-pellet dosage forms',
+      image: './images/products/esomax-d40.jpg',
+      imageAlt: 'Esomax D40 Capsules 10x15 Alu-Alu Official Packshot',
       onAction: () => {
         const p = getProduct('esomax-d40');
         if (p) onSelectProduct(p);
@@ -115,8 +115,8 @@ export const PMSqueezeShowcase: React.FC<PMSqueezeShowcaseProps> = ({
       description: 'Ubiquinone + Myo-Inositol + L-Carnitine + Folic Acid in 225ml. Stimulates cellular ATP synthesis in high-demand cardiac and ovarian tissues while improving insulin receptor signaling.',
       action: 'Request Institutional Quote',
       overlay: renderBadge('Nutritional Support', 'Myo-Q10 Syrup (225ml)'),
-      image: 'https://images.unsplash.com/photo-1512069772995-ec65ed45afd6?auto=format&fit=crop&w=1200&q=80',
-      imageAlt: 'Mitochondrial biochemistry and formulation engineering',
+      image: './images/products/myo-q10-syrup.jpg',
+      imageAlt: 'Myo-Q10 Syrup 225ml Official Packshot',
       onAction: () => {
         const p = getProduct('myo-q10-syrup');
         if (p) onSelectProduct(p);
