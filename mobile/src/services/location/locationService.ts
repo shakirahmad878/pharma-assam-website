@@ -64,7 +64,7 @@ export class LocationService {
         return null;
       }
 
-      const timeoutMs = options?.timeoutMs || 8000;
+      const timeoutMs = options?.timeoutMs || 15000;
 
       // Wrap getCurrentPositionAsync with a timeout
       const getHighAccuracyPos = Location.getCurrentPositionAsync({
@@ -77,20 +77,22 @@ export class LocationService {
 
       if (!loc) {
         console.warn(`[LocationService] High accuracy position timed out after ${timeoutMs}ms, attempting fallback...`);
-        // Fallback 1: Last known position within recent 2 minutes
+        // Fallback 1: Last known position within recent 10 minutes (useful indoors)
         try {
-          loc = await (Location as any).getLastKnownPositionAsync({ maxAge: 120000 });
+          loc = await (Location as any).getLastKnownPositionAsync({ maxAge: 600000 });
         } catch (e) {
           console.warn('[LocationService] getLastKnownPositionAsync failed:', e);
         }
 
-        // Fallback 2: Balanced accuracy
+        // Fallback 2: Balanced accuracy with 6-second timeout
         if (!loc) {
           try {
             console.log('[LocationService] Attempting Balanced accuracy fallback...');
-            loc = await Location.getCurrentPositionAsync({
+            const balancedPromise = Location.getCurrentPositionAsync({
               accuracy: Location.Accuracy.Balanced,
             });
+            const balancedTimeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 6000));
+            loc = await Promise.race([balancedPromise, balancedTimeout]);
           } catch (e) {
             console.warn('[LocationService] Balanced accuracy fallback failed:', e);
           }

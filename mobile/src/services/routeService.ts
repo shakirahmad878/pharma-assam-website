@@ -212,9 +212,9 @@ export class RouteService {
 
     const req = requests[idx];
     req.status = approve ? 'APPROVED' : 'REJECTED';
-    req.reviewedBy = 'Rajesh Sharma (RBM - East & Assam Zone)';
+    req.reviewedBy = 'Bodrud Jaman Sadial (RSM - Barak Valley)';
     req.reviewedTimestamp = new Date().toISOString();
-    req.reviewComment = reviewComment || (approve ? 'MTP deviation approved by RBM.' : 'Deviation request rejected.');
+    req.reviewComment = reviewComment || (approve ? 'MTP deviation approved by RSM.' : 'Deviation request rejected.');
 
     if (approve) {
       await this.setActiveRoute(req.requestedRouteId);

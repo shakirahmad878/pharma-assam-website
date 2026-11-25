@@ -284,11 +284,11 @@ export const RoutePlanScreen: React.FC<RoutePlanScreenProps> = ({ onBack, onOpen
             [
               { text: 'Cancel', style: 'cancel' },
               {
-                text: 'Submit to RBM',
+                text: 'Submit to RSM',
                 onPress: (reason) => {
                   Alert.alert(
                     'Deviation Requested',
-                    `Route deviation for ${selectedDayNumber} ${currentMonthName} sent to RBM Rajesh Sharma for approval.`
+                    `Route deviation for ${selectedDayNumber} ${currentMonthName} sent to RSM Bodrud Jaman Sadial for approval.`
                   );
                 },
               },
@@ -296,7 +296,7 @@ export const RoutePlanScreen: React.FC<RoutePlanScreenProps> = ({ onBack, onOpen
           )
         : Alert.alert(
             'Deviation Requested',
-            `Route deviation for ${selectedDayNumber} ${currentMonthName} submitted to RBM Rajesh Sharma.`
+            `Route deviation for ${selectedDayNumber} ${currentMonthName} submitted to RSM Bodrud Jaman Sadial.`
           );
     } else if (existingAction === 'VISIT_FIRM') {
       Alert.alert('Add Visit Firm', `Added wholesale firm call in ${existingCityName} to your itinerary.`);
@@ -369,7 +369,7 @@ export const RoutePlanScreen: React.FC<RoutePlanScreenProps> = ({ onBack, onOpen
       await RouteService.submitMTPForApproval(mtp);
       Alert.alert(
         'Tour Plan Submitted ✅',
-        `Tour plan for ${currentMonthName} 2026 submitted to RBM (Rajesh Sharma) & ABM (G Solanki) for approval.`
+        `Tour plan for ${currentMonthName} 2026 submitted to RSM (Bodrud Jaman Sadial) & Management (Samsuj Sadiol) for approval.`
       );
     }
   };

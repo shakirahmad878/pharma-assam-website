@@ -110,6 +110,9 @@ export type AccompaniedPerson =
   | 'ABM_G_SOLANKI'
   | 'RBM_RAJESH_SHARMA'
   | 'COLLEAGUE_AMIT_PAUL'
+  | 'RSM_BODRUD_SADIAL'
+  | 'MGMT_SAMSUJ_SADIOL'
+  | 'CO_MR_SATYAM_SHIL'
   | 'PRODUCT_SPECIALIST';
 
 export interface MTPDayPlan {

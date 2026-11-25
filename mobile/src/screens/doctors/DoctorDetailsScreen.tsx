@@ -86,12 +86,12 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
     matchedClinic?: any;
   }>({
     status: 'NOT_STARTED',
-    distanceMeters: 0,
+    distanceMeters: -1,
     isWithinRadius: false,
     canStartVisit: false,
-    statusText: 'Checking satellite distance to registered chambers...',
+    statusText: 'Acquiring GPS satellite fix to registered chambers...',
   });
-  const [checkingLocation, setCheckingLocation] = useState(false);
+  const [checkingLocation, setCheckingLocation] = useState(true);
 
   // Multi-Chamber State
   const [addClinicModalVisible, setAddClinicModalVisible] = useState(false);
@@ -783,7 +783,7 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
                 ? "📡 Acquiring GPS Satellite..."
                 : geofenceEval.canStartVisit
                 ? `✓ Start Visit at ${geofenceEval.matchedClinicName || doctor.clinicName}`
-                : geofenceEval.distanceMeters < 0
+                : (geofenceEval.status === 'NOT_STARTED' || geofenceEval.distanceMeters < 0 || (geofenceEval.distanceMeters === 0 && !geofenceEval.isWithinRadius))
                 ? "📡 Acquiring GPS... (Tap to Retry)"
                 : !geofenceEval.isWithinRadius
                 ? `🚫 Out of Range (${Math.round(geofenceEval.distanceMeters)}m Away)`
@@ -796,7 +796,7 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
               }
               if (geofenceEval.canStartVisit) {
                 onStartVisit(doctor, true, geofenceEval.distanceMeters, geofenceEval.matchedClinic);
-              } else if (geofenceEval.distanceMeters < 0) {
+              } else if (geofenceEval.status === 'NOT_STARTED' || geofenceEval.distanceMeters < 0 || (geofenceEval.distanceMeters === 0 && !geofenceEval.isWithinRadius)) {
                 checkGeofence(doctor);
               } else if (!geofenceEval.isWithinRadius) {
                 Alert.alert(

@@ -16,8 +16,8 @@ import { Badge } from '../../components/common/Badge';
 import { VisitService } from '../../services/visitService';
 import { DoctorService } from '../../services/doctorService';
 import { AuthService } from '../../services/authService';
-import { MOCK_PRODUCTS, CURRENT_USER } from '../../constants/mockData';
-import { Doctor, AccompaniedPerson, VisitRecord, VisitObjective } from '../../types';
+import { OrderService } from '../../services/orderService';
+import { Doctor, AccompaniedPerson, VisitRecord, VisitObjective, Product } from '../../types';
 
 interface VisitExecutionScreenProps {
   doctor?: Doctor;
@@ -91,6 +91,15 @@ export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
   // Visit Timer
   const [durationMinutes, setDurationMinutes] = useState(8);
   const [submitting, setSubmitting] = useState(false);
+  const [productsList, setProductsList] = useState<Product[]>([]);
+
+  useEffect(() => {
+    OrderService.getProducts().then(prods => {
+      if (prods && prods.length > 0) {
+        setProductsList(prods);
+      }
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -138,10 +147,13 @@ export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
 
   const getAccompaniedName = (p: AccompaniedPerson) => {
     switch (p) {
+      case 'RSM_BODRUD_SADIAL':
       case 'RBM':
       case 'RBM_RAJESH_SHARMA': return 'Bodrud Jaman Sadial (RSM)';
+      case 'CO_MR_SATYAM_SHIL':
       case 'CO_MR':
       case 'COLLEAGUE_AMIT_PAUL': return 'Satyam Shil (Co-MR)';
+      case 'MGMT_SAMSUJ_SADIOL':
       case 'ABM':
       case 'ABM_G_SOLANKI': return 'Samsuj Sadiol (Management / Super Admin)';
       case 'PRODUCT_SPECIALIST':
@@ -178,7 +190,7 @@ export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
 
     setSubmitting(true);
 
-    const detailedProducts = MOCK_PRODUCTS.filter(p => selectedProductIds.includes(p.id));
+    const detailedProducts = productsList.filter(p => selectedProductIds.includes(p.id));
     const reactions = detailedProducts.map(p => ({
       productId: p.id,
       productName: p.brandName,
@@ -188,7 +200,7 @@ export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
     const samples = Object.keys(sampleQuantities)
       .filter(id => (sampleQuantities[id] || 0) > 0)
       .map(id => {
-        const prod = MOCK_PRODUCTS.find(p => p.id === id);
+        const prod = productsList.find(p => p.id === id);
         return {
           productId: id,
           productName: prod ? prod.brandName : id,
@@ -197,7 +209,12 @@ export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
         };
       });
 
-    const user = AuthService.getCurrentUser() || CURRENT_USER;
+    const user = AuthService.getCurrentUser() || {
+      id: 'usr-nlcl-0004',
+      name: 'Pranjal Malakar',
+      employeeCode: 'NLCL-0004',
+      role: 'MR',
+    };
 
     await VisitService.recordVisit({
       customerType,
@@ -313,9 +330,9 @@ export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
           <View style={styles.pillsRow}>
             {[
               { id: 'SELF_SOLO', label: 'Solo Working' },
-              { id: 'RBM_RAJESH_SHARMA', label: 'RSM (Bodrud Sadial)' },
-              { id: 'COLLEAGUE_AMIT_PAUL', label: 'Co-MR (Satyam Shil)' },
-              { id: 'ABM_G_SOLANKI', label: 'Management (Samsuj Sadiol)' },
+              { id: 'RSM_BODRUD_SADIAL', label: 'RSM (Bodrud Sadial)' },
+              { id: 'CO_MR_SATYAM_SHIL', label: 'Co-MR (Satyam Shil)' },
+              { id: 'MGMT_SAMSUJ_SADIOL', label: 'Management (Samsuj Sadiol)' },
             ].map(p => {
               const active = accompaniedBy === p.id;
               return (
@@ -336,7 +353,7 @@ export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
           <Text style={styles.sectionTitle}>Product Detailing & Reactions</Text>
           <Text style={styles.sectionSubtitle}>Tap products presented during this call</Text>
 
-          {MOCK_PRODUCTS.slice(0, 6).map(prod => {
+          {productsList.map(prod => {
             const isSelected = selectedProductIds.includes(prod.id);
             const currentReaction = productReactions[prod.id] || 'HIGH_INTEREST';
 
@@ -383,7 +400,7 @@ export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
           <Text style={styles.sectionTitle}>Physician Samples Handover</Text>
           <Text style={styles.sectionSubtitle}>Track sample quantities given</Text>
 
-          {MOCK_PRODUCTS.slice(0, 4).map(prod => {
+          {productsList.slice(0, 6).map(prod => {
             const qty = sampleQuantities[prod.id] || 0;
             return (
               <View key={prod.id} style={styles.sampleRow}>

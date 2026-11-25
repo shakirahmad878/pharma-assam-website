@@ -1,7 +1,6 @@
 import { POBOrder, CartItem, Product } from '../types';
 import { StorageService, STORAGE_KEYS } from './storageService';
 import { SyncService } from './sync/syncService';
-import { PRODUCTS_MOCK, CURRENT_USER } from '../constants/mockData';
 import { AuthService } from './authService';
 import { SupabaseDbService } from './supabase/supabaseDbService';
 
@@ -20,7 +19,7 @@ export class OrderService {
     }
     const cached = await StorageService.getItem<Product[]>(STORAGE_KEYS.PRODUCTS_CACHE, []);
     if (cached && cached.length > 0) return cached;
-    return PRODUCTS_MOCK;
+    return [];
   }
 
   public static async getOrders(): Promise<POBOrder[]> {
