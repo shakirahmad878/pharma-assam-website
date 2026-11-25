@@ -1172,6 +1172,7 @@ export class SupabaseDbService {
 
     try {
       const visitDate = v.date || (v.checkInTimestamp ? v.checkInTimestamp.split('T')[0] : new Date().toISOString().split('T')[0]);
+      const repDistrict = (v as any).district || (v as any).territory || (v.chemistId ? 'Karimganj' : 'Cachar');
       await fetch(`${SUPABASE_CONFIG.url}/rest/v1/visits`, {
         method: 'POST',
         headers: { ...this.getHeaders(), Prefer: 'resolution=merge-duplicates' },
@@ -1184,14 +1185,15 @@ export class SupabaseDbService {
           chemist_name: v.chemistName || null,
           employee_id: v.employeeId || 'usr-nlcl-0004',
           employee_name: v.employeeName || 'Pranjal Malakar',
-          district: 'Cachar',
+          district: repDistrict,
           visit_date: visitDate,
           timestamp: v.checkInTimestamp || new Date().toISOString(),
           status: v.status || 'COMPLETED',
           latitude: v.checkInLatitude,
           longitude: v.checkInLongitude,
-          is_geofence_verified: v.isGeofenceVerified ?? true,
-          distance_meters: v.checkInDistanceMeters ?? 0,
+          // Server trigger trg_verify_visit_geofence automatically computes and enforces true geofence in PostgreSQL
+          is_geofence_verified: v.isGeofenceVerified ?? false,
+          distance_meters: v.checkInDistanceMeters ?? -1,
           notes: v.doctorFeedback || v.discussionNotes || '',
           products_discussed: v.productsDiscussed || [],
           samples_given: v.samplesDistributed || [],
@@ -2045,7 +2047,7 @@ export class SupabaseDbService {
             route_type: plan.routeType || 'HQ',
             target_doctor_calls: 10,
             target_chemist_calls: 4,
-            status: 'APPROVED',
+            status: (plan as any).status || 'PENDING',
             type: plan.type || 'TOUR',
             notes: plan.notes || null,
             updated_at: new Date().toISOString(),

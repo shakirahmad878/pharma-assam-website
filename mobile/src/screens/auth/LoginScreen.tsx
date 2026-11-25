@@ -102,13 +102,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
     const res = await AuthService.sendOtp(cleanDigits);
     setLoading(false);
 
-    if (res.success && res.otp) {
+    if (res.success) {
       setOtpSent(true);
-      setGeneratedOtpHint(res.otp);
-      setEnteredOtp(res.otp);
+      setGeneratedOtpHint('');
+      setEnteredOtp('');
       Alert.alert(
-        'Verification Code 📲',
-        `Verification OTP: ${res.otp}\n\nCode has been auto-filled for instant verification. Tap 'Verify OTP & Continue' to sign in.`,
+        'Verification Code Dispatched 📲',
+        res.message || 'OTP has been dispatched to your registered mobile number. Enter the 6-digit code to continue.',
         [{ text: 'OK' }]
       );
     } else {
@@ -526,13 +526,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
                     <Ionicons name="checkmark-circle" size={18} color="#16A34A" />
                     <View style={{ flex: 1 }}>
                       <Text style={styles.otpSentBannerText}>
-                        OTP sent to +91 {mobileNumber}
+                        OTP sent to +91 {mobileNumber.slice(-4).padStart(10, '•')}
                       </Text>
-                      {generatedOtpHint ? (
-                        <Text style={{ fontSize: 13, color: '#15803D', fontWeight: 'bold', marginTop: 2 }}>
-                          Code: {generatedOtpHint} (Auto-filled)
-                        </Text>
-                      ) : null}
                     </View>
                   </View>
 

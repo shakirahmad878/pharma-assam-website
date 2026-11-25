@@ -71,7 +71,23 @@ export class AuthService {
       return { success: false, error: 'Please enter a valid 10-digit registered Indian mobile number.' };
     }
 
-    // Generate 6-digit OTP
+    // Verify mobile number is registered in company roster
+    let employees: UserProfile[] = [];
+    try {
+      employees = await EmployeeService.getEmployees();
+    } catch {
+      employees = ALL_APP_USERS;
+    }
+
+    const isRegistered = employees.some(
+      u => (u.phone && (u.phone === cleanDigits || u.phone.includes(cleanDigits))) || u.employeeCode === cleanDigits
+    );
+
+    if (!isRegistered) {
+      return { success: false, error: 'Unauthorized: Mobile number is not registered with RepPulse. Contact HR.' };
+    }
+
+    // Generate 6-digit OTP stored strictly in server-side/service memory
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     this.sentOtpCache[cleanDigits] = {
       otp,
@@ -80,8 +96,7 @@ export class AuthService {
 
     return {
       success: true,
-      otp,
-      message: `OTP sent successfully to +91 ${cleanDigits}`,
+      message: `OTP has been dispatched to your registered number ending in ${cleanDigits.slice(-4)}.`,
     };
   }
 
@@ -121,10 +136,7 @@ export class AuthService {
     );
 
     if (!userTemplate) {
-      userTemplate = {
-        ...USER_PRANJAL_MR,
-        phone: cleanDigits,
-      };
+      return { success: false, error: 'Unauthorized: No active employee found for this phone number.' };
     }
 
     const customPin = await StorageService.getItem<string>(`@REPPULSE_USER_PIN_${userTemplate.employeeCode}`, '');
