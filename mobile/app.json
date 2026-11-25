@@ -3,7 +3,7 @@
     "name": "RepPulse",
     "slug": "reppulse",
     "owner": "shakirahmad878s-team",
-    "version": "1.7.10",
+    "version": "1.7.11",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -27,7 +27,7 @@
     },
     "android": {
       "package": "com.reppulse.sfa",
-      "versionCode": 16,
+      "versionCode": 17,
       "allowBackup": false,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",

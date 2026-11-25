@@ -138,11 +138,15 @@ export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
 
   const getAccompaniedName = (p: AccompaniedPerson) => {
     switch (p) {
-      case 'ABM_G_SOLANKI': return 'G Solanki (ABM)';
-      case 'RBM_RAJESH_SHARMA': return 'Rajesh Sharma (RBM)';
-      case 'COLLEAGUE_AMIT_PAUL': return 'Amit Paul (Co-MR)';
-      case 'PRODUCT_SPECIALIST': return 'Dr. Sengupta (Medical Advisor)';
-      default: return 'Self (Solo Working)';
+      case 'RBM':
+      case 'RBM_RAJESH_SHARMA': return 'Bodrud Jaman Sadial (RSM)';
+      case 'CO_MR':
+      case 'COLLEAGUE_AMIT_PAUL': return 'Satyam Shil (Co-MR)';
+      case 'ABM':
+      case 'ABM_G_SOLANKI': return 'Samsuj Sadiol (Management / Super Admin)';
+      case 'PRODUCT_SPECIALIST':
+      case 'MEDICAL_ADVISOR': return 'Shakir Ahmad Barbhuiya (Admin / HR)';
+      default: return 'Solo Working';
     }
   };
 
@@ -309,9 +313,9 @@ export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
           <View style={styles.pillsRow}>
             {[
               { id: 'SELF_SOLO', label: 'Solo Working' },
-              { id: 'ABM_G_SOLANKI', label: 'ABM (G. Solanki)' },
-              { id: 'RBM_RAJESH_SHARMA', label: 'RBM (R. Sharma)' },
-              { id: 'COLLEAGUE_AMIT_PAUL', label: 'Co-MR (A. Paul)' },
+              { id: 'RBM_RAJESH_SHARMA', label: 'RSM (Bodrud Sadial)' },
+              { id: 'COLLEAGUE_AMIT_PAUL', label: 'Co-MR (Satyam Shil)' },
+              { id: 'ABM_G_SOLANKI', label: 'Management (Samsuj Sadiol)' },
             ].map(p => {
               const active = accompaniedBy === p.id;
               return (

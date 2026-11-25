@@ -1,3 +1,4 @@
+import { SyncService } from './sync/syncService';
 import { Doctor } from '../types';
 import { StorageService, STORAGE_KEYS } from './storageService';
 import { SupabaseDbService, DoctorDeletionRequest } from './supabase/supabaseDbService';
@@ -66,13 +67,14 @@ export class DoctorService {
       phone: newDoc.phone || '+91 9435000000',
       monthlyVisitTarget: newDoc.monthlyVisitTarget || (newDoc.tier === 'A_PLUS' ? 12 : newDoc.tier === 'A' ? 8 : 4),
       completedVisitsThisMonth: 0,
-      todayVisitStatus: 'NOT_SCHEDULED',
+      todayVisitStatus: 'PENDING',
       isAssignedToMe: true,
       assignedToEmployeeId: newDoc.assignedToEmployeeId,
       assignedToEmployeeName: newDoc.assignedToEmployeeName,
       createdBy: newDoc.createdBy,
     };
     await SupabaseDbService.addDoctor(doc);
+    await SyncService.enqueue('DOCTOR', doc);
     return doc;
   }
 

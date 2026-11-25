@@ -1215,8 +1215,11 @@ export class SupabaseDbService {
     if (!this.isConnected()) return [];
     try {
       let url = `${SUPABASE_CONFIG.url}/rest/v1/visits?order=timestamp.desc&limit=${limit}`;
-      if (employeeId) {
-        url += `&employee_id=eq.${encodeURIComponent(employeeId)}`;
+      if (employeeId && employeeId !== 'ALL') {
+        const clean = employeeId.trim();
+        const codeClean = clean.startsWith('usr-') ? clean.replace('usr-', '').toUpperCase() : clean;
+        const idClean = clean.startsWith('usr-') ? clean : `usr-${clean.toLowerCase()}`;
+        url += `&or=(employee_id.eq.${encodeURIComponent(clean)},employee_id.eq.${encodeURIComponent(codeClean)},employee_id.eq.${encodeURIComponent(idClean)},employee_name.ilike.%25${encodeURIComponent(clean)}%25)`;
       }
       const res = await fetch(url, {
         method: 'GET',

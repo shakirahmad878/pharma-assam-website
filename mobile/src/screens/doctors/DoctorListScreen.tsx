@@ -268,6 +268,7 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
       latitude: capturedCoords.lat,
       longitude: capturedCoords.lng,
       monthlyVisitTarget: newDocTier === 'A_PLUS' ? 12 : newDocTier === 'A' ? 8 : 4,
+      todayVisitStatus: 'PENDING',
       assignedToEmployeeId: activeUserId,
       assignedToEmployeeName: activeUserName,
       createdBy: activeUserId,
@@ -275,7 +276,7 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
     });
 
     setAddModalVisible(false);
-    setSubTab('ALL');
+    setSubTab('TODAY');
     setSearchQuery(formattedName);
     await loadData();
 

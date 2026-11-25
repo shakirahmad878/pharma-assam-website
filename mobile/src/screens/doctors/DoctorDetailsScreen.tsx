@@ -203,10 +203,10 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
     } else {
       setGeofenceEval({
         status: 'LOCATION_ACCURACY_LOW',
-        distanceMeters: 0,
+        distanceMeters: -1,
         isWithinRadius: false,
         canStartVisit: false,
-        statusText: 'GPS fix unavailable. Please check location permissions.',
+        statusText: '📡 GPS Satellite Acquiring... Tap ↻ Recheck or step near a window.',
       });
     }
   };
@@ -779,8 +779,12 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
             title={
               doctor.todayVisitStatus === 'COMPLETED'
                 ? "✔ Visit Completed Today"
+                : checkingLocation
+                ? "📡 Acquiring GPS Satellite..."
                 : geofenceEval.canStartVisit
                 ? `✓ Start Visit at ${geofenceEval.matchedClinicName || doctor.clinicName}`
+                : geofenceEval.distanceMeters < 0
+                ? "📡 Acquiring GPS... (Tap to Retry)"
                 : !geofenceEval.isWithinRadius
                 ? `🚫 Out of Range (${Math.round(geofenceEval.distanceMeters)}m Away)`
                 : `📡 Weak GPS Signal (±${Math.round(geofenceEval.accuracyMeters || 0)}m)`
@@ -792,10 +796,12 @@ export const DoctorDetailsScreen: React.FC<DoctorDetailsScreenProps> = ({
               }
               if (geofenceEval.canStartVisit) {
                 onStartVisit(doctor, true, geofenceEval.distanceMeters, geofenceEval.matchedClinic);
+              } else if (geofenceEval.distanceMeters < 0) {
+                checkGeofence(doctor);
               } else if (!geofenceEval.isWithinRadius) {
                 Alert.alert(
                   'Visit Blocked - Out of 100m Range 🚫',
-                  `You are currently ${Math.round(geofenceEval.distanceMeters)}m away from ${geofenceEval.matchedClinicName || doctor.clinicName}.\n\nRepPulse requires you to be physically within the 100-meter perimeter of any registered chamber of this doctor to start and complete this visit.`
+                  `You are currently ${Math.round(geofenceEval.distanceMeters)}m away from ${geofenceEval.matchedClinicName || doctor.clinicName}.\n\nRepPulse requires you to be physically within the 100-meter perimeter of any registered chamber of this doctor to start and complete this visit.\n\nTap '↻ Recheck' or open chamber directions if you are at the clinic.`
                 );
               } else {
                 Alert.alert(
