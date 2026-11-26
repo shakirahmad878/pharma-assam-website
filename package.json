@@ -8,9 +8,9 @@
     "dev:website": "vite --mode website",
     "build": "tsc -b && vite build --mode portal",
     "build:portal": "tsc -b && vite build --mode portal && echo reppulse.nlcl.in > dist/CNAME",
-    "build:website": "tsc -b && vite build --mode website && echo nlcl.in > dist/CNAME",
+    "build:website": "node -e \"const fs=require('fs');fs.rmSync('dist-website',{recursive:true,force:true});fs.mkdirSync('dist-website',{recursive:true});fs.copyFileSync('website/index.html','dist-website/index.html');fs.cpSync('public/images','dist-website/images',{recursive:true});fs.writeFileSync('dist-website/CNAME','nlcl.in\\n')\"",
     "deploy:portal": "npm run build:portal && gh-pages -d dist --repo https://github.com/shakirahmad878/reppulse-pharma-sfa.git",
-    "deploy:website": "npm run build:website && gh-pages -d dist --repo https://github.com/shakirahmad878/pharma-assam-website.git",
+    "deploy:website": "npm run build:website && gh-pages -d dist-website --repo https://github.com/shakirahmad878/pharma-assam-website.git",
     "deploy": "npm run deploy:portal && npm run deploy:website",
     "lint": "oxlint",
     "preview": "vite preview"
