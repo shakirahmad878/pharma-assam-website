@@ -62,6 +62,9 @@ export class VisitService {
         await StorageService.setItem(STORAGE_KEYS.VISITS_LOCAL, visits);
       } catch (err) {
         console.warn('[VisitService] Direct Supabase push deferred to offline queue:', err);
+        newVisit.syncStatus = 'PENDING';
+        visits[0].syncStatus = 'PENDING';
+        await StorageService.setItem(STORAGE_KEYS.VISITS_LOCAL, visits);
       }
     }
 

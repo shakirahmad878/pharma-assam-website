@@ -76,9 +76,18 @@ export const RoutePlanScreen: React.FC<RoutePlanScreenProps> = ({ onBack, onOpen
 
   const currentUser = AuthService.getCurrentUser();
   const isManager = currentUser?.role === 'REGIONAL_MANAGER' || currentUser?.role === 'DIRECTOR' || currentUser?.role === 'SUPER_ADMIN';
-  const [selectedEmployeeCode, setSelectedEmployeeCode] = useState<string>(isManager ? 'NLCL-0005' : (currentUser?.employeeCode || 'NLCL-0005'));
-  const [selectedEmployeeName, setSelectedEmployeeName] = useState<string>(isManager ? 'Satyam Shil' : (currentUser?.name || 'Satyam Shil'));
+  const [selectedEmployeeCode, setSelectedEmployeeCode] = useState<string>(currentUser?.employeeCode || '');
+  const [selectedEmployeeName, setSelectedEmployeeName] = useState<string>(currentUser?.name || '');
   const [loadingTour, setLoadingTour] = useState(false);
+  const [teamMembers, setTeamMembers] = useState<{ code: string; name: string }[]>([]);
+
+  useEffect(() => {
+    EmployeeService.getEmployees().then(list => {
+      if (list && list.length > 0) {
+        setTeamMembers(list.map(e => ({ code: e.employeeCode, name: `${e.name} (${e.role})` })));
+      }
+    }).catch(() => {});
+  }, []);
 
   const getMonthNumber = (mName: string) => {
     const map: { [m: string]: number } = {
@@ -435,11 +444,7 @@ export const RoutePlanScreen: React.FC<RoutePlanScreenProps> = ({ onBack, onOpen
         <View style={styles.rsmTeamStrip}>
           <Text style={styles.rsmTeamLabel}>Team Plan:</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
-            {[
-              { code: 'NLCL-0005', name: 'Satyam Shil (MR)' },
-              { code: 'NLCL-0004', name: 'Pranjal Malakar (MR)' },
-              { code: 'NLCL-0003', name: 'Bodrud Jaman Sadial (RSM)' },
-            ].map(emp => (
+            {(teamMembers.length > 0 ? teamMembers : (currentUser?.employeeCode ? [{ code: currentUser.employeeCode, name: currentUser.name }] : [])).map(emp => (
               <TouchableOpacity
                 key={emp.code}
                 style={[styles.rsmEmpPill, selectedEmployeeCode === emp.code && styles.rsmEmpPillActive]}

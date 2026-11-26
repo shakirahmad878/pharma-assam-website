@@ -456,7 +456,7 @@ export interface LocationRequestRecord {
   expires_at?: string;
 }
 
-export type SyncEntityType = 'ATTENDANCE' | 'VISIT' | 'POB_ORDER' | 'TELEMETRY' | 'ROUTE_REQUEST' | 'TOUR_PLAN' | 'EXPENSE' | 'DOCTOR_UPDATE';
+export type SyncEntityType = 'ATTENDANCE' | 'VISIT' | 'POB_ORDER' | 'TELEMETRY' | 'ROUTE_REQUEST' | 'TOUR_PLAN' | 'EXPENSE' | 'DOCTOR' | 'DOCTOR_UPDATE';
 
 export interface SyncQueueItem {
   id: string;

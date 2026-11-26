@@ -60,7 +60,13 @@ export const VisitListScreen: React.FC<VisitListScreenProps> = ({
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState<CategoryFilter>('ALL');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('TODAY');
+  const currentUser = AuthService.getCurrentUser();
+  const isManager = DivisionService.isManager(currentUser);
+  const userDivision = DivisionService.getUserDivision(currentUser);
+  const [selectedDivision, setSelectedDivision] = useState<DivisionType>(
+    isManager ? 'ALL' : userDivision
+  );
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(isManager ? 'ALL' : 'TODAY');
 
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [chemists, setChemists] = useState<any[]>([]);
@@ -73,17 +79,11 @@ export const VisitListScreen: React.FC<VisitListScreenProps> = ({
     records: VisitRecord[];
   } | null>(null);
 
-  const currentUser = AuthService.getCurrentUser();
-  const isManager = DivisionService.isManager(currentUser);
-  const userDivision = DivisionService.getUserDivision(currentUser);
-  const [selectedDivision, setSelectedDivision] = useState<DivisionType>(
-    isManager ? 'ALL' : userDivision
-  );
-
   useEffect(() => {
     const user = AuthService.getCurrentUser();
     if (DivisionService.isManager(user)) {
       setSelectedDivision('ALL');
+      setStatusFilter('ALL');
     } else {
       setSelectedDivision(DivisionService.getUserDivision(user));
     }

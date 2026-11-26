@@ -17,7 +17,8 @@ TaskManager.defineTask(REPPULSE_TELEMETRY_TASK_NAME, async ({ data, error }) => 
     if (locations && locations.length > 0) {
       const loc = locations[0];
       const session = await StorageService.getItem<UserProfile | null>(STORAGE_KEYS.AUTH_SESSION, null);
-      const authenticatedEmpId = session?.id || session?.employeeCode || 'usr-nlcl-0004';
+      const authenticatedEmpId = session?.id || session?.employeeCode;
+      if (!authenticatedEmpId) return;
       const timestampIso = new Date(loc.timestamp).toISOString();
 
       const point: TelemetryLogPoint = {

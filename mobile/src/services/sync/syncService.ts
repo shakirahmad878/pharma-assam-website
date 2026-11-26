@@ -1,7 +1,8 @@
-import { SyncQueueItem, SyncEntityType, VisitRecord, POBOrder, AttendanceRecord } from '../../types';
+import { SyncQueueItem, SyncEntityType, VisitRecord, POBOrder, AttendanceRecord, Doctor } from '../../types';
 import { StorageService, STORAGE_KEYS } from '../storageService';
 import { SupabaseDbService } from '../supabase/supabaseDbService';
 import { SupabaseStorageService } from '../supabase/supabaseStorageService';
+import { RecoveryService } from '../recoveryService';
 
 export interface SyncStats {
   pending: number;
@@ -93,6 +94,14 @@ export class SyncService {
   }
 
   public static async syncAll(): Promise<{ success: boolean; processedCount: number; failedCount: number; message: string }> {
+    try {
+      if (SupabaseDbService.isConnected()) {
+        await RecoveryService.executeFullRecovery();
+      }
+    } catch (recErr) {
+      console.warn('[SyncService] Recovery cycle encounter note:', recErr);
+    }
+
     const res = await this.processQueue();
     const msg = res.failedCount === 0
       ? `Successfully synchronized ${res.processedCount} record${res.processedCount === 1 ? '' : 's'} with cloud.`
@@ -127,6 +136,10 @@ export class SyncService {
         // Serverless Dispatch: Supabase PostgreSQL
         if (item.entityType === 'VISIT') {
           await SupabaseDbService.recordVisit(item.payload);
+        } else if (item.entityType === 'DOCTOR') {
+          await SupabaseDbService.addDoctor(item.payload);
+        } else if (item.entityType === 'DOCTOR_UPDATE') {
+          await SupabaseDbService.updateDoctor(item.payload.id, item.payload);
         } else if (item.entityType === 'ATTENDANCE') {
           if (item.payload?.selfieBase64OrUri && typeof item.payload.selfieBase64OrUri === 'string' && item.payload.selfieBase64OrUri.startsWith('file://')) {
             try {
@@ -196,6 +209,14 @@ export class SyncService {
           atts[idx].syncStatus = 'SYNCED';
           atts[idx].serverId = serverId;
           await StorageService.setItem(STORAGE_KEYS.ATTENDANCE_LOCAL, atts);
+        }
+      } else if (entityType === 'DOCTOR' || entityType === 'DOCTOR_UPDATE') {
+        const docs = await StorageService.getItem<Doctor[]>(STORAGE_KEYS.DOCTORS_CACHE, []);
+        const idx = docs.findIndex(d => d.id === localId);
+        if (idx >= 0) {
+          (docs[idx] as any).syncStatus = 'SYNCED';
+          (docs[idx] as any).serverId = serverId;
+          await StorageService.setItem(STORAGE_KEYS.DOCTORS_CACHE, docs);
         }
       }
     } catch (e) {

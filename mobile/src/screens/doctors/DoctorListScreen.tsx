@@ -16,6 +16,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { colors, typography, spacing, radius, shadows } from '../../constants/theme';
 import { DoctorService } from '../../services/doctorService';
+import { SupabaseDbService } from '../../services/supabase/supabaseDbService';
 import { RouteService } from '../../services/routeService';
 import { LocationService } from '../../services/location/locationService';
 import { PdfReportService } from '../../services/pdfReportService';
@@ -52,7 +53,11 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(AuthService.getCurrentUser());
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [topTab, setTopTab] = useState<'DOCTORS' | 'FIRMS'>('DOCTORS');
-  const [subTab, setSubTab] = useState<'TODAY' | 'ALL'>('TODAY');
+  const isManager = DivisionService.isManager(currentUser);
+  const userDivision = DivisionService.getUserDivision(currentUser);
+  const [subTab, setSubTab] = useState<'TODAY' | 'ALL'>(
+    mode === 'MASTER' || isManager ? 'ALL' : 'TODAY'
+  );
   const currentMonthIdx = new Date().getMonth();
   const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
@@ -60,10 +65,9 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
   const [statusFilter, setStatusFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeRoute, setActiveRoute] = useState<RoutePlan | null>(null);
+  const [diagStatus, setDiagStatus] = useState<string>('');
 
   // Division Filter State
-  const isManager = DivisionService.isManager(currentUser);
-  const userDivision = DivisionService.getUserDivision(currentUser);
   const [selectedDivision, setSelectedDivision] = useState<DivisionType>(
     isManager ? 'ALL' : userDivision
   );
@@ -91,15 +95,20 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
     setCurrentUser(user);
     if (DivisionService.isManager(user)) {
       setSelectedDivision('ALL');
+      setSubTab('ALL');
     } else {
       setSelectedDivision(DivisionService.getUserDivision(user));
+      if (mode === 'MASTER') {
+        setSubTab('ALL');
+      }
     }
     loadData();
-  }, []);
+  }, [mode]);
 
   const loadData = async () => {
     const docs = await DoctorService.getDoctors();
     setDoctors(docs);
+    setDiagStatus(SupabaseDbService.lastDoctorsFetchStatus);
     const route = await RouteService.getActiveRoute();
     setActiveRoute(route);
   };
@@ -254,8 +263,17 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
     const tierDisplayName = newDocTier === 'A_PLUS' ? 'Prime Core' : newDocTier === 'A' ? 'Core' : 'General';
 
     const user = currentUser || AuthService.getCurrentUser();
-    const activeUserId = user?.employeeCode || user?.id || 'usr-nlcl-0005';
-    const activeUserName = user?.name || 'Satyam Shil';
+    if (!user?.id && !user?.employeeCode) {
+      console.error('[DoctorCreation] Employee identity unavailable');
+      Alert.alert(
+        'Session Error',
+        'Your employee identity could not be verified. Please sign in again before registering a doctor.'
+      );
+      return;
+    }
+
+    const activeUserId = user.id || user.employeeCode;
+    const activeUserName = user.name || 'Representative';
 
     await DoctorService.addDoctor({
       name: formattedName,
@@ -502,6 +520,9 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
               {mode === 'VISITS'
                 ? "No doctor visits are currently queued for today.\n\nTo log a visit, switch to the Doctors directory and tap '+ Add to Visit' or open a doctor to start a DCR call."
                 : `No doctors found for ${isManager ? DivisionService.getDivisionLabel(selectedDivision) : DivisionService.getDivisionLabel(userDivision)} division.`}
+            </Text>
+            <Text style={{ fontSize: 11, color: '#64748B', marginTop: 10, textAlign: 'center' }}>
+              {`Sync: ${diagStatus || 'Checking...'} | Loaded: ${doctors.length} | Tab: ${subTab} | Div: ${selectedDivision}`}
             </Text>
           </View>
         )}

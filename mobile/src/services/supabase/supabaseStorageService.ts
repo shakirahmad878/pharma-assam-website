@@ -54,13 +54,14 @@ export class SupabaseStorageService {
         type: 'image/jpeg',
       } as any);
 
+      const token = await AuthService.getAccessToken();
       const res = await fetch(
         `${SUPABASE_CONFIG.url}/storage/v1/object/attendance-selfies/${objectPath}`,
         {
           method: 'POST',
           headers: {
             apikey: SUPABASE_CONFIG.apiKey,
-            Authorization: `Bearer ${SUPABASE_CONFIG.apiKey}`,
+            Authorization: `Bearer ${token || ''}`,
             // Let the engine set multipart boundary automatically
           },
           body: formData,

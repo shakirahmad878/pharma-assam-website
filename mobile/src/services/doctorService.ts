@@ -73,8 +73,14 @@ export class DoctorService {
       assignedToEmployeeName: newDoc.assignedToEmployeeName,
       createdBy: newDoc.createdBy,
     };
-    await SupabaseDbService.addDoctor(doc);
-    await SyncService.enqueue('DOCTOR', doc);
+    let isSynced = false;
+    try {
+      await SupabaseDbService.addDoctor(doc);
+      isSynced = true;
+    } catch (err) {
+      console.warn('[DoctorService] Direct Supabase addDoctor deferred to offline queue:', err);
+    }
+    await SyncService.enqueue('DOCTOR', { ...doc, syncStatus: isSynced ? 'SYNCED' : 'PENDING' });
     return doc;
   }
 

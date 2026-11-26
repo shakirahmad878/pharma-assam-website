@@ -153,7 +153,7 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack, isMa
       return true;
     }
     const todayStr = getBusinessDateStr();
-    const cleanCode = user.employeeCode || 'NLCL-0005';
+    const cleanCode = (user.employeeCode || '').trim().toUpperCase(); if (!cleanCode) return false;
     try {
       // 1. Check local / live approval via AuthService
       const localOrLive = await AuthService.getTodayLateApproval(cleanCode);
@@ -857,9 +857,9 @@ export const AttendanceScreen: React.FC<AttendanceScreenProps> = ({ onBack, isMa
                         const todayStr = getBusinessDateStr();
                         await SupabaseDbService.submitLateLoginRequest({
                           id: `late_req_${currentUser?.employeeCode || 'MR'}_${Date.now()}`,
-                          employeeId: currentUser?.id || 'usr-nlcl-0005',
+                          employeeId: currentUser?.id || '',
                           employeeName: currentUser?.name || 'Field Representative',
-                          employeeCode: currentUser?.employeeCode || 'NLCL-0005',
+                          employeeCode: currentUser?.employeeCode || '',
                           date: todayStr,
                           attemptedTime: nowStr,
                           reason: lateReason.trim(),

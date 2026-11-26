@@ -209,12 +209,11 @@ export const VisitExecutionScreen: React.FC<VisitExecutionScreenProps> = ({
         };
       });
 
-    const user = AuthService.getCurrentUser() || {
-      id: 'usr-nlcl-0004',
-      name: 'Pranjal Malakar',
-      employeeCode: 'NLCL-0004',
-      role: 'MR',
-    };
+    const user = AuthService.getCurrentUser();
+    if (!user?.id) {
+      Alert.alert('Session Error', 'Active employee session not found. Please log in again.');
+      return;
+    }
 
     await VisitService.recordVisit({
       customerType,

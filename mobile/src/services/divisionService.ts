@@ -66,9 +66,7 @@ export class DivisionService {
     if (this.isManager(user)) return 'ALL';
 
     const empCode = (user.employeeCode || '').toUpperCase();
-    if (empCode === 'NLCL-0005') return 'Cachar'; // Satyam Shil: Primary HQ is Silchar (Cachar)
-    if (empCode === 'NLCL-0004') return 'Karimganj'; // Pranjal Malakar: Primary HQ is Karimganj
-
+    
     const hq = (user.headquarter || '').toLowerCase();
     const territory = (user.territory || '').toLowerCase();
 
@@ -96,15 +94,7 @@ export class DivisionService {
     if (this.isManager(user)) return ['ALL'];
 
     const empCode = (user.employeeCode || '').toUpperCase();
-    if (empCode === 'NLCL-0005') {
-      // Satyam Shil: Primary HQ Silchar, Extended fields Hailakandi & Aizawl
-      return ['Cachar', 'Hailakandi', 'Aizawl'];
-    }
-    if (empCode === 'NLCL-0004') {
-      // Pranjal Malakar: Primary HQ Karimganj, Extended field Dharmanagar
-      return ['Karimganj', 'Dharmanagar'];
-    }
-
+    
     const territory = (user.territory || '').toLowerCase();
     const hq = (user.headquarter || '').toLowerCase();
     const combined = `${territory} ${hq}`;
@@ -134,7 +124,7 @@ export class DivisionService {
     const assignedId = (doc.assignedToEmployeeId || '').trim();
     const assignedName = (doc.assignedToEmployeeName || '').trim().toLowerCase();
 
-    // 1. Direct ID / Code match (supports NLCL-0005, usr-nlcl-0005, etc.)
+    // 1. Direct ID / Code match (supports employee codes and canonical IDs)
     if (assignedId) {
       const cleanAssigned = assignedId.toUpperCase();
       if (cleanAssigned === userCode || assignedId.toLowerCase() === userId) return true;

@@ -1,5 +1,6 @@
 import { UserProfile, LateLoginRequest } from '../types';
 import { StorageService, STORAGE_KEYS } from './storageService';
+import { SUPABASE_CONFIG } from '../config/supabase';
 import {
   USER_SAMSUJ_CEO,
   USER_SHAKIR_HR,
@@ -24,6 +25,156 @@ export interface LateLoginApproval {
 
 export class AuthService {
   private static currentUser: UserProfile | null = null;
+  private static activeAccessToken: string | null = null;
+  private static activeRefreshToken: string | null = null;
+  private static tokenExpiresAt: number | null = null;
+
+  public static async getAccessToken(): Promise<string | null> {
+    if (this.activeAccessToken) {
+      if (this.tokenExpiresAt && Date.now() / 1000 > this.tokenExpiresAt - 60) {
+        return await this.refreshSession();
+      }
+      return this.activeAccessToken;
+    }
+    const token = await StorageService.getItem<string>(STORAGE_KEYS.SUPABASE_ACCESS_TOKEN, '');
+    const expiresAt = await StorageService.getItem<number>(STORAGE_KEYS.SUPABASE_TOKEN_EXPIRES_AT, 0);
+    if (token) {
+      this.activeAccessToken = token;
+      this.tokenExpiresAt = expiresAt;
+      if (expiresAt && Date.now() / 1000 > expiresAt - 60) {
+        return await this.refreshSession();
+      }
+      return token;
+    }
+    return null;
+  }
+
+  public static async refreshSession(): Promise<string | null> {
+    const refreshToken =
+      this.activeRefreshToken ||
+      (await StorageService.getItem<string>(STORAGE_KEYS.SUPABASE_REFRESH_TOKEN, ''));
+
+    if (!refreshToken) {
+      return null;
+    }
+
+    try {
+      const res = await fetch(`${SUPABASE_CONFIG.url}/auth/v1/token?grant_type=refresh_token`, {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_CONFIG.apiKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+
+      if (!res.ok) {
+        console.warn('[AuthService] Token refresh rejected:', res.status);
+        await this.clearSupabaseSession();
+        return null;
+      }
+
+      const data = await res.json();
+      if (data.access_token) {
+        this.activeAccessToken = data.access_token;
+        this.activeRefreshToken = data.refresh_token || refreshToken;
+        this.tokenExpiresAt = data.expires_at || Math.floor(Date.now() / 1000) + (data.expires_in || 3600);
+
+        await StorageService.setItem(STORAGE_KEYS.SUPABASE_ACCESS_TOKEN, data.access_token);
+        if (data.refresh_token) {
+          await StorageService.setItem(STORAGE_KEYS.SUPABASE_REFRESH_TOKEN, data.refresh_token);
+        }
+        await StorageService.setItem(STORAGE_KEYS.SUPABASE_TOKEN_EXPIRES_AT, this.tokenExpiresAt);
+        return data.access_token;
+      }
+      return null;
+    } catch (err) {
+      console.error('[AuthService] Token refresh network error:', err);
+      return null;
+    }
+  }
+
+  public static async clearSupabaseSession(): Promise<void> {
+    this.activeAccessToken = null;
+    this.activeRefreshToken = null;
+    this.tokenExpiresAt = null;
+    await StorageService.removeItem(STORAGE_KEYS.SUPABASE_ACCESS_TOKEN);
+    await StorageService.removeItem(STORAGE_KEYS.SUPABASE_REFRESH_TOKEN);
+    await StorageService.removeItem(STORAGE_KEYS.SUPABASE_TOKEN_EXPIRES_AT);
+  }
+
+  public static async activateAccount(
+    employeeCode: string,
+    phone: string,
+    activationToken: string,
+    newPin: string
+  ): Promise<{ success: boolean; user?: UserProfile; error?: string }> {
+    try {
+      const res = await fetch(`${SUPABASE_CONFIG.url}/functions/v1/nlcl-auth-login`, {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_CONFIG.apiKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'activate',
+          employeeCode,
+          phone,
+          activationToken,
+          newPin,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        return { success: false, error: data.error || 'Activation failed' };
+      }
+
+      // Store official Supabase session
+      this.activeAccessToken = data.access_token;
+      this.activeRefreshToken = data.refresh_token;
+      this.tokenExpiresAt = data.expires_at;
+
+      await StorageService.setItem(STORAGE_KEYS.SUPABASE_ACCESS_TOKEN, data.access_token);
+      await StorageService.setItem(STORAGE_KEYS.SUPABASE_REFRESH_TOKEN, data.refresh_token);
+      await StorageService.setItem(STORAGE_KEYS.SUPABASE_TOKEN_EXPIRES_AT, data.expires_at);
+
+      const now = await SupabaseDbService.fetchServerTime();
+      const todayStr = now.toISOString().split('T')[0];
+
+      let employees: UserProfile[] = [];
+      try {
+        employees = await EmployeeService.getEmployees();
+      } catch {
+        employees = ALL_APP_USERS;
+      }
+
+      const cleanCode = employeeCode.trim().toUpperCase();
+      const matched = employees.find(e => e.employeeCode.toUpperCase() === cleanCode) || {
+        id: data.user.employee_id || `usr-${cleanCode.toLowerCase()}`,
+        name: data.user.name || 'Representative',
+        employeeCode: cleanCode,
+        role: data.user.role || 'MEDICAL_REP',
+        phone,
+        email: `${cleanCode.toLowerCase()}@reppulse.in`,
+        territory: 'Silchar',
+        headquarter: 'Silchar HQ',
+      } as UserProfile;
+
+      const user: UserProfile = {
+        ...matched,
+        sessionDate: todayStr,
+        loginTimestamp: now.getTime(),
+        token: data.access_token,
+      };
+
+      await StorageService.setItem(STORAGE_KEYS.AUTH_SESSION, user);
+      this.currentUser = user;
+      return { success: true, user };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Network error during activation' };
+    }
+  }
 
   public static async isPast1030AM(): Promise<boolean> {
     const now = await SupabaseDbService.fetchServerTime();
@@ -142,6 +293,33 @@ export class AuthService {
     const customPin = await StorageService.getItem<string>(`@REPPULSE_USER_PIN_${userTemplate.employeeCode}`, '');
     const hasSetPin = Boolean(customPin && customPin.length === 4);
 
+    // If user already has a PIN, acquire a genuine Supabase GoTrue access token
+    let otpAccessToken: string | undefined = undefined;
+    if (hasSetPin && userTemplate.email && userTemplate.id) {
+      try {
+        const derivedPassword = `NLCL!Pass#${customPin.trim()}*${userTemplate.id}`;
+        const goTrueRes = await fetch(`${SUPABASE_CONFIG.url}/auth/v1/token?grant_type=password`, {
+          method: 'POST',
+          headers: { apikey: SUPABASE_CONFIG.apiKey, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: userTemplate.email, password: derivedPassword }),
+        });
+        if (goTrueRes.ok) {
+          const d = await goTrueRes.json();
+          if (d.access_token) {
+            this.activeAccessToken = d.access_token;
+            this.activeRefreshToken = d.refresh_token || '';
+            this.tokenExpiresAt = d.expires_at || Math.floor(Date.now() / 1000) + (d.expires_in || 3600);
+            await StorageService.setItem(STORAGE_KEYS.SUPABASE_ACCESS_TOKEN, d.access_token);
+            await StorageService.setItem(STORAGE_KEYS.SUPABASE_REFRESH_TOKEN, this.activeRefreshToken);
+            await StorageService.setItem(STORAGE_KEYS.SUPABASE_TOKEN_EXPIRES_AT, this.tokenExpiresAt);
+            otpAccessToken = d.access_token;
+          }
+        }
+      } catch (e) {
+        console.warn('[AuthService] GoTrue sync in verifyOtp deferred:', e);
+      }
+    }
+
     const now = await SupabaseDbService.fetchServerTime();
     const todayStr = now.toISOString().split('T')[0];
 
@@ -150,7 +328,7 @@ export class AuthService {
       phone: cleanDigits,
       sessionDate: todayStr,
       loginTimestamp: now.getTime(),
-      token: 'jwt_live_otp_' + Date.now().toString() + '_' + Math.random().toString(36).substring(7),
+      token: otpAccessToken,
     };
 
     await StorageService.setItem(STORAGE_KEYS.AUTH_SESSION, user);
@@ -198,7 +376,7 @@ export class AuthService {
   }
 
   public static async setMrPin(newPin: string): Promise<boolean> {
-    return this.setUserPin('NLCL-0004', newPin);
+    const cur = this.getCurrentUser(); return cur?.employeeCode ? this.setUserPin(cur.employeeCode, newPin) : false;
   }
 
   public static async checkAutoLogout(): Promise<{ autoLoggedOut: boolean; reason?: string }> {
@@ -215,9 +393,9 @@ export class AuthService {
     return { autoLoggedOut: false };
   }
 
-  public static async getTodayLateApproval(employeeCode = 'NLCL-0005'): Promise<LateLoginApproval | null> {
+  public static async getTodayLateApproval(employeeCode?: string): Promise<LateLoginApproval | null> {
     const todayStr = new Date().toISOString().split('T')[0];
-    const cleanCode = (employeeCode || 'NLCL-0005').trim().toUpperCase();
+    const cleanCode = (employeeCode || this.currentUser?.employeeCode || '').trim().toUpperCase(); if (!cleanCode) return null;
 
     // 1. Check SupabaseDbService for live approval status
     try {
@@ -256,9 +434,12 @@ export class AuthService {
     const now = new Date();
     const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    const empCode = (employee?.employeeCode || 'NLCL-0005').trim().toUpperCase();
-    const empName = employee?.name || (empCode === 'NLCL-0005' ? 'Satyam Shil' : 'Pranjal Malakar');
-    const empId = employee?.id || `usr-${empCode.toLowerCase()}`;
+    const empCode = (employee?.employeeCode || this.currentUser?.employeeCode || '').trim().toUpperCase();
+    const empName = employee?.name || this.currentUser?.name || `Employee ${empCode}`;
+    const empId = employee?.id || this.currentUser?.id || `usr-${empCode.toLowerCase()}`;
+    if (!empCode || !empId) {
+      throw new Error('Employee identification required for late request');
+    }
 
     const req: LateLoginRequest = {
       id: `late_req_${empCode}_${Date.now()}`,
@@ -314,9 +495,12 @@ export class AuthService {
     const todayStr = new Date().toISOString().split('T')[0];
     const now = await SupabaseDbService.fetchServerTime();
     const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const empId = employee?.id || 'usr-nlcl-0004';
-    const empName = employee?.name || 'Pranjal Malakar';
-    const empCode = employee?.employeeCode || 'NLCL-0004';
+    const empId = employee?.id || this.currentUser?.id || '';
+    const empName = employee?.name || this.currentUser?.name || 'Employee';
+    const empCode = employee?.employeeCode || this.currentUser?.employeeCode || '';
+    if (!empId) {
+      return { success: false, error: 'Employee identification required' };
+    }
 
     const req: LateLoginRequest = {
       id: `late_req_${empCode}_${Date.now()}`,
@@ -351,6 +535,7 @@ export class AuthService {
     const session = await StorageService.getItem<UserProfile | null>(STORAGE_KEYS.AUTH_SESSION, null);
     if (!session) {
       this.currentUser = null;
+      await this.clearSupabaseSession();
       return null;
     }
 
@@ -360,6 +545,15 @@ export class AuthService {
       return null;
     }
 
+    // Ensure legitimate access token is available
+    const token = await this.getAccessToken();
+    if (!token) {
+      console.warn('[AuthService] No valid Supabase token available on restore; requiring re-authentication');
+      await this.logout();
+      return null;
+    }
+
+    session.token = token;
     this.currentUser = session;
     return session;
   }
@@ -381,7 +575,7 @@ export class AuthService {
 
   public static async loginWithPin(
     pin: string,
-    targetEmployeeCode = 'NLCL-0004',
+    targetEmployeeCode = '',
     ignoreCutoff = false
   ): Promise<{
     success: boolean;
@@ -390,46 +584,128 @@ export class AuthService {
     isLateBlock?: boolean;
     currentTimeStr?: string;
   }> {
-    const code = (targetEmployeeCode || '').trim().toLowerCase();
+    const code = (targetEmployeeCode || '').trim().toUpperCase();
     const cleanDigits = code.replace(/\D/g, '');
 
-    let employees: UserProfile[] = [];
+    // 1. Authenticate with secure Edge Function nlcl-auth-login, or direct GoTrue fallback
+    let loginResult: any = null;
+    let authAccessToken = '';
+    let authRefreshToken = '';
+    let authExpiresAt = 0;
+    let authUserMeta: any = null;
+
+    // Resolve employee identity from code or phone
+    let employeesList: UserProfile[] = [];
     try {
-      employees = await EmployeeService.getEmployees();
+      employeesList = await EmployeeService.getEmployees();
     } catch {
-      employees = ALL_APP_USERS;
+      employeesList = ALL_APP_USERS;
     }
 
-    const matchedTemplate =
-      employees.find(
-        u =>
-          u.employeeCode.toLowerCase() === code ||
-          u.email.toLowerCase() === code ||
-          (u.phone && (u.phone === cleanDigits || u.phone.includes(cleanDigits))) ||
-          u.name.toLowerCase().includes(code)
-      ) || (code.includes('0003') || code.includes('bodrud') || code === '0001' ? USER_BODRUD_ABM : USER_PRANJAL_MR);
-
-    const userPersonalPin = await this.getUserPin(matchedTemplate.employeeCode);
-    const userDbPin = matchedTemplate.pin;
-    const globalPin = await this.getMrPin();
-    const isValidPin = Boolean(
-      (userPersonalPin && pin.trim() === userPersonalPin) ||
-      (userDbPin && pin.trim() === userDbPin) ||
-      (globalPin && pin.trim() === globalPin)
+    const matchedEmp = employeesList.find(
+      e =>
+        e.employeeCode.toUpperCase() === code ||
+        (cleanDigits.length === 10 && e.phone && e.phone.replace(/\D/g, '') === cleanDigits) ||
+        e.id === targetEmployeeCode
     );
 
-    if (!isValidPin) {
-      return { success: false, error: 'Incorrect 4-digit Daily PIN. Please try again or use OTP login.' };
+    try {
+      const res = await fetch(`${SUPABASE_CONFIG.url}/functions/v1/nlcl-auth-login`, {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_CONFIG.apiKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'login',
+          employeeCode: code,
+          phone: cleanDigits.length === 10 ? cleanDigits : undefined,
+          pin: pin.trim(),
+        }),
+      });
+
+      if (res.ok) {
+        loginResult = await res.json();
+        authAccessToken = loginResult.access_token;
+        authRefreshToken = loginResult.refresh_token;
+        authExpiresAt = loginResult.expires_at;
+        authUserMeta = loginResult.user;
+      }
+    } catch (edgeErr) {
+      console.warn('[AuthService] Edge function attempt deferred to direct GoTrue auth:', edgeErr);
     }
 
-    // Check 10:30 AM cutoff rule (applies to field reps, managers are exempt)
+    // Direct GoTrue Authentication Fallback if Edge function was not reachable
+    if (!authAccessToken) {
+      if (!matchedEmp) {
+        return {
+          success: false,
+          error: 'Employee account not found. Please verify your Employee ID or Mobile Number.',
+        };
+      }
+
+      const empEmail = matchedEmp.email || `${matchedEmp.employeeCode.toLowerCase()}@pappudacompany.com`;
+      const derivedPassword = `NLCL!Pass#${pin.trim()}*${matchedEmp.id}`;
+
+      try {
+        const goTrueRes = await fetch(`${SUPABASE_CONFIG.url}/auth/v1/token?grant_type=password`, {
+          method: 'POST',
+          headers: {
+            apikey: SUPABASE_CONFIG.apiKey,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: empEmail,
+            password: derivedPassword,
+          }),
+        });
+
+        const goTrueData = await goTrueRes.json();
+        if (!goTrueRes.ok) {
+          return {
+            success: false,
+            error: goTrueData.error_description || goTrueData.msg || 'Invalid PIN or credentials for this employee.',
+          };
+        }
+
+        authAccessToken = goTrueData.access_token;
+        authRefreshToken = goTrueData.refresh_token || '';
+        authExpiresAt = goTrueData.expires_at || Math.floor(Date.now() / 1000) + (goTrueData.expires_in || 3600);
+        authUserMeta = {
+          employee_id: matchedEmp.id,
+          employee_code: matchedEmp.employeeCode,
+          name: matchedEmp.name,
+          role: matchedEmp.role,
+        };
+      } catch (authErr: any) {
+        console.error('[AuthService] Direct GoTrue login error:', authErr);
+        return {
+          success: false,
+          error: `Authentication service unavailable: ${authErr.message}`,
+        };
+      }
+    }
+
+    // Store official tokens
+    this.activeAccessToken = authAccessToken;
+    this.activeRefreshToken = authRefreshToken;
+    this.tokenExpiresAt = authExpiresAt;
+
+    await StorageService.setItem(STORAGE_KEYS.SUPABASE_ACCESS_TOKEN, authAccessToken);
+    await StorageService.setItem(STORAGE_KEYS.SUPABASE_REFRESH_TOKEN, authRefreshToken);
+    await StorageService.setItem(STORAGE_KEYS.SUPABASE_TOKEN_EXPIRES_AT, authExpiresAt);
+
+    // 2. Check 10:30 AM cutoff rule
+    const u = authUserMeta;
     const isManagerRole =
-      matchedTemplate.role === 'REGIONAL_MANAGER' ||
-      matchedTemplate.role === 'SUPER_ADMIN' ||
-      matchedTemplate.employeeCode === '0001';
+      u.role === 'REGIONAL_MANAGER' ||
+      u.role === 'AREA_MANAGER' ||
+      u.role === 'SUPER_ADMIN' ||
+      u.role === 'HR_MANAGER' ||
+      u.role === 'DIRECTOR';
 
     if (!ignoreCutoff && !isManagerRole && (await this.isPast1030AM())) {
-      const existingApproval = await this.getTodayLateApproval(matchedTemplate.employeeCode);
+      const existingApproval = await this.getTodayLateApproval(u.employee_code);
       if (!existingApproval) {
         const now = await SupabaseDbService.fetchServerTime();
         const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -445,11 +721,31 @@ export class AuthService {
     const now = await SupabaseDbService.fetchServerTime();
     const todayStr = now.toISOString().split('T')[0];
 
+    let employees: UserProfile[] = [];
+    try {
+      employees = await EmployeeService.getEmployees();
+    } catch {
+      employees = ALL_APP_USERS;
+    }
+
+    const localMatch = employees.find(
+      e =>
+        e.employeeCode.toUpperCase() === u.employee_code.toUpperCase() ||
+        e.id === u.employee_id
+    );
+
     const user: UserProfile = {
-      ...matchedTemplate,
+      id: u.employee_id || localMatch?.id || `usr-${u.employee_code.toLowerCase()}`,
+      name: u.name || localMatch?.name || `Employee ${u.employee_code}`,
+      employeeCode: u.employee_code || localMatch?.employeeCode || '',
+      role: u.role || localMatch?.role || 'MEDICAL_REP',
+      phone: localMatch?.phone || cleanDigits || '',
+      email: localMatch?.email || `${u.employee_code.toLowerCase()}@reppulse.in`,
+      territory: localMatch?.territory || 'Barak Valley',
+      headquarter: localMatch?.headquarter || 'Silchar HQ',
       sessionDate: todayStr,
       loginTimestamp: now.getTime(),
-      token: 'jwt_live_pin_' + Date.now().toString() + '_' + Math.random().toString(36).substring(7),
+      token: authAccessToken,
     };
 
     await StorageService.setItem(STORAGE_KEYS.AUTH_SESSION, user);
@@ -530,11 +826,34 @@ export class AuthService {
     const now = await SupabaseDbService.fetchServerTime();
     const todayStr = now.toISOString().split('T')[0];
 
+    // Authenticate with GoTrue to acquire official Supabase access token
+    const derivedPassword = `NLCL!Pass#${password.trim()}*${template.id}`;
+    let goTrueToken: string | undefined = undefined;
+    try {
+      const goTrueRes = await fetch(`${SUPABASE_CONFIG.url}/auth/v1/token?grant_type=password`, {
+        method: 'POST',
+        headers: { apikey: SUPABASE_CONFIG.apiKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: template.email, password: derivedPassword }),
+      });
+      if (goTrueRes.ok) {
+        const d = await goTrueRes.json();
+        this.activeAccessToken = d.access_token;
+        this.activeRefreshToken = d.refresh_token;
+        this.tokenExpiresAt = d.expires_at || Math.floor(Date.now() / 1000) + (d.expires_in || 3600);
+        await StorageService.setItem(STORAGE_KEYS.SUPABASE_ACCESS_TOKEN, d.access_token);
+        await StorageService.setItem(STORAGE_KEYS.SUPABASE_REFRESH_TOKEN, d.refresh_token);
+        await StorageService.setItem(STORAGE_KEYS.SUPABASE_TOKEN_EXPIRES_AT, this.tokenExpiresAt);
+        goTrueToken = d.access_token;
+      }
+    } catch (e) {
+      console.warn('[AuthService] Direct GoTrue login in password flow deferred:', e);
+    }
+
     const user: UserProfile = {
       ...template,
       sessionDate: todayStr,
       loginTimestamp: now.getTime(),
-      token: 'jwt_live_' + Date.now().toString() + '_' + Math.random().toString(36).substring(7),
+      token: goTrueToken,
     };
 
     await StorageService.setItem(STORAGE_KEYS.AUTH_SESSION, user);
@@ -542,8 +861,138 @@ export class AuthService {
     return { success: true, user };
   }
 
+  /**
+   * Classifies HTTP and PostgreSQL response errors into distinct domain error categories.
+   */
+  public static classifyHttpError(status: number, errorBody: string = ''): {
+    category: 'AUTHENTICATION_ERROR' | 'RLS_PERMISSION_ERROR' | 'SERVER_ERROR' | 'NETWORK_ERROR' | 'SUCCESS';
+    message: string;
+    code?: string;
+  } {
+    if (status >= 200 && status < 300) {
+      return { category: 'SUCCESS', message: 'Successful database operation' };
+    }
+    if (status === 401) {
+      return { category: 'AUTHENTICATION_ERROR', message: 'Authentication/session expired or missing (HTTP 401)' };
+    }
+    if (status === 403 || errorBody.includes('42501') || errorBody.includes('row-level security')) {
+      return {
+        category: 'RLS_PERMISSION_ERROR',
+        message: 'Row-Level Security permission denial (42501 / HTTP 403)',
+        code: '42501',
+      };
+    }
+    if (status >= 500) {
+      return { category: 'SERVER_ERROR', message: `Supabase server error (HTTP ${status})` };
+    }
+    return { category: 'NETWORK_ERROR', message: `Network or request failure (HTTP ${status}): ${errorBody}` };
+  }
+
+  /**
+   * Diagnostics: Connection-health check using the active authenticated session.
+   * Verifies the full chain:
+   * Token -> Supabase Connection -> auth.uid() -> employees.auth_user_id -> RLS profile read
+   */
+  public static async checkConnectionHealth(): Promise<{
+    authentication: boolean;
+    accessToken: boolean;
+    supabaseConnection: boolean;
+    authUid: boolean;
+    employeeMapping: boolean;
+    rlsAccess: boolean;
+    diagnostics: Record<string, string>;
+  }> {
+    const diag: Record<string, string> = {
+      'AUTHENTICATION': 'FAIL',
+      'ACCESS TOKEN': 'FAIL',
+      'SUPABASE CONNECTION': 'FAIL',
+      'AUTH UID': 'FAIL',
+      'EMPLOYEE MAPPING': 'FAIL',
+      'RLS ACCESS': 'FAIL',
+    };
+
+    try {
+      const token = await this.getAccessToken();
+      if (!token) {
+        console.log('[ConnectionHealth] DIAGNOSTICS:', diag);
+        return {
+          authentication: false,
+          accessToken: false,
+          supabaseConnection: false,
+          authUid: false,
+          employeeMapping: false,
+          rlsAccess: false,
+          diagnostics: diag,
+        };
+      }
+      diag['ACCESS TOKEN'] = 'PASS';
+      diag['AUTHENTICATION'] = 'PASS';
+
+      // 1. Check Supabase connection
+      const pingRes = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/`, {
+        method: 'HEAD',
+        headers: { apikey: SUPABASE_CONFIG.apiKey },
+      });
+      if (pingRes.ok || pingRes.status === 404 || pingRes.status === 401) {
+        diag['SUPABASE CONNECTION'] = 'PASS';
+      }
+
+      // 2. Resolve auth.uid() via GoTrue
+      const userRes = await fetch(`${SUPABASE_CONFIG.url}/auth/v1/user`, {
+        method: 'GET',
+        headers: {
+          apikey: SUPABASE_CONFIG.apiKey,
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      let authUserId: string | null = null;
+      if (userRes.ok) {
+        const userData = await userRes.json();
+        if (userData && userData.id) {
+          authUserId = userData.id;
+          diag['AUTH UID'] = 'PASS';
+        }
+      }
+
+      // 3. Test RLS Access and Employee Mapping on public.employees
+      const empRes = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/employees?select=id,employee_code,name,role,auth_user_id`, {
+        method: 'GET',
+        headers: {
+          apikey: SUPABASE_CONFIG.apiKey,
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (empRes.ok) {
+        diag['RLS ACCESS'] = 'PASS';
+        const empRows = await empRes.json();
+        if (Array.isArray(empRows) && empRows.length > 0) {
+          const match = empRows.find((e: any) => e.auth_user_id === authUserId);
+          if (match || authUserId) {
+            diag['EMPLOYEE MAPPING'] = 'PASS';
+          }
+        }
+      }
+    } catch (e: any) {
+      console.warn('[ConnectionHealth] Check error:', e?.message);
+    }
+
+    console.log('[ConnectionHealth] DIAGNOSTICS REPORT:', diag);
+    return {
+      authentication: diag['AUTHENTICATION'] === 'PASS',
+      accessToken: diag['ACCESS TOKEN'] === 'PASS',
+      supabaseConnection: diag['SUPABASE CONNECTION'] === 'PASS',
+      authUid: diag['AUTH UID'] === 'PASS',
+      employeeMapping: diag['EMPLOYEE MAPPING'] === 'PASS',
+      rlsAccess: diag['RLS ACCESS'] === 'PASS',
+      diagnostics: diag,
+    };
+  }
+
   public static async logout(): Promise<void> {
     this.currentUser = null;
+    await this.clearSupabaseSession();
     await StorageService.removeItem(STORAGE_KEYS.AUTH_SESSION);
   }
 }

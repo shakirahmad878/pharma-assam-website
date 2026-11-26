@@ -120,7 +120,7 @@ export const TourPlanScreen: React.FC<{ onBack: () => void; onNavigate?: (s: str
   // Load custom plans and pending reschedules
   const loadTourData = async () => {
     try {
-      const empCode = currentUser?.employeeCode || 'NLCL-0005';
+      const empCode = (currentUser?.employeeCode || '').trim().toUpperCase(); if (!empCode) return;
       const plans = await SupabaseDbService.fetchTourPlans(empCode, month + 1, year);
       const reqs = await SupabaseDbService.getEmployeeRescheduleRequests(empCode);
       setCustomPlans(plans || {});
@@ -717,7 +717,7 @@ export const ExpensesScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => 
         if (routes && routes.length > 0) setSfcList(routes);
       }).catch(() => {});
       const user = AuthService.getCurrentUser();
-      const code = user?.employeeCode || 'NLCL-0005';
+      const code = (user?.employeeCode || '').trim().toUpperCase(); if (!code) return;
       SupabaseDbService.fetchExpenses(code).then((exps) => {
         if (exps && exps.length > 0) setExpensesList(exps);
       }).catch(() => {});
@@ -1273,11 +1273,11 @@ export const MonthlySummaryScreen: React.FC<{ onBack: () => void }> = ({ onBack 
   const [selectedMonth, setSelectedMonth] = useState(currentMonthName);
   const [selectedYear, setSelectedYear] = useState(currentYearStr);
   const [selectedAgent, setSelectedAgent] = useState<{ id: string; name: string; role: any; territory: string; employeeCode?: string }>({
-    id: currentUser?.id || 'usr-nlcl-0004',
-    name: currentUser?.name || 'Pranjal Malakar',
+    id: currentUser?.id || '',
+    name: currentUser?.name || 'Representative',
     role: currentUser?.role || 'MEDICAL_REP',
-    territory: currentUser?.territory || 'Karimganj Division (Shribhumi)',
-    employeeCode: currentUser?.employeeCode || 'NLCL-0004',
+    territory: currentUser?.territory || 'Barak Valley',
+    employeeCode: currentUser?.employeeCode || '',
   });
   
   const [monthYearModalVisible, setMonthYearModalVisible] = useState(false);
@@ -1915,7 +1915,7 @@ export const ReportsHubScreen: React.FC<{ onBack: () => void }> = ({ onBack }) =
     }
 
     if (id === 'EXPENSE_REPORT') {
-      const code = targetCode || currentUser?.employeeCode || 'NLCL-0005';
+      const code = (targetCode || currentUser?.employeeCode || '').trim().toUpperCase(); if (!code) return;
       let exps: any[] = [];
       try {
         exps = await SupabaseDbService.fetchExpenses(code);

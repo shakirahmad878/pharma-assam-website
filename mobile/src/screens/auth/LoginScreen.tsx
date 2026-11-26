@@ -222,8 +222,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
     let interval: any = null;
     if (lateModalVisible && isWaitingForApproval) {
       interval = setInterval(async () => {
-        const inputIdentifier = employeeId.trim() || email.trim() || targetEmployeeForPin || 'NLCL-0005';
-        const empCode = inputIdentifier.toUpperCase().startsWith('NLCL') ? inputIdentifier.toUpperCase() : 'NLCL-0005';
+        const inputIdentifier = (employeeId.trim() || email.trim() || targetEmployeeForPin || '').trim();
+        const empCode = inputIdentifier.toUpperCase();
+        if (!empCode) return;
         const approval = await AuthService.getTodayLateApproval(empCode);
         if (approval && approval.isApproved) {
           setIsWaitingForApproval(false);
@@ -263,8 +264,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
         );
       } catch (e) {}
 
-      const code = matchedEmp?.employeeCode || (inputIdentifier.toUpperCase().startsWith('NLCL') ? inputIdentifier.toUpperCase() : 'NLCL-0005');
-      const name = matchedEmp?.name || (code === 'NLCL-0005' ? 'Satyam Shil' : `Employee ${code}`);
+      const code = matchedEmp?.employeeCode || inputIdentifier.toUpperCase();
+      const name = matchedEmp?.name || `Employee ${code}`;
       const id = matchedEmp?.id || `usr-${code.toLowerCase()}`;
 
       await AuthService.requestLateApproval(lateReason, {
@@ -286,8 +287,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
 
   const handleCheckApprovalStatus = async () => {
     setRequestingApproval(true);
-    const inputIdentifier = employeeId.trim() || email.trim() || targetEmployeeForPin || 'NLCL-0005';
-    const empCode = inputIdentifier.toUpperCase().startsWith('NLCL') ? inputIdentifier.toUpperCase() : 'NLCL-0005';
+    const inputIdentifier = (employeeId.trim() || email.trim() || targetEmployeeForPin || '').trim();
+    const empCode = inputIdentifier.toUpperCase();
+    if (!empCode) { setRequestingApproval(false); return; }
     const approval = await AuthService.getTodayLateApproval(empCode);
     setRequestingApproval(false);
 
@@ -317,11 +319,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
       return;
     }
     setRequestingApproval(true);
-    const inputIdentifier = employeeId.trim() || email.trim() || targetEmployeeForPin || 'NLCL-0005';
-    const code = inputIdentifier.toUpperCase().startsWith('NLCL') ? inputIdentifier.toUpperCase() : 'NLCL-0005';
+    const inputIdentifier = (employeeId.trim() || email.trim() || targetEmployeeForPin || '').trim();
+    const code = inputIdentifier.toUpperCase();
+    if (!code) { setRequestingApproval(false); Alert.alert('Identification Required', 'Please enter your Employee Code first.'); return; }
     const res = await AuthService.verifyManagerPin(managerPin, 'Manager In-Person Sign-off', {
       id: `usr-${code.toLowerCase()}`,
-      name: code === 'NLCL-0005' ? 'Satyam Shil' : `Employee ${code}`,
+      name: `Employee ${code}`,
       employeeCode: code,
     });
     setRequestingApproval(false);
@@ -444,7 +447,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
                 label="Employee ID or Registered Mobile"
                 value={employeeId}
                 onChangeText={setEmployeeId}
-                placeholder="e.g. NLCL-0004 or Registered Mobile"
+                placeholder="e.g. Employee Code or Registered Mobile"
                 autoCapitalize="none"
               />
 
@@ -574,7 +577,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onForg
                 label="Official Email or Employee ID"
                 value={email}
                 onChangeText={setEmail}
-                placeholder="e.g. NLCL-0004 or official email"
+                placeholder="e.g. Employee Code"
                 keyboardType="email-address"
                 autoCapitalize="none"
               />

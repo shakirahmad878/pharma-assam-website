@@ -14,6 +14,7 @@ import { Doctor, UserProfile, AttendanceRecord, VisitRecord, LateLoginRequest, T
 import { getBusinessDateStr } from '../../utils/dateUtils';
 import { determineLocationFreshness, LocationFreshness } from '../../utils/geoUtils';
 import { StorageService, STORAGE_KEYS } from '../storageService';
+import { AuthService } from '../authService';
 
 export interface FirmRecord {
   id: string;
@@ -64,10 +65,18 @@ export interface DoctorDeletionRequest {
 }
 
 export class SupabaseDbService {
-  private static getHeaders() {
+  public static lastDoctorsFetchStatus = 'Not fetched yet';
+
+  private static async getHeaders(): Promise<Record<string, string>> {
+    const token = await AuthService.getAccessToken();
+
+    if (!token) {
+      throw new Error('Authenticated Supabase session required');
+    }
+
     return {
       apikey: SUPABASE_CONFIG.apiKey,
-      Authorization: `Bearer ${SUPABASE_CONFIG.apiKey}`,
+      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
       Prefer: 'return=representation',
     };
@@ -83,20 +92,30 @@ export class SupabaseDbService {
 
   public static async fetchDoctors(): Promise<Doctor[]> {
     if (!this.isConnected()) {
+      this.lastDoctorsFetchStatus = 'Supabase not configured';
       return await StorageService.getItem<Doctor[]>(STORAGE_KEYS.DOCTORS_CACHE, []);
     }
 
     try {
+      const token = await AuthService.getAccessToken();
+      if (!token) {
+        this.lastDoctorsFetchStatus = 'Token: MISSING (Please log out and sign in with PIN)';
+        throw new Error('Authenticated Supabase session required');
+      }
+
       const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/doctors?order=name.asc`, {
         method: 'GET',
-        headers: this.getHeaders(),
+        headers: await this.getHeaders(),
       });
 
       if (!res.ok) {
-        throw new Error(`Supabase error: ${res.status} ${await res.text()}`);
+        const errBody = await res.text();
+        this.lastDoctorsFetchStatus = `Token: OK | HTTP ${res.status}: ${errBody.slice(0, 120)}`;
+        throw new Error(`Supabase error: ${res.status} ${errBody}`);
       }
 
       const raw = await res.json();
+      this.lastDoctorsFetchStatus = `Token: OK | HTTP ${res.status} | Rows: ${Array.isArray(raw) ? raw.length : 'non-array'}`;
       const doctors: Doctor[] = raw.map((d: any) => ({
         id: d.id,
         name: d.name,
@@ -135,7 +154,10 @@ export class SupabaseDbService {
 
       await StorageService.setItem(STORAGE_KEYS.DOCTORS_CACHE, doctors);
       return doctors;
-    } catch (err) {
+    } catch (err: any) {
+      if (!this.lastDoctorsFetchStatus || this.lastDoctorsFetchStatus === 'Not fetched yet') {
+        this.lastDoctorsFetchStatus = `Error: ${err?.message || String(err)}`;
+      }
       console.warn('[Supabase] fetchDoctors error, using local cache:', err);
       return await StorageService.getItem<Doctor[]>(STORAGE_KEYS.DOCTORS_CACHE, []);
     }
@@ -147,39 +169,41 @@ export class SupabaseDbService {
 
     if (!this.isConnected()) return;
 
-    try {
-      await fetch(`${SUPABASE_CONFIG.url}/rest/v1/doctors`, {
-        method: 'POST',
-        headers: { ...this.getHeaders(), Prefer: 'resolution=merge-duplicates' },
-        body: JSON.stringify({
-          id: doc.id,
-          name: doc.name,
-          specialty: doc.specialty,
-          qualification: doc.qualification,
-          clinic_name: doc.clinicName,
-          clinic_address: doc.clinicAddress,
-          area: doc.area,
-          district: doc.district,
-          phone: doc.phone,
-          tier: doc.tier,
-          monthly_visit_target: doc.monthlyVisitTarget,
-          completed_visits_this_month: doc.completedVisitsThisMonth || 0,
-          today_visit_status: doc.todayVisitStatus || 'PENDING',
-          last_visit_date: doc.lastVisitDate,
-          route_id: doc.routeId,
-          latitude: doc.latitude,
-          longitude: doc.longitude,
-          geofence_radius_meters: doc.geofenceRadiusMeters || 100,
-          is_assigned_to_me: Boolean(doc.isAssignedToMe),
-          assigned_employee_id: doc.assignedToEmployeeId || null,
-          assigned_employee_name: doc.assignedToEmployeeName || null,
-          created_by_employee_id: doc.createdBy || doc.assignedToEmployeeId || null,
-          clinics: doc.clinics || [],
-          updated_at: new Date().toISOString(),
-        }),
-      });
-    } catch (err) {
-      console.warn('[Supabase] addDoctor error:', err);
+    const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/doctors`, {
+      method: 'POST',
+      headers: { ...(await this.getHeaders()), Prefer: 'resolution=merge-duplicates' },
+      body: JSON.stringify({
+        id: doc.id,
+        name: doc.name,
+        specialty: doc.specialty,
+        qualification: doc.qualification,
+        clinic_name: doc.clinicName,
+        clinic_address: doc.clinicAddress,
+        area: doc.area,
+        district: doc.district,
+        phone: doc.phone,
+        tier: doc.tier,
+        monthly_visit_target: doc.monthlyVisitTarget,
+        completed_visits_this_month: doc.completedVisitsThisMonth || 0,
+        today_visit_status: doc.todayVisitStatus || 'PENDING',
+        last_visit_date: doc.lastVisitDate,
+        route_id: doc.routeId,
+        latitude: doc.latitude,
+        longitude: doc.longitude,
+        geofence_radius_meters: doc.geofenceRadiusMeters || 100,
+        is_assigned_to_me: Boolean(doc.isAssignedToMe),
+        assigned_employee_id: doc.assignedToEmployeeId || null,
+        assigned_employee_name: doc.assignedToEmployeeName || null,
+        created_by_employee_id: doc.createdBy || doc.assignedToEmployeeId || null,
+        clinics: doc.clinics || [],
+        updated_at: new Date().toISOString(),
+      }),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error('[Supabase addDoctor] FAILED:', res.status, errText);
+      throw new Error(`[Supabase addDoctor] HTTP ${res.status}: ${errText}`);
     }
   }
 
@@ -213,14 +237,16 @@ export class SupabaseDbService {
     if (updates.isAssignedToMe !== undefined) payload.is_assigned_to_me = updates.isAssignedToMe;
     if (updates.clinics !== undefined) payload.clinics = updates.clinics;
 
-    try {
-      await fetch(`${SUPABASE_CONFIG.url}/rest/v1/doctors?id=eq.${encodeURIComponent(id)}`, {
-        method: 'PATCH',
-        headers: this.getHeaders(),
-        body: JSON.stringify(payload),
-      });
-    } catch (err) {
-      console.warn('[Supabase] updateDoctor error:', err);
+    const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/doctors?id=eq.${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      headers: await this.getHeaders(),
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error('[Supabase updateDoctor] FAILED:', res.status, errText);
+      throw new Error(`[Supabase updateDoctor] HTTP ${res.status}: ${errText}`);
     }
   }
 
@@ -233,7 +259,7 @@ export class SupabaseDbService {
     try {
       await fetch(`${SUPABASE_CONFIG.url}/rest/v1/doctors?id=eq.${encodeURIComponent(id)}`, {
         method: 'DELETE',
-        headers: this.getHeaders(),
+        headers: await this.getHeaders(),
       });
     } catch (err) {
       console.warn('[Supabase] deleteDoctor error:', err);
@@ -253,12 +279,12 @@ export class SupabaseDbService {
     try {
       await fetch(`${SUPABASE_CONFIG.url}/rest/v1/doctor_deletion_requests`, {
         method: 'POST',
-        headers: this.getHeaders(),
+        headers: await this.getHeaders(),
         body: JSON.stringify({
           id,
           doctor_id: req.doctorId,
           doctor_name: req.doctorName,
-          requested_by_employee_id: 'usr-nlcl-0004',
+          requested_by_employee_id: req.requestedByEmployeeId || AuthService.getCurrentUser()?.id || '',
           requested_by_name: req.requestedBy,
           district: req.district || 'Cachar',
           reason: req.reason,
@@ -278,7 +304,7 @@ export class SupabaseDbService {
     try {
       const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/doctor_deletion_requests?status=eq.PENDING&order=requested_at.desc`, {
         method: 'GET',
-        headers: this.getHeaders(),
+        headers: await this.getHeaders(),
       });
       if (res.ok) {
         const raw = await res.json();
@@ -323,7 +349,7 @@ export class SupabaseDbService {
     try {
       await fetch(`${SUPABASE_CONFIG.url}/rest/v1/doctor_deletion_requests?id=eq.${encodeURIComponent(requestId)}`, {
         method: 'PATCH',
-        headers: this.getHeaders(),
+        headers: await this.getHeaders(),
         body: JSON.stringify({
           status: 'APPROVED',
           reviewed_by: managerName,
@@ -352,7 +378,7 @@ export class SupabaseDbService {
     try {
       await fetch(`${SUPABASE_CONFIG.url}/rest/v1/doctor_deletion_requests?id=eq.${encodeURIComponent(requestId)}`, {
         method: 'PATCH',
-        headers: this.getHeaders(),
+        headers: await this.getHeaders(),
         body: JSON.stringify({
           status: 'REJECTED',
           reviewed_by: managerName,
@@ -377,7 +403,7 @@ export class SupabaseDbService {
     try {
       const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/employees?order=employee_code.asc`, {
         method: 'GET',
-        headers: this.getHeaders(),
+        headers: await this.getHeaders(),
       });
 
       if (!res.ok) {
@@ -446,7 +472,7 @@ export class SupabaseDbService {
     try {
       await fetch(`${SUPABASE_CONFIG.url}/rest/v1/employees`, {
         method: 'POST',
-        headers: { ...this.getHeaders(), Prefer: 'resolution=merge-duplicates' },
+        headers: { ...(await this.getHeaders()), Prefer: 'resolution=merge-duplicates' },
         body: JSON.stringify({
           id: emp.id,
           employee_code: emp.employeeCode,
@@ -481,7 +507,7 @@ export class SupabaseDbService {
         `${SUPABASE_CONFIG.url}/rest/v1/employees?${filter}`,
         {
           method: 'PATCH',
-          headers: this.getHeaders(),
+          headers: await this.getHeaders(),
           body: JSON.stringify({
             pin: newPin,
             updated_at: new Date().toISOString(),
@@ -511,7 +537,7 @@ export class SupabaseDbService {
     try {
       await fetch(`${SUPABASE_CONFIG.url}/rest/v1/employees?id=eq.${encodeURIComponent(id)}`, {
         method: 'PATCH',
-        headers: this.getHeaders(),
+        headers: await this.getHeaders(),
         body: JSON.stringify(payload),
       });
     } catch (err) {
@@ -525,7 +551,7 @@ export class SupabaseDbService {
     try {
       await fetch(`${SUPABASE_CONFIG.url}/rest/v1/employees?id=eq.${encodeURIComponent(id)}`, {
         method: 'DELETE',
-        headers: this.getHeaders(),
+        headers: await this.getHeaders(),
       });
     } catch (err) {
       console.warn('[Supabase] deleteEmployee error:', err);
@@ -544,7 +570,7 @@ export class SupabaseDbService {
     try {
       const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/firms?order=name.asc`, {
         method: 'GET',
-        headers: this.getHeaders(),
+        headers: await this.getHeaders(),
       });
 
       if (!res.ok) {
@@ -581,7 +607,7 @@ export class SupabaseDbService {
     try {
       await fetch(`${SUPABASE_CONFIG.url}/rest/v1/firms`, {
         method: 'POST',
-        headers: { ...this.getHeaders(), Prefer: 'resolution=merge-duplicates' },
+        headers: { ...(await this.getHeaders()), Prefer: 'resolution=merge-duplicates' },
         body: JSON.stringify({
           id: firm.id,
           name: firm.name,
@@ -637,7 +663,7 @@ export class SupabaseDbService {
     const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/attendance`, {
       method: 'POST',
       headers: {
-        ...this.getHeaders(),
+        ...(await this.getHeaders()),
         Prefer: 'resolution=merge-duplicates,return=representation',
       },
       body: JSON.stringify(payload),
@@ -654,14 +680,14 @@ export class SupabaseDbService {
     if (this.isConnected()) {
       try {
         const clean = encodeURIComponent(employeeIdOrCode.trim());
-        // Match either canonical employee_id ('usr-nlcl-0004') or employee_code ('NLCL-0004')
+        // Match either canonical employee_id or employee_code
         const codeClean = clean.startsWith('usr-') ? clean.replace('usr-', '').toUpperCase() : clean;
         const idClean = clean.startsWith('usr-') ? clean : `usr-${clean.toLowerCase()}`;
         const queryFilter = `or=(employee_id.eq.${clean},employee_id.eq.${codeClean},employee_id.eq.${idClean})`;
 
         const res = await fetch(
           `${SUPABASE_CONFIG.url}/rest/v1/attendance?${queryFilter}&date=eq.${getBusinessDateStr()}`,
-          { method: 'GET', headers: this.getHeaders() }
+          { method: 'GET', headers: await this.getHeaders() }
         );
         if (res.ok) {
           const raw = await res.json();
@@ -703,7 +729,7 @@ export class SupabaseDbService {
       // 1. Append to location_telemetry table
       fetch(`${SUPABASE_CONFIG.url}/rest/v1/location_telemetry`, {
         method: 'POST',
-        headers: this.getHeaders(),
+        headers: await this.getHeaders(),
         body: JSON.stringify(payload),
       }).catch(err => console.warn('[Supabase] location_telemetry append error:', err));
 
@@ -735,7 +761,7 @@ export class SupabaseDbService {
       // 1. Try location_telemetry first
       const telRes = await fetch(
         `${SUPABASE_CONFIG.url}/rest/v1/location_telemetry?${queryFilter}&order=recorded_at.desc&limit=1`,
-        { method: 'GET', headers: this.getHeaders() }
+        { method: 'GET', headers: await this.getHeaders() }
       );
       if (telRes.ok) {
         const raw = await telRes.json();
@@ -775,7 +801,7 @@ export class SupabaseDbService {
 
       const res = await fetch(
         `${SUPABASE_CONFIG.url}/rest/v1/location_telemetry?${queryFilter}&order=recorded_at.desc&limit=${limit}`,
-        { method: 'GET', headers: this.getHeaders() }
+        { method: 'GET', headers: await this.getHeaders() }
       );
       if (res.ok) {
         return await res.json();
@@ -801,7 +827,7 @@ export class SupabaseDbService {
       };
       const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/location_requests`, {
         method: 'POST',
-        headers: this.getHeaders(),
+        headers: await this.getHeaders(),
         body: JSON.stringify(payload),
       });
       if (res.ok) {
@@ -821,7 +847,7 @@ export class SupabaseDbService {
     try {
       const res = await fetch(
         `${SUPABASE_CONFIG.url}/rest/v1/location_requests?id=eq.${encodeURIComponent(requestId)}&limit=1`,
-        { method: 'GET', headers: this.getHeaders() }
+        { method: 'GET', headers: await this.getHeaders() }
       );
       if (res.ok) {
         const data = await res.json();
@@ -846,7 +872,7 @@ export class SupabaseDbService {
       const now = new Date().toISOString();
       const res = await fetch(
         `${SUPABASE_CONFIG.url}/rest/v1/location_requests?${queryFilter}&status=eq.PENDING&expires_at=gt.${encodeURIComponent(now)}&order=requested_at.desc`,
-        { method: 'GET', headers: this.getHeaders() }
+        { method: 'GET', headers: await this.getHeaders() }
       );
       if (res.ok) {
         return await res.json();
@@ -874,7 +900,7 @@ export class SupabaseDbService {
         `${SUPABASE_CONFIG.url}/rest/v1/location_requests?id=eq.${encodeURIComponent(requestId)}`,
         {
           method: 'PATCH',
-          headers: this.getHeaders(),
+          headers: await this.getHeaders(),
           body: JSON.stringify(payload),
         }
       );
@@ -919,7 +945,7 @@ export class SupabaseDbService {
       if (this.isConnected()) {
         const attRes = await fetch(
           `${SUPABASE_CONFIG.url}/rest/v1/attendance?${queryFilter}&date=eq.${businessDateStr}&order=created_at.desc&limit=1`,
-          { method: 'GET', headers: this.getHeaders() }
+          { method: 'GET', headers: await this.getHeaders() }
         );
         if (attRes.ok) {
           const rows = await attRes.json();
@@ -1010,7 +1036,7 @@ export class SupabaseDbService {
         {
           method: 'PATCH',
           headers: {
-            ...this.getHeaders(),
+            ...(await this.getHeaders()),
             Prefer: 'return=representation',
           },
           body: JSON.stringify({
@@ -1044,7 +1070,7 @@ export class SupabaseDbService {
       try {
         const attRes = await fetch(
           `${SUPABASE_CONFIG.url}/rest/v1/attendance?date=eq.${today}&order=created_at.desc`,
-          { method: 'GET', headers: this.getHeaders() }
+          { method: 'GET', headers: await this.getHeaders() }
         );
         if (attRes.ok) {
           todayAttendance = await attRes.json();
@@ -1056,7 +1082,7 @@ export class SupabaseDbService {
       try {
         const telRes = await fetch(
           `${SUPABASE_CONFIG.url}/rest/v1/location_telemetry?order=recorded_at.desc&limit=200`,
-          { method: 'GET', headers: this.getHeaders() }
+          { method: 'GET', headers: await this.getHeaders() }
         );
         if (telRes.ok) {
           recentTelemetry = await telRes.json();
@@ -1170,46 +1196,48 @@ export class SupabaseDbService {
   public static async recordVisit(v: VisitRecord): Promise<void> {
     if (!this.isConnected()) return;
 
-    try {
-      const visitDate = v.date || (v.checkInTimestamp ? v.checkInTimestamp.split('T')[0] : new Date().toISOString().split('T')[0]);
-      const repDistrict = (v as any).district || (v as any).territory || (v.chemistId ? 'Karimganj' : 'Cachar');
-      await fetch(`${SUPABASE_CONFIG.url}/rest/v1/visits`, {
-        method: 'POST',
-        headers: { ...this.getHeaders(), Prefer: 'resolution=merge-duplicates' },
-        body: JSON.stringify({
-          id: v.id,
-          customer_type: v.customerType || (v.chemistId ? 'CHEMIST' : 'DOCTOR'),
-          doctor_id: v.doctorId || null,
-          doctor_name: v.doctorName || v.chemistName || 'Customer',
-          chemist_id: v.chemistId || null,
-          chemist_name: v.chemistName || null,
-          employee_id: v.employeeId || 'usr-nlcl-0004',
-          employee_name: v.employeeName || 'Pranjal Malakar',
-          district: repDistrict,
-          visit_date: visitDate,
-          timestamp: v.checkInTimestamp || new Date().toISOString(),
-          status: v.status || 'COMPLETED',
-          latitude: v.checkInLatitude,
-          longitude: v.checkInLongitude,
-          // Server trigger trg_verify_visit_geofence automatically computes and enforces true geofence in PostgreSQL
-          is_geofence_verified: v.isGeofenceVerified ?? false,
-          distance_meters: v.checkInDistanceMeters ?? -1,
-          notes: v.doctorFeedback || v.discussionNotes || '',
-          products_discussed: v.productsDiscussed || [],
-          samples_given: v.samplesDistributed || [],
-          visit_objective: v.visitObjective || v.visitPurpose || null,
-          start_time: v.checkInTimestamp || null,
-          end_time: v.checkOutTimestamp || null,
-          duration_minutes: v.visitDurationMinutes || 0,
-          pob_amount: v.pobAmount || 0,
-          accompanied_by: v.accompaniedBy || null,
-          feedback: v.doctorFeedback || null,
-          next_visit_date: v.nextFollowUpDate || null,
-          is_unplanned: v.isUnplanned ?? false,
-        }),
-      });
-    } catch (err) {
-      console.warn('[Supabase] recordVisit error:', err);
+    const visitDate = v.date || (v.checkInTimestamp ? v.checkInTimestamp.split('T')[0] : new Date().toISOString().split('T')[0]);
+    const repDistrict = (v as any).district || (v as any).territory || (v.chemistId ? 'Karimganj' : 'Cachar');
+    const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/visits`, {
+      method: 'POST',
+      headers: { ...(await this.getHeaders()), Prefer: 'resolution=merge-duplicates' },
+      body: JSON.stringify({
+        id: v.id,
+        customer_type: v.customerType || (v.chemistId ? 'CHEMIST' : 'DOCTOR'),
+        doctor_id: v.doctorId || null,
+        doctor_name: v.doctorName || v.chemistName || 'Customer',
+        chemist_id: v.chemistId || null,
+        chemist_name: v.chemistName || null,
+        employee_id: v.employeeId || AuthService.getCurrentUser()?.id || '',
+        employee_name: v.employeeName || AuthService.getCurrentUser()?.name || 'Representative',
+        district: repDistrict,
+        visit_date: visitDate,
+        timestamp: v.checkInTimestamp || new Date().toISOString(),
+        status: v.status || 'COMPLETED',
+        latitude: v.checkInLatitude,
+        longitude: v.checkInLongitude,
+        // Server trigger trg_verify_visit_geofence automatically computes and enforces true geofence in PostgreSQL
+        is_geofence_verified: v.isGeofenceVerified ?? false,
+        distance_meters: v.checkInDistanceMeters ?? -1,
+        notes: v.doctorFeedback || v.discussionNotes || '',
+        products_discussed: v.productsDiscussed || [],
+        samples_given: v.samplesDistributed || [],
+        visit_objective: v.visitObjective || v.visitPurpose || null,
+        start_time: v.checkInTimestamp || null,
+        end_time: v.checkOutTimestamp || null,
+        duration_minutes: v.visitDurationMinutes || 0,
+        pob_amount: v.pobAmount || 0,
+        accompanied_by: v.accompaniedBy || null,
+        feedback: v.doctorFeedback || null,
+        next_visit_date: v.nextFollowUpDate || null,
+        is_unplanned: v.isUnplanned ?? false,
+      }),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error('[Supabase recordVisit] FAILED:', res.status, errText);
+      throw new Error(`[Supabase recordVisit] HTTP ${res.status}: ${errText}`);
     }
   }
 
@@ -1225,7 +1253,7 @@ export class SupabaseDbService {
       }
       const res = await fetch(url, {
         method: 'GET',
-        headers: this.getHeaders(),
+        headers: await this.getHeaders(),
       });
       if (!res.ok) return [];
       return await res.json();
@@ -1247,7 +1275,7 @@ export class SupabaseDbService {
       }
       const res = await fetch(url, {
         method: 'GET',
-        headers: this.getHeaders(),
+        headers: await this.getHeaders(),
       });
       if (!res.ok) return [];
       return await res.json();
@@ -1272,7 +1300,7 @@ export class SupabaseDbService {
       try {
         await fetch(`${SUPABASE_CONFIG.url}/rest/v1/late_login_requests`, {
           method: 'POST',
-          headers: { ...this.getHeaders(), Prefer: 'resolution=merge-duplicates' },
+          headers: { ...(await this.getHeaders()), Prefer: 'resolution=merge-duplicates' },
           body: JSON.stringify({
             id: req.id,
             employee_id: req.employeeId,
@@ -1297,7 +1325,7 @@ export class SupabaseDbService {
         const empCodeUpper = req.employeeCode.toUpperCase();
         const empRes = await fetch(
           `${SUPABASE_CONFIG.url}/rest/v1/employees?employee_code=eq.${encodeURIComponent(empCodeUpper)}`,
-          { method: 'GET', headers: this.getHeaders() }
+          { method: 'GET', headers: await this.getHeaders() }
         );
         if (empRes.ok) {
           const emps = await empRes.json();
@@ -1311,7 +1339,7 @@ export class SupabaseDbService {
 
             await fetch(`${SUPABASE_CONFIG.url}/rest/v1/employees?id=eq.${encodeURIComponent(emp.id)}`, {
               method: 'PATCH',
-              headers: this.getHeaders(),
+              headers: await this.getHeaders(),
               body: JSON.stringify({
                 assigned_route_ids: cleanRoutes,
                 updated_at: new Date().toISOString(),
@@ -1336,7 +1364,7 @@ export class SupabaseDbService {
           `${SUPABASE_CONFIG.url}/rest/v1/late_login_requests?status=eq.PENDING&order=created_at.desc`,
           {
             method: 'GET',
-            headers: this.getHeaders(),
+            headers: await this.getHeaders(),
           }
         );
         if (res.ok) {
@@ -1366,7 +1394,7 @@ export class SupabaseDbService {
       try {
         const empRes = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/employees?select=*`, {
           method: 'GET',
-          headers: this.getHeaders(),
+          headers: await this.getHeaders(),
         });
         if (empRes.ok) {
           const allEmps = await empRes.json();
@@ -1457,7 +1485,7 @@ export class SupabaseDbService {
       try {
         await fetch(`${SUPABASE_CONFIG.url}/rest/v1/late_login_requests?id=eq.${encodeURIComponent(requestId)}`, {
           method: 'PATCH',
-          headers: this.getHeaders(),
+          headers: await this.getHeaders(),
           body: JSON.stringify({
             status,
             reviewed_by: reviewerName,
@@ -1473,7 +1501,7 @@ export class SupabaseDbService {
       try {
         const empRes = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/employees?select=*`, {
           method: 'GET',
-          headers: this.getHeaders(),
+          headers: await this.getHeaders(),
         });
         if (empRes.ok) {
           const emps = await empRes.json();
@@ -1491,7 +1519,7 @@ export class SupabaseDbService {
             if (hasToken) {
               await fetch(`${SUPABASE_CONFIG.url}/rest/v1/employees?id=eq.${encodeURIComponent(emp.id)}`, {
                 method: 'PATCH',
-                headers: this.getHeaders(),
+                headers: await this.getHeaders(),
                 body: JSON.stringify({
                   assigned_route_ids: updatedRoutes,
                   updated_at: new Date().toISOString(),
@@ -1520,7 +1548,7 @@ export class SupabaseDbService {
           `${SUPABASE_CONFIG.url}/rest/v1/late_login_requests?employee_code=ilike.${encodeURIComponent(cleanCode)}&date=eq.${encodeURIComponent(dateStr)}&status=eq.APPROVED&limit=1`,
           {
             method: 'GET',
-            headers: this.getHeaders(),
+            headers: await this.getHeaders(),
           }
         );
         if (res.ok) {
@@ -1553,7 +1581,7 @@ export class SupabaseDbService {
           `${SUPABASE_CONFIG.url}/rest/v1/employees?employee_code=eq.${encodeURIComponent(cleanCode)}`,
           {
             method: 'GET',
-            headers: this.getHeaders(),
+            headers: await this.getHeaders(),
           }
         );
         if (empRes.ok) {
@@ -1618,7 +1646,7 @@ export class SupabaseDbService {
       try {
         await fetch(`${SUPABASE_CONFIG.url}/rest/v1/tour_plan_reschedule_requests`, {
           method: 'POST',
-          headers: { ...this.getHeaders(), Prefer: 'resolution=merge-duplicates' },
+          headers: { ...(await this.getHeaders()), Prefer: 'resolution=merge-duplicates' },
           body: JSON.stringify({
             id: req.id,
             employee_id: req.employeeId,
@@ -1650,7 +1678,7 @@ export class SupabaseDbService {
           `${SUPABASE_CONFIG.url}/rest/v1/tour_plan_reschedule_requests?status=eq.PENDING&order=created_at.desc`,
           {
             method: 'GET',
-            headers: this.getHeaders(),
+            headers: await this.getHeaders(),
           }
         );
         if (res.ok) {
@@ -1696,7 +1724,7 @@ export class SupabaseDbService {
           `${SUPABASE_CONFIG.url}/rest/v1/tour_plan_reschedule_requests?order=created_at.desc`,
           {
             method: 'GET',
-            headers: this.getHeaders(),
+            headers: await this.getHeaders(),
           }
         );
         if (res.ok) {
@@ -1765,7 +1793,7 @@ export class SupabaseDbService {
       try {
         await fetch(`${SUPABASE_CONFIG.url}/rest/v1/tour_plan_reschedule_requests?id=eq.${encodeURIComponent(requestId)}`, {
           method: 'PATCH',
-          headers: this.getHeaders(),
+          headers: await this.getHeaders(),
           body: JSON.stringify({
             status,
             reviewed_by: reviewerName,
@@ -1822,7 +1850,7 @@ export class SupabaseDbService {
   }
 
   public static async getCustomTourPlans(employeeCode: string): Promise<Record<string, any>> {
-    const clean = (employeeCode || 'NLCL-0004').trim().toLowerCase();
+    const clean = (employeeCode || AuthService.getCurrentUser()?.employeeCode || '').trim().toLowerCase();
     const tourPlansKey = `${STORAGE_KEYS.TOUR_PLANS_CACHE}_${clean}`;
     return await StorageService.getItem<Record<string, any>>(tourPlansKey, {});
   }
@@ -1832,7 +1860,7 @@ export class SupabaseDbService {
     dateKey: string,
     plan: { city: string; type: string; notes?: string }
   ): Promise<void> {
-    const clean = (employeeCode || 'NLCL-0004').trim().toLowerCase();
+    const clean = (employeeCode || AuthService.getCurrentUser()?.employeeCode || '').trim().toLowerCase();
     const tourPlansKey = `${STORAGE_KEYS.TOUR_PLANS_CACHE}_${clean}`;
     const current = await StorageService.getItem<Record<string, any>>(tourPlansKey, {});
     current[dateKey] = plan;
@@ -1848,33 +1876,35 @@ export class SupabaseDbService {
 
     if (!this.isConnected()) return;
 
-    try {
-      await fetch(`${SUPABASE_CONFIG.url}/rest/v1/orders`, {
-        method: 'POST',
-        headers: { ...this.getHeaders(), Prefer: 'resolution=merge-duplicates' },
-        body: JSON.stringify({
-          id: order.id,
-          order_number: order.orderNumber,
-          employee_id: order.employeeId,
-          employee_name: order.employeeName,
-          buyer_type: order.buyerType,
-          buyer_id: order.buyerId,
-          buyer_name: order.buyerName,
-          stockist_name: order.stockistName || null,
-          territory: order.territory,
-          order_date: order.orderDate,
-          sub_total: order.subTotal,
-          gst_amount: order.gstAmount,
-          grand_total: order.grandTotal,
-          items: order.items,
-          remarks: order.remarks || null,
-          latitude: order.latitude,
-          longitude: order.longitude,
-          sync_status: 'SYNCED',
-        }),
-      });
-    } catch (err) {
-      console.warn('[Supabase] submitOrder error:', err);
+    const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/orders`, {
+      method: 'POST',
+      headers: { ...(await this.getHeaders()), Prefer: 'resolution=merge-duplicates' },
+      body: JSON.stringify({
+        id: order.id,
+        order_number: order.orderNumber,
+        employee_id: order.employeeId,
+        employee_name: order.employeeName,
+        buyer_type: order.buyerType,
+        buyer_id: order.buyerId,
+        buyer_name: order.buyerName,
+        stockist_name: order.stockistName || null,
+        territory: order.territory,
+        order_date: order.orderDate,
+        sub_total: order.subTotal,
+        gst_amount: order.gstAmount,
+        grand_total: order.grandTotal,
+        items: order.items,
+        remarks: order.remarks || null,
+        latitude: order.latitude,
+        longitude: order.longitude,
+        sync_status: 'SYNCED',
+      }),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error('[Supabase submitOrder] FAILED:', res.status, errText);
+      throw new Error(`[Supabase submitOrder] HTTP ${res.status}: ${errText}`);
     }
   }
 
@@ -1886,7 +1916,7 @@ export class SupabaseDbService {
     try {
       const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/orders?order=created_at.desc`, {
         method: 'GET',
-        headers: this.getHeaders(),
+        headers: await this.getHeaders(),
       });
 
       if (!res.ok) {
@@ -1924,7 +1954,7 @@ export class SupabaseDbService {
     try {
       const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/role_permissions?order=created_at.asc`, {
         method: 'GET',
-        headers: this.getHeaders(),
+        headers: await this.getHeaders(),
       });
       if (res.ok) {
         return await res.json();
@@ -1944,7 +1974,7 @@ export class SupabaseDbService {
     try {
       const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/routes?is_active=eq.true&order=parent_hq.asc,name.asc`, {
         method: 'GET',
-        headers: this.getHeaders(),
+        headers: await this.getHeaders(),
       });
       if (res.ok) {
         return await res.json();
@@ -1956,7 +1986,7 @@ export class SupabaseDbService {
   }
 
   public static async fetchTourPlans(employeeCode: string, month?: number, year?: number): Promise<Record<string, any>> {
-    const cleanCode = (employeeCode || 'NLCL-0005').trim().toUpperCase();
+    const cleanCode = (employeeCode || AuthService.getCurrentUser()?.employeeCode || '').trim().toUpperCase();
     const tourPlansKey = `${STORAGE_KEYS.TOUR_PLANS_CACHE}_${cleanCode.toLowerCase()}`;
     
     if (this.isConnected()) {
@@ -1968,7 +1998,7 @@ export class SupabaseDbService {
 
         const res = await fetch(url, {
           method: 'GET',
-          headers: this.getHeaders(),
+          headers: await this.getHeaders(),
         });
         if (res.ok) {
           const list = await res.json();
@@ -2006,7 +2036,7 @@ export class SupabaseDbService {
     routeType?: string;
     notes?: string;
   }): Promise<boolean> {
-    const cleanCode = (plan.employeeCode || 'NLCL-0005').trim().toUpperCase();
+    const cleanCode = (plan.employeeCode || AuthService.getCurrentUser()?.employeeCode || '').trim().toUpperCase();
     const tourPlansKey = `${STORAGE_KEYS.TOUR_PLANS_CACHE}_${cleanCode.toLowerCase()}`;
     
     // 1. Cache locally
@@ -2031,7 +2061,7 @@ export class SupabaseDbService {
 
         await fetch(`${SUPABASE_CONFIG.url}/rest/v1/tour_plans`, {
           method: 'POST',
-          headers: { ...this.getHeaders(), Prefer: 'resolution=merge-duplicates' },
+          headers: { ...(await this.getHeaders()), Prefer: 'resolution=merge-duplicates' },
           body: JSON.stringify({
             id: `tp_${cleanCode}_${plan.date}`,
             employee_id: plan.employeeId,
@@ -2065,7 +2095,7 @@ export class SupabaseDbService {
     try {
       const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/products?is_active=eq.true&order=name.asc`, {
         method: 'GET',
-        headers: this.getHeaders(),
+        headers: await this.getHeaders(),
       });
       if (res.ok) {
         const raw = await res.json();
@@ -2098,7 +2128,7 @@ export class SupabaseDbService {
       const clean = (employeeCode || '').trim().toUpperCase();
       const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/expenses?employee_code=eq.${encodeURIComponent(clean)}&order=date.desc`, {
         method: 'GET',
-        headers: this.getHeaders(),
+        headers: await this.getHeaders(),
       });
       if (res.ok) {
         const raw = await res.json();
@@ -2129,7 +2159,7 @@ export class SupabaseDbService {
     try {
       const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/expenses`, {
         method: 'POST',
-        headers: { ...this.getHeaders(), Prefer: 'resolution=merge-duplicates' },
+        headers: { ...(await this.getHeaders()), Prefer: 'resolution=merge-duplicates' },
         body: JSON.stringify({
           id: claim.id || `exp_${Date.now()}`,
           employee_id: claim.employeeId,
@@ -2163,7 +2193,7 @@ export class SupabaseDbService {
     try {
       const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/sfc_routes?order=from_location.asc,distance_km.asc`, {
         method: 'GET',
-        headers: this.getHeaders(),
+        headers: await this.getHeaders(),
       });
       if (res.ok) {
         const raw = await res.json();
@@ -2189,7 +2219,7 @@ export class SupabaseDbService {
     try {
       const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/holidays?order=date.asc`, {
         method: 'GET',
-        headers: this.getHeaders(),
+        headers: await this.getHeaders(),
       });
       if (res.ok) {
         return await res.json();
@@ -2206,7 +2236,7 @@ export class SupabaseDbService {
       const clean = (employeeCode || '').trim().toUpperCase();
       const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/leave_balances?employee_code=eq.${encodeURIComponent(clean)}&limit=1`, {
         method: 'GET',
-        headers: this.getHeaders(),
+        headers: await this.getHeaders(),
       });
       if (res.ok) {
         const list = await res.json();
