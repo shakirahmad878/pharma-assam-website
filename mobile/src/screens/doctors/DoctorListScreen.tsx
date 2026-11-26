@@ -148,27 +148,23 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
     setNewDocArea('');
     setAddModalVisible(true);
 
-    // Auto-capture GPS and auto-fill area via geofencing
+    // Read safe OS-cached GPS on modal open (avoids native GPS crash while typing)
     setGpsLoading(true);
     try {
-      const loc = await LocationService.getCurrentLocation();
-      if (loc) {
-        if (loc.isMockLocation) {
-          LocationService.validateAuthenticGps(loc, 'Doctor Clinic Geotagging');
-        } else {
-          setCapturedCoords({ lat: loc.latitude, lng: loc.longitude });
-          const detectedDist = DivisionService.detectDistrictFromGps(loc.latitude, loc.longitude);
-          if (detectedDist) {
-            setNewDocDistrict(detectedDist as any);
-          }
-          const detectedArea = await LocationService.reverseGeocodeArea(loc.latitude, loc.longitude);
-          if (detectedArea) {
-            setNewDocArea(detectedArea);
-          }
+      const loc = await LocationService.getLastKnownLocationOnly();
+      if (loc && !loc.isMockLocation) {
+        setCapturedCoords({ lat: loc.latitude, lng: loc.longitude });
+        const detectedDist = DivisionService.detectDistrictFromGps(loc.latitude, loc.longitude);
+        if (detectedDist) {
+          setNewDocDistrict(detectedDist as any);
+        }
+        const detectedArea = await LocationService.reverseGeocodeArea(loc.latitude, loc.longitude);
+        if (detectedArea) {
+          setNewDocArea(detectedArea);
         }
       }
     } catch {
-      // fallback
+      // fallback to default division coords
     } finally {
       setGpsLoading(false);
     }

@@ -47,6 +47,35 @@ export class LocationService {
   }
 
   /**
+   * Returns recent OS-cached GPS fix without starting a live hardware request.
+   * Safe for modal/screen initialization on Android 14/15/16.
+   */
+  public static async getLastKnownLocationOnly(maxAgeMs: number = 300000): Promise<LocationResult | null> {
+    try {
+      const hasPermission = await this.requestForegroundPermission();
+      if (!hasPermission) return null;
+      const loc = await (Location as any).getLastKnownPositionAsync({ maxAge: maxAgeMs }).catch(() => null);
+      if (!loc || !loc.coords) return null;
+      const isMocked = Boolean(
+        loc.mocked ||
+        (loc as any).isFromMockProvider ||
+        (loc as any).mock ||
+        (loc.coords && (loc.coords as any).isMock)
+      );
+      return {
+        latitude: loc.coords.latitude,
+        longitude: loc.coords.longitude,
+        accuracyMeters: loc.coords.accuracy || 15,
+        speedKmh: (loc.coords.speed || 0) * 3.6,
+        isMockLocation: isMocked,
+        timestamp: new Date(loc.timestamp || Date.now()).toISOString(),
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  /**
    * Gets single GPS fix with timeout, accuracy validation,
    * modern Android fallback, and strict Anti-Mock / Fake GPS hardware verification.
    */
@@ -64,42 +93,29 @@ export class LocationService {
         return null;
       }
 
-      const timeoutMs = options?.timeoutMs || 15000;
-
-      // Wrap getCurrentPositionAsync with a timeout
-      const getHighAccuracyPos = Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High,
-      });
-
-      const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), timeoutMs));
-
-      let loc: Location.LocationObject | null = await Promise.race([getHighAccuracyPos, timeoutPromise]);
-
-      if (!loc) {
-        console.warn(`[LocationService] High accuracy position timed out after ${timeoutMs}ms, attempting fallback...`);
-        // Fallback 1: Last known position within recent 10 minutes (useful indoors)
-        try {
-          loc = await (Location as any).getLastKnownPositionAsync({ maxAge: 600000 });
-        } catch (e) {
-          console.warn('[LocationService] getLastKnownPositionAsync failed:', e);
-        }
-
-        // Fallback 2: Balanced accuracy with 6-second timeout
-        if (!loc) {
-          try {
-            console.log('[LocationService] Attempting Balanced accuracy fallback...');
-            const balancedPromise = Location.getCurrentPositionAsync({
-              accuracy: Location.Accuracy.Balanced,
-            });
-            const balancedTimeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 6000));
-            loc = await Promise.race([balancedPromise, balancedTimeout]);
-          } catch (e) {
-            console.warn('[LocationService] Balanced accuracy fallback failed:', e);
-          }
-        }
+      // 1. Check recent OS-cached position first (avoids native Accuracy.High crashes on Android 14/15/16)
+      let loc: Location.LocationObject | null = null;
+      try {
+        loc = await (Location as any).getLastKnownPositionAsync({ maxAge: 180000 }).catch(() => null);
+      } catch (e) {
+        console.warn('[LocationService] getLastKnownPositionAsync check failed:', e);
       }
 
-      if (!loc) {
+      // 2. If no recent fix, request Balanced accuracy with safe catch & timeout
+      if (!loc || !loc.coords) {
+        const timeoutMs = options?.timeoutMs || 8000;
+        const getBalancedPos = Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        }).catch((e) => {
+          console.warn('[LocationService] Balanced accuracy failed:', e);
+          return null;
+        });
+
+        const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), timeoutMs));
+        loc = await Promise.race([getBalancedPos, timeoutPromise]);
+      }
+
+      if (!loc || !loc.coords) {
         console.error('[LOCATION_RESULT] Failed: No location fix available.');
         return null;
       }
@@ -145,45 +161,7 @@ export class LocationService {
    * based on device location and known pharmaceutical cluster geofences.
    */
   public static async reverseGeocodeArea(latitude: number, longitude: number): Promise<string> {
-    // 1. Primary Engine: Device Native Google Play Geocoder
-    try {
-      const addresses = await (Location as any).reverseGeocodeAsync({ latitude, longitude });
-      if (addresses && addresses.length > 0) {
-        const addr = addresses[0];
-
-        // If Android Google geocoder provided a full formatted address, use it cleaned up
-        if (addr.formattedAddress && typeof addr.formattedAddress === 'string') {
-          const cleaned = addr.formattedAddress.replace(/,?\s*India\s*$/i, '').trim();
-          if (cleaned.length > 5) {
-            return cleaned;
-          }
-        }
-
-        // Assemble Google Maps address components:
-        // [Street / Road], [Area / Locality], [City], [State], [PIN]
-        const street = addr.street || addr.name || '';
-        const locality = addr.subregion || addr.district || '';
-        const city = addr.city || '';
-        const state = addr.region || '';
-        const pin = addr.postalCode || '';
-
-        const parts: string[] = [];
-
-        if (street) parts.push(street);
-        if (locality && locality !== street && locality !== city) parts.push(locality);
-        if (city && !parts.includes(city)) parts.push(city);
-        if (state && !parts.includes(state)) parts.push(state);
-        if (pin && !parts.includes(pin)) parts.push(pin);
-
-        if (parts.length >= 2) {
-          return parts.join(', ');
-        }
-      }
-    } catch (err) {
-      console.warn('[LocationService] Native Google reverse geocode attempt:', err);
-    }
-
-    // 2. Secondary Engine: OpenStreetMap / Nominatim fallback
+    // Pure-JS HTTPS OpenStreetMap / Nominatim reverse geocoding (avoids native Android Geocoder crashes)
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 4000);
