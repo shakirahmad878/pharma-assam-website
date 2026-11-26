@@ -79,7 +79,11 @@ export class LocationService {
    * Gets single GPS fix with timeout, accuracy validation,
    * modern Android fallback, and strict Anti-Mock / Fake GPS hardware verification.
    */
-  public static async getCurrentLocation(options?: { timeoutMs?: number }): Promise<LocationResult | null> {
+  public static async getCurrentLocation(options?: {
+    timeoutMs?: number;
+    forceFresh?: boolean;
+    highAccuracy?: boolean;
+  }): Promise<LocationResult | null> {
     try {
       console.log('[LOCATION_REQUEST_STARTED] Checking permissions & services...');
       const hasPermission = await this.requestForegroundPermission();
@@ -93,26 +97,44 @@ export class LocationService {
         return null;
       }
 
-      // 1. Check recent OS-cached position first (avoids native Accuracy.High crashes on Android 14/15/16)
+      const forceFresh = Boolean(options?.forceFresh);
+      const useHighAccuracy = Boolean(options?.highAccuracy);
+      const timeoutMs = options?.timeoutMs || 8000;
       let loc: Location.LocationObject | null = null;
-      try {
-        loc = await (Location as any).getLastKnownPositionAsync({ maxAge: 180000 }).catch(() => null);
-      } catch (e) {
-        console.warn('[LocationService] getLastKnownPositionAsync check failed:', e);
+
+      // 1. Unless forceFresh is requested, check recent accurate OS-cached position first
+      if (!forceFresh) {
+        try {
+          const cached = await (Location as any).getLastKnownPositionAsync({ maxAge: 60000 }).catch(() => null);
+          if (cached?.coords && (cached.coords.accuracy == null || cached.coords.accuracy <= 60)) {
+            loc = cached;
+          }
+        } catch (e) {
+          console.warn('[LocationService] getLastKnownPositionAsync check failed:', e);
+        }
       }
 
-      // 2. If no recent fix, request Balanced accuracy with safe catch & timeout
+      // 2. Request live position (High accuracy when explicitly requested, Balanced otherwise)
       if (!loc || !loc.coords) {
-        const timeoutMs = options?.timeoutMs || 8000;
-        const getBalancedPos = Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
+        const primaryAccuracy = useHighAccuracy ? Location.Accuracy.High : Location.Accuracy.Balanced;
+        const getPrimaryPos = Location.getCurrentPositionAsync({
+          accuracy: primaryAccuracy,
         }).catch((e) => {
-          console.warn('[LocationService] Balanced accuracy failed:', e);
+          console.warn('[LocationService] Primary location accuracy failed:', e);
           return null;
         });
 
         const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), timeoutMs));
-        loc = await Promise.race([getBalancedPos, timeoutPromise]);
+        loc = await Promise.race([getPrimaryPos, timeoutPromise]);
+
+        // Fallback to Balanced if High accuracy timed out
+        if ((!loc || !loc.coords) && useHighAccuracy) {
+          const getBalancedPos = Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          }).catch(() => null);
+          const balancedTimeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000));
+          loc = await Promise.race([getBalancedPos, balancedTimeout]);
+        }
       }
 
       if (!loc || !loc.coords) {
@@ -161,7 +183,45 @@ export class LocationService {
    * based on device location and known pharmaceutical cluster geofences.
    */
   public static async reverseGeocodeArea(latitude: number, longitude: number): Promise<string> {
-    // Pure-JS HTTPS OpenStreetMap / Nominatim reverse geocoding (avoids native Android Geocoder crashes)
+    // 1. Primary Engine: Device Native Google Play Geocoder (wrapped with timeout & safe catch)
+    try {
+      const geoPromise = (Location as any)
+        .reverseGeocodeAsync({ latitude, longitude })
+        .catch(() => null);
+      const geoTimeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000));
+      const addresses = await Promise.race([geoPromise, geoTimeout]);
+
+      if (addresses && addresses.length > 0) {
+        const addr = addresses[0];
+        if (addr.formattedAddress && typeof addr.formattedAddress === 'string') {
+          const cleaned = addr.formattedAddress.replace(/,?\s*India\s*$/i, '').trim();
+          if (cleaned.length > 5) {
+            return cleaned;
+          }
+        }
+
+        const street = addr.street || addr.name || '';
+        const locality = addr.subregion || addr.district || '';
+        const city = addr.city || '';
+        const state = addr.region || '';
+        const pin = addr.postalCode || '';
+
+        const parts: string[] = [];
+        if (street) parts.push(street);
+        if (locality && locality !== street && locality !== city) parts.push(locality);
+        if (city && !parts.includes(city)) parts.push(city);
+        if (state && !parts.includes(state)) parts.push(state);
+        if (pin && !parts.includes(pin)) parts.push(pin);
+
+        if (parts.length >= 2) {
+          return parts.join(', ');
+        }
+      }
+    } catch (err) {
+      console.warn('[LocationService] Native reverse geocode fallback:', err);
+    }
+
+    // 2. Secondary Engine: OpenStreetMap / Nominatim fallback
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 4000);

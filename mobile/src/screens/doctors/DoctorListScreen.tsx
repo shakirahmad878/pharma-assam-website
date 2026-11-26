@@ -116,7 +116,11 @@ export const DoctorListScreen: React.FC<DoctorListScreenProps> = ({
   const handleAutoDetectArea = async () => {
     setGpsLoading(true);
     try {
-      const loc = await LocationService.getCurrentLocation();
+      const loc = await LocationService.getCurrentLocation({
+        forceFresh: true,
+        highAccuracy: true,
+        timeoutMs: 10000,
+      });
       if (loc) {
         setCapturedCoords({ lat: loc.latitude, lng: loc.longitude });
         const detectedDist = DivisionService.detectDistrictFromGps(loc.latitude, loc.longitude);
